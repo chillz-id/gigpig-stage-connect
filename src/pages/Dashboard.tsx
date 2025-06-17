@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell } from 'lucide-react';
+import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell, MessageCircle, User, Zap, TrendingUp } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -27,6 +28,44 @@ const Dashboard = () => {
 
   const ComedianDashboard = () => (
     <div className="space-y-6">
+      {/* Quick Actions */}
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription className="text-purple-200">
+            Get started with your comedy career
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Link to="/browse">
+              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                <Calendar className="w-4 h-4 mr-2" />
+                Browse Shows
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <User className="w-4 h-4 mr-2" />
+                Update Profile
+              </Button>
+            </Link>
+            <Link to="/messages">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Messages
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <Zap className="w-4 h-4 mr-2" />
+                Upgrade
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -78,11 +117,20 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Applications</CardTitle>
-            <CardDescription>Your latest gig applications</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Applications</CardTitle>
+                <CardDescription>Your latest gig applications</CardDescription>
+              </div>
+              <Link to="/browse">
+                <Button size="sm" className="bg-purple-500 hover:bg-purple-600">
+                  Apply More
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {mockApplications.map((application) => (
+            {mockApplications.slice(0, 3).map((application) => (
               <div key={application.id} className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{application.showTitle}</p>
@@ -105,8 +153,17 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Shows</CardTitle>
-            <CardDescription>Your confirmed performances</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Upcoming Shows</CardTitle>
+                <CardDescription>Your confirmed performances</CardDescription>
+              </div>
+              <Link to="/messages">
+                <Button size="sm" variant="outline">
+                  Contact Promoters
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {mockUpcomingGigs.map((gig) => (
@@ -126,6 +183,44 @@ const Dashboard = () => {
 
   const PromoterDashboard = () => (
     <div className="space-y-6">
+      {/* Quick Actions */}
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription className="text-purple-200">
+            Manage your comedy events and talent
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Link to="/create-event">
+              <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Event
+              </Button>
+            </Link>
+            <Link to="/applications">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <Users className="w-4 h-4 mr-2" />
+                Manage Applications
+              </Button>
+            </Link>
+            <Link to="/messages">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Message Comedians
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -173,27 +268,27 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-4">
-        <Button className="bg-gradient-to-r from-pink-500 to-purple-500">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Event
-        </Button>
-        <Button variant="outline">
-          <Users className="w-4 h-4 mr-2" />
-          Manage Groups
-        </Button>
-        <Button variant="outline">
-          <Bell className="w-4 h-4 mr-2" />
-          Send Notification
-        </Button>
-      </div>
-
       {/* Recent Events */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Events</CardTitle>
-          <CardDescription>Your latest comedy events</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Events</CardTitle>
+              <CardDescription>Your latest comedy events</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/applications">
+                <Button size="sm" variant="outline">
+                  View Applications
+                </Button>
+              </Link>
+              <Link to="/create-event">
+                <Button size="sm" className="bg-purple-500 hover:bg-purple-600">
+                  Create New
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
