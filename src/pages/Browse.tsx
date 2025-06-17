@@ -23,8 +23,8 @@ const Browse = () => {
     const matchesSearch = show.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          show.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          show.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !locationFilter || show.location.includes(locationFilter);
-    const matchesType = !typeFilter || show.type.toLowerCase().includes(typeFilter.toLowerCase());
+    const matchesLocation = !locationFilter || locationFilter === 'all' || show.location.includes(locationFilter);
+    const matchesType = !typeFilter || typeFilter === 'all' || show.type.toLowerCase().includes(typeFilter.toLowerCase());
     
     return matchesSearch && matchesLocation && matchesType;
   });
@@ -206,7 +206,7 @@ const Browse = () => {
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 <SelectItem value="Sydney">Sydney, NSW</SelectItem>
                 <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
                 <SelectItem value="Brisbane">Brisbane, QLD</SelectItem>
@@ -218,7 +218,7 @@ const Browse = () => {
                 <SelectValue placeholder="Show Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="open mic">Open Mic</SelectItem>
                 <SelectItem value="semi-pro">Semi-Pro</SelectItem>
                 <SelectItem value="pro">Professional</SelectItem>
