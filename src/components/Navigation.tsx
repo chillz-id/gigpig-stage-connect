@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Moon, Sun, Menu, X, User, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 
 interface NavigationProps {
   isDarkMode: boolean;
@@ -12,6 +14,7 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useUser();
 
   return (
     <nav className="bg-white/10 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50">
@@ -48,12 +51,36 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
               <Moon className="w-4 h-4 text-white" />
             </div>
 
-            <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
-              Sign In
-            </Button>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
-              Get Started
-            </Button>
+            {/* User Info or Auth Buttons */}
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border-2 border-white/20"
+                  />
+                  <div className="text-white">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm font-medium">{user.name}</span>
+                      {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                    </div>
+                    <Badge variant="outline" className="text-xs text-purple-200 border-purple-300">
+                      {user.membership.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
+                  Sign In
+                </Button>
+                <Button className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -70,6 +97,26 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden pb-4 space-y-4">
+            {/* User info on mobile */}
+            {user && (
+              <div className="flex items-center space-x-3 pb-4 border-b border-white/10">
+                <img 
+                  src={user.avatar} 
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full border-2 border-white/20"
+                />
+                <div className="text-white">
+                  <div className="flex items-center space-x-1">
+                    <span className="font-medium">{user.name}</span>
+                    {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                  </div>
+                  <Badge variant="outline" className="text-xs text-purple-200 border-purple-300">
+                    {user.membership.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
             <Link 
               to="/browse" 
               className="block text-white hover:text-pink-300 transition-colors py-2"
@@ -103,21 +150,23 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
               <span className="text-white text-sm">Dark Mode</span>
             </div>
 
-            <div className="space-y-2 pt-2">
-              <Button 
-                variant="outline" 
-                className="w-full text-white border-white/20 hover:bg-white/10"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sign In
-              </Button>
-              <Button 
-                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Get Started
-              </Button>
-            </div>
+            {!user && (
+              <div className="space-y-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full text-white border-white/20 hover:bg-white/10"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Get Started
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

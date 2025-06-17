@@ -6,57 +6,62 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, DollarSign, Users, Search, Filter } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { mockShows } from '@/data/mockData';
+import { useToast } from '@/hooks/use-toast';
 
 const Browse = () => {
+  const { user } = useUser();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map'>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
 
-  const mockShows = [
-    {
-      id: 1,
-      title: "Wednesday Comedy Night",
-      venue: "The Laugh Track",
-      location: "Sydney, NSW",
-      date: "2024-12-20",
-      time: "19:30",
-      type: "Open Mic",
-      spots: 6,
-      appliedSpots: 2,
-      pay: "Free",
-      duration: "5 min",
-      description: "Weekly open mic night for new and emerging comedians",
-    },
-    {
-      id: 2,
-      title: "Friday Headliner Showcase",
-      venue: "Comedy Central Club",
-      location: "Melbourne, V6IC",
-      date: "2024-12-22",
-      time: "20:00",
-      type: "Pro",
-      spots: 4,
-      appliedSpots: 1,
-      pay: "$150",
-      duration: "15 min",
-      description: "Professional showcase featuring established comedians",
-      isPaid: true,
-    },
-    {
-      id: 3,
-      title: "Saturday Mixed Show",
-      venue: "Riverside Comedy",
-      location: "Brisbane, QLD",
-      date: "2024-12-23",
-      time: "21:00",
-      type: "Mixed",
-      spots: 8,
-      appliedSpots: 3,
-      pay: "Split",
-      duration: "10 min",
-      description: "Mix of open mic and paid spots with ticket revenue split",
-    },
-  ];
+  const filteredShows = mockShows.filter(show => {
+    const matchesSearch = show.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         show.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         show.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLocation = !locationFilter || show.location.includes(locationFilter);
+    const matchesType = !typeFilter || show.type.toLowerCase().includes(typeFilter.toLowerCase());
+    
+    return matchesSearch && matchesLocation && matchesType;
+  });
+
+  const handleApply = (show: any) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to apply for shows.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (show.isVerifiedOnly && !user.isVerified) {
+      toast({
+        title: "Verification required",
+        description: "This show requires verified comedians only. Upgrade to Pro to get verified!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (show.status === 'full') {
+      toast({
+        title: "Show is full",
+        description: "This show has reached its maximum capacity.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Application submitted!",
+      description: `Your application for "${show.title}" has been submitted successfully.`,
+    });
+  };
 
   const ShowCard = ({ show }: { show: any }) => (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/15 transition-colors">
@@ -68,11 +73,17 @@ const Browse = () => {
               {show.venue} • {show.location}
             </CardDescription>
           </div>
-          {show.isPaid && (
-            <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-              Verified Only
-            </Badge>
-          )}
+          <div className="flex flex-col gap-2">
+            {show.isVerifiedOnly && (
+              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                <Star className="w-3 h-3 mr-1" />
+                Verified Only
+              </Badge>
+            )}
+            {show.status === 'full' && (
+              <Badge variant="destructive">Full</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -106,12 +117,24 @@ const Browse = () => {
 
         <p className="text-purple-100 text-sm">{show.description}</p>
 
+        {show.requirements && (
+          <div className="text-xs text-purple-200">
+            <p className="font-medium mb-1">Requirements:</p>
+            <ul className="list-disc list-inside space-y-1">
+              {show.requirements.map((req, index) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button 
             className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-            disabled={show.isPaid}
+            onClick={() => handleApply(show)}
+            disabled={show.status === 'full'}
           >
-            {show.isPaid ? "Upgrade to View" : "Apply Now"}
+            {show.status === 'full' ? 'Show Full' : 'Apply Now'}
           </Button>
           <Button variant="outline" className="text-white border-white/30 hover:bg-white/10">
             Details
@@ -123,9 +146,18 @@ const Browse = () => {
 
   const ListView = () => (
     <div className="space-y-4">
-      {mockShows.map((show) => (
-        <ShowCard key={show.id} show={show} />
-      ))}
+      {filteredShows.length === 0 ? (
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+          <CardContent className="p-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">No shows found</h3>
+            <p className="text-purple-100">Try adjusting your search criteria</p>
+          </CardContent>
+        </Card>
+      ) : (
+        filteredShows.map((show) => (
+          <ShowCard key={show.id} show={show} />
+        ))
+      )}
     </div>
   );
 
@@ -169,23 +201,25 @@ const Browse = () => {
                 className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-300"
               />
             </div>
-            <Select>
+            <Select onValueChange={setLocationFilter}>
               <SelectTrigger className="w-full md:w-48 bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sydney">Sydney, NSW</SelectItem>
-                <SelectItem value="melbourne">Melbourne, VIC</SelectItem>
-                <SelectItem value="brisbane">Brisbane, QLD</SelectItem>
-                <SelectItem value="perth">Perth, WA</SelectItem>
+                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="Sydney">Sydney, NSW</SelectItem>
+                <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
+                <SelectItem value="Brisbane">Brisbane, QLD</SelectItem>
+                <SelectItem value="Perth">Perth, WA</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select onValueChange={setTypeFilter}>
               <SelectTrigger className="w-full md:w-48 bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Show Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="open-mic">Open Mic</SelectItem>
+                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="open mic">Open Mic</SelectItem>
                 <SelectItem value="semi-pro">Semi-Pro</SelectItem>
                 <SelectItem value="pro">Professional</SelectItem>
                 <SelectItem value="mixed">Mixed</SelectItem>

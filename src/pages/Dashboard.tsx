@@ -5,9 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
 
 const Dashboard = () => {
-  const [userRole, setUserRole] = useState<'comedian' | 'promoter' | 'both'>('comedian');
+  const { user } = useUser();
+  const [userRole, setUserRole] = useState<'comedian' | 'promoter' | 'both'>('both');
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">Please sign in to access your dashboard</h1>
+          <Button className="bg-gradient-to-r from-pink-500 to-purple-500">
+            Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const ComedianDashboard = () => (
     <div className="space-y-6">
@@ -19,7 +35,7 @@ const Dashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{mockApplications.length}</div>
             <p className="text-xs text-muted-foreground">+2 from last week</p>
           </CardContent>
         </Card>
@@ -30,7 +46,7 @@ const Dashboard = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{mockUpcomingGigs.length}</div>
             <p className="text-xs text-muted-foreground">Next: Tonight at 8pm</p>
           </CardContent>
         </Card>
@@ -41,7 +57,7 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$450</div>
+            <div className="text-2xl font-bold">${user.stats.totalEarnings}</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
@@ -52,7 +68,7 @@ const Dashboard = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">68%</div>
+            <div className="text-2xl font-bold">{user.stats.successRate}%</div>
             <p className="text-xs text-muted-foreground">Applications accepted</p>
           </CardContent>
         </Card>
@@ -66,27 +82,24 @@ const Dashboard = () => {
             <CardDescription>Your latest gig applications</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Comedy Night at The Laugh Track</p>
-                <p className="text-sm text-muted-foreground">Applied 2 days ago</p>
+            {mockApplications.map((application) => (
+              <div key={application.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{application.showTitle}</p>
+                  <p className="text-sm text-muted-foreground">Applied {application.appliedDate}</p>
+                </div>
+                <Badge 
+                  variant={
+                    application.status === 'accepted' ? 'default' : 
+                    application.status === 'declined' ? 'destructive' : 
+                    'outline'
+                  }
+                  className={application.status === 'accepted' ? 'bg-green-500' : ''}
+                >
+                  {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                </Badge>
               </div>
-              <Badge variant="outline">Pending</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Open Mic Wednesday</p>
-                <p className="text-sm text-muted-foreground">Applied 5 days ago</p>
-              </div>
-              <Badge className="bg-green-500">Accepted</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Friday Night Laughs</p>
-                <p className="text-sm text-muted-foreground">Applied 1 week ago</p>
-              </div>
-              <Badge variant="destructive">Declined</Badge>
-            </div>
+            ))}
           </CardContent>
         </Card>
 
@@ -96,20 +109,15 @@ const Dashboard = () => {
             <CardDescription>Your confirmed performances</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Comedy Club Central - Tonight</p>
-                <p className="text-sm text-muted-foreground">8:00 PM • 7 min set</p>
+            {mockUpcomingGigs.map((gig) => (
+              <div key={gig.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{gig.title}</p>
+                  <p className="text-sm text-muted-foreground">{gig.time} • {gig.duration}</p>
+                </div>
+                <Badge className="bg-purple-500">{gig.pay}</Badge>
               </div>
-              <Badge className="bg-purple-500">$75</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Saturday Showcase</p>
-                <p className="text-sm text-muted-foreground">Dec 23 • 10 min set</p>
-              </div>
-              <Badge className="bg-purple-500">$100</Badge>
-            </div>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -126,7 +134,7 @@ const Dashboard = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{user.stats.totalEvents}</div>
             <p className="text-xs text-muted-foreground">2 this week</p>
           </CardContent>
         </Card>
@@ -148,7 +156,7 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$2,340</div>
+            <div className="text-2xl font-bold">${user.stats.totalRevenue}</div>
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
@@ -159,7 +167,7 @@ const Dashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">{user.stats.activeGroups}</div>
             <p className="text-xs text-muted-foreground">127 total members</p>
           </CardContent>
         </Card>
@@ -189,26 +197,26 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Wednesday Comedy Night</p>
-                <p className="text-sm text-muted-foreground">Tonight • 6 spots available • 23 applications</p>
+            {mockEvents.map((event) => (
+              <div key={event.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{event.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {event.date} • {event.spots} spots • {event.applications} applications
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Badge variant="outline">{event.type}</Badge>
+                  <Badge className={
+                    event.status === 'active' ? 'bg-green-500' : 
+                    event.status === 'draft' ? 'bg-purple-500' : 
+                    'bg-gray-500'
+                  }>
+                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline">Open Mic</Badge>
-                <Badge className="bg-green-500">Active</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Friday Headliner Showcase</p>
-                <p className="text-sm text-muted-foreground">Dec 22 • 4 spots • 12 applications</p>
-              </div>
-              <div className="flex gap-2">
-                <Badge variant="outline">Pro</Badge>
-                <Badge className="bg-purple-500">Paid</Badge>
-              </div>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -219,8 +227,13 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-purple-100">Welcome back! Here's what's happening with your comedy career.</p>
+          <div className="flex items-center space-x-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+            {user.isVerified && <Star className="w-6 h-6 text-yellow-400 fill-current" />}
+          </div>
+          <p className="text-purple-100">
+            Welcome back, {user.name}! Here's what's happening with your comedy career.
+          </p>
         </div>
 
         {/* Role Selector */}
