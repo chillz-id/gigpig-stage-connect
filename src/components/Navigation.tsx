@@ -1,42 +1,37 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus } from 'lucide-react';
+import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
-interface NavigationProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) => {
+const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
+  const { theme, setTheme } = useTheme();
+
+  const toggleDarkMode = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const togglePigMode = () => {
+    setTheme(theme === 'pig' ? 'light' : 'pig');
+  };
 
   return (
-    <nav className={`${
-      isDarkMode 
-        ? 'bg-gray-900/95 border-gray-800' 
-        : 'bg-white/95 border-gray-200'
-    } backdrop-blur-sm border-b sticky top-0 z-50 transition-colors duration-200`}>
+    <nav className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 transition-colors duration-200">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className={`w-8 h-8 ${
-              isDarkMode 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600' 
-                : 'bg-gradient-to-r from-blue-500 to-indigo-500'
-            } rounded-full flex items-center justify-center`}>
-              <span className="text-white font-bold text-sm">GP</span>
+            <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">GP</span>
             </div>
-            <h1 className={`text-2xl font-bold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>GigPig</h1>
+            <h1 className="text-2xl font-bold text-foreground">GigPig</h1>
           </Link>
 
           {/* Desktop Menu */}
@@ -44,11 +39,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className={`${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:text-white bg-transparent hover:bg-gray-800' 
-                      : 'text-gray-700 hover:text-gray-900 bg-transparent hover:bg-gray-100'
-                  } transition-colors`}>
+                  <NavigationMenuTrigger className="text-foreground hover:text-foreground bg-transparent hover:bg-accent transition-colors">
                     Shows
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -76,11 +67,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className={`${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:text-white bg-transparent hover:bg-gray-800' 
-                      : 'text-gray-700 hover:text-gray-900 bg-transparent hover:bg-gray-100'
-                  } transition-colors`}>
+                  <NavigationMenuTrigger className="text-foreground hover:text-foreground bg-transparent hover:bg-accent transition-colors">
                     Manage
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -117,11 +104,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
 
                 {user?.roles.includes('promoter') && (
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className={`${
-                      isDarkMode 
-                        ? 'text-gray-200 hover:text-white bg-transparent hover:bg-gray-800' 
-                        : 'text-gray-700 hover:text-gray-900 bg-transparent hover:bg-gray-100'
-                    } transition-colors`}>
+                    <NavigationMenuTrigger className="text-foreground hover:text-foreground bg-transparent hover:bg-accent transition-colors">
                       Settings
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
@@ -141,11 +124,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
               </NavigationMenuList>
             </NavigationMenu>
 
-            <Link to="/pricing" className={`${
-              isDarkMode 
-                ? 'text-gray-200 hover:text-white' 
-                : 'text-gray-700 hover:text-gray-900'
-            } transition-colors`}>
+            <Link to="/pricing" className="text-foreground hover:text-foreground/80 transition-colors">
               Pricing
             </Link>
             
@@ -153,32 +132,20 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
             {user && (
               <div className="flex items-center space-x-2">
                 <Link to="/notifications">
-                  <Button variant="ghost" size="sm" className={`${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:bg-gray-800 hover:text-white' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  } relative transition-colors`}>
+                  <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-colors">
                     <Bell className="w-4 h-4" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                   </Button>
                 </Link>
                 <Link to="/messages">
-                  <Button variant="ghost" size="sm" className={`${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:bg-gray-800 hover:text-white' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  } relative transition-colors`}>
+                  <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-colors">
                     <MessageCircle className="w-4 h-4" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
                   </Button>
                 </Link>
                 {user.roles.includes('promoter') && (
                   <Link to="/create-event">
-                    <Button size="sm" className={`${
-                      isDarkMode 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
-                        : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
-                    } text-white transition-all duration-200`}>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200">
                       <Plus className="w-4 h-4 mr-1" />
                       Create
                     </Button>
@@ -187,63 +154,52 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
               </div>
             )}
             
-            {/* Dark Mode Toggle */}
-            <div className="flex items-center space-x-2">
-              <Sun className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-yellow-500'}`} />
-              <Switch
-                checked={isDarkMode}
-                onCheckedChange={toggleDarkMode}
-                className={`${
-                  isDarkMode 
-                    ? 'data-[state=checked]:bg-blue-600' 
-                    : 'data-[state=checked]:bg-blue-500'
-                }`}
-              />
-              <Moon className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-gray-400'}`} />
+            {/* Theme Controls */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Sun className={`w-4 h-4 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Switch
+                  checked={theme === 'dark'}
+                  onCheckedChange={toggleDarkMode}
+                  className="data-[state=checked]:bg-primary"
+                />
+                <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={togglePigMode}
+                className={`w-8 h-8 p-0 ${theme === 'pig' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <PigIcon className="w-4 h-4" />
+              </Button>
             </div>
 
             {/* User Info or Auth Buttons */}
             {user ? (
-              <Link to="/profile" className={`flex items-center space-x-3 ${
-                isDarkMode 
-                  ? 'hover:bg-gray-800' 
-                  : 'hover:bg-gray-100'
-              } rounded-lg p-2 transition-colors`}>
+              <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-lg p-2 transition-colors">
                 <img 
                   src={user.avatar} 
                   alt={user.name}
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    isDarkMode ? 'border-gray-700' : 'border-gray-300'
-                  }`}
+                  className="w-8 h-8 rounded-full border-2 border-border"
                 />
-                <div className={isDarkMode ? 'text-white' : 'text-gray-900'}>
+                <div className="text-foreground">
                   <div className="flex items-center space-x-1">
                     <span className="text-sm font-medium">{user.name}</span>
                     {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
-                  <Badge variant="outline" className={`text-xs ${
-                    isDarkMode 
-                      ? 'text-blue-200 border-blue-400' 
-                      : 'text-blue-600 border-blue-300'
-                  }`}>
+                  <Badge variant="outline" className="text-xs text-primary border-primary/30">
                     {user.membership.toUpperCase()}
                   </Badge>
                 </div>
               </Link>
             ) : (
               <>
-                <Button variant="outline" className={`${
-                  isDarkMode 
-                    ? 'text-white border-gray-600 hover:bg-gray-800' 
-                    : 'text-gray-900 border-gray-300 hover:bg-gray-50'
-                } transition-colors`}>
+                <Button variant="outline" className="text-foreground border-border hover:bg-accent transition-colors">
                   Sign In
                 </Button>
-                <Button className={`${
-                  isDarkMode 
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
-                    : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
-                } text-white transition-all duration-200`}>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200">
                   Get Started
                 </Button>
               </>
@@ -254,11 +210,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
           <Button
             variant="ghost"
             size="sm"
-            className={`md:hidden ${
-              isDarkMode 
-                ? 'text-white hover:bg-gray-800' 
-                : 'text-gray-900 hover:bg-gray-100'
-            } transition-colors`}
+            className="md:hidden text-foreground hover:bg-accent transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -267,164 +219,110 @@ const Navigation: React.FC<NavigationProps> = ({ isDarkMode, toggleDarkMode }) =
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className={`md:hidden pb-4 space-y-4 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
+          <div className="md:hidden pb-4 space-y-4 text-foreground">
             {/* User info on mobile */}
             {user && (
-              <div className={`flex items-center space-x-3 pb-4 border-b ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              }`}>
-                <img 
-                  src={user.avatar} 
+              <div className={`flex items-center space-x-3 pb-4 border-b border-border`}>
+                <img
+                  src={user.avatar}
                   alt={user.name}
-                  className={`w-10 h-10 rounded-full border-2 ${
-                    isDarkMode ? 'border-gray-700' : 'border-gray-300'
-                  }`}
+                  className="w-10 h-10 rounded-full border-2 border-border"
                 />
                 <div>
                   <div className="flex items-center space-x-1">
                     <span className="font-medium">{user.name}</span>
                     {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
-                  <Badge variant="outline" className={`text-xs ${
-                    isDarkMode 
-                      ? 'text-blue-200 border-blue-400' 
-                      : 'text-blue-600 border-blue-300'
-                  }`}>
+                  <Badge variant="outline" className="text-xs text-primary border-primary/30">
                     {user.membership.toUpperCase()}
                   </Badge>
                 </div>
               </div>
             )}
 
-            <Link 
-              to="/browse" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/browse"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Browse Shows
             </Link>
-            <Link 
-              to="/dashboard" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/dashboard"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Dashboard
             </Link>
             {user?.roles.includes('promoter') && (
               <>
-                <Link 
-                  to="/create-event" 
-                  className={`block ${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:text-white' 
-                      : 'text-gray-700 hover:text-gray-900'
-                  } transition-colors py-2`}
+                <Link
+                  to="/create-event"
+                  className="block text-foreground hover:text-foreground/80 transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Create Event
                 </Link>
-                <Link 
-                  to="/applications" 
-                  className={`block ${
-                    isDarkMode 
-                      ? 'text-gray-200 hover:text-white' 
-                      : 'text-gray-700 hover:text-gray-900'
-                  } transition-colors py-2`}
+                <Link
+                  to="/applications"
+                  className="block text-foreground hover:text-foreground/80 transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Applications
                 </Link>
               </>
             )}
-            <Link 
-              to="/profile" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/profile"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Profile
             </Link>
-            <Link 
-              to="/messages" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/messages"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Messages
             </Link>
-            <Link 
-              to="/notifications" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/notifications"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Notifications
             </Link>
-            <Link 
-              to="/pricing" 
-              className={`block ${
-                isDarkMode 
-                  ? 'text-gray-200 hover:text-white' 
-                  : 'text-gray-700 hover:text-gray-900'
-              } transition-colors py-2`}
+            <Link
+              to="/pricing"
+              className="block text-foreground hover:text-foreground/80 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
             </Link>
-            
+
             <div className="flex items-center space-x-2 py-2">
-              <Sun className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-yellow-500'}`} />
+              <Sun className={`w-4 h-4 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
               <Switch
-                checked={isDarkMode}
+                checked={theme === 'dark'}
                 onCheckedChange={toggleDarkMode}
-                className={`${
-                  isDarkMode 
-                    ? 'data-[state=checked]:bg-blue-600' 
-                    : 'data-[state=checked]:bg-blue-500'
-                }`}
+                className="data-[state=checked]:bg-primary"
               />
-              <Moon className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-gray-400'}`} />
+              <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
               <span className="text-sm">Dark Mode</span>
             </div>
 
             {!user && (
               <div className="space-y-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  className={`w-full ${
-                    isDarkMode 
-                      ? 'text-white border-gray-600 hover:bg-gray-800' 
-                      : 'text-gray-900 border-gray-300 hover:bg-gray-50'
-                  } transition-colors`}
+                <Button
+                  variant="outline"
+                  className="w-full text-foreground border-border hover:bg-accent transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </Button>
-                <Button 
-                  className={`w-full ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
-                      : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
-                  } text-white transition-all duration-200`}
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Get Started

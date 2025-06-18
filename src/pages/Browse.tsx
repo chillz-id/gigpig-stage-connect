@@ -10,6 +10,8 @@ import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star } from 'lucide
 import { useUser } from '@/contexts/UserContext';
 import { mockShows } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { CalendarView } from '@/components/CalendarView';
+import { MapView } from '@/components/MapView';
 
 const Browse = () => {
   const { user } = useUser();
@@ -64,12 +66,12 @@ const Browse = () => {
   };
 
   const ShowCard = ({ show }: { show: any }) => (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/15 transition-colors">
+    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-xl">{show.title}</CardTitle>
-            <CardDescription className="text-purple-100">
+            <CardDescription className="text-muted-foreground">
               {show.venue} • {show.location}
             </CardDescription>
           </div>
@@ -107,18 +109,18 @@ const Browse = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-white border-white/30">
+          <Badge variant="outline" className="text-foreground border-border">
             {show.type}
           </Badge>
-          <Badge variant="outline" className="text-white border-white/30">
+          <Badge variant="outline" className="text-foreground border-border">
             {show.duration}
           </Badge>
         </div>
 
-        <p className="text-purple-100 text-sm">{show.description}</p>
+        <p className="text-muted-foreground text-sm">{show.description}</p>
 
         {show.requirements && (
-          <div className="text-xs text-purple-200">
+          <div className="text-xs text-muted-foreground">
             <p className="font-medium mb-1">Requirements:</p>
             <ul className="list-disc list-inside space-y-1">
               {show.requirements.map((req, index) => (
@@ -130,13 +132,13 @@ const Browse = () => {
 
         <div className="flex gap-2">
           <Button 
-            className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+            className="flex-1 bg-primary hover:bg-primary/90"
             onClick={() => handleApply(show)}
             disabled={show.status === 'full'}
           >
             {show.status === 'full' ? 'Show Full' : 'Apply Now'}
           </Button>
-          <Button variant="outline" className="text-white border-white/30 hover:bg-white/10">
+          <Button variant="outline" className="text-foreground border-border hover:bg-accent">
             Details
           </Button>
         </div>
@@ -147,10 +149,10 @@ const Browse = () => {
   const ListView = () => (
     <div className="space-y-4">
       {filteredShows.length === 0 ? (
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+        <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-            <p className="text-purple-100">Try adjusting your search criteria</p>
+            <p className="text-muted-foreground">Try adjusting your search criteria</p>
           </CardContent>
         </Card>
       ) : (
@@ -161,48 +163,28 @@ const Browse = () => {
     </div>
   );
 
-  const CalendarView = () => (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center text-white">
-      <Calendar className="w-16 h-16 mx-auto mb-4 text-purple-300" />
-      <h3 className="text-xl font-semibold mb-2">Calendar View</h3>
-      <p className="text-purple-100">
-        Interactive calendar showing all available shows by date - Coming Soon!
-      </p>
-    </div>
-  );
-
-  const MapView = () => (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center text-white">
-      <MapPin className="w-16 h-16 mx-auto mb-4 text-purple-300" />
-      <h3 className="text-xl font-semibold mb-2">Map View</h3>
-      <p className="text-purple-100">
-        Interactive map showing comedy venues and events near you - Coming Soon!
-      </p>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Browse Shows</h1>
-          <p className="text-purple-100">Find your next comedy opportunity</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
+          <p className="text-muted-foreground">Find your next comedy opportunity</p>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search shows, venues, or locations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <Select onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
@@ -214,7 +196,7 @@ const Browse = () => {
               </SelectContent>
             </Select>
             <Select onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
                 <SelectValue placeholder="Show Type" />
               </SelectTrigger>
               <SelectContent>
@@ -230,14 +212,14 @@ const Browse = () => {
 
         {/* View Mode Tabs */}
         <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-white/10 backdrop-blur-sm">
-            <TabsTrigger value="list" className="data-[state=active]:bg-purple-500">
+          <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
+            <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               List View
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="data-[state=active]:bg-purple-500">
+            <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="map" className="data-[state=active]:bg-purple-500">
+            <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Map
             </TabsTrigger>
           </TabsList>
