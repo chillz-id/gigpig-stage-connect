@@ -27,25 +27,27 @@ const App = () => {
       <ThemeProvider>
         <UserProvider>
           <TooltipProvider>
-            <div className="min-h-screen bg-background text-foreground">
+            <div className="min-h-screen transition-colors duration-300">
               <Toaster />
               <Sonner />
               <BrowserRouter>
                 <Navigation />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/browse" element={<Browse />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/create-event" element={<CreateEvent />} />
-                  <Route path="/applications" element={<Applications />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/promoter-settings" element={<PromoterSettings />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <main className="transition-colors duration-300">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/browse" element={<Browse />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/create-event" element={<CreateEvent />} />
+                    <Route path="/applications" element={<Applications />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/promoter-settings" element={<PromoterSettings />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
               </BrowserRouter>
             </div>
           </TooltipProvider>
