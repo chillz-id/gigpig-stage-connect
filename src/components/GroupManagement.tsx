@@ -52,7 +52,8 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
     name: '',
     description: '',
     color: '#8B5CF6',
-    permissions: [] as string[]
+    permissions: [] as string[],
+    isDefault: false
   });
 
   const availablePermissions = [
@@ -73,7 +74,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
   const handleCreateGroup = () => {
     if (newGroup.name.trim()) {
       onCreateGroup(newGroup);
-      setNewGroup({ name: '', description: '', color: '#8B5CF6', permissions: [] });
+      setNewGroup({ name: '', description: '', color: '#8B5CF6', permissions: [], isDefault: false });
       setIsCreateDialogOpen(false);
     }
   };
