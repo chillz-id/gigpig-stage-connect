@@ -197,7 +197,7 @@ const SubscriptionManager = () => {
                 <Button
                   size="sm"
                   onClick={openCustomerPortal}
-                  disabled={portal Loading}
+                  disabled={portalLoading}
                   className="mt-2 bg-yellow-600 hover:bg-yellow-700"
                 >
                   Update Payment Method
