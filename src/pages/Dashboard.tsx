@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import SubscriptionManager from '@/components/SubscriptionManager';
 
 const Dashboard = () => {
   const { user, profile, hasRole } = useAuth();
@@ -85,6 +85,9 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Subscription Manager */}
+      <SubscriptionManager />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -242,6 +245,9 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Subscription Manager */}
+      <SubscriptionManager />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

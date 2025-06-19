@@ -1,13 +1,51 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Zap, Crown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Star, Zap, Crown, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Pricing = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
+
+  const handleSubscribe = async (planType: string) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to subscribe to a plan.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(planType);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planType, discountCode: discountCode || undefined },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create checkout session",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const plans = [
     {
@@ -29,12 +67,14 @@ const Pricing = () => {
         'No verified badge',
       ],
       buttonText: 'Current Plan',
-      isCurrentPlan: profile?.membership === 'free',
+      isCurrentPlan: !profile?.membership || profile?.membership === 'free',
       popular: false,
+      planType: 'free',
     },
     {
-      name: 'Pro',
-      price: '$19',
+      name: 'Verified Comedian',
+      price: '$20',
+      currency: 'AUD',
       period: 'month',
       description: 'For serious comedians',
       icon: Zap,
@@ -46,19 +86,22 @@ const Pricing = () => {
         'Priority support',
         'Advanced analytics',
         'Professional profile',
+        '14-day free trial',
       ],
-      buttonText: profile?.membership === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
-      isCurrentPlan: profile?.membership === 'pro',
+      buttonText: profile?.membership === 'verified_comedian' ? 'Current Plan' : 'Start Free Trial',
+      isCurrentPlan: profile?.membership === 'verified_comedian',
       popular: true,
+      planType: 'verified_comedian',
     },
     {
-      name: 'Premium',
-      price: '$49',
+      name: 'Promoter',
+      price: '$25',
+      currency: 'AUD',
       period: 'month',
       description: 'For promoters and venues',
       icon: Crown,
       features: [
-        'Everything in Pro',
+        'Everything in Verified Comedian',
         'Create unlimited events',
         'Advanced booking management',
         'Revenue analytics',
@@ -66,10 +109,12 @@ const Pricing = () => {
         'Custom branding',
         'API access',
         'Priority listing',
+        '14-day free trial',
       ],
-      buttonText: profile?.membership === 'premium' ? 'Current Plan' : 'Upgrade to Premium',
-      isCurrentPlan: profile?.membership === 'premium',
+      buttonText: profile?.membership === 'promoter' ? 'Current Plan' : 'Start Free Trial',
+      isCurrentPlan: profile?.membership === 'promoter',
       popular: false,
+      planType: 'promoter',
     },
   ];
 
@@ -81,6 +126,26 @@ const Pricing = () => {
           <p className="text-xl text-purple-100 max-w-2xl mx-auto">
             Whether you're just starting out or running multiple venues, we have the perfect plan for your comedy career.
           </p>
+          <p className="text-sm text-purple-200 mt-2">
+            All paid plans include a 14-day free trial • Prices in AUD
+          </p>
+        </div>
+
+        {/* Discount Code Input */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            <label htmlFor="discount" className="block text-sm font-medium text-white mb-2">
+              Have a discount code?
+            </label>
+            <Input
+              id="discount"
+              type="text"
+              placeholder="Enter discount code"
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value)}
+              className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -107,6 +172,7 @@ const Pricing = () => {
                   <CardDescription className="text-purple-100">{plan.description}</CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">{plan.price}</span>
+                    {plan.currency && <span className="text-sm text-purple-200"> {plan.currency}</span>}
                     {plan.period && <span className="text-purple-200">/{plan.period}</span>}
                   </div>
                 </CardHeader>
@@ -138,9 +204,17 @@ const Pricing = () => {
                           ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
                           : 'bg-white/20 hover:bg-white/30'
                     }`}
-                    disabled={plan.isCurrentPlan}
+                    disabled={plan.isCurrentPlan || loading === plan.planType}
+                    onClick={() => plan.planType !== 'free' && handleSubscribe(plan.planType)}
                   >
-                    {plan.buttonText}
+                    {loading === plan.planType ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      plan.buttonText
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -154,19 +228,37 @@ const Pricing = () => {
           <div className="space-y-6">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardHeader>
-                <CardTitle className="text-lg">Can I change plans anytime?</CardTitle>
+                <CardTitle className="text-lg">What's included in the free trial?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-purple-100">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+                <p className="text-purple-100">All paid plans include a 14-day free trial with full access to all features. No credit card required upfront.</p>
               </CardContent>
             </Card>
             
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">Can I change plans anytime?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-purple-100">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and billing is prorated.</p>
+              </CardContent>
+            </Card>
+
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardHeader>
                 <CardTitle className="text-lg">What happens if I cancel?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-purple-100">You'll keep access to your current plan until the end of your billing period, then automatically switch to our Free plan.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">Do you accept discount codes?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-purple-100">Yes! Enter your discount code above before selecting a plan. Codes can provide percentage discounts or extended trial periods.</p>
               </CardContent>
             </Card>
           </div>
