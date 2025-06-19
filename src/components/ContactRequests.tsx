@@ -56,7 +56,17 @@ export const ContactRequests: React.FC = () => {
 
       if (error) throw error;
       
-      return data || [];
+      // Transform the data to match our interface with proper type assertion
+      return (data || []).map(request => ({
+        ...request,
+        request_type: request.request_type as 'manager' | 'agent' | 'both',
+        status: request.status as 'pending' | 'approved' | 'denied',
+        requester: request.requester ? {
+          name: request.requester.name || 'Unknown User',
+          avatar_url: request.requester.avatar_url || '',
+          is_verified: request.requester.is_verified || false
+        } : undefined
+      })) as ContactRequest[];
     }
   });
 
