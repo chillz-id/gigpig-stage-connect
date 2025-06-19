@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,15 +56,7 @@ export const ContactRequests: React.FC = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
-      return data.map(request => ({
-        ...request,
-        requester: request.requester ? {
-          name: request.requester.name || 'Unknown User',
-          avatar_url: request.requester.avatar_url || '',
-          is_verified: request.requester.is_verified || false
-        } : undefined
-      })) as ContactRequest[];
+      return data || [];
     }
   });
 
