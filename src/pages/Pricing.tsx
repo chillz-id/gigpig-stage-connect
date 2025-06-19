@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,35 +8,38 @@ import { Check, Star, Zap, Crown, Loader2, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
 const Pricing = () => {
-  const { profile, user } = useAuth();
-  const { toast } = useToast();
+  const {
+    profile,
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
   const [discountCode, setDiscountCode] = useState('');
   const [isAnnual, setIsAnnual] = useState(false);
-
   const handleSubscribe = async (planType: string) => {
     if (!user) {
       toast({
         title: "Please sign in",
         description: "You need to be signed in to subscribe to a plan.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setLoading(planType);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          planType: isAnnual ? `${planType}_annual` : planType, 
-          discountCode: discountCode || undefined 
-        },
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          planType: isAnnual ? `${planType}_annual` : planType,
+          discountCode: discountCode || undefined
+        }
       });
-
       if (error) throw error;
-
       if (data?.url) {
         window.open(data.url, '_blank');
       }
@@ -45,16 +47,14 @@ const Pricing = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to create checkout session",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(null);
     }
   };
-
   const hasComedianPro = profile?.has_comedian_pro_badge || false;
   const hasPromoterPro = profile?.has_promoter_pro_badge || false;
-
   const getPrice = (monthlyPrice: number) => {
     if (isAnnual) {
       const annualPrice = monthlyPrice * 12 * 0.75; // 25% discount
@@ -72,92 +72,51 @@ const Pricing = () => {
       billing: 'Billed monthly'
     };
   };
-
   const comedianPrice = getPrice(20);
   const promoterPrice = getPrice(25);
   const dualPrice = getPrice(40);
-
-  const plans = [
-    {
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      description: 'Perfect for getting started',
-      icon: Star,
-      features: [
-        'Apply to open mic nights',
-        'Basic profile',
-        'View public shows',
-        'Email notifications',
-        'Community access',
-      ],
-      limitations: [
-        'No paid gig applications',
-        'Limited to 5 applications/month',
-        'No verified badge',
-        'No marketplace access',
-      ],
-      buttonText: 'Current Plan',
-      isCurrentPlan: !hasComedianPro && !hasPromoterPro,
-      popular: false,
-      planType: 'free',
-    },
-    {
-      name: 'Comedian Pro',
-      price: `$${comedianPrice.price}`,
-      originalPrice: comedianPrice.originalPrice ? `$${comedianPrice.originalPrice}` : null,
-      currency: 'AUD',
-      period: comedianPrice.period,
-      billing: comedianPrice.billing,
-      description: 'For serious comedians',
-      icon: Zap,
-      features: [
-        'Everything in Free',
-        'Apply to all paid gigs',
-        'Verified comedian badge',
-        'Unlimited applications',
-        'Priority support',
-        'Advanced analytics',
-        'Professional profile',
-        'Promoter Marketplace access',
-        'Invoice management',
-        '14-day free trial',
-      ],
-      buttonText: hasComedianPro ? 'Current Plan' : 'Start Free Trial',
-      isCurrentPlan: hasComedianPro,
-      popular: true,
-      planType: 'comedian_pro',
-    },
-    {
-      name: 'Promoter Pro',
-      price: `$${promoterPrice.price}`,
-      originalPrice: promoterPrice.originalPrice ? `$${promoterPrice.originalPrice}` : null,
-      currency: 'AUD',
-      period: promoterPrice.period,
-      billing: promoterPrice.billing,
-      description: 'For promoters and venues',
-      icon: Crown,
-      features: [
-        'Create unlimited events',
-        'Advanced booking management',
-        'Revenue analytics',
-        'Comedian group management',
-        'Custom branding',
-        'API access',
-        'Priority listing',
-        'Comedian Marketplace access',
-        'Invoice management',
-        '14-day free trial',
-      ],
-      buttonText: hasPromoterPro ? 'Current Plan' : 'Start Free Trial',
-      isCurrentPlan: hasPromoterPro,
-      popular: false,
-      planType: 'promoter_pro',
-    },
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+  const plans = [{
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    description: 'Perfect for getting started',
+    icon: Star,
+    features: ['Apply to open mic nights', 'Basic profile', 'View public shows', 'Email notifications', 'Community access'],
+    limitations: ['No paid gig applications', 'Limited to 5 applications/month', 'No verified badge', 'No marketplace access'],
+    buttonText: 'Current Plan',
+    isCurrentPlan: !hasComedianPro && !hasPromoterPro,
+    popular: false,
+    planType: 'free'
+  }, {
+    name: 'Comedian Pro',
+    price: `$${comedianPrice.price}`,
+    originalPrice: comedianPrice.originalPrice ? `$${comedianPrice.originalPrice}` : null,
+    currency: 'AUD',
+    period: comedianPrice.period,
+    billing: comedianPrice.billing,
+    description: 'For serious comedians',
+    icon: Zap,
+    features: ['Everything in Free', 'Apply to all paid gigs', 'Verified comedian badge', 'Unlimited applications', 'Priority support', 'Advanced analytics', 'Professional profile', 'Promoter Marketplace access', 'Invoice management', '14-day free trial'],
+    buttonText: hasComedianPro ? 'Current Plan' : 'Start Free Trial',
+    isCurrentPlan: hasComedianPro,
+    popular: true,
+    planType: 'comedian_pro'
+  }, {
+    name: 'Promoter Pro',
+    price: `$${promoterPrice.price}`,
+    originalPrice: promoterPrice.originalPrice ? `$${promoterPrice.originalPrice}` : null,
+    currency: 'AUD',
+    period: promoterPrice.period,
+    billing: promoterPrice.billing,
+    description: 'For promoters and venues',
+    icon: Crown,
+    features: ['Create unlimited events', 'Advanced booking management', 'Revenue analytics', 'Comedian group management', 'Custom branding', 'API access', 'Priority listing', 'Comedian Marketplace access', 'Invoice management', '14-day free trial'],
+    buttonText: hasPromoterPro ? 'Current Plan' : 'Start Free Trial',
+    isCurrentPlan: hasPromoterPro,
+    popular: false,
+    planType: 'promoter_pro'
+  }];
+  return <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h1>
@@ -172,11 +131,7 @@ const Pricing = () => {
         {/* Billing Toggle */}
         <div className="flex justify-center items-center space-x-4 mb-8">
           <span className={`text-white ${!isAnnual ? 'font-semibold' : ''}`}>Monthly</span>
-          <Switch
-            checked={isAnnual}
-            onCheckedChange={setIsAnnual}
-            className="data-[state=checked]:bg-purple-500"
-          />
+          <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="data-[state=checked]:bg-purple-500" />
           <span className={`text-white ${isAnnual ? 'font-semibold' : ''}`}>
             Annual
             <Badge className="ml-2 bg-green-500">Save 25%</Badge>
@@ -184,68 +139,42 @@ const Pricing = () => {
         </div>
 
         {/* Current Plan Status */}
-        {(hasComedianPro || hasPromoterPro) && (
-          <div className="max-w-2xl mx-auto mb-8">
+        {(hasComedianPro || hasPromoterPro) && <div className="max-w-2xl mx-auto mb-8">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardHeader>
                 <CardTitle className="text-center">Your Current Plans</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {hasComedianPro && (
-                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2">
+                  {hasComedianPro && <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2">
                       <Zap className="w-4 h-4 mr-2" />
                       Comedian Pro
-                    </Badge>
-                  )}
-                  {hasPromoterPro && (
-                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2">
+                    </Badge>}
+                  {hasPromoterPro && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2">
                       <Crown className="w-4 h-4 mr-2" />
                       Promoter Pro
-                    </Badge>
-                  )}
+                    </Badge>}
                 </div>
                 <p className="text-center text-purple-200 mt-4">
-                  Total: ${((hasComedianPro ? comedianPrice.price : 0) + (hasPromoterPro ? promoterPrice.price : 0))} AUD/month
+                  Total: ${(hasComedianPro ? comedianPrice.price : 0) + (hasPromoterPro ? promoterPrice.price : 0)} AUD/month
                   {isAnnual && <span className="block text-sm">{comedianPrice.billing}</span>}
                 </p>
               </CardContent>
             </Card>
-          </div>
-        )}
+          </div>}
 
         {/* Discount Code Input */}
         <div className="max-w-md mx-auto mb-8">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
-            <label htmlFor="discount" className="block text-sm font-medium text-white mb-2">
-              Have a discount code?
-            </label>
-            <Input
-              id="discount"
-              type="text"
-              placeholder="Enter discount code"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
-            />
-          </div>
+          
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            return (
-              <Card 
-                key={plan.name}
-                className={`relative bg-white/10 backdrop-blur-sm border-white/20 text-white ${
-                  plan.popular ? 'ring-2 ring-purple-400' : ''
-                }`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-500">
+          {plans.map(plan => {
+          const Icon = plan.icon;
+          return <Card key={plan.name} className={`relative bg-white/10 backdrop-blur-sm border-white/20 text-white ${plan.popular ? 'ring-2 ring-purple-400' : ''}`}>
+                {plan.popular && <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-500">
                     Most Popular
-                  </Badge>
-                )}
+                  </Badge>}
                 
                 <CardHeader className="text-center">
                   <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -255,9 +184,7 @@ const Pricing = () => {
                   <CardDescription className="text-purple-100">{plan.description}</CardDescription>
                   <div className="mt-4">
                     <div className="flex items-center justify-center gap-2">
-                      {plan.originalPrice && (
-                        <span className="text-2xl text-purple-300 line-through">{plan.originalPrice}</span>
-                      )}
+                      {plan.originalPrice && <span className="text-2xl text-purple-300 line-through">{plan.originalPrice}</span>}
                       <span className="text-4xl font-bold">{plan.price}</span>
                     </div>
                     {plan.currency && <span className="text-sm text-purple-200"> {plan.currency}</span>}
@@ -268,118 +195,66 @@ const Pricing = () => {
 
                 <CardContent className="space-y-6">
                   <div className="space-y-3">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3">
+                    {plan.features.map((feature, index) => <div key={index} className="flex items-center space-x-3">
                         <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span className="text-sm">{feature}</span>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
 
-                  {plan.limitations && (
-                    <div className="border-t border-white/10 pt-4">
+                  {plan.limitations && <div className="border-t border-white/10 pt-4">
                       <p className="text-xs text-purple-200 mb-2">Limitations:</p>
-                      {plan.limitations.map((limitation, index) => (
-                        <p key={index} className="text-xs text-purple-300">• {limitation}</p>
-                      ))}
-                    </div>
-                  )}
+                      {plan.limitations.map((limitation, index) => <p key={index} className="text-xs text-purple-300">• {limitation}</p>)}
+                    </div>}
 
-                  <Button 
-                    className={`w-full ${
-                      plan.isCurrentPlan 
-                        ? 'bg-gray-600 cursor-not-allowed' 
-                        : plan.popular 
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
-                          : 'bg-white/20 hover:bg-white/30'
-                    }`}
-                    disabled={plan.isCurrentPlan || loading === plan.planType}
-                    onClick={() => plan.planType !== 'free' && handleSubscribe(plan.planType)}
-                  >
-                    {loading === plan.planType ? (
-                      <>
+                  <Button className={`w-full ${plan.isCurrentPlan ? 'bg-gray-600 cursor-not-allowed' : plan.popular ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' : 'bg-white/20 hover:bg-white/30'}`} disabled={plan.isCurrentPlan || loading === plan.planType} onClick={() => plan.planType !== 'free' && handleSubscribe(plan.planType)}>
+                    {loading === plan.planType ? <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Loading...
-                      </>
-                    ) : (
-                      plan.buttonText
-                    )}
+                      </> : plan.buttonText}
                   </Button>
 
                   {/* Add-on option for dual subscriptions */}
-                  {plan.planType !== 'free' && (
-                    <div className="border-t border-white/10 pt-4">
-                      {plan.planType === 'comedian_pro' && !hasPromoterPro && (
-                        <div className="space-y-2">
+                  {plan.planType !== 'free' && <div className="border-t border-white/10 pt-4">
+                      {plan.planType === 'comedian_pro' && !hasPromoterPro && <div className="space-y-2">
                           <div className="text-center">
                             <div className="flex items-center justify-center gap-2">
-                              {isAnnual && (
-                                <span className="text-sm text-purple-300 line-through">${25}</span>
-                              )}
+                              {isAnnual && <span className="text-sm text-purple-300 line-through">${25}</span>}
                               <span className="text-lg font-bold">${promoterPrice.price}</span>
                               <span className="text-sm text-purple-200">/month</span>
                             </div>
                             <p className="text-xs text-purple-200">Add Promoter Pro</p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
-                            disabled={loading === 'dual_pro'}
-                            onClick={() => handleSubscribe('dual_pro')}
-                          >
-                            {loading === 'dual_pro' ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <>
+                          <Button variant="outline" size="sm" className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20" disabled={loading === 'dual_pro'} onClick={() => handleSubscribe('dual_pro')}>
+                            {loading === 'dual_pro' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <>
                                 <Plus className="w-4 h-4 mr-2" />
                                 Get Both Plans
-                              </>
-                            )}
+                              </>}
                           </Button>
-                        </div>
-                      )}
-                      {plan.planType === 'promoter_pro' && !hasComedianPro && (
-                        <div className="space-y-2">
+                        </div>}
+                      {plan.planType === 'promoter_pro' && !hasComedianPro && <div className="space-y-2">
                           <div className="text-center">
                             <div className="flex items-center justify-center gap-2">
-                              {isAnnual && (
-                                <span className="text-sm text-purple-300 line-through">${20}</span>
-                              )}
+                              {isAnnual && <span className="text-sm text-purple-300 line-through">${20}</span>}
                               <span className="text-lg font-bold">${comedianPrice.price}</span>
                               <span className="text-sm text-purple-200">/month</span>
                             </div>
                             <p className="text-xs text-purple-200">Add Comedian Pro</p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
-                            disabled={loading === 'dual_pro'}
-                            onClick={() => handleSubscribe('dual_pro')}
-                          >
-                            {loading === 'dual_pro' ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <>
+                          <Button variant="outline" size="sm" className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20" disabled={loading === 'dual_pro'} onClick={() => handleSubscribe('dual_pro')}>
+                            {loading === 'dual_pro' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <>
                                 <Plus className="w-4 h-4 mr-2" />
                                 Get Both Plans
-                              </>
-                            )}
+                              </>}
                           </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        </div>}
+                    </div>}
                 </CardContent>
-              </Card>
-            );
-          })}
+              </Card>;
+        })}
         </div>
 
         {/* Dual Plan Offer */}
-        {!hasComedianPro || !hasPromoterPro ? (
-          <div className="max-w-2xl mx-auto mt-12">
+        {!hasComedianPro || !hasPromoterPro ? <div className="max-w-2xl mx-auto mt-12">
             <Card className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-sm border-pink-300/30 text-white">
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">🎭 Get Both Plans & Save</CardTitle>
@@ -390,34 +265,22 @@ const Pricing = () => {
               <CardContent className="text-center space-y-6">
                 <div>
                   <div className="flex items-center justify-center gap-2">
-                    {isAnnual && (
-                      <span className="text-2xl text-purple-300 line-through">$45</span>
-                    )}
+                    {isAnnual && <span className="text-2xl text-purple-300 line-through">$45</span>}
                     <span className="text-4xl font-bold">${dualPrice.price}</span>
                     <span className="text-lg text-purple-200">AUD/month</span>
                   </div>
                   <p className="text-sm text-purple-200">{dualPrice.billing}</p>
                   <p className="text-green-300 font-medium">Save $5/month compared to separate plans</p>
                 </div>
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-                  disabled={hasComedianPro && hasPromoterPro || loading === 'dual_pro'}
-                  onClick={() => handleSubscribe('dual_pro')}
-                >
-                  {loading === 'dual_pro' ? (
-                    <>
+                <Button size="lg" className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600" disabled={hasComedianPro && hasPromoterPro || loading === 'dual_pro'} onClick={() => handleSubscribe('dual_pro')}>
+                  {loading === 'dual_pro' ? <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Loading...
-                    </>
-                  ) : (
-                    'Get Both Plans'
-                  )}
+                    </> : 'Get Both Plans'}
                 </Button>
               </CardContent>
             </Card>
-          </div>
-        ) : null}
+          </div> : null}
 
         {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
@@ -479,8 +342,6 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;
