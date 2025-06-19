@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Check, Star, Zap, Crown, Loader2 } from 'lucide-react';
+import { Check, Star, Zap, Crown, Loader2, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +47,9 @@ const Pricing = () => {
     }
   };
 
+  const hasComedianPro = profile?.has_comedian_pro_badge || false;
+  const hasPromoterPro = profile?.has_promoter_pro_badge || false;
+
   const plans = [
     {
       name: 'Free',
@@ -65,14 +68,15 @@ const Pricing = () => {
         'No paid gig applications',
         'Limited to 5 applications/month',
         'No verified badge',
+        'No marketplace access',
       ],
       buttonText: 'Current Plan',
-      isCurrentPlan: !profile?.membership || profile?.membership === 'free',
+      isCurrentPlan: !hasComedianPro && !hasPromoterPro,
       popular: false,
       planType: 'free',
     },
     {
-      name: 'Verified Comedian',
+      name: 'Comedian Pro',
       price: '$20',
       currency: 'AUD',
       period: 'month',
@@ -86,22 +90,24 @@ const Pricing = () => {
         'Priority support',
         'Advanced analytics',
         'Professional profile',
+        'Comedian Marketplace access',
+        'Invoice management',
+        'Add Promoter Pro for +$20/month',
         '14-day free trial',
       ],
-      buttonText: profile?.membership === 'verified_comedian' ? 'Current Plan' : 'Start Free Trial',
-      isCurrentPlan: profile?.membership === 'verified_comedian',
+      buttonText: hasComedianPro ? 'Current Plan' : 'Start Free Trial',
+      isCurrentPlan: hasComedianPro,
       popular: true,
-      planType: 'verified_comedian',
+      planType: 'comedian_pro',
     },
     {
-      name: 'Promoter',
-      price: '$25',
+      name: 'Promoter Pro',
+      price: '$20',
       currency: 'AUD',
       period: 'month',
       description: 'For promoters and venues',
       icon: Crown,
       features: [
-        'Everything in Verified Comedian',
         'Create unlimited events',
         'Advanced booking management',
         'Revenue analytics',
@@ -109,12 +115,15 @@ const Pricing = () => {
         'Custom branding',
         'API access',
         'Priority listing',
+        'Promoter Marketplace access',
+        'Invoice management',
+        'Add Comedian Pro for +$20/month',
         '14-day free trial',
       ],
-      buttonText: profile?.membership === 'promoter' ? 'Current Plan' : 'Start Free Trial',
-      isCurrentPlan: profile?.membership === 'promoter',
+      buttonText: hasPromoterPro ? 'Current Plan' : 'Start Free Trial',
+      isCurrentPlan: hasPromoterPro,
       popular: false,
-      planType: 'promoter',
+      planType: 'promoter_pro',
     },
   ];
 
@@ -127,9 +136,39 @@ const Pricing = () => {
             Whether you're just starting out or running multiple venues, we have the perfect plan for your comedy career.
           </p>
           <p className="text-sm text-purple-200 mt-2">
-            All paid plans include a 14-day free trial • Prices in AUD
+            All paid plans include a 14-day free trial • Prices in AUD • Mix and match Pro plans
           </p>
         </div>
+
+        {/* Current Plan Status */}
+        {(hasComedianPro || hasPromoterPro) && (
+          <div className="max-w-2xl mx-auto mb-8">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+              <CardHeader>
+                <CardTitle className="text-center">Your Current Plans</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {hasComedianPro && (
+                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2">
+                      <Zap className="w-4 h-4 mr-2" />
+                      Comedian Pro
+                    </Badge>
+                  )}
+                  {hasPromoterPro && (
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Promoter Pro
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-center text-purple-200 mt-4">
+                  Total: ${((hasComedianPro ? 20 : 0) + (hasPromoterPro ? 20 : 0))} AUD/month
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Discount Code Input */}
         <div className="max-w-md mx-auto mb-8">
@@ -216,16 +255,127 @@ const Pricing = () => {
                       plan.buttonText
                     )}
                   </Button>
+
+                  {/* Add-on option for dual subscriptions */}
+                  {plan.planType !== 'free' && (
+                    <div className="border-t border-white/10 pt-4">
+                      {plan.planType === 'comedian_pro' && !hasPromoterPro && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
+                          disabled={loading === 'promoter_pro_addon'}
+                          onClick={() => handleSubscribe('promoter_pro_addon')}
+                        >
+                          {loading === 'promoter_pro_addon' ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Promoter Pro (+$20/mo)
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      {plan.planType === 'promoter_pro' && !hasComedianPro && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
+                          disabled={loading === 'comedian_pro_addon'}
+                          onClick={() => handleSubscribe('comedian_pro_addon')}
+                        >
+                          {loading === 'comedian_pro_addon' ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Comedian Pro (+$20/mo)
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
         </div>
 
+        {/* Dual Plan Offer */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <Card className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-sm border-pink-300/30 text-white">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">🎭 Ultimate Comedy Package</CardTitle>
+              <CardDescription className="text-purple-100 text-lg">
+                Get both Comedian Pro + Promoter Pro for the complete comedy experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-6">
+              <div className="text-4xl font-bold">
+                $40 <span className="text-lg text-purple-200">AUD/month</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Comedian Pro Features
+                  </h4>
+                  <ul className="text-sm space-y-1 text-purple-200">
+                    <li>• Verified comedian badge</li>
+                    <li>• Unlimited gig applications</li>
+                    <li>• Comedian Marketplace access</li>
+                    <li>• Invoice management</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Promoter Pro Features
+                  </h4>
+                  <ul className="text-sm space-y-1 text-purple-200">
+                    <li>• Create unlimited events</li>
+                    <li>• Advanced booking management</li>
+                    <li>• Promoter Marketplace access</li>
+                    <li>• Custom branding & API access</li>
+                  </ul>
+                </div>
+              </div>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                disabled={hasComedianPro && hasPromoterPro || loading === 'dual_pro'}
+                onClick={() => handleSubscribe('dual_pro')}
+              >
+                {loading === 'dual_pro' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : hasComedianPro && hasPromoterPro ? (
+                  'You Have Both Plans!'
+                ) : (
+                  'Get Ultimate Package'
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-8">Frequently Asked Questions</h2>
           <div className="space-y-6">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">Can I have both Comedian Pro and Promoter Pro?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-purple-100">Absolutely! You can subscribe to both plans for $40 AUD/month total, or add one to the other for just +$20/month.</p>
+              </CardContent>
+            </Card>
+
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardHeader>
                 <CardTitle className="text-lg">What's included in the free trial?</CardTitle>
@@ -240,25 +390,16 @@ const Pricing = () => {
                 <CardTitle className="text-lg">Can I change plans anytime?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-purple-100">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and billing is prorated.</p>
+                <p className="text-purple-100">Yes! You can upgrade, downgrade, or add/remove plan features at any time. Changes take effect immediately and billing is prorated.</p>
               </CardContent>
             </Card>
 
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardHeader>
-                <CardTitle className="text-lg">What happens if I cancel?</CardTitle>
+                <CardTitle className="text-lg">What are the Marketplaces?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-purple-100">You'll keep access to your current plan until the end of your billing period, then automatically switch to our Free plan.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-              <CardHeader>
-                <CardTitle className="text-lg">Do you accept discount codes?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-purple-100">Yes! Enter your discount code above before selecting a plan. Codes can provide percentage discounts or extended trial periods.</p>
+                <p className="text-purple-100">The Comedian Marketplace connects you with gig opportunities, while the Promoter Marketplace helps you find and book talent. Each is exclusive to their respective Pro plan.</p>
               </CardContent>
             </Card>
           </div>

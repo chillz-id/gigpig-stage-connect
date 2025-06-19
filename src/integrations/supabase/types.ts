@@ -206,6 +206,8 @@ export type Database = {
           bio: string | null
           created_at: string | null
           email: string
+          has_comedian_pro_badge: boolean | null
+          has_promoter_pro_badge: boolean | null
           id: string
           is_verified: boolean | null
           location: string | null
@@ -219,6 +221,8 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           email: string
+          has_comedian_pro_badge?: boolean | null
+          has_promoter_pro_badge?: boolean | null
           id: string
           is_verified?: boolean | null
           location?: string | null
@@ -232,6 +236,8 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           email?: string
+          has_comedian_pro_badge?: boolean | null
+          has_promoter_pro_badge?: boolean | null
           id?: string
           is_verified?: boolean | null
           location?: string | null
@@ -247,6 +253,8 @@ export type Database = {
           created_at: string | null
           current_period_end: string | null
           current_period_start: string | null
+          has_comedian_pro: boolean | null
+          has_promoter_pro: boolean | null
           id: string
           plan_type: string | null
           status: string | null
@@ -259,6 +267,8 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          has_comedian_pro?: boolean | null
+          has_promoter_pro?: boolean | null
           id?: string
           plan_type?: string | null
           status?: string | null
@@ -271,6 +281,8 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          has_comedian_pro?: boolean | null
+          has_promoter_pro?: boolean | null
           id?: string
           plan_type?: string | null
           status?: string | null

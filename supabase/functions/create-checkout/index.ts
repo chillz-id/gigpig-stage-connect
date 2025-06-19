@@ -53,10 +53,13 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    // Define pricing
+    // Define pricing for new plan structure
     const prices = {
-      verified_comedian: { amount: 2000, name: "Verified Comedian" }, // $20 AUD
-      promoter: { amount: 2500, name: "Promoter" } // $25 AUD
+      comedian_pro: { amount: 2000, name: "Comedian Pro" }, // $20 AUD
+      promoter_pro: { amount: 2000, name: "Promoter Pro" }, // $20 AUD
+      comedian_pro_addon: { amount: 2000, name: "Comedian Pro Add-on" }, // $20 AUD
+      promoter_pro_addon: { amount: 2000, name: "Promoter Pro Add-on" }, // $20 AUD
+      dual_pro: { amount: 4000, name: "Comedian Pro + Promoter Pro" } // $40 AUD
     };
 
     const selectedPrice = prices[planType as keyof typeof prices];

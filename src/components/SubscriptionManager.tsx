@@ -3,14 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, Calendar, AlertCircle } from 'lucide-react';
+import { Loader2, CreditCard, Calendar, AlertCircle, Zap, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionData {
   subscribed: boolean;
-  plan_type: string;
+  has_comedian_pro: boolean;
+  has_promoter_pro: boolean;
   status: string;
   current_period_end?: string;
 }
@@ -71,14 +72,6 @@ const SubscriptionManager = () => {
 
   if (!user) return null;
 
-  const getPlanDisplayName = (planType: string) => {
-    switch (planType) {
-      case 'verified_comedian': return 'Verified Comedian';
-      case 'promoter': return 'Promoter';
-      default: return 'Free';
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500';
@@ -87,6 +80,13 @@ const SubscriptionManager = () => {
       case 'canceled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const getTotalCost = () => {
+    if (!subscription) return 0;
+    const comedianCost = subscription.has_comedian_pro ? 20 : 0;
+    const promoterCost = subscription.has_promoter_pro ? 20 : 0;
+    return comedianCost + promoterCost;
   };
 
   return (
@@ -120,22 +120,52 @@ const SubscriptionManager = () => {
       <CardContent className="space-y-4">
         {subscription ? (
           <>
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              {/* Current Plans */}
               <div>
-                <p className="font-medium text-foreground">
-                  Current Plan: {getPlanDisplayName(subscription.plan_type)}
-                </p>
-                {subscription.current_period_end && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                    <Calendar className="w-3 h-3" />
-                    {subscription.status === 'active' ? 'Renews' : 'Expires'} on{' '}
-                    {new Date(subscription.current_period_end).toLocaleDateString()}
-                  </p>
-                )}
+                <p className="font-medium text-foreground mb-2">Current Plans:</p>
+                <div className="flex flex-wrap gap-2">
+                  {subscription.has_comedian_pro && (
+                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Comedian Pro
+                    </Badge>
+                  )}
+                  {subscription.has_promoter_pro && (
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Promoter Pro
+                    </Badge>
+                  )}
+                  {!subscription.has_comedian_pro && !subscription.has_promoter_pro && (
+                    <Badge variant="outline">Free Plan</Badge>
+                  )}
+                </div>
               </div>
-              <Badge className={getStatusColor(subscription.status)}>
-                {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
-              </Badge>
+
+              {/* Total Cost */}
+              {(subscription.has_comedian_pro || subscription.has_promoter_pro) && (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Monthly Total:</p>
+                  <p className="font-medium">${getTotalCost()} AUD/month</p>
+                </div>
+              )}
+
+              {/* Status and Period */}
+              <div className="flex items-center justify-between">
+                <div>
+                  {subscription.current_period_end && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {subscription.status === 'active' ? 'Renews' : 'Expires'} on{' '}
+                      {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                <Badge className={getStatusColor(subscription.status)}>
+                  {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                </Badge>
+              </div>
             </div>
 
             {subscription.subscribed && subscription.status === 'active' && (
@@ -167,7 +197,7 @@ const SubscriptionManager = () => {
                 <Button
                   size="sm"
                   onClick={openCustomerPortal}
-                  disabled={portalLoading}
+                  disabled={portal Loading}
                   className="mt-2 bg-yellow-600 hover:bg-yellow-700"
                 >
                   Update Payment Method
