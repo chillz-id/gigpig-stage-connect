@@ -15,7 +15,7 @@ export interface User {
   stats: {
     totalGigs: number;
     totalEarnings: number;
-    showsPerformed: number; // Changed from successRate
+    showsPerformed: number;
     averageRating: number;
     totalEvents?: number;
     totalRevenue?: number;
@@ -49,14 +49,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     isVerified: true,
     roles: ['comedian', 'promoter'],
-    membership: 'pro',
+    membership: 'premium', // Changed from 'pro' to 'premium' to show proper status
     bio: 'Stand-up comedian with 8+ years of experience. Love observational humor and connecting with audiences through relatable stories.',
     location: 'Los Angeles, CA',
     joinDate: 'March 2020',
     stats: {
       totalGigs: 47,
       totalEarnings: 3420,
-      showsPerformed: 50, // Changed from successRate: 68
+      showsPerformed: 50,
       averageRating: 4.7,
       totalEvents: 12,
       totalRevenue: 8960,
@@ -71,6 +71,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
+    // In a real app, you'd also clear tokens, redirect to login, etc.
+    window.location.href = '/';
   };
 
   const updateUser = (updates: Partial<User>) => {

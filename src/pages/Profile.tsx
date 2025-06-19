@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,15 +11,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
-import { CalendarSync } from '@/components/CalendarSync';
+import { CalendarView } from '@/components/CalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
-import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy } from 'lucide-react';
+import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -40,6 +41,25 @@ const Profile = () => {
     });
   };
 
+  const handleLogout = () => {
+    toast({
+      title: "Signed Out",
+      description: "You have been successfully signed out.",
+    });
+    logout();
+  };
+
+  const getMembershipBadgeColor = (membership: string) => {
+    switch (membership) {
+      case 'premium':
+        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
+      case 'pro':
+        return 'bg-gradient-to-r from-blue-500 to-purple-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -55,7 +75,7 @@ const Profile = () => {
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold">{user.name}</h1>
                   {user.isVerified && <Shield className="w-6 h-6 text-blue-500" />}
-                  <Badge className="bg-primary text-primary-foreground">
+                  <Badge className={getMembershipBadgeColor(user.membership)}>
                     {user.membership.toUpperCase()}
                   </Badge>
                 </div>
@@ -83,6 +103,10 @@ const Profile = () => {
                 <Button variant="outline" size="sm">
                   <Award className="w-4 h-4 mr-2" />
                   Vouch
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
                 </Button>
               </div>
             </div>
@@ -159,7 +183,7 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="calendar">
-            <CalendarSync />
+            <CalendarView />
           </TabsContent>
 
           <TabsContent value="requests">
