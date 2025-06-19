@@ -9,16 +9,351 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_at: string | null
+          comedian_id: string
+          event_id: string
+          id: string
+          message: string | null
+          responded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          comedian_id: string
+          event_id: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          comedian_id?: string
+          event_id?: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          comedian_slots: number | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          duration_minutes: number | null
+          event_date: string
+          id: string
+          pay_per_comedian: number | null
+          promoter_id: string
+          requirements: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          venue_address: string
+          venue_name: string
+        }
+        Insert: {
+          comedian_slots?: number | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date: string
+          id?: string
+          pay_per_comedian?: number | null
+          promoter_id: string
+          requirements?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          venue_address: string
+          venue_name: string
+        }
+        Update: {
+          comedian_slots?: number | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date?: string
+          id?: string
+          pay_per_comedian?: number | null
+          promoter_id?: string
+          requirements?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          venue_address?: string
+          venue_name?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          subject: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          subject?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          status: string | null
+          stripe_session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string
+          id: string
+          is_verified: boolean | null
+          location: string | null
+          membership: string | null
+          name: string | null
+          stage_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          is_verified?: boolean | null
+          location?: string | null
+          membership?: string | null
+          name?: string | null
+          stage_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_verified?: boolean | null
+          location?: string | null
+          membership?: string | null
+          name?: string | null
+          stage_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_type: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vouches: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          rating: number | null
+          vouchee_id: string
+          voucher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          rating?: number | null
+          vouchee_id: string
+          voucher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          rating?: number | null
+          vouchee_id?: string
+          voucher_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: boolean
+      }
+      send_notification: {
+        Args: {
+          _user_id: string
+          _type: string
+          _title: string
+          _message: string
+          _data?: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "comedian" | "promoter" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +468,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["comedian", "promoter", "admin"],
+    },
   },
 } as const
