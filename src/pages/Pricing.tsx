@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Zap, Crown } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Pricing = () => {
-  const { user } = useUser();
+  const { profile } = useAuth();
 
   const plans = [
     {
@@ -29,7 +29,7 @@ const Pricing = () => {
         'No verified badge',
       ],
       buttonText: 'Current Plan',
-      isCurrentPlan: user?.membership === 'free',
+      isCurrentPlan: profile?.membership === 'free',
       popular: false,
     },
     {
@@ -47,8 +47,8 @@ const Pricing = () => {
         'Advanced analytics',
         'Professional profile',
       ],
-      buttonText: user?.membership === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
-      isCurrentPlan: user?.membership === 'pro',
+      buttonText: profile?.membership === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
+      isCurrentPlan: profile?.membership === 'pro',
       popular: true,
     },
     {
@@ -67,8 +67,8 @@ const Pricing = () => {
         'API access',
         'Priority listing',
       ],
-      buttonText: user?.membership === 'premium' ? 'Current Plan' : 'Upgrade to Premium',
-      isCurrentPlan: user?.membership === 'premium',
+      buttonText: profile?.membership === 'premium' ? 'Current Plan' : 'Upgrade to Premium',
+      isCurrentPlan: profile?.membership === 'premium',
       popular: false,
     },
   ];

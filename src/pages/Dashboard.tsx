@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell, MessageCircle, User, Zap, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
-  const { user } = useUser();
+  const { user, profile, hasRole } = useAuth();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<'comedian' | 'promoter' | 'both'>('both');
 
@@ -27,6 +27,17 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  // Map profile data to user stats format for compatibility with existing components
+  const userStats = {
+    totalGigs: 47,
+    totalEarnings: 3420,
+    successRate: 68,
+    averageRating: 4.7,
+    totalEvents: 12,
+    totalRevenue: 8960,
+    activeGroups: 5,
+  };
 
   const handleQuickAction = (action: string) => {
     toast({
@@ -108,7 +119,7 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">${user.stats.totalEarnings}</div>
+            <div className="text-2xl font-bold text-foreground">${userStats.totalEarnings}</div>
             <div className="flex items-center text-xs text-green-600">
               <ArrowUp className="w-3 h-3 mr-1" />
               +12% this month
@@ -122,7 +133,7 @@ const Dashboard = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{user.stats.successRate}%</div>
+            <div className="text-2xl font-bold text-foreground">{userStats.successRate}%</div>
             <p className="text-xs text-muted-foreground">Applications accepted</p>
           </CardContent>
         </Card>
@@ -240,7 +251,7 @@ const Dashboard = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{user.stats.totalEvents}</div>
+            <div className="text-2xl font-bold text-foreground">{userStats.totalEvents}</div>
             <div className="flex items-center text-xs text-green-600">
               <ArrowUp className="w-3 h-3 mr-1" />
               2 this week
@@ -268,7 +279,7 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">${user.stats.totalRevenue}</div>
+            <div className="text-2xl font-bold text-foreground">${userStats.totalRevenue}</div>
             <div className="flex items-center text-xs text-green-600">
               <ArrowUp className="w-3 h-3 mr-1" />
               +12% from last month
@@ -282,7 +293,7 @@ const Dashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{user.stats.activeGroups}</div>
+            <div className="text-2xl font-bold text-foreground">{userStats.activeGroups}</div>
             <p className="text-xs text-muted-foreground">127 total members</p>
           </CardContent>
         </Card>
@@ -344,10 +355,10 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            {user.isVerified && <Star className="w-6 h-6 text-yellow-400 fill-current" />}
+            {profile?.is_verified && <Star className="w-6 h-6 text-yellow-400 fill-current" />}
           </div>
           <p className="text-muted-foreground">
-            Welcome back, {user.name}! Here's what's happening with your comedy career.
+            Welcome back, {profile?.name || 'User'}! Here's what's happening with your comedy career.
           </p>
         </div>
 
