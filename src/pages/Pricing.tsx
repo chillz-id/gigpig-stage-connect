@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Check, Star, Zap, Crown, Loader2, Plus, Users } from 'lucide-react';
+import { Check, Star, Zap, Crown, Loader2, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +12,6 @@ const Pricing = () => {
   const { profile, user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
-  const [discountCode, setDiscountCode] = useState('');
   const [isAnnual, setIsAnnual] = useState(false);
 
   const handleSubscribe = async (planType: string) => {
@@ -31,8 +28,7 @@ const Pricing = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          planType: isAnnual ? `${planType}_annual` : planType,
-          discountCode: discountCode || undefined
+          planType: isAnnual ? `${planType}_annual` : planType
         }
       });
 
@@ -234,19 +230,6 @@ const Pricing = () => {
             </Card>
           </div>
         )}
-
-        {/* Discount Code Input */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Discount Code (Applied in Stripe Checkout)</label>
-            <Input
-              placeholder="Enter discount code"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              className="bg-card border-border text-foreground"
-            />
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => {

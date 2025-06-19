@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,7 +95,7 @@ export const VouchSystem: React.FC = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <ThumbsUp className="w-5 h-5" />
-                Vouch System
+                Current Vouches
               </CardTitle>
               <CardDescription>
                 Give and receive recommendations from verified comedians and promoters
@@ -297,7 +296,7 @@ export const VouchSystem: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-medium">{vouch.from.name}</span>
-                        {vouch.from.verified && <Shield className="w-4 h-4 text-blue-500" />}
+                        {vouch.from.verified &&  <Shield className="w-4 h-4 text-blue-500" />}
                         <Badge variant="outline">{vouch.from.role}</Badge>
                         <span className="text-sm text-muted-foreground">vouched for</span>
                         <span className="font-medium">{vouch.to.name}</span>
