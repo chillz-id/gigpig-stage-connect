@@ -85,7 +85,7 @@ const SubscriptionManager = () => {
   const getTotalCost = () => {
     if (!subscription) return 0;
     const comedianCost = subscription.has_comedian_pro ? 20 : 0;
-    const promoterCost = subscription.has_promoter_pro ? 20 : 0;
+    const promoterCost = subscription.has_promoter_pro ? 25 : 0;
     return comedianCost + promoterCost;
   };
 
@@ -128,13 +128,13 @@ const SubscriptionManager = () => {
                   {subscription.has_comedian_pro && (
                     <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
                       <Zap className="w-3 h-3 mr-1" />
-                      Comedian Pro
+                      Comedian Pro - $20/month
                     </Badge>
                   )}
                   {subscription.has_promoter_pro && (
                     <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
                       <Crown className="w-3 h-3 mr-1" />
-                      Promoter Pro
+                      Promoter Pro - $25/month
                     </Badge>
                   )}
                   {!subscription.has_comedian_pro && !subscription.has_promoter_pro && (
@@ -147,7 +147,12 @@ const SubscriptionManager = () => {
               {(subscription.has_comedian_pro || subscription.has_promoter_pro) && (
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">Monthly Total:</p>
-                  <p className="font-medium">${getTotalCost()} AUD/month</p>
+                  <p className="font-medium">
+                    ${getTotalCost()} AUD/month
+                    {subscription.has_comedian_pro && subscription.has_promoter_pro && (
+                      <span className="text-green-600 text-xs ml-2">($5/month savings)</span>
+                    )}
+                  </p>
                 </div>
               )}
 

@@ -54,16 +54,22 @@ serve(async (req) => {
     }
 
     // Define pricing for new plan structure
-    const prices = {
+    const isAnnual = planType.includes('_annual');
+    const basePlanType = planType.replace('_annual', '');
+    
+    const monthlyPrices = {
       comedian_pro: { amount: 2000, name: "Comedian Pro" }, // $20 AUD
-      promoter_pro: { amount: 2000, name: "Promoter Pro" }, // $20 AUD
-      comedian_pro_addon: { amount: 2000, name: "Comedian Pro Add-on" }, // $20 AUD
-      promoter_pro_addon: { amount: 2000, name: "Promoter Pro Add-on" }, // $20 AUD
-      dual_pro: { amount: 4000, name: "Comedian Pro + Promoter Pro" } // $40 AUD
+      promoter_pro: { amount: 2500, name: "Promoter Pro" }, // $25 AUD
+      dual_pro: { amount: 4000, name: "Comedian Pro + Promoter Pro" } // $40 AUD (saving $5)
     };
 
-    const selectedPrice = prices[planType as keyof typeof prices];
+    const selectedPrice = monthlyPrices[basePlanType as keyof typeof monthlyPrices];
     if (!selectedPrice) throw new Error("Invalid plan type");
+
+    // Calculate annual pricing (25% discount)
+    const finalAmount = isAnnual ? Math.round(selectedPrice.amount * 12 * 0.75) : selectedPrice.amount;
+    const interval = isAnnual ? "year" : "month";
+    const planName = isAnnual ? `${selectedPrice.name} (Annual - 25% Off)` : selectedPrice.name;
 
     // Handle discount codes if provided
     let couponId;
@@ -86,11 +92,11 @@ serve(async (req) => {
           price_data: {
             currency: "aud",
             product_data: { 
-              name: `${selectedPrice.name} Subscription`,
-              description: `Monthly subscription for ${selectedPrice.name} access`
+              name: `${planName} Subscription`,
+              description: `${interval.charAt(0).toUpperCase() + interval.slice(1)}ly subscription for ${selectedPrice.name} access`
             },
-            unit_amount: selectedPrice.amount,
-            recurring: { interval: "month" },
+            unit_amount: finalAmount,
+            recurring: { interval },
           },
           quantity: 1,
         },
@@ -103,7 +109,8 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/pricing?cancelled=true`,
       metadata: {
         user_id: user.id,
-        plan_type: planType,
+        plan_type: basePlanType,
+        billing_interval: interval,
       },
     };
 
