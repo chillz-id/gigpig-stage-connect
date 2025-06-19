@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,8 @@ import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
 import { CalendarSync } from '@/components/CalendarSync';
 import { ContactRequests } from '@/components/ContactRequests';
-import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare } from 'lucide-react';
+import SubscriptionManager from '@/components/SubscriptionManager';
+import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -70,8 +70,8 @@ const Profile = () => {
                     <span>Member since {user.joinDate}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span>{user.stats.successRate}% success rate</span>
+                    <Trophy className="w-4 h-4 text-yellow-400 fill-current" />
+                    <span>{user.stats.showsPerformed} shows performed</span>
                   </div>
                 </div>
               </div>
@@ -214,6 +214,9 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
+            {/* Subscription Manager */}
+            <SubscriptionManager />
+
             <Card className="professional-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -288,10 +291,10 @@ const Profile = () => {
 
               <Card className="professional-card">
                 <CardHeader>
-                  <CardTitle className="text-lg">Success Rate</CardTitle>
+                  <CardTitle className="text-lg">Shows Performed</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{user.stats.successRate}%</div>
+                  <div className="text-3xl font-bold">{user.stats.showsPerformed}</div>
                   <p className="text-sm text-muted-foreground">All time</p>
                 </CardContent>
               </Card>

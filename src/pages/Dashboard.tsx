@@ -3,12 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell, MessageCircle, User, Zap, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell, MessageCircle, User, Zap, TrendingUp, ArrowUp, ArrowDown, Trophy } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import SubscriptionManager from '@/components/SubscriptionManager';
 
 const Dashboard = () => {
   const { user, profile, hasRole } = useAuth();
@@ -32,7 +31,7 @@ const Dashboard = () => {
   const userStats = {
     totalGigs: 47,
     totalEarnings: 3420,
-    successRate: 68,
+    showsPerformed: 50, // Changed from successRate
     averageRating: 4.7,
     totalEvents: 12,
     totalRevenue: 8960,
@@ -86,9 +85,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Subscription Manager */}
-      <SubscriptionManager />
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="professional-card">
@@ -132,12 +128,12 @@ const Dashboard = () => {
         
         <Card className="professional-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Success Rate</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-foreground">Shows Performed</CardTitle>
+            <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{userStats.successRate}%</div>
-            <p className="text-xs text-muted-foreground">Applications accepted</p>
+            <div className="text-2xl font-bold text-foreground">{userStats.showsPerformed}</div>
+            <p className="text-xs text-muted-foreground">Total performances</p>
           </CardContent>
         </Card>
       </div>
@@ -245,9 +241,6 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Subscription Manager */}
-      <SubscriptionManager />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

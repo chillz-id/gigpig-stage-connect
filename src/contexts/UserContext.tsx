@@ -15,7 +15,7 @@ export interface User {
   stats: {
     totalGigs: number;
     totalEarnings: number;
-    successRate: number;
+    showsPerformed: number; // Changed from successRate
     averageRating: number;
     totalEvents?: number;
     totalRevenue?: number;
@@ -56,7 +56,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     stats: {
       totalGigs: 47,
       totalEarnings: 3420,
-      successRate: 68,
+      showsPerformed: 50, // Changed from successRate: 68
       averageRating: 4.7,
       totalEvents: 12,
       totalRevenue: 8960,
