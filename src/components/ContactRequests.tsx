@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ export const ContactRequests: React.FC = () => {
         .from('contact_requests')
         .select(`
           *,
-          requester:requester_id (
+          profiles!contact_requests_requester_id_fkey (
             name,
             avatar_url,
             is_verified
@@ -55,7 +54,16 @@ export const ContactRequests: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as ContactRequest[];
+      
+      // Transform the data to match our interface
+      return data.map(request => ({
+        ...request,
+        requester: request.profiles ? {
+          name: request.profiles.name || 'Unknown User',
+          avatar_url: request.profiles.avatar_url || '',
+          is_verified: request.profiles.is_verified || false
+        } : undefined
+      })) as ContactRequest[];
     }
   });
 
