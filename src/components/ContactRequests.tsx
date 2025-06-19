@@ -44,7 +44,7 @@ export const ContactRequests: React.FC = () => {
         .from('contact_requests')
         .select(`
           *,
-          profiles!contact_requests_requester_id_fkey (
+          requester:profiles!contact_requests_requester_id_fkey (
             name,
             avatar_url,
             is_verified
@@ -58,10 +58,10 @@ export const ContactRequests: React.FC = () => {
       // Transform the data to match our interface
       return data.map(request => ({
         ...request,
-        requester: request.profiles ? {
-          name: request.profiles.name || 'Unknown User',
-          avatar_url: request.profiles.avatar_url || '',
-          is_verified: request.profiles.is_verified || false
+        requester: request.requester ? {
+          name: request.requester.name || 'Unknown User',
+          avatar_url: request.requester.avatar_url || '',
+          is_verified: request.requester.is_verified || false
         } : undefined
       })) as ContactRequest[];
     }
