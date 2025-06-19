@@ -9,6 +9,9 @@ export interface User {
   isVerified: boolean;
   roles: ('comedian' | 'promoter')[];
   membership: 'free' | 'pro' | 'premium';
+  bio?: string;
+  location?: string;
+  joinDate?: string;
   stats: {
     totalGigs: number;
     totalEarnings: number;
@@ -47,6 +50,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isVerified: true,
     roles: ['comedian', 'promoter'],
     membership: 'pro',
+    bio: 'Stand-up comedian with 8+ years of experience. Love observational humor and connecting with audiences through relatable stories.',
+    location: 'Los Angeles, CA',
+    joinDate: 'March 2020',
     stats: {
       totalGigs: 47,
       totalEarnings: 3420,
