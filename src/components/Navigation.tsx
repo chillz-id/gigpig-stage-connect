@@ -7,12 +7,12 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus } from 'lucide-react';
 import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, profile, hasRole } = useAuth();
+  const { user } = useUser();
   const { theme, setTheme } = useTheme();
 
   const toggleDarkMode = () => {
@@ -23,18 +23,10 @@ const Navigation: React.FC = () => {
     setTheme(theme === 'pig' ? 'light' : 'pig');
   };
 
-  // Map auth data to expected user structure
-  const currentUser = profile ? {
-    name: profile.name || 'User',
-    avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    isVerified: profile.is_verified,
-    membership: profile.membership,
-    roles: [
-      ...(hasRole('comedian') ? ['comedian'] : []),
-      ...(hasRole('promoter') ? ['promoter'] : []),
-      ...(hasRole('admin') ? ['admin'] : [])
-    ] as ('comedian' | 'promoter' | 'admin')[]
-  } : null;
+  // Helper function to check if user has a specific role
+  const hasRole = (role: string) => {
+    return user?.roles?.includes(role as any) || false;
+  };
 
   return (
     <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
@@ -143,7 +135,7 @@ const Navigation: React.FC = () => {
             </Link>
             
             {/* Quick Action Buttons */}
-            {currentUser && (
+            {user && (
               <div className="flex items-center space-x-3">
                 <Link to="/notifications">
                   <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
@@ -191,20 +183,20 @@ const Navigation: React.FC = () => {
             </div>
 
             {/* User Info or Auth Buttons */}
-            {currentUser ? (
+            {user ? (
               <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-xl p-3 transition-all duration-200 group">
                 <img 
-                  src={currentUser.avatar} 
-                  alt={currentUser.name}
+                  src={user.avatar} 
+                  alt={user.name}
                   className="w-10 h-10 rounded-full border-2 border-border group-hover:border-primary transition-colors duration-200"
                 />
                 <div className="text-foreground">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-semibold">{currentUser.name}</span>
-                    {currentUser.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                    <span className="text-sm font-semibold">{user.name}</span>
+                    {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
                   <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                    {currentUser.membership?.toUpperCase() || 'FREE'}
+                    {user.membership?.toUpperCase() || 'FREE'}
                   </Badge>
                 </div>
               </Link>
@@ -239,20 +231,20 @@ const Navigation: React.FC = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden pb-6 space-y-4 text-foreground animate-fade-in bg-background/95 backdrop-blur-lg border-t border-border">
             {/* User info on mobile */}
-            {currentUser && (
+            {user && (
               <div className="flex items-center space-x-3 pb-4 border-b border-border">
                 <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
+                  src={user.avatar}
+                  alt={user.name}
                   className="w-12 h-12 rounded-full border-2 border-border"
                 />
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold">{currentUser.name}</span>
-                    {currentUser.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                    <span className="font-semibold">{user.name}</span>
+                    {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
                   <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                    {currentUser.membership?.toUpperCase() || 'FREE'}
+                    {user.membership?.toUpperCase() || 'FREE'}
                   </Badge>
                 </div>
               </div>
@@ -302,7 +294,7 @@ const Navigation: React.FC = () => {
               </Button>
             </div>
 
-            {!currentUser && (
+            {!user && (
               <div className="space-y-3 pt-3 border-t border-border">
                 <Link to="/auth">
                   <Button

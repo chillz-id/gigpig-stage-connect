@@ -11,17 +11,19 @@ import { format, isSameDay, parseISO } from 'date-fns';
 export const CalendarView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Convert mock shows to have proper dates
-  const showsWithDates = mockShows.map((show, index) => ({
-    ...show,
-    dateObj: new Date(2025, 5, 19 + (index % 14)) // Spread shows across 2 weeks
-  }));
+  // Filter for only confirmed shows and convert to have proper dates
+  const confirmedShows = mockShows
+    .filter(show => show.status === 'confirmed') // Only show confirmed events
+    .map((show, index) => ({
+      ...show,
+      dateObj: new Date(2025, 5, 19 + (index % 14)) // Spread shows across 2 weeks
+    }));
 
-  const selectedDateShows = showsWithDates.filter(show => 
+  const selectedDateShows = confirmedShows.filter(show => 
     isSameDay(show.dateObj, selectedDate)
   );
 
-  const datesWithShows = showsWithDates.map(show => show.dateObj);
+  const datesWithShows = confirmedShows.map(show => show.dateObj);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -50,23 +52,23 @@ export const CalendarView: React.FC = () => {
             className="rounded-md border bg-background/50"
           />
           <div className="mt-4 text-sm text-muted-foreground">
-            Dates with shows are highlighted
+            Dates with confirmed shows are highlighted
           </div>
         </CardContent>
       </Card>
 
       <div className="space-y-4">
         <h3 className="text-xl font-semibold">
-          Shows on {format(selectedDate, 'MMMM d, yyyy')}
+          Confirmed Shows on {format(selectedDate, 'MMMM d, yyyy')}
         </h3>
         
         {selectedDateShows.length === 0 ? (
           <Card className="bg-card/50 backdrop-blur-sm border-border">
             <CardContent className="p-8 text-center">
               <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">No shows this day</h4>
+              <h4 className="text-lg font-semibold mb-2">No confirmed shows this day</h4>
               <p className="text-muted-foreground">
-                Select a highlighted date to see available shows
+                Select a highlighted date to see your confirmed shows
               </p>
             </CardContent>
           </Card>
@@ -79,7 +81,10 @@ export const CalendarView: React.FC = () => {
                     <CardTitle className="text-lg">{show.title}</CardTitle>
                     <p className="text-muted-foreground">{show.venue}</p>
                   </div>
-                  <Badge variant="outline">{show.type}</Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">{show.type}</Badge>
+                    <Badge className="bg-green-500">Confirmed</Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -94,7 +99,7 @@ export const CalendarView: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>{show.spots - show.appliedSpots} spots left</span>
+                    <span>Your confirmed slot</span>
                   </div>
                 </div>
                 
@@ -102,9 +107,9 @@ export const CalendarView: React.FC = () => {
                 
                 <div className="flex gap-2">
                   <Button className="flex-1 bg-primary hover:bg-primary/90">
-                    Apply Now
+                    View Details
                   </Button>
-                  <Button variant="outline">Details</Button>
+                  <Button variant="outline">Contact Promoter</Button>
                 </div>
               </CardContent>
             </Card>
