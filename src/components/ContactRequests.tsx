@@ -5,97 +5,110 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Mail, Phone, User, Clock, CheckCircle, X, Send } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Mail, Clock, CheckCircle, X, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface ContactRequest {
   id: string;
-  from: {
-    name: string;
-    avatar: string;
-    role: 'promoter' | 'comedian';
-    verified: boolean;
-  };
-  to: {
-    name: string;
-    avatar: string;
-  };
-  requestType: 'manager' | 'agent' | 'both';
-  message: string;
+  requester_id: string;
+  comedian_id: string;
+  request_type: 'manager' | 'agent' | 'both';
+  message: string | null;
   status: 'pending' | 'approved' | 'denied';
-  createdAt: string;
-  reason?: string;
+  created_at: string;
+  response_message: string | null;
+  requester?: {
+    name: string;
+    avatar_url: string;
+    is_verified: boolean;
+  };
 }
-
-const mockRequests: ContactRequest[] = [
-  {
-    id: '1',
-    from: {
-      name: 'Sarah Johnson',
-      avatar: '/placeholder.svg',
-      role: 'promoter',
-      verified: true
-    },
-    to: {
-      name: 'Mike Chen',
-      avatar: '/placeholder.svg'
-    },
-    requestType: 'manager',
-    message: 'Hi Mike, I have a great opportunity for a corporate event next month. Would love to connect with your management team to discuss details and booking.',
-    status: 'pending',
-    createdAt: '2024-12-18'
-  },
-  {
-    id: '2',
-    from: {
-      name: 'Emma Davis',
-      avatar: '/placeholder.svg',
-      role: 'promoter',
-      verified: true
-    },
-    to: {
-      name: 'Alex Rodriguez',
-      avatar: '/placeholder.svg'
-    },
-    requestType: 'both',
-    message: 'Hello Alex, I\'m organizing a comedy festival and would like to reach out to your representation regarding potential headlining opportunities.',
-    status: 'approved',
-    createdAt: '2024-12-17'
-  }
-];
 
 export const ContactRequests: React.FC = () => {
   const { toast } = useToast();
-  const [requests, setRequests] = useState<ContactRequest[]>(mockRequests);
+  const queryClient = useQueryClient();
   const [selectedRequest, setSelectedRequest] = useState<ContactRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [isResponseDialogOpen, setIsResponseDialogOpen] = useState(false);
 
+  // Fetch contact requests for the current user (comedian)
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ['contact-requests'],
+    queryFn: async () => {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('contact_requests')
+        .select(`
+          *,
+          requester:requester_id (
+            name,
+            avatar_url,
+            is_verified
+          )
+        `)
+        .eq('comedian_id', user.data.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as ContactRequest[];
+    }
+  });
+
+  // Mutation to approve/deny contact requests
+  const updateRequestMutation = useMutation({
+    mutationFn: async ({ 
+      requestId, 
+      status, 
+      responseMessage 
+    }: { 
+      requestId: string; 
+      status: 'approved' | 'denied'; 
+      responseMessage?: string;
+    }) => {
+      const { error } = await supabase
+        .from('contact_requests')
+        .update({ 
+          status, 
+          response_message: responseMessage,
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['contact-requests'] });
+      toast({
+        title: variables.status === 'approved' ? "Request Approved" : "Request Denied",
+        description: variables.status === 'approved' 
+          ? "Contact information has been shared with the promoter."
+          : "The contact request has been declined.",
+      });
+      setIsResponseDialogOpen(false);
+      setSelectedRequest(null);
+      setResponseMessage('');
+    }
+  });
+
   const handleApprove = (requestId: string) => {
-    setRequests(prev => prev.map(request =>
-      request.id === requestId
-        ? { ...request, status: 'approved' as const }
-        : request
-    ));
-    toast({
-      title: "Request Approved",
-      description: "Contact information has been shared with the promoter.",
+    updateRequestMutation.mutate({ 
+      requestId, 
+      status: 'approved', 
+      responseMessage: responseMessage || undefined 
     });
-    setIsResponseDialogOpen(false);
   };
 
   const handleDeny = (requestId: string, reason?: string) => {
-    setRequests(prev => prev.map(request =>
-      request.id === requestId
-        ? { ...request, status: 'denied' as const, reason }
-        : request
-    ));
-    toast({
-      title: "Request Denied",
-      description: "The contact request has been declined.",
+    updateRequestMutation.mutate({ 
+      requestId, 
+      status: 'denied', 
+      responseMessage: reason 
     });
-    setIsResponseDialogOpen(false);
   };
 
   const openResponseDialog = (request: ContactRequest) => {
@@ -116,6 +129,18 @@ export const ContactRequests: React.FC = () => {
         return 'Contact Information';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card className="professional-card">
+          <CardContent className="p-8">
+            <div className="text-center">Loading contact requests...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -144,23 +169,33 @@ export const ContactRequests: React.FC = () => {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <Avatar>
-                      <AvatarImage src={request.from.avatar} />
-                      <AvatarFallback>{request.from.name[0]}</AvatarFallback>
+                      <AvatarImage src={request.requester?.avatar_url} />
+                      <AvatarFallback>
+                        {request.requester?.name?.[0] || 'U'}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{request.from.name}</span>
-                        {request.from.verified && <Badge variant="outline">Verified</Badge>}
-                        <Badge variant="outline">{request.from.role}</Badge>
+                        <span className="font-medium">
+                          {request.requester?.name || 'Unknown User'}
+                        </span>
+                        {request.requester?.is_verified && (
+                          <Badge variant="outline">Verified</Badge>
+                        )}
+                        <Badge variant="outline">Promoter</Badge>
                         <span className="text-sm text-muted-foreground">•</span>
-                        <span className="text-sm text-muted-foreground">{request.createdAt}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                       
                       <div className="mb-3">
                         <Badge variant="secondary" className="mb-2">
-                          {getRequestTypeText(request.requestType)}
+                          {getRequestTypeText(request.request_type)}
                         </Badge>
-                        <p className="text-sm text-muted-foreground">{request.message}</p>
+                        {request.message && (
+                          <p className="text-sm text-muted-foreground">{request.message}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -170,6 +205,7 @@ export const ContactRequests: React.FC = () => {
                               size="sm"
                               onClick={() => openResponseDialog(request)}
                               className="bg-green-600 hover:bg-green-700"
+                              disabled={updateRequestMutation.isPending}
                             >
                               <CheckCircle className="w-4 h-4 mr-1" />
                               Approve
@@ -178,6 +214,7 @@ export const ContactRequests: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => handleDeny(request.id)}
+                              disabled={updateRequestMutation.isPending}
                             >
                               <X className="w-4 h-4 mr-1" />
                               Deny
@@ -218,7 +255,7 @@ export const ContactRequests: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Approve Contact Request</DialogTitle>
             <DialogDescription>
-              This will share your {selectedRequest && getRequestTypeText(selectedRequest.requestType).toLowerCase()} with {selectedRequest?.from.name}
+              This will share your {selectedRequest && getRequestTypeText(selectedRequest.request_type).toLowerCase()} with {selectedRequest?.requester?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -235,13 +272,15 @@ export const ContactRequests: React.FC = () => {
               <Button
                 onClick={() => selectedRequest && handleApprove(selectedRequest.id)}
                 className="flex-1 bg-green-600 hover:bg-green-700"
+                disabled={updateRequestMutation.isPending}
               >
                 <Send className="w-4 h-4 mr-2" />
-                Approve & Share Contact
+                {updateRequestMutation.isPending ? 'Approving...' : 'Approve & Share Contact'}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setIsResponseDialogOpen(false)}
+                disabled={updateRequestMutation.isPending}
               >
                 Cancel
               </Button>

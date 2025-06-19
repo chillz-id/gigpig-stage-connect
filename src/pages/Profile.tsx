@@ -11,6 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
+import { CalendarSync } from '@/components/CalendarSync';
+import { ContactRequests } from '@/components/ContactRequests';
 import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
@@ -89,10 +91,12 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-8 mb-8">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="vouches">Vouches</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -152,6 +156,14 @@ const Profile = () => {
 
           <TabsContent value="vouches">
             <VouchSystem />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <CalendarSync />
+          </TabsContent>
+
+          <TabsContent value="requests">
+            <ContactRequests />
           </TabsContent>
 
           <TabsContent value="media" className="space-y-6">

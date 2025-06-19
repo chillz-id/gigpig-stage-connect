@@ -47,6 +47,128 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          calendar_sync_status: string | null
+          comedian_id: string
+          created_at: string
+          event_date: string
+          event_id: string | null
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          calendar_sync_status?: string | null
+          comedian_id: string
+          created_at?: string
+          event_date: string
+          event_id?: string | null
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          venue: string
+        }
+        Update: {
+          calendar_sync_status?: string | null
+          comedian_id?: string
+          created_at?: string
+          event_date?: string
+          event_id?: string | null
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_integrations: {
+        Row: {
+          access_token: string | null
+          calendar_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          provider: string
+          refresh_token: string | null
+          settings: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          refresh_token?: string | null
+          settings?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          refresh_token?: string | null
+          settings?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contact_requests: {
+        Row: {
+          comedian_id: string
+          created_at: string
+          id: string
+          message: string | null
+          request_type: string
+          requester_id: string
+          responded_at: string | null
+          response_message: string | null
+          status: string
+        }
+        Insert: {
+          comedian_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          request_type: string
+          requester_id: string
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string
+        }
+        Update: {
+          comedian_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          request_type?: string
+          requester_id?: string
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           comedian_slots: number | null
