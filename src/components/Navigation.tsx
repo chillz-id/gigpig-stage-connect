@@ -7,12 +7,12 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus } from 'lucide-react';
 import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useUser();
+  const { user, profile, hasRole } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const toggleDarkMode = () => {
@@ -22,6 +22,19 @@ const Navigation: React.FC = () => {
   const togglePigMode = () => {
     setTheme(theme === 'pig' ? 'light' : 'pig');
   };
+
+  // Map auth data to expected user structure
+  const currentUser = profile ? {
+    name: profile.name || 'User',
+    avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    isVerified: profile.is_verified,
+    membership: profile.membership,
+    roles: [
+      ...(hasRole('comedian') ? ['comedian'] : []),
+      ...(hasRole('promoter') ? ['promoter'] : []),
+      ...(hasRole('admin') ? ['admin'] : [])
+    ] as ('comedian' | 'promoter' | 'admin')[]
+  } : null;
 
   return (
     <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
@@ -53,7 +66,7 @@ const Navigation: React.FC = () => {
                           </p>
                         </Link>
                       </NavigationMenuLink>
-                      {user?.roles.includes('promoter') && (
+                      {hasRole('promoter') && (
                         <NavigationMenuLink asChild>
                           <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                             <div className="text-sm font-semibold leading-none">Create Event</div>
@@ -81,7 +94,7 @@ const Navigation: React.FC = () => {
                           </p>
                         </Link>
                       </NavigationMenuLink>
-                      {user?.roles.includes('promoter') && (
+                      {hasRole('promoter') && (
                         <NavigationMenuLink asChild>
                           <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                             <div className="text-sm font-semibold leading-none">Applications</div>
@@ -103,7 +116,7 @@ const Navigation: React.FC = () => {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {user?.roles.includes('promoter') && (
+                {hasRole('promoter') && (
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                       Settings
@@ -130,7 +143,7 @@ const Navigation: React.FC = () => {
             </Link>
             
             {/* Quick Action Buttons */}
-            {user && (
+            {currentUser && (
               <div className="flex items-center space-x-3">
                 <Link to="/notifications">
                   <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
@@ -144,7 +157,7 @@ const Navigation: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
                   </Button>
                 </Link>
-                {user.roles.includes('promoter') && (
+                {hasRole('promoter') && (
                   <Link to="/create-event">
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                       <Plus className="w-4 h-4 mr-2" />
@@ -178,31 +191,35 @@ const Navigation: React.FC = () => {
             </div>
 
             {/* User Info or Auth Buttons */}
-            {user ? (
+            {currentUser ? (
               <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-xl p-3 transition-all duration-200 group">
                 <img 
-                  src={user.avatar} 
-                  alt={user.name}
+                  src={currentUser.avatar} 
+                  alt={currentUser.name}
                   className="w-10 h-10 rounded-full border-2 border-border group-hover:border-primary transition-colors duration-200"
                 />
                 <div className="text-foreground">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-semibold">{user.name}</span>
-                    {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                    <span className="text-sm font-semibold">{currentUser.name}</span>
+                    {currentUser.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
                   <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                    {user.membership.toUpperCase()}
+                    {currentUser.membership?.toUpperCase() || 'FREE'}
                   </Badge>
                 </div>
               </Link>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button variant="outline" className="text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg">
-                  Sign In
-                </Button>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
-                  Get Started
-                </Button>
+                <Link to="/auth">
+                  <Button variant="outline" className="text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                    Get Started
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
@@ -222,20 +239,20 @@ const Navigation: React.FC = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden pb-6 space-y-4 text-foreground animate-fade-in bg-background/95 backdrop-blur-lg border-t border-border">
             {/* User info on mobile */}
-            {user && (
+            {currentUser && (
               <div className="flex items-center space-x-3 pb-4 border-b border-border">
                 <img
-                  src={user.avatar}
-                  alt={user.name}
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
                   className="w-12 h-12 rounded-full border-2 border-border"
                 />
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold">{user.name}</span>
-                    {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                    <span className="font-semibold">{currentUser.name}</span>
+                    {currentUser.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                   </div>
                   <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                    {user.membership.toUpperCase()}
+                    {currentUser.membership?.toUpperCase() || 'FREE'}
                   </Badge>
                 </div>
               </div>
@@ -245,7 +262,7 @@ const Navigation: React.FC = () => {
             {[
               { to: '/browse', label: 'Browse Shows' },
               { to: '/dashboard', label: 'Dashboard' },
-              ...(user?.roles.includes('promoter') ? [
+              ...(hasRole('promoter') ? [
                 { to: '/create-event', label: 'Create Event' },
                 { to: '/applications', label: 'Applications' }
               ] : []),
@@ -285,21 +302,25 @@ const Navigation: React.FC = () => {
               </Button>
             </div>
 
-            {!user && (
+            {!currentUser && (
               <div className="space-y-3 pt-3 border-t border-border">
-                <Button
-                  variant="outline"
-                  className="w-full text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Get Started
-                </Button>
+                <Link to="/auth">
+                  <Button
+                    variant="outline"
+                    className="w-full text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
