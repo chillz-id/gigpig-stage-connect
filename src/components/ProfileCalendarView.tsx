@@ -5,59 +5,41 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2 } from 'lucide-react';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { useUser } from '@/contexts/UserContext';
-
-// Mock data for user's confirmed events
-const mockUserEvents = [
-  {
-    id: '1',
-    title: 'Friday Night Comedy Show',
-    venue: 'The Laugh Track',
-    location: 'Los Angeles, CA',
-    date: new Date(2025, 5, 21), // June 21, 2025
-    time: '8:00 PM',
-    status: 'confirmed',
-    type: 'performance',
-    description: 'Main set - 15 minutes',
-    payment: '$150'
-  },
-  {
-    id: '2',
-    title: 'Saturday Showcase',
-    venue: 'Comedy Central Club',
-    location: 'Hollywood, CA',
-    date: new Date(2025, 5, 22), // June 22, 2025
-    time: '9:30 PM',
-    status: 'confirmed',
-    type: 'performance',
-    description: 'Opening act - 5 minutes',
-    payment: '$75'
-  },
-  {
-    id: '3',
-    title: 'Corporate Event',
-    venue: 'Tech Conference 2025',
-    location: 'San Francisco, CA',
-    date: new Date(2025, 5, 28), // June 28, 2025
-    time: '7:00 PM',
-    status: 'pending',
-    type: 'corporate',
-    description: 'Clean comedy set for corporate audience',
-    payment: '$500'
-  }
-];
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const ProfileCalendarView: React.FC = () => {
   const { user } = useUser();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
+  // Fetch user's calendar events
+  const { data: calendarEvents = [], isLoading } = useQuery({
+    queryKey: ['calendar-events', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('comedian_id', user.id)
+        .order('event_date', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
   // Filter events for the selected date
-  const selectedDateEvents = mockUserEvents.filter(event => 
-    isSameDay(event.date, selectedDate)
+  const selectedDateEvents = calendarEvents.filter(event => 
+    isSameDay(parseISO(event.event_date), selectedDate)
   );
 
-  const datesWithEvents = mockUserEvents.map(event => event.date);
+  const datesWithEvents = calendarEvents.map(event => parseISO(event.event_date));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,6 +53,47 @@ export const ProfileCalendarView: React.FC = () => {
         return 'bg-gray-500';
     }
   };
+
+  const handleEditEvent = (eventId: string) => {
+    toast({
+      title: "Edit Event",
+      description: "Event editing functionality will be implemented soon"
+    });
+  };
+
+  const handleCancelEvent = (eventId: string) => {
+    toast({
+      title: "Cancel Event",
+      description: "Event cancellation functionality will be implemented soon"
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-card/50 backdrop-blur-sm border-border">
+          <CardContent className="p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-muted rounded w-1/3"></div>
+              <div className="h-64 bg-muted rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="space-y-4">
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+          <Card className="bg-card/50 backdrop-blur-sm border-border">
+            <CardContent className="p-8">
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-muted rounded"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -129,7 +152,6 @@ export const ProfileCalendarView: React.FC = () => {
                     <p className="text-muted-foreground">{event.venue}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Badge variant="outline">{event.type}</Badge>
                     <Badge className={getStatusColor(event.status)}>
                       {event.status}
                     </Badge>
@@ -139,27 +161,30 @@ export const ProfileCalendarView: React.FC = () => {
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{event.time}</span>
+                    <span>{format(parseISO(event.event_date), 'h:mm a')}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>{event.payment}</span>
+                    <span>Calendar sync: {event.calendar_sync_status}</span>
                   </div>
                 </div>
                 
-                <p className="text-sm">{event.description}</p>
-                
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleEditEvent(event.id)}
+                  >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Details
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleCancelEvent(event.id)}
+                  >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Cancel
                   </Button>

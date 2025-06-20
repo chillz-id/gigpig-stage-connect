@@ -184,57 +184,140 @@ export type Database = {
           },
         ]
       }
+      event_applications: {
+        Row: {
+          applied_at: string
+          comedian_id: string
+          event_id: string
+          id: string
+          message: string | null
+          status: string
+        }
+        Insert: {
+          applied_at?: string
+          comedian_id: string
+          event_id: string
+          id?: string
+          message?: string | null
+          status?: string
+        }
+        Update: {
+          applied_at?: string
+          comedian_id?: string
+          event_id?: string
+          id?: string
+          message?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_applications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
+          address: string
+          age_restriction: string | null
+          allow_recording: boolean | null
+          applied_spots: number | null
+          banner_url: string | null
+          city: string | null
           comedian_slots: number | null
+          country: string | null
           created_at: string | null
           currency: string | null
           description: string | null
+          dress_code: string | null
+          duration: string | null
           duration_minutes: number | null
+          end_time: string | null
           event_date: string
           id: string
+          is_paid: boolean | null
+          is_verified_only: boolean | null
+          pay: string | null
           pay_per_comedian: number | null
           promoter_id: string
           requirements: string | null
+          spots: number | null
+          start_time: string | null
+          state: string | null
           status: string | null
           title: string
+          type: string | null
           updated_at: string | null
-          venue_address: string
-          venue_name: string
+          venue: string
         }
         Insert: {
+          address: string
+          age_restriction?: string | null
+          allow_recording?: boolean | null
+          applied_spots?: number | null
+          banner_url?: string | null
+          city?: string | null
           comedian_slots?: number | null
+          country?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          dress_code?: string | null
+          duration?: string | null
           duration_minutes?: number | null
+          end_time?: string | null
           event_date: string
           id?: string
+          is_paid?: boolean | null
+          is_verified_only?: boolean | null
+          pay?: string | null
           pay_per_comedian?: number | null
           promoter_id: string
           requirements?: string | null
+          spots?: number | null
+          start_time?: string | null
+          state?: string | null
           status?: string | null
           title: string
+          type?: string | null
           updated_at?: string | null
-          venue_address: string
-          venue_name: string
+          venue: string
         }
         Update: {
+          address?: string
+          age_restriction?: string | null
+          allow_recording?: boolean | null
+          applied_spots?: number | null
+          banner_url?: string | null
+          city?: string | null
           comedian_slots?: number | null
+          country?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          dress_code?: string | null
+          duration?: string | null
           duration_minutes?: number | null
+          end_time?: string | null
           event_date?: string
           id?: string
+          is_paid?: boolean | null
+          is_verified_only?: boolean | null
+          pay?: string | null
           pay_per_comedian?: number | null
           promoter_id?: string
           requirements?: string | null
+          spots?: number | null
+          start_time?: string | null
+          state?: string | null
           status?: string | null
           title?: string
+          type?: string | null
           updated_at?: string | null
-          venue_address?: string
-          venue_name?: string
+          venue?: string
         }
         Relationships: []
       }
