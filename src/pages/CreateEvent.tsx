@@ -123,6 +123,7 @@ const CreateEvent = () => {
       dress_code: formData.dresscode,
       duration: formData.duration,
       pay: formData.pay,
+      promoter_id: user.id,
       spots: eventSpots.length || formData.spots,
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
