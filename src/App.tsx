@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -20,36 +21,48 @@ import Marketplace from '@/pages/Marketplace';
 import Invoices from '@/pages/Invoices';
 import NotFound from '@/pages/NotFound';
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <UserProvider>
-          <Router>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-              <Navigation />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/create-event" element={<CreateEvent />} />
-                <Route path="/applications" element={<Applications />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/promoter-settings" element={<PromoterSettings />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route path="/invoices/*" element={<Invoices />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </div>
-          </Router>
-        </UserProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserProvider>
+            <Router>
+              <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+                <Navigation />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/browse" element={<Browse />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/create-event" element={<CreateEvent />} />
+                  <Route path="/applications" element={<Applications />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/promoter-settings" element={<PromoterSettings />} />
+                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/invoices/*" element={<Invoices />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+              </div>
+            </Router>
+          </UserProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
