@@ -122,7 +122,6 @@ const CreateEvent = () => {
       dress_code: formData.dresscode,
       promoter_id: user.id,
       banner_url: formData.bannerUrl || null,
-      spots: eventSpots.length || formData.spots,
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
       recurrenceEndDate: recurringSettings.isRecurring ? recurringSettings.endDate : undefined,
