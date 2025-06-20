@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -127,11 +126,13 @@ const CreateEvent = () => {
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
       recurrenceEndDate: recurringSettings.isRecurring ? recurringSettings.endDate : undefined,
-      spots: eventSpots
     };
 
     console.log('Creating event:', eventData);
-    createEvent(eventData);
+    createEvent({
+      ...eventData,
+      spots: eventSpots
+    });
   };
 
   const addRequirement = () => {
