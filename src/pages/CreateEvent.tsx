@@ -207,7 +207,7 @@ const CreateEvent = () => {
     }
     
     if (data.recurringSettings) {
-      setRec urringSettings(data.recurringSettings);
+      setRecurringSettings(data.recurringSettings);
     }
 
     toast({
