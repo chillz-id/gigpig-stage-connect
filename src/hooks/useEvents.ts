@@ -52,30 +52,109 @@ export const useEvents = () => {
     }
   });
 
-  // Create event mutation
+  // Create single or recurring events
   const createEventMutation = useMutation({
-    mutationFn: async (eventData: EventInsert) => {
+    mutationFn: async (eventData: EventInsert & { 
+      isRecurring?: boolean;
+      recurrencePattern?: string;
+      recurrenceEndDate?: string;
+      spots?: Array<{
+        spot_name: string;
+        is_paid: boolean;
+        payment_amount?: number;
+        currency: string;
+        duration_minutes?: number;
+      }>;
+    }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('events')
-        .insert({
-          ...eventData,
+      const { spots, isRecurring, recurrencePattern, recurrenceEndDate, ...baseEventData } = eventData;
+      
+      // Generate series ID for recurring events
+      const seriesId = isRecurring ? crypto.randomUUID() : null;
+
+      let eventsToCreate = [];
+      
+      if (isRecurring && recurrencePattern && recurrenceEndDate) {
+        // Generate recurring events
+        const startDate = new Date(baseEventData.event_date);
+        const endDate = new Date(recurrenceEndDate);
+        let currentDate = new Date(startDate);
+        let isFirst = true;
+
+        while (currentDate <= endDate) {
+          eventsToCreate.push({
+            ...baseEventData,
+            promoter_id: user.id,
+            event_date: currentDate.toISOString(),
+            is_recurring: true,
+            recurrence_pattern: recurrencePattern,
+            parent_event_id: isFirst ? null : eventsToCreate[0]?.id || null,
+            series_id: seriesId,
+            recurrence_end_date: recurrenceEndDate
+          });
+
+          // Increment date based on pattern
+          if (recurrencePattern === 'weekly') {
+            currentDate.setDate(currentDate.getDate() + 7);
+          } else if (recurrencePattern === 'monthly') {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+          }
+          
+          isFirst = false;
+        }
+      } else {
+        // Single event
+        eventsToCreate.push({
+          ...baseEventData,
           promoter_id: user.id
-        })
-        .select()
-        .single();
+        });
+      }
+
+      // Insert events
+      const { data: createdEvents, error } = await supabase
+        .from('events')
+        .insert(eventsToCreate)
+        .select();
 
       if (error) throw error;
-      return data;
+
+      // Create spots for each event if provided
+      if (spots && spots.length > 0) {
+        const spotsToCreate = [];
+        createdEvents.forEach((event, eventIndex) => {
+          spots.forEach((spot, spotIndex) => {
+            spotsToCreate.push({
+              event_id: event.id,
+              spot_name: spot.spot_name,
+              is_paid: spot.is_paid,
+              payment_amount: spot.payment_amount || 0,
+              currency: spot.currency,
+              duration_minutes: spot.duration_minutes || 5,
+              spot_order: spotIndex + 1
+            });
+          });
+        });
+
+        const { error: spotsError } = await supabase
+          .from('event_spots')
+          .insert(spotsToCreate);
+
+        if (spotsError) throw spotsError;
+      }
+
+      return createdEvents;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['user-events'] });
+      const eventCount = data.length;
       toast({
-        title: "Event created",
-        description: "Your event has been created successfully"
+        title: eventCount > 1 ? "Recurring events created" : "Event created",
+        description: eventCount > 1 
+          ? `${eventCount} events have been created successfully`
+          : "Your event has been created successfully"
       });
     },
     onError: (error) => {

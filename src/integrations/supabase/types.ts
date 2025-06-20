@@ -219,6 +219,86 @@ export type Database = {
           },
         ]
       }
+      event_spots: {
+        Row: {
+          comedian_id: string | null
+          created_at: string
+          currency: string
+          duration_minutes: number | null
+          event_id: string
+          id: string
+          is_filled: boolean
+          is_paid: boolean
+          payment_amount: number | null
+          spot_name: string
+          spot_order: number
+          updated_at: string
+        }
+        Insert: {
+          comedian_id?: string | null
+          created_at?: string
+          currency?: string
+          duration_minutes?: number | null
+          event_id: string
+          id?: string
+          is_filled?: boolean
+          is_paid?: boolean
+          payment_amount?: number | null
+          spot_name: string
+          spot_order?: number
+          updated_at?: string
+        }
+        Update: {
+          comedian_id?: string | null
+          created_at?: string
+          currency?: string
+          duration_minutes?: number | null
+          event_id?: string
+          id?: string
+          is_filled?: boolean
+          is_paid?: boolean
+          payment_amount?: number | null
+          spot_name?: string
+          spot_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_event_spots_event"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_templates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          promoter_id: string
+          template_data: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          promoter_id: string
+          template_data: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          promoter_id?: string
+          template_data?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           address: string
@@ -239,11 +319,16 @@ export type Database = {
           event_date: string
           id: string
           is_paid: boolean | null
+          is_recurring: boolean | null
           is_verified_only: boolean | null
+          parent_event_id: string | null
           pay: string | null
           pay_per_comedian: number | null
           promoter_id: string
+          recurrence_end_date: string | null
+          recurrence_pattern: string | null
           requirements: string | null
+          series_id: string | null
           spots: number | null
           start_time: string | null
           state: string | null
@@ -272,11 +357,16 @@ export type Database = {
           event_date: string
           id?: string
           is_paid?: boolean | null
+          is_recurring?: boolean | null
           is_verified_only?: boolean | null
+          parent_event_id?: string | null
           pay?: string | null
           pay_per_comedian?: number | null
           promoter_id: string
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           requirements?: string | null
+          series_id?: string | null
           spots?: number | null
           start_time?: string | null
           state?: string | null
@@ -305,11 +395,16 @@ export type Database = {
           event_date?: string
           id?: string
           is_paid?: boolean | null
+          is_recurring?: boolean | null
           is_verified_only?: boolean | null
+          parent_event_id?: string | null
           pay?: string | null
           pay_per_comedian?: number | null
           promoter_id?: string
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           requirements?: string | null
+          series_id?: string | null
           spots?: number | null
           start_time?: string | null
           state?: string | null
@@ -319,7 +414,15 @@ export type Database = {
           updated_at?: string | null
           venue?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_events_parent"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoice_items: {
         Row: {

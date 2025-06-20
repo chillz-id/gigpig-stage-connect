@@ -8,15 +8,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, Template } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useEvents } from '@/hooks/useEvents';
+import { useEventTemplates } from '@/hooks/useEventTemplates';
+import { EventSpotManager } from '@/components/EventSpotManager';
 
 const CreateEvent = () => {
   const { user } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createEvent, isCreating } = useEvents();
+  const { templates, createTemplate, deleteTemplate, isCreating: isCreatingTemplate } = useEventTemplates();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -41,7 +47,23 @@ const CreateEvent = () => {
     dresscode: 'Casual',
   });
 
+  const [eventSpots, setEventSpots] = useState<Array<{
+    spot_name: string;
+    is_paid: boolean;
+    payment_amount?: number;
+    currency: string;
+    duration_minutes?: number;
+  }>>([]);
+
+  const [recurringSettings, setRecurringSettings] = useState({
+    isRecurring: false,
+    pattern: 'weekly',
+    endDate: ''
+  });
+
   const [newRequirement, setNewRequirement] = useState('');
+  const [templateName, setTemplateName] = useState('');
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
 
   if (!user || !user.roles.includes('promoter')) {
     return (
@@ -71,24 +93,46 @@ const CreateEvent = () => {
       return;
     }
 
+    if (recurringSettings.isRecurring && !recurringSettings.endDate) {
+      toast({
+        title: "Missing recurring end date",
+        description: "Please specify when the recurring events should end.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const eventDateTime = new Date(`${formData.date}T${formData.time}`);
+
     const eventData = {
-      id: Date.now().toString(),
-      ...formData,
-      promoterId: user.id,
-      promoterName: user.name,
-      appliedSpots: 0,
-      status: 'open' as const,
-      createdAt: new Date().toISOString(),
+      title: formData.title,
+      venue: formData.venue,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+      event_date: eventDateTime.toISOString(),
+      start_time: formData.time,
+      end_time: formData.endTime || null,
+      type: formData.type,
+      description: formData.description,
+      requirements: formData.requirements.join('\n'),
+      is_verified_only: formData.isVerifiedOnly,
+      is_paid: formData.isPaid,
+      allow_recording: formData.allowRecording,
+      age_restriction: formData.ageRestriction,
+      dress_code: formData.dresscode,
+      duration: formData.duration,
+      pay: formData.pay,
+      spots: eventSpots.length || formData.spots,
+      isRecurring: recurringSettings.isRecurring,
+      recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
+      recurrenceEndDate: recurringSettings.isRecurring ? recurringSettings.endDate : undefined,
+      spots: eventSpots
     };
 
     console.log('Creating event:', eventData);
-    
-    toast({
-      title: "Event created successfully!",
-      description: `"${formData.title}" has been created and is now live.`,
-    });
-
-    navigate('/dashboard');
+    createEvent(eventData);
   };
 
   const addRequirement = () => {
@@ -108,12 +152,136 @@ const CreateEvent = () => {
     }));
   };
 
+  const saveAsTemplate = () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Template name required",
+        description: "Please enter a name for your template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const templateData = {
+      ...formData,
+      spots: eventSpots,
+      recurringSettings
+    };
+
+    createTemplate({
+      name: templateName,
+      template_data: templateData
+    });
+
+    setTemplateName('');
+    setShowSaveTemplate(false);
+  };
+
+  const loadTemplate = (template: any) => {
+    const data = template.template_data;
+    setFormData({
+      title: data.title || '',
+      venue: data.venue || '',
+      address: data.address || '',
+      city: data.city || '',
+      state: data.state || '',
+      country: data.country || 'Australia',
+      date: '',
+      time: data.time || '',
+      endTime: data.endTime || '',
+      type: data.type || '',
+      spots: data.spots || 5,
+      duration: data.duration || '5',
+      pay: data.pay || 'Free',
+      description: data.description || '',
+      requirements: data.requirements || [],
+      isVerifiedOnly: data.isVerifiedOnly || false,
+      isPaid: data.isPaid || false,
+      allowRecording: data.allowRecording || false,
+      ageRestriction: data.ageRestriction || '18+',
+      dresscode: data.dresscode || 'Casual',
+    });
+    
+    if (data.spots && Array.isArray(data.spots)) {
+      setEventSpots(data.spots);
+    }
+    
+    if (data.recurringSettings) {
+      setRec urringSettings(data.recurringSettings);
+    }
+
+    toast({
+      title: "Template loaded",
+      description: `Template "${template.name}" has been loaded successfully.`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Create New Event</h1>
-          <p className="text-purple-100">Build your shows and start receiving applications</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Create New Event</h1>
+            <p className="text-purple-100">Build your shows and start receiving applications</p>
+          </div>
+          
+          <div className="flex gap-2">
+            {templates.length > 0 && (
+              <Select onValueChange={(value) => {
+                const template = templates.find(t => t.id === value);
+                if (template) loadTemplate(template);
+              }}>
+                <SelectTrigger className="bg-white/10 border-white/20 text-white w-48">
+                  <Template className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Load Template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            
+            <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="text-white border-white/30 hover:bg-white/10">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Template
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-gray-800 border-gray-600 text-white">
+                <DialogHeader>
+                  <DialogTitle>Save as Template</DialogTitle>
+                  <DialogDescription>
+                    Save your current event configuration as a reusable template.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="templateName">Template Name</Label>
+                    <Input
+                      id="templateName"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      placeholder="e.g., Weekly Comedy Night Template"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={saveAsTemplate} disabled={isCreatingTemplate}>
+                      Save Template
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
@@ -122,7 +290,7 @@ const CreateEvent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Star className="w-5 h-5" />
-                Basic Information
+                Event Title & Venue Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -149,6 +317,17 @@ const CreateEvent = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Event Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe your comedy event, atmosphere, and what comedians can expect..."
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300 min-h-[100px]"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -254,86 +433,62 @@ const CreateEvent = () => {
                   />
                 </div>
               </div>
+
+              {/* Recurring Events */}
+              <Card className="bg-white/5 border-white/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Repeat className="w-4 h-4" />
+                    Recurring Event Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="isRecurring">Create Recurring Event</Label>
+                    <Switch
+                      id="isRecurring"
+                      checked={recurringSettings.isRecurring}
+                      onCheckedChange={(checked) => setRecurringSettings(prev => ({ ...prev, isRecurring: checked }))}
+                    />
+                  </div>
+
+                  {recurringSettings.isRecurring && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="pattern">Recurrence Pattern</Label>
+                        <Select value={recurringSettings.pattern} onValueChange={(value) => setRecurringSettings(prev => ({ ...prev, pattern: value }))}>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="endDate">End Date *</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={recurringSettings.endDate}
+                          onChange={(e) => setRecurringSettings(prev => ({ ...prev, endDate: e.target.value }))}
+                          className="bg-white/10 border-white/20 text-white"
+                          required={recurringSettings.isRecurring}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
 
-          {/* Event Details */}
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Event Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label htmlFor="type">Show Type *</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Open Mic">Open Mic</SelectItem>
-                      <SelectItem value="Semi-Pro">Semi-Pro</SelectItem>
-                      <SelectItem value="Pro">Professional</SelectItem>
-                      <SelectItem value="Mixed">Mixed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="spots">Available Spots *</Label>
-                  <Input
-                    id="spots"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formData.spots}
-                    onChange={(e) => setFormData(prev => ({ ...prev, spots: parseInt(e.target.value) || 1 }))}
-                    className="bg-white/10 border-white/20 text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="duration">Set Duration (minutes)</Label>
-                  <Select value={formData.duration} onValueChange={(value) => setFormData(prev => ({ ...prev, duration: value }))}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 minutes</SelectItem>
-                      <SelectItem value="5">5 minutes</SelectItem>
-                      <SelectItem value="7">7 minutes</SelectItem>
-                      <SelectItem value="10">10 minutes</SelectItem>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="20">20 minutes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="pay">Payment</Label>
-                  <Input
-                    id="pay"
-                    value={formData.pay}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pay: e.target.value }))}
-                    placeholder="$50 or Free"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Event Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe your comedy event, atmosphere, and what comedians can expect..."
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300 min-h-[100px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Event Spots Management */}
+          <EventSpotManager 
+            spots={eventSpots} 
+            onSpotsChange={setEventSpots}
+          />
 
           {/* Requirements & Settings */}
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
@@ -341,6 +496,21 @@ const CreateEvent = () => {
               <CardTitle>Requirements & Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="type">Show Type</Label>
+                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Open Mic">Open Mic</SelectItem>
+                    <SelectItem value="Semi-Pro">Semi-Pro</SelectItem>
+                    <SelectItem value="Pro">Professional</SelectItem>
+                    <SelectItem value="Mixed">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <Label htmlFor="newRequirement">Add Requirements</Label>
                 <div className="flex gap-2">
@@ -429,6 +599,35 @@ const CreateEvent = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="duration">Set Duration (minutes)</Label>
+                  <Select value={formData.duration} onValueChange={(value) => setFormData(prev => ({ ...prev, duration: value }))}>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 minutes</SelectItem>
+                      <SelectItem value="5">5 minutes</SelectItem>
+                      <SelectItem value="7">7 minutes</SelectItem>
+                      <SelectItem value="10">10 minutes</SelectItem>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="20">20 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pay">Payment</Label>
+                  <Input
+                    id="pay"
+                    value={formData.pay}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pay: e.target.value }))}
+                    placeholder="$50 or Free"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -444,9 +643,11 @@ const CreateEvent = () => {
             </Button>
             <Button 
               type="submit"
+              disabled={isCreating}
               className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
             >
-              Create Event
+              {isCreating ? 'Creating...' : 
+               recurringSettings.isRecurring ? 'Create Recurring Events' : 'Create Event'}
             </Button>
           </div>
         </form>
