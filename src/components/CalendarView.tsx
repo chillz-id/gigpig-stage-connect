@@ -13,7 +13,7 @@ export const CalendarView: React.FC = () => {
 
   // Filter for only confirmed shows and convert to have proper dates
   const confirmedShows = mockShows
-    .filter(show => show.status === 'confirmed') // Only show confirmed events
+    .filter(show => show.status === 'open') // Updated to use valid status from mockData
     .map((show, index) => ({
       ...show,
       dateObj: new Date(2025, 5, 19 + (index % 14)) // Spread shows across 2 weeks
@@ -52,23 +52,23 @@ export const CalendarView: React.FC = () => {
             className="rounded-md border bg-background/50"
           />
           <div className="mt-4 text-sm text-muted-foreground">
-            Dates with confirmed shows are highlighted
+            Dates with open shows are highlighted
           </div>
         </CardContent>
       </Card>
 
       <div className="space-y-4">
         <h3 className="text-xl font-semibold">
-          Confirmed Shows on {format(selectedDate, 'MMMM d, yyyy')}
+          Open Shows on {format(selectedDate, 'MMMM d, yyyy')}
         </h3>
         
         {selectedDateShows.length === 0 ? (
           <Card className="bg-card/50 backdrop-blur-sm border-border">
             <CardContent className="p-8 text-center">
               <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">No confirmed shows this day</h4>
+              <h4 className="text-lg font-semibold mb-2">No open shows this day</h4>
               <p className="text-muted-foreground">
-                Select a highlighted date to see your confirmed shows
+                Select a highlighted date to see available shows
               </p>
             </CardContent>
           </Card>
@@ -83,7 +83,7 @@ export const CalendarView: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <Badge variant="outline">{show.type}</Badge>
-                    <Badge className="bg-green-500">Confirmed</Badge>
+                    <Badge className="bg-green-500">Open</Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -99,7 +99,7 @@ export const CalendarView: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>Your confirmed slot</span>
+                    <span>Apply for slot</span>
                   </div>
                 </div>
                 

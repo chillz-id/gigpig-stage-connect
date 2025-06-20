@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus } from 'lucide-react';
+import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus, FileText } from 'lucide-react';
 import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
@@ -87,14 +87,24 @@ const Navigation: React.FC = () => {
                         </Link>
                       </NavigationMenuLink>
                       {hasRole('promoter') && (
-                        <NavigationMenuLink asChild>
-                          <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                            <div className="text-sm font-semibold leading-none">Applications</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Manage comedian applications
-                            </p>
-                          </Link>
-                        </NavigationMenuLink>
+                        <>
+                          <NavigationMenuLink asChild>
+                            <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                              <div className="text-sm font-semibold leading-none">Applications</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Manage comedian applications
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink asChild>
+                            <Link to="/invoices" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                              <div className="text-sm font-semibold leading-none">Invoices</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Create and manage invoices
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </>
                       )}
                       <NavigationMenuLink asChild>
                         <Link to="/profile" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
@@ -150,12 +160,20 @@ const Navigation: React.FC = () => {
                   </Button>
                 </Link>
                 {hasRole('promoter') && (
-                  <Link to="/create-event">
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create
-                    </Button>
-                  </Link>
+                  <>
+                    <Link to="/create-event">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create
+                      </Button>
+                    </Link>
+                    <Link to="/invoices/new">
+                      <Button size="sm" variant="outline" className="transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Invoice
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
             )}
@@ -256,7 +274,8 @@ const Navigation: React.FC = () => {
               { to: '/dashboard', label: 'Dashboard' },
               ...(hasRole('promoter') ? [
                 { to: '/create-event', label: 'Create Event' },
-                { to: '/applications', label: 'Applications' }
+                { to: '/applications', label: 'Applications' },
+                { to: '/invoices', label: 'Invoices' }
               ] : []),
               { to: '/profile', label: 'Profile' },
               { to: '/messages', label: 'Messages' },
