@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, Template } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, FileText } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -232,7 +231,7 @@ const CreateEvent = () => {
                 if (template) loadTemplate(template);
               }}>
                 <SelectTrigger className="bg-white/10 border-white/20 text-white w-48">
-                  <Template className="w-4 h-4 mr-2" />
+                  <FileText className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Load Template" />
                 </SelectTrigger>
                 <SelectContent>
