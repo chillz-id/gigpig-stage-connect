@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, FileText } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, FileText, Image } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -35,8 +36,6 @@ const CreateEvent = () => {
     endTime: '',
     type: '',
     spots: 5,
-    duration: '5',
-    pay: 'Free',
     description: '',
     requirements: [] as string[],
     isVerifiedOnly: false,
@@ -44,6 +43,7 @@ const CreateEvent = () => {
     allowRecording: false,
     ageRestriction: '18+',
     dresscode: 'Casual',
+    bannerUrl: '',
   });
 
   const [eventSpots, setEventSpots] = useState<Array<{
@@ -121,9 +121,8 @@ const CreateEvent = () => {
       allow_recording: formData.allowRecording,
       age_restriction: formData.ageRestriction,
       dress_code: formData.dresscode,
-      duration: formData.duration,
-      pay: formData.pay,
       promoter_id: user.id,
+      banner_url: formData.bannerUrl || null,
       spots: eventSpots.length || formData.spots,
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
@@ -191,8 +190,6 @@ const CreateEvent = () => {
       endTime: data.endTime || '',
       type: data.type || '',
       spots: data.spots || 5,
-      duration: data.duration || '5',
-      pay: data.pay || 'Free',
       description: data.description || '',
       requirements: data.requirements || [],
       isVerifiedOnly: data.isVerifiedOnly || false,
@@ -200,6 +197,7 @@ const CreateEvent = () => {
       allowRecording: data.allowRecording || false,
       ageRestriction: data.ageRestriction || '18+',
       dresscode: data.dresscode || 'Casual',
+      bannerUrl: data.bannerUrl || '',
     });
     
     if (data.spots && Array.isArray(data.spots)) {
@@ -386,6 +384,29 @@ const CreateEvent = () => {
                   placeholder="123 Comedy Street, Sydney NSW 2000"
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Event Banner */}
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="w-5 h-5" />
+                Event Banner
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="bannerUrl">Banner Image URL</Label>
+                <Input
+                  id="bannerUrl"
+                  value={formData.bannerUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bannerUrl: e.target.value }))}
+                  placeholder="https://example.com/banner.jpg"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                />
+                <p className="text-sm text-gray-300 mt-1">Add a banner image to make your event stand out</p>
               </div>
             </CardContent>
           </Card>
@@ -599,35 +620,6 @@ const CreateEvent = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="duration">Set Duration (minutes)</Label>
-                  <Select value={formData.duration} onValueChange={(value) => setFormData(prev => ({ ...prev, duration: value }))}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 minutes</SelectItem>
-                      <SelectItem value="5">5 minutes</SelectItem>
-                      <SelectItem value="7">7 minutes</SelectItem>
-                      <SelectItem value="10">10 minutes</SelectItem>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="20">20 minutes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="pay">Payment</Label>
-                  <Input
-                    id="pay"
-                    value={formData.pay}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pay: e.target.value }))}
-                    placeholder="$50 or Free"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
 
@@ -646,8 +638,8 @@ const CreateEvent = () => {
               disabled={isCreating}
               className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
             >
-              {isCreating ? 'Creating...' : 
-               recurringSettings.isRecurring ? 'Create Recurring Events' : 'Create Event'}
+              {isCreating ? 'Publishing...' : 
+               recurringSettings.isRecurring ? 'Publish Recurring Events' : 'Publish Event'}
             </Button>
           </div>
         </form>
