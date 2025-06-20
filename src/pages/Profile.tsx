@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
-import { CalendarView } from '@/components/CalendarView';
+import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
@@ -266,7 +266,7 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="calendar">
-            <CalendarView />
+            <ProfileCalendarView />
           </TabsContent>
 
           <TabsContent value="requests">

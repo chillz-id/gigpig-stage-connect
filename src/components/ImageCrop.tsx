@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,7 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Clear the crop area (make it visible by removing the dark overlay)
+    // Use composite operation to "cut out" the crop area from the dark overlay
     ctx.globalCompositeOperation = 'destination-out';
     const cropSize = 200;
     const cropX = (containerWidth - cropSize) / 2;
@@ -73,8 +72,14 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     ctx.arc(cropX + cropSize / 2, cropY + cropSize / 2, cropSize / 2, 0, Math.PI * 2);
     ctx.fill();
     
-    // Draw crop circle border
+    // Reset composite operation and redraw the image in the crop area only
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.drawImage(image, x, y, displayWidth, displayHeight);
+    
+    // Reset composite operation for the border
     ctx.globalCompositeOperation = 'source-over';
+    
+    // Draw crop circle border
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
