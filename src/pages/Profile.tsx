@@ -14,14 +14,17 @@ import { VouchSystem } from '@/components/VouchSystem';
 import { CalendarView } from '@/components/CalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
-import { User, Star, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut } from 'lucide-react';
+import { ImageCrop } from '@/components/ImageCrop';
+import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
-  const { user, logout } = useUser();
+  const { user, logout, updateUser } = useUser();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
+  const [showImageCrop, setShowImageCrop] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>('');
 
   if (!user) {
     return (
@@ -49,6 +52,26 @@ const Profile = () => {
     logout();
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+        setShowImageCrop(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCroppedImage = (croppedImage: string) => {
+    updateUser({ avatar: croppedImage });
+    toast({
+      title: "Profile Picture Updated",
+      description: "Your profile picture has been successfully updated.",
+    });
+  };
+
   const getMembershipBadgeColor = (membership: string) => {
     switch (membership) {
       case 'premium':
@@ -67,10 +90,26 @@ const Profile = () => {
         <Card className="professional-card mb-8">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <Avatar className="w-32 h-32">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-2xl">{user.name[0]}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="w-32 h-32">
+                  <AvatarImage src={user.avatar} />
+                  <AvatarFallback className="text-2xl">{user.name[0]}</AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0">
+                  <label htmlFor="avatar-upload" className="cursor-pointer">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg">
+                      <Camera className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold">{user.name}</h1>
@@ -342,6 +381,14 @@ const Profile = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Image Crop Modal */}
+        <ImageCrop
+          isOpen={showImageCrop}
+          onClose={() => setShowImageCrop(false)}
+          onCrop={handleCroppedImage}
+          imageUrl={selectedImage}
+        />
       </div>
     </div>
   );

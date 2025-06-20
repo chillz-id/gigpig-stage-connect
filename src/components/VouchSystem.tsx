@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Users, MessageSquare, Plus, Shield, Eye, EyeOff, ThumbsUp } from 'lucide-react';
+import { Users, MessageSquare, Plus, Shield, Eye, EyeOff, ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Vouch {
@@ -15,7 +16,6 @@ interface Vouch {
   from: { name: string; avatar: string; verified: boolean; role: 'comedian' | 'promoter' };
   to: { name: string; avatar: string; verified: boolean; role: 'comedian' | 'promoter' };
   message: string;
-  rating: number;
   isPublic: boolean;
   date: string;
   category: 'professionalism' | 'talent' | 'reliability' | 'communication';
@@ -27,7 +27,6 @@ const mockVouches: Vouch[] = [
     from: { name: 'Sarah Johnson', avatar: '/placeholder.svg', verified: true, role: 'promoter' },
     to: { name: 'Mike Chen', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
     message: 'Outstanding performer with incredible stage presence. Always professional and reliable.',
-    rating: 5,
     isPublic: true,
     date: '2024-12-15',
     category: 'talent'
@@ -37,7 +36,6 @@ const mockVouches: Vouch[] = [
     from: { name: 'David Williams', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
     to: { name: 'Emma Davis', avatar: '/placeholder.svg', verified: true, role: 'promoter' },
     message: 'Fantastic promoter who really cares about the comedians. Great communication throughout.',
-    rating: 5,
     isPublic: true,
     date: '2024-12-14',
     category: 'professionalism'
@@ -50,7 +48,6 @@ export const VouchSystem: React.FC = () => {
   const [newVouch, setNewVouch] = useState({
     to: '',
     message: '',
-    rating: 5,
     isPublic: true,
     category: 'professionalism' as const
   });
@@ -62,29 +59,19 @@ export const VouchSystem: React.FC = () => {
       from: { name: 'You', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
       to: { name: newVouch.to, avatar: '/placeholder.svg', verified: true, role: 'promoter' },
       message: newVouch.message,
-      rating: newVouch.rating,
       isPublic: newVouch.isPublic,
       date: new Date().toISOString().split('T')[0],
       category: newVouch.category
     };
 
     setVouches(prev => [vouch, ...prev]);
-    setNewVouch({ to: '', message: '', rating: 5, isPublic: true, category: 'professionalism' });
+    setNewVouch({ to: '', message: '', isPublic: true, category: 'professionalism' });
     setIsCreateDialogOpen(false);
 
     toast({
       title: "Vouch Created",
       description: `Your ${newVouch.isPublic ? 'public' : 'private'} vouch has been submitted.`,
     });
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-      />
-    ));
   };
 
   return (
@@ -144,23 +131,6 @@ export const VouchSystem: React.FC = () => {
                         <SelectItem value="communication">Communication</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Rating</label>
-                    <div className="flex gap-1 mt-1">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setNewVouch(prev => ({ ...prev, rating: i + 1 }))}
-                        >
-                          <Star
-                            className={`w-5 h-5 ${i < newVouch.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   <div>
@@ -241,9 +211,6 @@ export const VouchSystem: React.FC = () => {
                         <Badge variant="outline">{vouch.category}</Badge>
                         {!vouch.isPublic && <Badge variant="secondary"><EyeOff className="w-3 h-3 mr-1" />Private</Badge>}
                       </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        {renderStars(vouch.rating)}
-                      </div>
                       <p className="text-sm text-muted-foreground">{vouch.message}</p>
                       <p className="text-xs text-muted-foreground mt-2">{vouch.date}</p>
                     </div>
@@ -270,9 +237,6 @@ export const VouchSystem: React.FC = () => {
                         <Badge variant="outline">{vouch.to.role}</Badge>
                         <Badge variant="outline">{vouch.category}</Badge>
                         {!vouch.isPublic && <Badge variant="secondary"><EyeOff className="w-3 h-3 mr-1" />Private</Badge>}
-                      </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        {renderStars(vouch.rating)}
                       </div>
                       <p className="text-sm text-muted-foreground">{vouch.message}</p>
                       <p className="text-xs text-muted-foreground mt-2">{vouch.date}</p>
@@ -304,9 +268,6 @@ export const VouchSystem: React.FC = () => {
                         <Badge variant="outline">{vouch.to.role}</Badge>
                       </div>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="flex items-center gap-1">
-                          {renderStars(vouch.rating)}
-                        </div>
                         <Badge variant="outline">{vouch.category}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{vouch.message}</p>

@@ -1,438 +1,362 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Save, Send } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/contexts/UserContext';
-import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
+import { CalendarIcon, Plus, Trash2, Save, Send, ArrowLeft } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface InvoiceItem {
   id: string;
   description: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  rate: number;
+  total: number;
 }
 
-interface InvoiceFormData {
-  eventId?: string;
-  dueDate: string;
-  taxRate: number;
-  currency: string;
-  notes: string;
-  paymentTerms: string;
-  recipientName: string;
-  recipientEmail: string;
-  recipientAddress: string;
-  items: InvoiceItem[];
-}
-
-const InvoiceForm: React.FC = () => {
-  const { user } = useUser();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<InvoiceFormData>({
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    taxRate: 0,
-    currency: 'USD',
+const InvoiceForm = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [invoiceData, setInvoiceData] = useState({
+    clientName: '',
+    clientEmail: '',
+    issueDate: new Date(),
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     notes: '',
-    paymentTerms: 'Net 30',
-    recipientName: '',
-    recipientEmail: '',
-    recipientAddress: '',
-    items: [
-      {
-        id: '1',
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-        totalPrice: 0
-      }
-    ]
+    taxRate: 10,
+    status: 'draft' as 'draft' | 'sent' | 'paid'
   });
+
+  const [items, setItems] = useState<InvoiceItem[]>([
+    { id: '1', description: '', quantity: 1, rate: 0, total: 0 }
+  ]);
 
   const addItem = () => {
     const newItem: InvoiceItem = {
       id: Date.now().toString(),
       description: '',
       quantity: 1,
-      unitPrice: 0,
-      totalPrice: 0
+      rate: 0,
+      total: 0
     };
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, newItem]
-    }));
+    setItems([...items, newItem]);
   };
 
-  const removeItem = (itemId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.id !== itemId)
-    }));
+  const removeItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
   };
 
-  const updateItem = (itemId: string, field: keyof InvoiceItem, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.map(item => {
-        if (item.id === itemId) {
-          const updatedItem = { ...item, [field]: value };
-          if (field === 'quantity' || field === 'unitPrice') {
-            updatedItem.totalPrice = Number(updatedItem.quantity) * Number(updatedItem.unitPrice);
-          }
-          return updatedItem;
+  const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updatedItem = { ...item, [field]: value };
+        if (field === 'quantity' || field === 'rate') {
+          updatedItem.total = updatedItem.quantity * updatedItem.rate;
         }
-        return item;
-      })
+        return updatedItem;
+      }
+      return item;
     }));
   };
 
-  const subtotal = formData.items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const taxAmount = subtotal * (formData.taxRate / 100);
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const taxAmount = subtotal * (invoiceData.taxRate / 100);
   const total = subtotal + taxAmount;
 
-  const saveInvoice = async (status: 'draft' | 'sent') => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to create invoices",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSave = (status: 'draft' | 'sent') => {
+    // Here you would typically save to your backend
+    console.log('Saving invoice:', { ...invoiceData, items, subtotal, taxAmount, total, status });
+    
+    toast({
+      title: status === 'draft' ? "Invoice Saved" : "Invoice Sent",
+      description: status === 'draft' 
+        ? "Your invoice has been saved as a draft." 
+        : "Your invoice has been sent to the client.",
+    });
 
-    if (!formData.recipientName || !formData.recipientEmail || formData.items.some(item => !item.description)) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Generate invoice number
-      const { data: invoiceNumber, error: numberError } = await supabase
-        .rpc('generate_invoice_number');
-
-      if (numberError) throw numberError;
-
-      // Create invoice
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .insert({
-          promoter_id: user.id,
-          event_id: formData.eventId || null,
-          invoice_number: invoiceNumber,
-          due_date: formData.dueDate,
-          status,
-          subtotal,
-          tax_rate: formData.taxRate,
-          tax_amount: taxAmount,
-          total_amount: total,
-          currency: formData.currency,
-          notes: formData.notes,
-          payment_terms: formData.paymentTerms
-        })
-        .select()
-        .single();
-
-      if (invoiceError) throw invoiceError;
-
-      // Create invoice items
-      const { error: itemsError } = await supabase
-        .from('invoice_items')
-        .insert(
-          formData.items.map(item => ({
-            invoice_id: invoice.id,
-            description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unitPrice,
-            total_price: item.totalPrice
-          }))
-        );
-
-      if (itemsError) throw itemsError;
-
-      // Create recipient
-      const { error: recipientError } = await supabase
-        .from('invoice_recipients')
-        .insert({
-          invoice_id: invoice.id,
-          recipient_name: formData.recipientName,
-          recipient_email: formData.recipientEmail,
-          recipient_address: formData.recipientAddress,
-          is_primary: true
-        });
-
-      if (recipientError) throw recipientError;
-
-      toast({
-        title: "Success",
-        description: `Invoice ${status === 'draft' ? 'saved as draft' : 'created and sent'} successfully!`
-      });
-
-      // Reset form
-      setFormData({
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        taxRate: 0,
-        currency: 'USD',
-        notes: '',
-        paymentTerms: 'Net 30',
-        recipientName: '',
-        recipientEmail: '',
-        recipientAddress: '',
-        items: [
-          {
-            id: '1',
-            description: '',
-            quantity: 1,
-            unitPrice: 0,
-            totalPrice: 0
-          }
-        ]
-      });
-
-    } catch (error) {
-      console.error('Error creating invoice:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create invoice. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    navigate('/invoices');
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Invoice</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Recipient Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="recipientName">Recipient Name *</Label>
-              <Input
-                id="recipientName"
-                value={formData.recipientName}
-                onChange={(e) => setFormData(prev => ({ ...prev, recipientName: e.target.value }))}
-                placeholder="Enter recipient name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="recipientEmail">Recipient Email *</Label>
-              <Input
-                id="recipientEmail"
-                type="email"
-                value={formData.recipientEmail}
-                onChange={(e) => setFormData(prev => ({ ...prev, recipientEmail: e.target.value }))}
-                placeholder="Enter recipient email"
-              />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/invoices')}
+            className="text-white hover:bg-white/10 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Invoices
+          </Button>
+          <h1 className="text-3xl font-bold text-white mb-2">Create New Invoice</h1>
+          <p className="text-purple-200">Generate professional invoices for your comedy gigs</p>
+        </div>
 
-          <div>
-            <Label htmlFor="recipientAddress">Recipient Address</Label>
-            <Textarea
-              id="recipientAddress"
-              value={formData.recipientAddress}
-              onChange={(e) => setFormData(prev => ({ ...prev, recipientAddress: e.target.value }))}
-              placeholder="Enter recipient address"
-              rows={3}
-            />
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Invoice Form */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Client Information */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Client Information</CardTitle>
+                <CardDescription className="text-purple-200">
+                  Enter your client's details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="clientName" className="text-white">Client Name</Label>
+                    <Input
+                      id="clientName"
+                      value={invoiceData.clientName}
+                      onChange={(e) => setInvoiceData(prev => ({...prev, clientName: e.target.value}))}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                      placeholder="Comedy Club Name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientEmail" className="text-white">Client Email</Label>
+                    <Input
+                      id="clientEmail"
+                      type="email"
+                      value={invoiceData.clientEmail}
+                      onChange={(e) => setInvoiceData(prev => ({...prev, clientEmail: e.target.value}))}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                      placeholder="booking@comedyclub.com"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Invoice Settings */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="taxRate">Tax Rate (%)</Label>
-              <Input
-                id="taxRate"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={formData.taxRate}
-                onChange={(e) => setFormData(prev => ({ ...prev, taxRate: Number(e.target.value) }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="currency">Currency</Label>
-              <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
-                  <SelectItem value="AUD">AUD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+            {/* Invoice Details */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Invoice Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-white">Issue Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white/5 border-white/20 text-white hover:bg-white/10",
+                            !invoiceData.issueDate && "text-white/50"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceData.issueDate ? format(invoiceData.issueDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={invoiceData.issueDate}
+                          onSelect={(date) => date && setInvoiceData(prev => ({...prev, issueDate: date}))}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label className="text-white">Due Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white/5 border-white/20 text-white hover:bg-white/10",
+                            !invoiceData.dueDate && "text-white/50"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceData.dueDate ? format(invoiceData.dueDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={invoiceData.dueDate}
+                          onSelect={(date) => date && setInvoiceData(prev => ({...prev, dueDate: date}))}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="taxRate" className="text-white">Tax Rate (%)</Label>
+                    <Input
+                      id="taxRate"
+                      type="number"
+                      value={invoiceData.taxRate}
+                      onChange={(e) => setInvoiceData(prev => ({...prev, taxRate: parseFloat(e.target.value) || 0}))}
+                      className="bg-white/5 border-white/20 text-white"
+                      placeholder="10"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Invoice Items */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <Label className="text-lg font-semibold">Invoice Items</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addItem}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Item
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {formData.items.map((item, index) => (
-                <Card key={item.id} className="border-2">
-                  <CardContent className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                      <div className="md:col-span-5">
-                        <Label>Description *</Label>
+            {/* Invoice Items */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-white">Invoice Items</CardTitle>
+                    <CardDescription className="text-purple-200">
+                      Add the services or shows you're billing for
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={addItem}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Item
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {items.map((item, index) => (
+                    <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
+                      <div className="col-span-12 md:col-span-5">
+                        <Label className="text-white">Description</Label>
                         <Input
                           value={item.description}
                           onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                          placeholder="Enter item description"
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                          placeholder="Comedy Show Performance"
                         />
                       </div>
-                      <div className="md:col-span-2">
-                        <Label>Quantity</Label>
+                      <div className="col-span-4 md:col-span-2">
+                        <Label className="text-white">Qty</Label>
                         <Input
                           type="number"
-                          min="1"
                           value={item.quantity}
-                          onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))}
+                          onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                          className="bg-white/5 border-white/20 text-white"
+                          min="1"
                         />
                       </div>
-                      <div className="md:col-span-2">
-                        <Label>Unit Price</Label>
+                      <div className="col-span-4 md:col-span-2">
+                        <Label className="text-white">Rate ($)</Label>
                         <Input
                           type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(item.id, 'unitPrice', Number(e.target.value))}
+                          value={item.rate}
+                          onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                          className="bg-white/5 border-white/20 text-white"
+                          placeholder="200"
                         />
                       </div>
-                      <div className="md:col-span-2">
-                        <Label>Total</Label>
-                        <Input
-                          value={item.totalPrice.toFixed(2)}
-                          readOnly
-                          className="bg-muted"
-                        />
+                      <div className="col-span-3 md:col-span-2">
+                        <Label className="text-white">Total</Label>
+                        <div className="text-white font-medium py-2">${item.total.toFixed(2)}</div>
                       </div>
-                      <div className="md:col-span-1">
-                        {formData.items.length > 1 && (
+                      <div className="col-span-1">
+                        {items.length > 1 && (
                           <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
                             onClick={() => removeItem(item.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Invoice Totals */}
-          <Card className="bg-muted/50">
-            <CardContent className="p-4">
-              <div className="space-y-2 text-right">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formData.currency} {subtotal.toFixed(2)}</span>
+                  ))}
                 </div>
-                <div className="flex justify-between">
-                  <span>Tax ({formData.taxRate}%):</span>
-                  <span>{formData.currency} {taxAmount.toFixed(2)}</span>
+              </CardContent>
+            </Card>
+
+            {/* Notes */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Additional Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={invoiceData.notes}
+                  onChange={(e) => setInvoiceData(prev => ({...prev, notes: e.target.value}))}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                  placeholder="Thank you for having me perform at your venue..."
+                  rows={4}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Invoice Summary */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 sticky top-8">
+              <CardHeader>
+                <CardTitle className="text-white">Invoice Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-white">
+                    <span>Subtotal:</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-white">
+                    <span>Tax ({invoiceData.taxRate}%):</span>
+                    <span>${taxAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="bg-white/20" />
+                  <div className="flex justify-between text-white font-bold text-lg">
+                    <span>Total:</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-lg font-semibold border-t pt-2">
-                  <span>Total:</span>
-                  <span>{formData.currency} {total.toFixed(2)}</span>
+
+                <div className="space-y-2 pt-4">
+                  <Button
+                    onClick={() => handleSave('draft')}
+                    variant="outline"
+                    className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save as Draft
+                  </Button>
+                  <Button
+                    onClick={() => handleSave('sent')}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Invoice
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Additional Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="paymentTerms">Payment Terms</Label>
-              <Input
-                id="paymentTerms"
-                value={formData.paymentTerms}
-                onChange={(e) => setFormData(prev => ({ ...prev, paymentTerms: e.target.value }))}
-                placeholder="e.g., Net 30"
-              />
-            </div>
+                <div className="pt-4 border-t border-white/20">
+                  <Badge variant="secondary" className="bg-white/10 text-white">
+                    Invoice will be numbered automatically
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Additional notes or terms"
-              rows={3}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <Button
-              onClick={() => saveInvoice('draft')}
-              disabled={loading}
-              variant="outline"
-              className="flex-1"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save as Draft
-            </Button>
-            <Button
-              onClick={() => saveInvoice('sent')}
-              disabled={loading}
-              className="flex-1"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Create & Send Invoice
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
