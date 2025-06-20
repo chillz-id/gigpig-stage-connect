@@ -113,7 +113,7 @@ const CreateEvent = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Create New Event</h1>
-          <p className="text-purple-100">Set up your comedy show and start receiving applications</p>
+          <p className="text-purple-100">Build your shows and start receiving applications</p>
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">

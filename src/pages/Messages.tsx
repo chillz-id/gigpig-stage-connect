@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, Send, Search, MoreVertical, Phone, Video, Star, Paperclip, UserPlus, Shield, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageCircle, Send, Search, MoreVertical, Phone, Video, Star, Paperclip, UserPlus, Shield, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import ConnectionRequest from '@/components/ConnectionRequest';
 import PendingRequests from '@/components/PendingRequests';
@@ -176,14 +177,18 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0]);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'comedian' | 'promoter'>('all');
   const [showConnectionRequest, setShowConnectionRequest] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(mockPendingRequests);
   const [selectedTab, setSelectedTab] = useState('conversations');
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredConversations = conversations.filter(conv => {
+    const matchesSearch = conv.participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'all' || conv.participantRole === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
 
   const sendMessage = () => {
     if (!newMessage.trim() || !selectedConversation || !user) return;
@@ -325,14 +330,28 @@ const Messages = () => {
               <div className="lg:col-span-1">
                 <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white h-full flex flex-col">
                   <CardHeader className="pb-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <Input
-                        placeholder="Search conversations..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-                      />
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search conversations..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 pr-12 bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                        />
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          <Select value={roleFilter} onValueChange={(value: 'all' | 'comedian' | 'promoter') => setRoleFilter(value)}>
+                            <SelectTrigger className="w-10 h-8 p-0 border-none bg-transparent hover:bg-white/10 transition-colors">
+                              <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-800 border-gray-700">
+                              <SelectItem value="all" className="text-white hover:bg-gray-700">All</SelectItem>
+                              <SelectItem value="comedian" className="text-white hover:bg-gray-700">Comedians</SelectItem>
+                              <SelectItem value="promoter" className="text-white hover:bg-gray-700">Promoters</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 overflow-y-auto p-0">

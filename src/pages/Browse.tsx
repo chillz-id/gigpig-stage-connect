@@ -168,7 +168,7 @@ const Browse = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
-          <p className="text-muted-foreground">Find your next comedy opportunity</p>
+          <p className="text-muted-foreground">Find gigs near you</p>
         </div>
 
         {/* Search and Filters */}
