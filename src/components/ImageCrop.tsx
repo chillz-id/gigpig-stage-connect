@@ -60,11 +60,11 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     // Draw image
     ctx.drawImage(image, x, y, displayWidth, displayHeight);
     
-    // Draw crop overlay
+    // Create dark overlay everywhere
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Clear the crop area
+    // Clear the crop area (make it visible by removing the dark overlay)
     ctx.globalCompositeOperation = 'destination-out';
     const cropSize = 200;
     const cropX = (containerWidth - cropSize) / 2;

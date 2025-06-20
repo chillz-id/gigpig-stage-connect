@@ -15,7 +15,7 @@ import { CalendarView } from '@/components/CalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
-import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera } from 'lucide-react';
+import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -154,15 +154,13 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="vouches">Vouches</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="requests">Requests</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -206,9 +204,55 @@ const Profile = () => {
                   <Input id="specialties" placeholder="Observational, Dark Comedy, Storytelling..." />
                 </div>
 
+                <div>
+                  <Label>Social Media Links</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <Input placeholder="Instagram @username" />
+                    <Input placeholder="TikTok @username" />
+                    <Input placeholder="YouTube channel" />
+                    <Input placeholder="Twitter @username" />
+                  </div>
+                </div>
+
                 <Button onClick={handleSaveProfile} className="professional-button">
                   Save Profile
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="professional-card">
+              <CardHeader>
+                <CardTitle>Media & Portfolio</CardTitle>
+                <CardDescription>
+                  Showcase your best work to potential promoters
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label>Show Reel</Label>
+                    <div className="mt-2 border-2 border-dashed border-border rounded-lg p-8 text-center">
+                      <div className="text-muted-foreground">
+                        <Youtube className="w-8 h-8 mx-auto mb-2" />
+                        <p>Upload your show reel video or add YouTube link</p>
+                        <Button variant="outline" className="mt-2">Add Video</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Photo Gallery</Label>
+                    <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {Array.from({ length: 4 }, (_, i) => (
+                        <div key={i} className="aspect-square border-2 border-dashed border-border rounded-lg flex items-center justify-center">
+                          <Button variant="ghost" size="sm">Add Photo</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button className="professional-button">Update Media</Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -227,53 +271,6 @@ const Profile = () => {
 
           <TabsContent value="requests">
             <ContactRequests />
-          </TabsContent>
-
-          <TabsContent value="media" className="space-y-6">
-            <Card className="professional-card">
-              <CardHeader>
-                <CardTitle>Media & Portfolio</CardTitle>
-                <CardDescription>
-                  Showcase your best work to potential promoters
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <Label>Demo Reel</Label>
-                    <div className="mt-2 border-2 border-dashed border-border rounded-lg p-8 text-center">
-                      <div className="text-muted-foreground">
-                        <p>Upload your demo reel video</p>
-                        <Button variant="outline" className="mt-2">Choose File</Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Photo Gallery</Label>
-                    <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Array.from({ length: 4 }, (_, i) => (
-                        <div key={i} className="aspect-square border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-                          <Button variant="ghost" size="sm">Add Photo</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Social Media Links</Label>
-                    <div className="space-y-2 mt-2">
-                      <Input placeholder="Instagram @username" />
-                      <Input placeholder="TikTok @username" />
-                      <Input placeholder="YouTube channel" />
-                      <Input placeholder="Twitter @username" />
-                    </div>
-                  </div>
-
-                  <Button className="professional-button">Update Media</Button>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
@@ -326,57 +323,6 @@ const Profile = () => {
                 </div>
 
                 <Button className="professional-button">Save Settings</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="professional-card">
-                <CardHeader>
-                  <CardTitle className="text-lg">Profile Views</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">247</div>
-                  <p className="text-sm text-muted-foreground">This month</p>
-                </CardContent>
-              </Card>
-
-              <Card className="professional-card">
-                <CardHeader>
-                  <CardTitle className="text-lg">Applications Sent</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">18</div>
-                  <p className="text-sm text-muted-foreground">This month</p>
-                </CardContent>
-              </Card>
-
-              <Card className="professional-card">
-                <CardHeader>
-                  <CardTitle className="text-lg">Shows Performed</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{user.stats.showsPerformed}</div>
-                  <p className="text-sm text-muted-foreground">All time</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="professional-card">
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {['Applied to Comedy Night at The Laugh Track', 'Profile viewed by Sarah Johnson', 'Received vouch from Mike Chen', 'Updated bio and photos'].map((activity, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      <span className="text-sm">{activity}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{i + 1} day{i > 0 ? 's' : ''} ago</span>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
