@@ -125,13 +125,11 @@ const CreateEvent = () => {
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
       recurrenceEndDate: recurringSettings.isRecurring ? recurringSettings.endDate : undefined,
+      spotDetails: eventSpots
     };
 
     console.log('Creating event:', eventData);
-    createEvent({
-      ...eventData,
-      spots: eventSpots
-    });
+    createEvent(eventData);
   };
 
   const addRequirement = () => {

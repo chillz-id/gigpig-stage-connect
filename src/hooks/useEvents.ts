@@ -58,7 +58,7 @@ export const useEvents = () => {
       isRecurring?: boolean;
       recurrencePattern?: string;
       recurrenceEndDate?: string;
-      spots?: Array<{
+      spotDetails?: Array<{
         spot_name: string;
         is_paid: boolean;
         payment_amount?: number;
@@ -69,7 +69,7 @@ export const useEvents = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const { spots, isRecurring, recurrencePattern, recurrenceEndDate, ...baseEventData } = eventData;
+      const { spotDetails, isRecurring, recurrencePattern, recurrenceEndDate, ...baseEventData } = eventData;
       
       // Generate series ID for recurring events
       const seriesId = isRecurring ? crypto.randomUUID() : null;
@@ -121,10 +121,10 @@ export const useEvents = () => {
       if (error) throw error;
 
       // Create spots for each event if provided
-      if (spots && spots.length > 0) {
+      if (spotDetails && spotDetails.length > 0) {
         const spotsToCreate = [];
         createdEvents.forEach((event, eventIndex) => {
-          spots.forEach((spot, spotIndex) => {
+          spotDetails.forEach((spot, spotIndex) => {
             spotsToCreate.push({
               event_id: event.id,
               spot_name: spot.spot_name,
