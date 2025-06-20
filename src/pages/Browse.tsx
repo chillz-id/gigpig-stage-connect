@@ -8,30 +8,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import { mockShows } from '@/data/mockData';
+import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarView } from '@/components/CalendarView';
 import { MapView } from '@/components/MapView';
+import { useNavigate } from 'react-router-dom';
 
 const Browse = () => {
   const { user } = useUser();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { events, isLoading } = useEvents();
   const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
-  const filteredShows = mockShows.filter(show => {
-    const matchesSearch = show.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         show.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         show.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !locationFilter || locationFilter === 'all' || show.location.includes(locationFilter);
-    const matchesType = !typeFilter || typeFilter === 'all' || show.type.toLowerCase().includes(typeFilter.toLowerCase());
+  const filteredShows = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         `${event.city}, ${event.state}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLocation = !locationFilter || locationFilter === 'all' || 
+                           `${event.city}, ${event.state}`.includes(locationFilter);
+    const matchesType = !typeFilter || typeFilter === 'all' || 
+                       (event.type && event.type.toLowerCase().includes(typeFilter.toLowerCase()));
     
     return matchesSearch && matchesLocation && matchesType;
   });
 
-  const handleApply = (show: any) => {
+  const handleApply = (event: any) => {
     if (!user) {
       toast({
         title: "Please sign in",
@@ -41,7 +46,7 @@ const Browse = () => {
       return;
     }
 
-    if (show.isVerifiedOnly && !user.isVerified) {
+    if (event.is_verified_only && !user.isVerified) {
       toast({
         title: "Verification required",
         description: "This show requires verified comedians only. Upgrade to Pro to get verified!",
@@ -50,7 +55,7 @@ const Browse = () => {
       return;
     }
 
-    if (show.status === 'full') {
+    if (event.status === 'full') {
       toast({
         title: "Show is full",
         description: "This show has reached its maximum capacity.",
@@ -61,94 +66,100 @@ const Browse = () => {
 
     toast({
       title: "Application submitted!",
-      description: `Your application for "${show.title}" has been submitted successfully.`,
+      description: `Your application for "${event.title}" has been submitted successfully.`,
     });
   };
 
-  const ShowCard = ({ show }: { show: any }) => (
-    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl">{show.title}</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {show.venue} • {show.location}
-            </CardDescription>
+  const ShowCard = ({ show }: { show: any }) => {
+    const eventDate = new Date(show.event_date);
+    const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
+    
+    return (
+      <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-xl">{show.title}</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                {show.venue} • {show.city}, {show.state}
+              </CardDescription>
+            </div>
+            <div className="flex flex-col gap-2">
+              {show.is_verified_only && (
+                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                  <Star className="w-3 h-3 mr-1" />
+                  Verified Only
+                </Badge>
+              )}
+              {availableSpots <= 0 && (
+                <Badge variant="destructive">Full</Badge>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            {show.isVerifiedOnly && (
-              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                <Star className="w-3 h-3 mr-1" />
-                Verified Only
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center space-x-1">
+              <Calendar className="w-4 h-4" />
+              <span>{eventDate.toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Clock className="w-4 h-4" />
+              <span>{show.start_time || 'Time TBA'}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Users className="w-4 h-4" />
+              <span>{Math.max(0, availableSpots)} spots left</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <DollarSign className="w-4 h-4" />
+              <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {show.type && (
+              <Badge variant="outline" className="text-foreground border-border">
+                {show.type}
               </Badge>
             )}
-            {show.status === 'full' && (
-              <Badge variant="destructive">Full</Badge>
-            )}
+            <Badge variant="outline" className="text-foreground border-border">
+              {show.age_restriction || '18+'}
+            </Badge>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center space-x-1">
-            <Calendar className="w-4 h-4" />
-            <span>{show.date}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Clock className="w-4 h-4" />
-            <span>{show.time}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Users className="w-4 h-4" />
-            <span>{show.spots - show.appliedSpots} spots left</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <DollarSign className="w-4 h-4" />
-            <span>{show.pay}</span>
-          </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-foreground border-border">
-            {show.type}
-          </Badge>
-          <Badge variant="outline" className="text-foreground border-border">
-            {show.duration}
-          </Badge>
-        </div>
+          {show.description && (
+            <p className="text-muted-foreground text-sm line-clamp-2">{show.description}</p>
+          )}
 
-        <p className="text-muted-foreground text-sm">{show.description}</p>
-
-        {show.requirements && (
-          <div className="text-xs text-muted-foreground">
-            <p className="font-medium mb-1">Requirements:</p>
-            <ul className="list-disc list-inside space-y-1">
-              {show.requirements.map((req, index) => (
-                <li key={index}>{req}</li>
-              ))}
-            </ul>
+          <div className="flex gap-2">
+            <Button 
+              className="flex-1 bg-primary hover:bg-primary/90"
+              onClick={() => handleApply(show)}
+              disabled={availableSpots <= 0}
+            >
+              {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-foreground border-border hover:bg-accent"
+              onClick={() => navigate(`/event/${show.id}`)}
+            >
+              Details
+            </Button>
           </div>
-        )}
-
-        <div className="flex gap-2">
-          <Button 
-            className="flex-1 bg-primary hover:bg-primary/90"
-            onClick={() => handleApply(show)}
-            disabled={show.status === 'full'}
-          >
-            {show.status === 'full' ? 'Show Full' : 'Apply Now'}
-          </Button>
-          <Button variant="outline" className="text-foreground border-border hover:bg-accent">
-            Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const ListView = () => (
     <div className="space-y-4">
-      {filteredShows.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-8">
+          <div className="text-xl text-muted-foreground">Loading events...</div>
+        </div>
+      ) : filteredShows.length === 0 ? (
         <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">No shows found</h3>

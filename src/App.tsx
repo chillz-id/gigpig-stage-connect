@@ -12,6 +12,7 @@ import Browse from '@/pages/Browse';
 import Dashboard from '@/pages/Dashboard';
 import Profile from '@/pages/Profile';
 import CreateEvent from '@/pages/CreateEvent';
+import EventDetails from '@/pages/EventDetails';
 import Applications from '@/pages/Applications';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
@@ -44,6 +45,7 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/browse" element={<Browse />} />
+                  <Route path="/event/:id" element={<EventDetails />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/create-event" element={<CreateEvent />} />
