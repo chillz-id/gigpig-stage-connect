@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/contexts/UserContext';
 import BrandingCustomization from '@/components/BrandingCustomization';
 import GroupManagement from '@/components/GroupManagement';
-import { Settings, Palette, Users, Crown } from 'lucide-react';
+import OrganizationManagement from '@/components/OrganizationManagement';
+import { Settings, Palette, Users, Crown, Building2 } from 'lucide-react';
 
 const PromoterSettings = () => {
   const { user } = useUser();
@@ -125,12 +126,16 @@ const PromoterSettings = () => {
             <Badge className="bg-yellow-500 text-black">PRO</Badge>
           </div>
           <p className="text-purple-100">
-            Customize your promoter dashboard and manage your staff
+            Customize your promoter dashboard and manage your business
           </p>
         </div>
 
-        <Tabs defaultValue="branding" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm mb-6">
+        <Tabs defaultValue="organizations" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm mb-6">
+            <TabsTrigger value="organizations" className="data-[state=active]:bg-purple-500">
+              <Building2 className="w-4 h-4 mr-2" />
+              Organizations
+            </TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-purple-500">
               <Palette className="w-4 h-4 mr-2" />
               Branding
@@ -140,6 +145,10 @@ const PromoterSettings = () => {
               Groups
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="organizations">
+            <OrganizationManagement />
+          </TabsContent>
 
           <TabsContent value="branding">
             <BrandingCustomization
