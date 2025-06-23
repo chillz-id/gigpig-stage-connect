@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/hooks/useEvents';
+import { useUser } from '@/contexts/UserContext';
 import { EventBasicInfo } from './EventBasicInfo';
 import { EventDateTimeSection } from './EventDateTimeSection';
 import { EventRequirementsSection } from './EventRequirementsSection';
@@ -15,6 +16,7 @@ export const CreateEventForm: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { createEvent, isCreating } = useEvents();
+  const { user } = useUser();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -108,6 +110,15 @@ export const CreateEventForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create an event.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!formData.title || !formData.venue || !formData.date || !formData.time) {
       toast({
         title: "Missing required fields",
@@ -138,6 +149,7 @@ export const CreateEventForm: React.FC = () => {
     const eventDateTime = new Date(`${formData.date}T${formData.time}`);
 
     const eventData = {
+      promoter_id: user.id,
       title: formData.title,
       venue: formData.venue,
       address: formData.address,
