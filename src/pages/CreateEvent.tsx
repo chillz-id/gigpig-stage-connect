@@ -173,10 +173,14 @@ const CreateEvent = () => {
       return;
     }
 
+    // Convert Date objects to ISO strings for JSON serialization
     const templateData = {
       ...formData,
       spots: eventSpots,
-      recurringSettings
+      recurringSettings: {
+        ...recurringSettings,
+        customDates: recurringSettings.customDates.map(date => date.toISOString())
+      }
     };
 
     createTemplate({
@@ -217,7 +221,13 @@ const CreateEvent = () => {
     }
     
     if (data.recurringSettings) {
-      setRecurringSettings(data.recurringSettings);
+      // Convert ISO strings back to Date objects
+      setRecurringSettings({
+        ...data.recurringSettings,
+        customDates: data.recurringSettings.customDates 
+          ? data.recurringSettings.customDates.map((dateStr: string) => new Date(dateStr))
+          : []
+      });
     }
 
     toast({
