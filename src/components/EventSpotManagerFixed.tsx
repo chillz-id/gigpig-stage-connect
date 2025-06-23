@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -127,16 +126,14 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="is-paid">Paid Spot</Label>
-                {newSpot.is_paid && (
-                  <Badge className="bg-green-500 text-xs">
-                    <DollarSign className="w-3 h-3 mr-1" />
-                    {newSpot.currency}
-                  </Badge>
-                )}
-              </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="is-paid">Paid Spot</Label>
+              {newSpot.is_paid && (
+                <Badge className="bg-green-500 text-xs">
+                  <DollarSign className="w-3 h-3 mr-1" />
+                  {newSpot.currency}
+                </Badge>
+              )}
               <Switch
                 id="is-paid"
                 checked={newSpot.is_paid}
@@ -163,7 +160,7 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
                   <CurrencySelector
                     value={newSpot.currency}
                     onChange={(currency) => setNewSpot(prev => ({ ...prev, currency }))}
-                    className="bg-white/10 border-white/20 text-white"
+                    className="bg-white/10 border-white/20 text-white w-full"
                   />
                 </div>
               </div>
@@ -245,7 +242,7 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
                             <CurrencySelector
                               value={spot.currency}
                               onChange={(currency) => updateSpot(index, { currency })}
-                              className="bg-white/10 border-white/20 text-white text-sm"
+                              className="bg-white/10 border-white/20 text-white text-sm w-full"
                             />
                           </>
                         )}

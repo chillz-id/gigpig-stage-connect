@@ -25,7 +25,7 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
 }) => {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={`w-20 ${className}`}>
+      <SelectTrigger className={className}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
