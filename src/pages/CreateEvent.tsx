@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Clock, DollarSign, Users, MapPin, Star, Plus, X, Save, Repeat, FileText, Image } from 'lucide-react';
+import { Calendar, Clock, Star, Plus, X, Save, Repeat, FileText } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
 import { useEventTemplates } from '@/hooks/useEventTemplates';
-import { EventSpotManager } from '@/components/EventSpotManager';
+import { EventSpotManagerFixed } from '@/components/EventSpotManagerFixed';
+import { EventBannerUpload } from '@/components/EventBannerUpload';
+import { CustomRecurrencePicker } from '@/components/CustomRecurrencePicker';
 
 const CreateEvent = () => {
   const { user } = useUser();
@@ -56,7 +59,8 @@ const CreateEvent = () => {
   const [recurringSettings, setRecurringSettings] = useState({
     isRecurring: false,
     pattern: 'weekly',
-    endDate: ''
+    endDate: '',
+    customDates: [] as Date[]
   });
 
   const [newRequirement, setNewRequirement] = useState('');
@@ -91,10 +95,19 @@ const CreateEvent = () => {
       return;
     }
 
-    if (recurringSettings.isRecurring && !recurringSettings.endDate) {
+    if (recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' && !recurringSettings.endDate) {
       toast({
         title: "Missing recurring end date",
         description: "Please specify when the recurring events should end.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (recurringSettings.isRecurring && recurringSettings.pattern === 'custom' && recurringSettings.customDates.length === 0) {
+      toast({
+        title: "No custom dates selected",
+        description: "Please select at least one date for custom recurring events.",
         variant: "destructive",
       });
       return;
@@ -124,7 +137,8 @@ const CreateEvent = () => {
       banner_url: formData.bannerUrl || null,
       isRecurring: recurringSettings.isRecurring,
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
-      recurrenceEndDate: recurringSettings.isRecurring ? recurringSettings.endDate : undefined,
+      recurrenceEndDate: recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' ? recurringSettings.endDate : undefined,
+      customDates: recurringSettings.isRecurring && recurringSettings.pattern === 'custom' ? recurringSettings.customDates : undefined,
       spotDetails: eventSpots
     };
 
@@ -387,27 +401,10 @@ const CreateEvent = () => {
           </Card>
 
           {/* Event Banner */}
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Image className="w-5 h-5" />
-                Event Banner
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="bannerUrl">Banner Image URL</Label>
-                <Input
-                  id="bannerUrl"
-                  value={formData.bannerUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bannerUrl: e.target.value }))}
-                  placeholder="https://example.com/banner.jpg"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-                />
-                <p className="text-sm text-gray-300 mt-1">Add a banner image to make your event stand out</p>
-              </div>
-            </CardContent>
-          </Card>
+          <EventBannerUpload 
+            bannerUrl={formData.bannerUrl}
+            onBannerChange={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))}
+          />
 
           {/* Date & Time */}
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
@@ -472,7 +469,7 @@ const CreateEvent = () => {
                   </div>
 
                   {recurringSettings.isRecurring && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
                         <Label htmlFor="pattern">Recurrence Pattern</Label>
                         <Select value={recurringSettings.pattern} onValueChange={(value) => setRecurringSettings(prev => ({ ...prev, pattern: value }))}>
@@ -482,20 +479,29 @@ const CreateEvent = () => {
                           <SelectContent>
                             <SelectItem value="weekly">Weekly</SelectItem>
                             <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="custom">Custom Dates</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label htmlFor="endDate">End Date *</Label>
-                        <Input
-                          id="endDate"
-                          type="date"
-                          value={recurringSettings.endDate}
-                          onChange={(e) => setRecurringSettings(prev => ({ ...prev, endDate: e.target.value }))}
-                          className="bg-white/10 border-white/20 text-white"
-                          required={recurringSettings.isRecurring}
+
+                      {recurringSettings.pattern === 'custom' ? (
+                        <CustomRecurrencePicker
+                          selectedDates={recurringSettings.customDates}
+                          onDatesChange={(dates) => setRecurringSettings(prev => ({ ...prev, customDates: dates }))}
                         />
-                      </div>
+                      ) : (
+                        <div>
+                          <Label htmlFor="endDate">End Date *</Label>
+                          <Input
+                            id="endDate"
+                            type="date"
+                            value={recurringSettings.endDate}
+                            onChange={(e) => setRecurringSettings(prev => ({ ...prev, endDate: e.target.value }))}
+                            className="bg-white/10 border-white/20 text-white"
+                            required={recurringSettings.isRecurring && recurringSettings.pattern !== 'custom'}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -504,7 +510,7 @@ const CreateEvent = () => {
           </Card>
 
           {/* Event Spots Management */}
-          <EventSpotManager 
+          <EventSpotManagerFixed 
             spots={eventSpots} 
             onSpotsChange={setEventSpots}
           />

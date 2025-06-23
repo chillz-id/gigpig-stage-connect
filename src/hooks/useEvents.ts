@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +57,7 @@ export const useEvents = () => {
       isRecurring?: boolean;
       recurrencePattern?: string;
       recurrenceEndDate?: string;
+      customDates?: Date[];
       spotDetails?: Array<{
         spot_name: string;
         is_paid: boolean;
@@ -69,14 +69,32 @@ export const useEvents = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const { spotDetails, isRecurring, recurrencePattern, recurrenceEndDate, ...baseEventData } = eventData;
+      const { spotDetails, isRecurring, recurrencePattern, recurrenceEndDate, customDates, ...baseEventData } = eventData;
       
       // Generate series ID for recurring events
       const seriesId = isRecurring ? crypto.randomUUID() : null;
 
       let eventsToCreate = [];
       
-      if (isRecurring && recurrencePattern && recurrenceEndDate) {
+      if (isRecurring && recurrencePattern === 'custom' && customDates && customDates.length > 0) {
+        // Generate events for custom dates
+        customDates.forEach((date, index) => {
+          // Use the base event time but with the custom date
+          const eventDateTime = new Date(date);
+          const baseDateTime = new Date(baseEventData.event_date);
+          eventDateTime.setHours(baseDateTime.getHours(), baseDateTime.getMinutes(), baseDateTime.getSeconds());
+          
+          eventsToCreate.push({
+            ...baseEventData,
+            promoter_id: user.id,
+            event_date: eventDateTime.toISOString(),
+            is_recurring: true,
+            recurrence_pattern: recurrencePattern,
+            parent_event_id: index === 0 ? null : eventsToCreate[0]?.id || null,
+            series_id: seriesId
+          });
+        });
+      } else if (isRecurring && recurrencePattern && recurrenceEndDate) {
         // Generate recurring events
         const startDate = new Date(baseEventData.event_date);
         const endDate = new Date(recurrenceEndDate);
