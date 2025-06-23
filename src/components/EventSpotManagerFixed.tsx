@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Users, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Users, DollarSign, GripVertical } from 'lucide-react';
+import { CurrencySelector } from '@/components/ui/currency-selector';
 
 interface EventSpot {
   spot_name: string;
@@ -29,9 +30,11 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
     spot_name: '',
     is_paid: false,
     payment_amount: 0,
-    currency: 'USD',
+    currency: 'AUD',
     duration_minutes: 5
   });
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const addSpot = () => {
     if (newSpot.spot_name.trim()) {
@@ -40,7 +43,7 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
         spot_name: '',
         is_paid: false,
         payment_amount: 0,
-        currency: 'USD',
+        currency: 'AUD',
         duration_minutes: 5
       });
     }
@@ -55,6 +58,33 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
       i === index ? { ...spot, ...updates } : spot
     );
     onSpotsChange(updatedSpots);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const updatedSpots = [...spots];
+    const draggedSpot = updatedSpots[draggedIndex];
+    updatedSpots.splice(draggedIndex, 1);
+    updatedSpots.splice(dropIndex, 0, draggedSpot);
+    
+    onSpotsChange(updatedSpots);
+    setDraggedIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   return (
@@ -98,7 +128,15 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="is-paid">Paid Spot</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="is-paid">Paid Spot</Label>
+                {newSpot.is_paid && (
+                  <Badge className="bg-green-500 text-xs">
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    {newSpot.currency}
+                  </Badge>
+                )}
+              </div>
               <Switch
                 id="is-paid"
                 checked={newSpot.is_paid}
@@ -122,18 +160,11 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
                 </div>
                 <div>
                   <Label htmlFor="currency">Currency</Label>
-                  <Select value={newSpot.currency} onValueChange={(value) => setNewSpot(prev => ({ ...prev, currency: value }))}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="AUD">AUD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                      <SelectItem value="CAD">CAD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <CurrencySelector
+                    value={newSpot.currency}
+                    onChange={(currency) => setNewSpot(prev => ({ ...prev, currency }))}
+                    className="bg-white/10 border-white/20 text-white"
+                  />
                 </div>
               </div>
             )}
@@ -155,9 +186,23 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
           <div className="space-y-3">
             <h4 className="text-lg font-semibold">Current Spots ({spots.length})</h4>
             {spots.map((spot, index) => (
-              <Card key={index} className="bg-white/5 border-white/10">
+              <Card 
+                key={index} 
+                className={`bg-white/5 border-white/10 transition-all ${
+                  draggedIndex === index ? 'opacity-50 scale-95' : ''
+                }`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+              >
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="cursor-move p-1 hover:bg-white/10 rounded">
+                      <GripVertical className="w-4 h-4 text-gray-400" />
+                    </div>
+                    
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h5 className="font-medium">{spot.spot_name}</h5>
@@ -171,7 +216,7 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
                           </Badge>
                         )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                         <Input
                           value={spot.spot_name}
                           onChange={(e) => updateSpot(index, { spot_name: e.target.value })}
@@ -187,22 +232,34 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
                           max="60"
                         />
                         {spot.is_paid && (
-                          <Input
-                            type="number"
-                            value={spot.payment_amount}
-                            onChange={(e) => updateSpot(index, { payment_amount: parseFloat(e.target.value) || 0 })}
-                            className="bg-white/10 border-white/20 text-white text-sm"
-                            min="0"
-                            step="0.01"
-                          />
+                          <>
+                            <Input
+                              type="number"
+                              value={spot.payment_amount}
+                              onChange={(e) => updateSpot(index, { payment_amount: parseFloat(e.target.value) || 0 })}
+                              className="bg-white/10 border-white/20 text-white text-sm"
+                              min="0"
+                              step="0.01"
+                              placeholder="Amount"
+                            />
+                            <CurrencySelector
+                              value={spot.currency}
+                              onChange={(currency) => updateSpot(index, { currency })}
+                              className="bg-white/10 border-white/20 text-white text-sm"
+                            />
+                          </>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Switch
-                        checked={spot.is_paid}
-                        onCheckedChange={(checked) => updateSpot(index, { is_paid: checked })}
-                      />
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-gray-300">Paid</span>
+                        <Switch
+                          checked={spot.is_paid}
+                          onCheckedChange={(checked) => updateSpot(index, { is_paid: checked })}
+                        />
+                      </div>
                       <Button
                         type="button"
                         size="sm"
