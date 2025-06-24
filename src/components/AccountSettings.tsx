@@ -11,7 +11,7 @@ export const AccountSettings: React.FC = () => {
   const upgradeOptions = [
     {
       title: "Comedian Pro",
-      price: "$9.99/month",
+      price: "$19.99/month",
       icon: Star,
       features: [
         "Verified comedian badge",
@@ -25,7 +25,7 @@ export const AccountSettings: React.FC = () => {
     },
     {
       title: "Promoter Pro",
-      price: "$19.99/month", 
+      price: "$24.99/month", 
       icon: Crown,
       features: [
         "Unlimited event creation",
@@ -39,8 +39,8 @@ export const AccountSettings: React.FC = () => {
     },
     {
       title: "Bundle & Save",
-      price: "$24.99/month",
-      originalPrice: "$29.98",
+      price: "$39.99/month",
+      originalPrice: "$44.98",
       icon: Zap,
       features: [
         "All Comedian Pro features",
@@ -57,56 +57,7 @@ export const AccountSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="professional-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Account Settings
-          </CardTitle>
-          <CardDescription>
-            Manage your account preferences and privacy
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive notifications about new opportunities</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>SMS Notifications</Label>
-                <p className="text-sm text-muted-foreground">Get text alerts for urgent updates</p>
-              </div>
-              <Switch />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Profile Visibility</Label>
-                <p className="text-sm text-muted-foreground">Make your profile discoverable to promoters</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Auto-Apply to Suitable Shows</Label>
-                <p className="text-sm text-muted-foreground">Automatically apply to shows matching your criteria</p>
-              </div>
-              <Switch />
-            </div>
-          </div>
-
-          <Button className="professional-button">Save Settings</Button>
-        </CardContent>
-      </Card>
-
-      {/* Upgrade Options */}
+      {/* Upgrade Options - moved to top */}
       <Card className="professional-card">
         <CardHeader>
           <CardTitle>Upgrade Your Account</CardTitle>
@@ -159,6 +110,55 @@ export const AccountSettings: React.FC = () => {
               );
             })}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="professional-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Account Settings
+          </CardTitle>
+          <CardDescription>
+            Manage your account preferences and privacy
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Email Notifications</Label>
+                <p className="text-sm text-muted-foreground">Receive notifications about new opportunities</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>SMS Notifications</Label>
+                <p className="text-sm text-muted-foreground">Get text alerts for urgent updates</p>
+              </div>
+              <Switch />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Profile Visibility</Label>
+                <p className="text-sm text-muted-foreground">Make your profile discoverable to promoters</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Auto-Apply to Suitable Shows</Label>
+                <p className="text-sm text-muted-foreground">Automatically apply to shows matching your criteria</p>
+              </div>
+              <Switch />
+            </div>
+          </div>
+
+          <Button className="professional-button">Save Settings</Button>
         </CardContent>
       </Card>
     </div>
