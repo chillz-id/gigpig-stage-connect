@@ -50,6 +50,13 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
     onTicketsChange(tickets.filter((_, i) => i !== index));
   };
 
+  const handlePriceChange = (value: string) => {
+    // Remove leading zeros and handle empty string
+    const cleanValue = value.replace(/^0+(?=\d)/, '') || '0';
+    const numericValue = parseFloat(cleanValue) || 0;
+    setNewTicket(prev => ({ ...prev, price: numericValue }));
+  };
+
   return (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
       <CardHeader>
@@ -118,8 +125,9 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
                   type="number"
                   step="0.01"
                   min="0"
-                  value={newTicket.price}
-                  onChange={(e) => setNewTicket(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  value={newTicket.price === 0 ? '' : newTicket.price}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  placeholder="0.00"
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                 />
               </div>
@@ -133,7 +141,12 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
               </div>
             </div>
 
-            <Button type="button" onClick={addTicket} className="bg-purple-500 hover:bg-purple-600">
+            <Button 
+              type="button" 
+              onClick={addTicket} 
+              disabled={!newTicket.ticket_name.trim()}
+              className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Ticket
             </Button>
@@ -144,9 +157,9 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {tickets.map((ticket, index) => (
                     <Badge key={index} variant="outline" className="text-white border-white/30 flex items-center gap-2">
-                      <span>{ticket.ticket_name} - {ticket.currency} {ticket.price}</span>
+                      <span>{ticket.ticket_name} - {ticket.currency} {ticket.price.toFixed(2)}</span>
                       <X 
-                        className="w-3 h-3 cursor-pointer" 
+                        className="w-3 h-3 cursor-pointer hover:text-red-300" 
                         onClick={() => removeTicket(index)}
                       />
                     </Badge>
