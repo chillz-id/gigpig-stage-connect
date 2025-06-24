@@ -12,6 +12,7 @@ import { EventSpotManagerFixed } from './EventSpotManagerFixed';
 import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateLoader } from './EventTemplateLoader';
 import { EventTemplateSaver } from './EventTemplateSaver';
+import { EventTicketSection } from './EventTicketSection';
 import { EventFormData, RecurringSettings, EventSpot } from '@/types/eventTypes';
 import { validateEventForm } from '@/utils/eventValidation';
 import { prepareEventData } from '@/utils/eventDataMapper';
@@ -40,6 +41,9 @@ const initialFormData: EventFormData = {
   showLevel: '',
   showType: '',
   customShowType: '',
+  ticketingType: 'gigpigs',
+  externalTicketUrl: '',
+  tickets: [],
 };
 
 const initialRecurringSettings: RecurringSettings = {
@@ -128,6 +132,15 @@ export const CreateEventForm: React.FC = () => {
       <EventSpotManagerFixed 
         spots={eventSpots} 
         onSpotsChange={setEventSpots}
+      />
+
+      <EventTicketSection
+        ticketingType={formData.ticketingType}
+        externalTicketUrl={formData.externalTicketUrl}
+        tickets={formData.tickets}
+        onTicketingTypeChange={(type) => handleFormDataChange({ ticketingType: type })}
+        onExternalTicketUrlChange={(url) => handleFormDataChange({ externalTicketUrl: url })}
+        onTicketsChange={(tickets) => handleFormDataChange({ tickets })}
       />
 
       <EventRequirementsSection

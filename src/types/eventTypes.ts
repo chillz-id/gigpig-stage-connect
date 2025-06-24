@@ -22,6 +22,9 @@ export interface EventFormData {
   showLevel: string;
   showType: string;
   customShowType: string;
+  ticketingType: 'gigpigs' | 'external';
+  externalTicketUrl: string;
+  tickets: EventTicket[];
 }
 
 export interface CustomDate {
@@ -45,4 +48,11 @@ export interface EventSpot {
   payment_amount?: number;
   currency: string;
   duration_minutes?: number;
+}
+
+export interface EventTicket {
+  ticket_name: string;
+  description?: string;
+  price: number;
+  currency: string;
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
+import { useCustomShowTypes } from '@/hooks/useCustomShowTypes';
 
 interface EventRequirementsSectionProps {
   formData: {
@@ -29,6 +29,7 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
   onFormDataChange
 }) => {
   const [newRequirement, setNewRequirement] = useState('');
+  const { customShowTypes, saveCustomShowType } = useCustomShowTypes();
 
   const addRequirement = () => {
     if (newRequirement.trim()) {
@@ -43,6 +44,19 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
     onFormDataChange({
       requirements: formData.requirements.filter((_, i) => i !== index)
     });
+  };
+
+  const handleShowTypeChange = (value: string) => {
+    onFormDataChange({ showType: value });
+    if (value !== 'custom') {
+      onFormDataChange({ customShowType: '' });
+    }
+  };
+
+  const handleCustomShowTypeSubmit = () => {
+    if (formData.customShowType.trim()) {
+      saveCustomShowType(formData.customShowType.trim());
+    }
   };
 
   return (
@@ -68,7 +82,7 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
           </div>
           <div>
             <Label htmlFor="showType">Show Type</Label>
-            <Select value={formData.showType} onValueChange={(value) => onFormDataChange({ showType: value })}>
+            <Select value={formData.showType} onValueChange={handleShowTypeChange}>
               <SelectTrigger className="bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Select show type" />
               </SelectTrigger>
@@ -77,6 +91,11 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
                 <SelectItem value="solo-show">Solo Show</SelectItem>
                 <SelectItem value="live-podcast">Live Podcast</SelectItem>
                 <SelectItem value="corporate">Corporate</SelectItem>
+                {customShowTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
                 <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
@@ -87,13 +106,23 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
         {formData.showType === 'custom' && (
           <div>
             <Label htmlFor="customShowType">Custom Show Type</Label>
-            <Input
-              id="customShowType"
-              value={formData.customShowType}
-              onChange={(e) => onFormDataChange({ customShowType: e.target.value })}
-              placeholder="Enter your custom show type"
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="customShowType"
+                value={formData.customShowType}
+                onChange={(e) => onFormDataChange({ customShowType: e.target.value })}
+                placeholder="Enter your custom show type"
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleCustomShowTypeSubmit())}
+              />
+              <Button 
+                type="button" 
+                onClick={handleCustomShowTypeSubmit}
+                className="bg-purple-500 hover:bg-purple-600"
+              >
+                Save
+              </Button>
+            </div>
           </div>
         )}
 
