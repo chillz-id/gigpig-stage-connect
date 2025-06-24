@@ -8,11 +8,19 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, Repeat } from 'lucide-react';
 import { CustomRecurrencePicker } from '@/components/CustomRecurrencePicker';
 
+interface CustomDate {
+  date: Date;
+  times: Array<{
+    startTime: string;
+    endTime: string;
+  }>;
+}
+
 interface RecurringSettings {
   isRecurring: boolean;
   pattern: string;
   endDate: string;
-  customDates: Date[];
+  customDates: CustomDate[];
 }
 
 interface EventDateTimeSectionProps {

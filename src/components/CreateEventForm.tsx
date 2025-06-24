@@ -12,6 +12,14 @@ import { EventSpotManagerFixed } from './EventSpotManagerFixed';
 import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateManager } from './EventTemplateManager';
 
+interface CustomDate {
+  date: Date;
+  times: Array<{
+    startTime: string;
+    endTime: string;
+  }>;
+}
+
 export const CreateEventForm: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -52,7 +60,7 @@ export const CreateEventForm: React.FC = () => {
     isRecurring: false,
     pattern: 'weekly',
     endDate: '',
-    customDates: [] as Date[]
+    customDates: [] as CustomDate[]
   });
 
   const handleFormDataChange = (updates: Partial<typeof formData>) => {
@@ -92,11 +100,14 @@ export const CreateEventForm: React.FC = () => {
     }
     
     if (data.recurringSettings) {
-      // Convert ISO strings back to Date objects
+      // Convert ISO strings back to Date objects and handle the new CustomDate structure
       setRecurringSettings({
         ...data.recurringSettings,
         customDates: data.recurringSettings.customDates 
-          ? data.recurringSettings.customDates.map((dateStr: string) => new Date(dateStr))
+          ? data.recurringSettings.customDates.map((customDate: any) => ({
+              date: new Date(customDate.date),
+              times: customDate.times || [{ startTime: '19:00', endTime: '22:00' }]
+            }))
           : []
       });
     }

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,14 @@ import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase
 type Event = Tables<'events'>;
 type EventInsert = TablesInsert<'events'>;
 type EventUpdate = TablesUpdate<'events'>;
+
+interface CustomDate {
+  date: Date;
+  times: Array<{
+    startTime: string;
+    endTime: string;
+  }>;
+}
 
 export const useEvents = () => {
   const { toast } = useToast();
@@ -57,7 +66,7 @@ export const useEvents = () => {
       isRecurring?: boolean;
       recurrencePattern?: string;
       recurrenceEndDate?: string;
-      customDates?: Date[];
+      customDates?: CustomDate[];
       spotDetails?: Array<{
         spot_name: string;
         is_paid: boolean;
@@ -77,21 +86,25 @@ export const useEvents = () => {
       let eventsToCreate = [];
       
       if (isRecurring && recurrencePattern === 'custom' && customDates && customDates.length > 0) {
-        // Generate events for custom dates
-        customDates.forEach((date, index) => {
-          // Use the base event time but with the custom date
-          const eventDateTime = new Date(date);
-          const baseDateTime = new Date(baseEventData.event_date);
-          eventDateTime.setHours(baseDateTime.getHours(), baseDateTime.getMinutes(), baseDateTime.getSeconds());
-          
-          eventsToCreate.push({
-            ...baseEventData,
-            promoter_id: user.id,
-            event_date: eventDateTime.toISOString(),
-            is_recurring: true,
-            recurrence_pattern: recurrencePattern,
-            parent_event_id: index === 0 ? null : eventsToCreate[0]?.id || null,
-            series_id: seriesId
+        // Generate events for custom dates with their specific times
+        customDates.forEach((customDate, dateIndex) => {
+          customDate.times.forEach((timeSlot, timeIndex) => {
+            // Create separate events for each time slot
+            const eventDateTime = new Date(customDate.date);
+            const [hours, minutes] = timeSlot.startTime.split(':').map(Number);
+            eventDateTime.setHours(hours, minutes, 0, 0);
+            
+            eventsToCreate.push({
+              ...baseEventData,
+              promoter_id: user.id,
+              event_date: eventDateTime.toISOString(),
+              start_time: timeSlot.startTime,
+              end_time: timeSlot.endTime || null,
+              is_recurring: true,
+              recurrence_pattern: recurrencePattern,
+              parent_event_id: dateIndex === 0 && timeIndex === 0 ? null : eventsToCreate[0]?.id || null,
+              series_id: seriesId
+            });
           });
         });
       } else if (isRecurring && recurrencePattern && recurrenceEndDate) {
