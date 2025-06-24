@@ -9,13 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
-import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard } from 'lucide-react';
+import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard, Plus, Eye, Image } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
@@ -32,6 +33,14 @@ const Profile = () => {
   
   const [showImageCrop, setShowImageCrop] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
+
+  // Contact settings state
+  const [contactSettings, setContactSettings] = useState({
+    email: { show: true, value: 'alex@example.com' },
+    phone: { show: false, value: '+1 (555) 123-4567' },
+    managerEmail: { show: true, value: 'manager@agency.com' },
+    managerPhone: { show: false, value: '+1 (555) 987-6543' },
+  });
 
   // Mock invoices data
   const mockInvoices = [
@@ -115,6 +124,24 @@ const Profile = () => {
     toast({
       title: "Profile Picture Updated",
       description: "Your profile picture has been successfully updated.",
+    });
+  };
+
+  const updateContactSetting = (key: string, field: 'show' | 'value', value: boolean | string) => {
+    setContactSettings(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key as keyof typeof prev],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveContactSettings = () => {
+    console.log('Saving contact settings:', contactSettings);
+    toast({
+      title: "Contact Settings Saved",
+      description: "Your contact visibility preferences have been updated.",
     });
   };
 
@@ -300,7 +327,10 @@ const Profile = () => {
                     <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Array.from({ length: 4 }, (_, i) => (
                         <div key={i} className="aspect-square border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-                          <Button variant="ghost" size="sm">Add Photo</Button>
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Image className="w-4 h-4" />
+                            Add Photo
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -311,7 +341,7 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Contact Information - Now at bottom of Profile tab */}
+            {/* Contact Information with Visibility Controls */}
             <Card className="professional-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -322,26 +352,116 @@ const Profile = () => {
                   Your contact details for booking and collaboration
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="contact-email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email Address
-                    </Label>
-                    <Input id="contact-email" defaultValue="alex@example.com" className="mt-2" />
+              <CardContent className="space-y-6">
+                {/* Personal Contact */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-4 h-4" />
+                    <h3 className="font-semibold">Personal Contact</h3>
                   </div>
-                  <div>
-                    <Label htmlFor="contact-phone" className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Mobile Number
-                    </Label>
-                    <Input id="contact-phone" defaultValue="+1 (555) 123-4567" className="mt-2" />
+                  <div className="grid gap-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Mail className="w-4 h-4" />
+                          <Label htmlFor="email">Email Address</Label>
+                          {contactSettings.email.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                        </div>
+                        <Input
+                          id="email"
+                          value={contactSettings.email.value}
+                          onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      <Switch
+                        checked={contactSettings.email.show}
+                        onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Phone className="w-4 h-4" />
+                          <Label htmlFor="phone">Phone Number</Label>
+                          {contactSettings.phone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                        </div>
+                        <Input
+                          id="phone"
+                          value={contactSettings.phone.value}
+                          onChange={(e) => updateContactSetting('phone', 'value', e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      <Switch
+                        checked={contactSettings.phone.show}
+                        onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
+                      />
+                    </div>
                   </div>
                 </div>
-                <Button className="professional-button mt-4">
-                  Update Contact Info
-                </Button>
+
+                <Separator />
+
+                {/* Manager Contact */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-4 h-4" />
+                    <h3 className="font-semibold">Manager Contact</h3>
+                  </div>
+                  <div className="grid gap-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Mail className="w-4 h-4" />
+                          <Label htmlFor="managerEmail">Manager Email</Label>
+                          {contactSettings.managerEmail.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                        </div>
+                        <Input
+                          id="managerEmail"
+                          value={contactSettings.managerEmail.value}
+                          onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      <Switch
+                        checked={contactSettings.managerEmail.show}
+                        onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Phone className="w-4 h-4" />
+                          <Label htmlFor="managerPhone">Manager Phone</Label>
+                          {contactSettings.managerPhone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                        </div>
+                        <Input
+                          id="managerPhone"
+                          value={contactSettings.managerPhone.value}
+                          onChange={(e) => updateContactSetting('managerPhone', 'value', e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      <Switch
+                        checked={contactSettings.managerPhone.show}
+                        onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-4">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add More Contact Details
+                  </Button>
+                  <Button onClick={handleSaveContactSettings} className="professional-button">
+                    Save Contact Settings
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
