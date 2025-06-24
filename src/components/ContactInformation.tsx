@@ -198,7 +198,7 @@ export const ContactInformation: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 <h3 className="font-semibold">Additional Contact Details</h3>
               </div>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {additionalContacts.map((contact) => (
                   <div key={contact.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1 mr-3">
@@ -207,19 +207,19 @@ export const ContactInformation: React.FC = () => {
                           value={contact.type}
                           onValueChange={(value) => updateAdditionalContact(contact.id, 'type', value)}
                         >
-                          <SelectTrigger className="w-24 h-8">
+                          <SelectTrigger className="w-20 h-6 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="email">
-                              <div className="flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
                                 Email
                               </div>
                             </SelectItem>
                             <SelectItem value="phone">
-                              <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4" />
+                              <div className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
                                 Phone
                               </div>
                             </SelectItem>
@@ -228,8 +228,8 @@ export const ContactInformation: React.FC = () => {
                         <Input
                           value={contact.label}
                           onChange={(e) => updateAdditionalContact(contact.id, 'label', e.target.value)}
-                          placeholder="Contact Type"
-                          className="text-sm flex-1"
+                          placeholder="Label"
+                          className="text-xs h-6 flex-1"
                         />
                         {contact.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
                       </div>
@@ -239,11 +239,11 @@ export const ContactInformation: React.FC = () => {
                           value={contact.value}
                           onChange={(e) => updateAdditionalContact(contact.id, 'value', e.target.value)}
                           placeholder={contact.type === 'email' ? 'contact@example.com' : '+1 (555) 123-4567'}
-                          className="text-sm flex-1"
+                          className="text-xs flex-1"
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-2">
                       <Switch
                         checked={contact.show}
                         onCheckedChange={(checked) => updateAdditionalContact(contact.id, 'show', checked)}
@@ -252,9 +252,9 @@ export const ContactInformation: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => removeAdditionalContact(contact.id)}
-                        className="h-8 w-8 p-0"
+                        className="h-6 w-6 p-0"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>

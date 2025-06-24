@@ -30,7 +30,7 @@ const calculateStripeFee = (amount: number, currency: string = 'AUD') => {
 };
 
 const calculateGigPigsFee = (amount: number) => {
-  return amount * 0.01; // 1% GigPigs platform fee
+  return 1.00; // $1 GigPigs platform fee
 };
 
 export const EventTicketSection: React.FC<EventTicketSectionProps> = ({

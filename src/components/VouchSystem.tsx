@@ -2,279 +2,199 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, MessageSquare, Plus, Shield, Eye, EyeOff, ThumbsUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Award, Star, Plus } from 'lucide-react';
+import { VouchCard } from './VouchCard';
 import { useToast } from '@/hooks/use-toast';
-
-interface Vouch {
-  id: string;
-  from: { name: string; avatar: string; verified: boolean; role: 'comedian' | 'promoter' };
-  to: { name: string; avatar: string; verified: boolean; role: 'comedian' | 'promoter' };
-  message: string;
-  isPublic: boolean;
-  date: string;
-  category: 'professionalism' | 'talent' | 'reliability' | 'communication';
-}
-
-const mockVouches: Vouch[] = [
-  {
-    id: '1',
-    from: { name: 'Sarah Johnson', avatar: '/placeholder.svg', verified: true, role: 'promoter' },
-    to: { name: 'Mike Chen', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
-    message: 'Outstanding performer with incredible stage presence. Always professional and reliable.',
-    isPublic: true,
-    date: '2024-12-15',
-    category: 'talent'
-  },
-  {
-    id: '2',
-    from: { name: 'David Williams', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
-    to: { name: 'Emma Davis', avatar: '/placeholder.svg', verified: true, role: 'promoter' },
-    message: 'Fantastic promoter who really cares about the comedians. Great communication throughout.',
-    isPublic: true,
-    date: '2024-12-14',
-    category: 'professionalism'
-  }
-];
 
 export const VouchSystem: React.FC = () => {
   const { toast } = useToast();
-  const [vouches, setVouches] = useState<Vouch[]>(mockVouches);
-  const [newVouch, setNewVouch] = useState({
-    to: '',
-    message: '',
-    isPublic: true,
-    category: 'professionalism' as const
-  });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
 
-  const handleCreateVouch = () => {
-    const vouch: Vouch = {
-      id: Date.now().toString(),
-      from: { name: 'You', avatar: '/placeholder.svg', verified: true, role: 'comedian' },
-      to: { name: newVouch.to, avatar: '/placeholder.svg', verified: true, role: 'promoter' },
-      message: newVouch.message,
-      isPublic: newVouch.isPublic,
-      date: new Date().toISOString().split('T')[0],
-      category: newVouch.category
-    };
+  const mockReceivedVouches = [
+    {
+      id: '1',
+      fromUser: {
+        name: 'Sarah Chen',
+        avatar: '',
+        role: 'Promoter'
+      },
+      rating: 5,
+      comment: 'Alex delivered an outstanding performance at our venue. Professional, punctual, and had the crowd in stitches all night. Would definitely book again!',
+      date: '2024-01-15',
+      type: 'received' as const
+    },
+    {
+      id: '2',
+      fromUser: {
+        name: 'Mike Rodriguez',
+        avatar: '',
+        role: 'Comedian'
+      },
+      rating: 5,
+      comment: 'Great to work with Alex on the same bill. Supportive fellow comedian and knows how to work a crowd. Highly recommend!',
+      date: '2024-01-10',
+      type: 'received' as const
+    },
+    {
+      id: '3',
+      fromUser: {
+        name: 'Comedy Central Venue',
+        avatar: '',
+        role: 'Promoter'
+      },
+      rating: 4,
+      comment: 'Solid performance and very professional. Alex was easy to work with and drew good laughs from the audience.',
+      date: '2024-01-05',
+      type: 'received' as const
+    }
+  ];
 
-    setVouches(prev => [vouch, ...prev]);
-    setNewVouch({ to: '', message: '', isPublic: true, category: 'professionalism' });
-    setIsCreateDialogOpen(false);
+  const mockGivenVouches = [
+    {
+      id: '4',
+      toUser: {
+        name: 'Jenny Walsh',
+        avatar: '',
+        role: 'Comedian'
+      },
+      rating: 5,
+      comment: 'Jenny was fantastic to work with! Great energy on stage and very supportive backstage. A true professional.',
+      date: '2024-01-12',
+      type: 'given' as const
+    },
+    {
+      id: '5',
+      toUser: {
+        name: 'The Laugh Track',
+        avatar: '',
+        role: 'Promoter'
+      },
+      rating: 5,
+      comment: 'Excellent venue with a great team. Well organized event and they really look after their comedians. Highly recommend!',
+      date: '2024-01-08',
+      type: 'given' as const
+    }
+  ];
+
+  const handleStarClick = (starRating: number) => {
+    setRating(starRating);
+  };
+
+  const handleSubmitVouch = () => {
+    if (rating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
-      title: "Vouch Created",
-      description: `Your ${newVouch.isPublic ? 'public' : 'private'} vouch has been submitted.`,
+      title: "Vouch Submitted!",
+      description: "Your vouch has been submitted successfully.",
     });
+    
+    setRating(0);
+    setComment('');
+  };
+
+  const renderStars = (interactive = false, currentRating = 0) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star 
+        key={i} 
+        className={`w-6 h-6 cursor-pointer transition-colors ${
+          i < currentRating ? 'text-yellow-400 fill-current' : 'text-gray-300 hover:text-yellow-200'
+        }`}
+        onClick={interactive ? () => handleStarClick(i + 1) : undefined}
+      />
+    ));
   };
 
   return (
     <div className="space-y-6">
+      {/* Give a Vouch */}
       <Card className="professional-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <ThumbsUp className="w-5 h-5" />
-                Current Vouches
-              </CardTitle>
-              <CardDescription>
-                Give and receive recommendations from verified comedians and promoters
-              </CardDescription>
-            </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="professional-button">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Vouch
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Create a Vouch</DialogTitle>
-                  <DialogDescription>
-                    Recommend someone you've worked with to the community
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Vouching for</label>
-                    <Select value={newVouch.to} onValueChange={(value) => setNewVouch(prev => ({ ...prev, to: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select person to vouch for" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Sarah Johnson">Sarah Johnson (Promoter)</SelectItem>
-                        <SelectItem value="Mike Chen">Mike Chen (Comedian)</SelectItem>
-                        <SelectItem value="Emma Davis">Emma Davis (Promoter)</SelectItem>
-                        <SelectItem value="David Williams">David Williams (Comedian)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Category</label>
-                    <Select value={newVouch.category} onValueChange={(value) => setNewVouch(prev => ({ ...prev, category: value as any }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="professionalism">Professionalism</SelectItem>
-                        <SelectItem value="talent">Talent</SelectItem>
-                        <SelectItem value="reliability">Reliability</SelectItem>
-                        <SelectItem value="communication">Communication</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Your recommendation</label>
-                    <Textarea
-                      placeholder="Share your experience working with this person..."
-                      value={newVouch.message}
-                      onChange={(e) => setNewVouch(prev => ({ ...prev, message: e.target.value }))}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant={newVouch.isPublic ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setNewVouch(prev => ({ ...prev, isPublic: true }))}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Public
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={!newVouch.isPublic ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setNewVouch(prev => ({ ...prev, isPublic: false }))}
-                    >
-                      <EyeOff className="w-4 h-4 mr-1" />
-                      Private
-                    </Button>
-                  </div>
-
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      onClick={handleCreateVouch}
-                      disabled={!newVouch.to || !newVouch.message}
-                      className="flex-1 professional-button"
-                    >
-                      Submit Vouch
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsCreateDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Give a Vouch
+          </CardTitle>
+          <CardDescription>
+            Vouch for a comedian or promoter you've worked with
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="vouchUser">User to Vouch For</Label>
+            <Input
+              id="vouchUser"
+              placeholder="Search for comedian or promoter..."
+              className="mt-1"
+            />
           </div>
+          
+          <div>
+            <Label>Rating</Label>
+            <div className="flex items-center gap-1 mt-2">
+              {renderStars(true, rating)}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="vouchComment">Comment</Label>
+            <Textarea
+              id="vouchComment"
+              placeholder="Share your experience working with this person..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="mt-1"
+              rows={3}
+            />
+          </div>
+
+          <Button onClick={handleSubmitVouch} className="professional-button">
+            Submit Vouch
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Vouch History */}
+      <Card className="professional-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="w-5 h-5" />
+            Vouch History
+          </CardTitle>
+          <CardDescription>
+            View vouches you've received and given
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="received" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="received">Received</TabsTrigger>
-              <TabsTrigger value="given">Given</TabsTrigger>
-              <TabsTrigger value="public">Public Feed</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="received">
+                Received ({mockReceivedVouches.length})
+              </TabsTrigger>
+              <TabsTrigger value="given">
+                Given ({mockGivenVouches.length})
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="received" className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Vouches you've received from other verified users
-              </div>
-              {vouches.filter(v => v.to.name === 'You').map((vouch) => (
-                <Card key={vouch.id} className="p-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src={vouch.from.avatar} />
-                      <AvatarFallback>{vouch.from.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{vouch.from.name}</span>
-                        {vouch.from.verified && <Shield className="w-4 h-4 text-blue-500" />}
-                        <Badge variant="outline">{vouch.from.role}</Badge>
-                        <Badge variant="outline">{vouch.category}</Badge>
-                        {!vouch.isPublic && <Badge variant="secondary"><EyeOff className="w-3 h-3 mr-1" />Private</Badge>}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{vouch.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{vouch.date}</p>
-                    </div>
-                  </div>
-                </Card>
+            <TabsContent value="received" className="space-y-4 mt-4">
+              {mockReceivedVouches.map((vouch) => (
+                <VouchCard key={vouch.id} vouch={vouch} />
               ))}
             </TabsContent>
             
-            <TabsContent value="given" className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Vouches you've given to other users
-              </div>
-              {vouches.filter(v => v.from.name === 'You').map((vouch) => (
-                <Card key={vouch.id} className="p-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src={vouch.to.avatar} />
-                      <AvatarFallback>{vouch.to.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{vouch.to.name}</span>
-                        {vouch.to.verified && <Shield className="w-4 h-4 text-blue-500" />}
-                        <Badge variant="outline">{vouch.to.role}</Badge>
-                        <Badge variant="outline">{vouch.category}</Badge>
-                        {!vouch.isPublic && <Badge variant="secondary"><EyeOff className="w-3 h-3 mr-1" />Private</Badge>}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{vouch.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{vouch.date}</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </TabsContent>
-            
-            <TabsContent value="public" className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Public vouches from the community
-              </div>
-              {vouches.filter(v => v.isPublic).map((vouch) => (
-                <Card key={vouch.id} className="p-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src={vouch.from.avatar} />
-                      <AvatarFallback>{vouch.from.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{vouch.from.name}</span>
-                        {vouch.from.verified &&  <Shield className="w-4 h-4 text-blue-500" />}
-                        <Badge variant="outline">{vouch.from.role}</Badge>
-                        <span className="text-sm text-muted-foreground">vouched for</span>
-                        <span className="font-medium">{vouch.to.name}</span>
-                        {vouch.to.verified && <Shield className="w-4 h-4 text-blue-500" />}
-                        <Badge variant="outline">{vouch.to.role}</Badge>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{vouch.category}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{vouch.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{vouch.date}</p>
-                    </div>
-                  </div>
-                </Card>
+            <TabsContent value="given" className="space-y-4 mt-4">
+              {mockGivenVouches.map((vouch) => (
+                <VouchCard key={vouch.id} vouch={vouch} />
               ))}
             </TabsContent>
           </Tabs>

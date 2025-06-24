@@ -1,11 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard } from 'lucide-react';
+import { InvoiceDetails } from './InvoiceDetails';
 
 export const InvoiceManagement: React.FC = () => {
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+
   const mockInvoices = [
     {
       id: '1',
@@ -45,41 +49,59 @@ export const InvoiceManagement: React.FC = () => {
     }
   };
 
+  const handleViewDetails = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowDetails(true);
+  };
+
   return (
-    <Card className="professional-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="w-5 h-5" />
-          Invoice Management
-        </CardTitle>
-        <CardDescription>
-          View and manage your invoices
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {mockInvoices.map((invoice) => (
-            <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-semibold">{invoice.number}</span>
-                  <Badge className={getStatusColor(invoice.status)}>
-                    {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                  </Badge>
+    <>
+      <Card className="professional-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Invoice Management
+          </CardTitle>
+          <CardDescription>
+            View and manage your invoices
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {mockInvoices.map((invoice) => (
+              <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-semibold">{invoice.number}</span>
+                    <Badge className={getStatusColor(invoice.status)}>
+                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{invoice.clientName}</p>
+                  <p className="text-xs text-muted-foreground">Due: {invoice.dueDate}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{invoice.clientName}</p>
-                <p className="text-xs text-muted-foreground">Due: {invoice.dueDate}</p>
+                <div className="text-right">
+                  <p className="text-lg font-semibold">${invoice.amount}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => handleViewDetails(invoice)}
+                  >
+                    View Details
+                  </Button>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold">${invoice.amount}</p>
-                <Button variant="outline" size="sm" className="mt-2">
-                  View Details
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <InvoiceDetails
+        invoice={selectedInvoice}
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+      />
+    </>
   );
 };

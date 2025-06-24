@@ -6,12 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarView } from '@/components/CalendarView';
 import { MapView } from '@/components/MapView';
+import { TicketPage } from '@/components/TicketPage';
 import { useNavigate } from 'react-router-dom';
 
 const Browse = () => {
@@ -23,8 +24,122 @@ const Browse = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [selectedEventForTickets, setSelectedEventForTickets] = useState<any>(null);
+  const [showTicketPage, setShowTicketPage] = useState(false);
 
-  const filteredShows = events.filter(event => {
+  // Mock events for the next 2 months
+  const mockEvents = [
+    {
+      id: 'mock-1',
+      title: 'Comedy Night Downtown',
+      venue: 'The Laugh Track',
+      city: 'Sydney',
+      state: 'NSW',
+      address: '123 Comedy Street, Sydney NSW 2000',
+      event_date: '2024-07-15',
+      start_time: '8:00 PM',
+      end_time: '10:00 PM',
+      description: 'Join us for an evening of hilarious stand-up comedy featuring local and international comedians.',
+      type: 'Stand-up',
+      age_restriction: '18+',
+      is_paid: true,
+      is_verified_only: false,
+      spots: 8,
+      applied_spots: 3,
+      status: 'open',
+      allow_recording: false,
+      dress_code: 'Smart Casual'
+    },
+    {
+      id: 'mock-2',
+      title: 'Open Mic Comedy',
+      venue: 'Brew & Laugh Cafe',
+      city: 'Melbourne',
+      state: 'VIC',
+      address: '456 Laughter Lane, Melbourne VIC 3000',
+      event_date: '2024-07-20',
+      start_time: '7:30 PM',
+      end_time: '9:30 PM',
+      description: 'Weekly open mic night for new and experienced comedians to test their material.',
+      type: 'Open Mic',
+      age_restriction: 'All Ages',
+      is_paid: false,
+      is_verified_only: false,
+      spots: 12,
+      applied_spots: 8,
+      status: 'open',
+      allow_recording: true,
+      dress_code: 'Casual'
+    },
+    {
+      id: 'mock-3',
+      title: 'Pro Comedy Showcase',
+      venue: 'Elite Comedy Club',
+      city: 'Brisbane',
+      state: 'QLD',
+      address: '789 Professional Way, Brisbane QLD 4000',
+      event_date: '2024-07-25',
+      start_time: '8:30 PM',
+      end_time: '11:00 PM',
+      description: 'Professional comedy showcase featuring verified comedians only.',
+      type: 'Professional',
+      age_restriction: '21+',
+      is_paid: true,
+      is_verified_only: true,
+      spots: 6,
+      applied_spots: 6,
+      status: 'full',
+      allow_recording: false,
+      dress_code: 'Smart Casual'
+    },
+    {
+      id: 'mock-4',
+      title: 'Friday Night Laughs',
+      venue: 'The Comedy Corner',
+      city: 'Perth',
+      state: 'WA',
+      address: '321 Funny Street, Perth WA 6000',
+      event_date: '2024-08-02',
+      start_time: '9:00 PM',
+      end_time: '11:30 PM',
+      description: 'End your week with a bang at our popular Friday night comedy show.',
+      type: 'Mixed',
+      age_restriction: '18+',
+      is_paid: true,
+      is_verified_only: false,
+      spots: 10,
+      applied_spots: 4,
+      status: 'open',
+      allow_recording: true,
+      dress_code: 'Casual'
+    },
+    {
+      id: 'mock-5',
+      title: 'Rooftop Comedy Under Stars',
+      venue: 'Sky High Comedy',
+      city: 'Sydney',
+      state: 'NSW',
+      address: '567 Heights Boulevard, Sydney NSW 2001',
+      event_date: '2024-08-10',
+      start_time: '7:00 PM',
+      end_time: '10:00 PM',
+      description: 'Unique outdoor comedy experience on our rooftop terrace with city views.',
+      type: 'Outdoor',
+      age_restriction: '18+',
+      is_paid: true,
+      is_verified_only: false,
+      spots: 15,
+      applied_spots: 7,
+      status: 'open',
+      allow_recording: false,
+      dress_code: 'Weather Appropriate'
+    }
+  ];
+
+  // Combine real events with mock events
+  const allEvents = [...events, ...mockEvents];
+
+  const filteredShows = allEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          `${event.city}, ${event.state}`.toLowerCase().includes(searchTerm.toLowerCase());
@@ -68,6 +183,25 @@ const Browse = () => {
       title: "Application submitted!",
       description: `Your application for "${event.title}" has been submitted successfully.`,
     });
+  };
+
+  const handleBuyTickets = (event: any) => {
+    setSelectedEventForTickets(event);
+    setShowTicketPage(true);
+  };
+
+  const handleGetDirections = (event: any) => {
+    if (event.address) {
+      const encodedAddress = encodeURIComponent(event.address);
+      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+      window.open(googleMapsUrl, '_blank');
+    } else {
+      toast({
+        title: "Address not available",
+        description: "No address provided for this venue.",
+        variant: "destructive",
+      });
+    }
   };
 
   const ShowCard = ({ show }: { show: any }) => {
@@ -132,7 +266,7 @@ const Browse = () => {
             <p className="text-muted-foreground text-sm line-clamp-2">{show.description}</p>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90"
               onClick={() => handleApply(show)}
@@ -147,6 +281,26 @@ const Browse = () => {
             >
               Details
             </Button>
+            {show.is_paid && (
+              <Button 
+                variant="outline"
+                className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                onClick={() => handleBuyTickets(show)}
+              >
+                Buy Tickets
+              </Button>
+            )}
+            {show.address && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleGetDirections(show)}
+                className="flex items-center gap-2"
+              >
+                <Navigation className="w-4 h-4" />
+                Directions
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -175,80 +329,89 @@ const Browse = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
-          <p className="text-muted-foreground">Find gigs near you</p>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search shows, venues, or locations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-            <Select onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="Sydney">Sydney, NSW</SelectItem>
-                <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
-                <SelectItem value="Brisbane">Brisbane, QLD</SelectItem>
-                <SelectItem value="Perth">Perth, WA</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
-                <SelectValue placeholder="Show Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="open mic">Open Mic</SelectItem>
-                <SelectItem value="semi-pro">Semi-Pro</SelectItem>
-                <SelectItem value="pro">Professional</SelectItem>
-                <SelectItem value="mixed">Mixed</SelectItem>
-              </SelectContent>
-            </Select>
+    <>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
+            <p className="text-muted-foreground">Find gigs near you</p>
           </div>
-        </div>
 
-        {/* View Mode Tabs */}
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
-            <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              List View
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Map
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="list" className="mt-6">
-            <ListView />
-          </TabsContent>
-          
-          <TabsContent value="calendar" className="mt-6">
-            <CalendarView />
-          </TabsContent>
-          
-          <TabsContent value="map" className="mt-6">
-            <MapView />
-          </TabsContent>
-        </Tabs>
+          {/* Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search shows, venues, or locations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              <Select onValueChange={setLocationFilter}>
+                <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+                  <SelectValue placeholder="Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  <SelectItem value="Sydney">Sydney, NSW</SelectItem>
+                  <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
+                  <SelectItem value="Brisbane">Brisbane, QLD</SelectItem>
+                  <SelectItem value="Perth">Perth, WA</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+                  <SelectValue placeholder="Show Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="open mic">Open Mic</SelectItem>
+                  <SelectItem value="semi-pro">Semi-Pro</SelectItem>
+                  <SelectItem value="pro">Professional</SelectItem>
+                  <SelectItem value="mixed">Mixed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* View Mode Tabs */}
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
+              <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                List View
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Calendar
+              </TabsTrigger>
+              <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Map
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="list" className="mt-6">
+              <ListView />
+            </TabsContent>
+            
+            <TabsContent value="calendar" className="mt-6">
+              <CalendarView />
+            </TabsContent>
+            
+            <TabsContent value="map" className="mt-6">
+              <MapView />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+
+      {/* Ticket Purchase Modal */}
+      <TicketPage
+        event={selectedEventForTickets}
+        isOpen={showTicketPage}
+        onClose={() => setShowTicketPage(false)}
+      />
+    </>
   );
 };
 
