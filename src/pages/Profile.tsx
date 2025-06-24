@@ -16,7 +16,7 @@ import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
-import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard, Plus, Eye, Image } from 'lucide-react';
+import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard, Plus, Eye, Image, Building, X } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
@@ -40,6 +40,17 @@ const Profile = () => {
     phone: { show: false, value: '+1 (555) 123-4567' },
     managerEmail: { show: true, value: 'manager@agency.com' },
     managerPhone: { show: false, value: '+1 (555) 987-6543' },
+  });
+
+  // Additional contact fields
+  const [additionalContacts, setAdditionalContacts] = useState<Array<{ id: string, label: string, value: string, show: boolean }>>([]);
+
+  // Financial information state
+  const [financialInfo, setFinancialInfo] = useState({
+    accountName: '',
+    bsb: '',
+    accountNumber: '',
+    abn: '',
   });
 
   // Mock invoices data
@@ -137,8 +148,39 @@ const Profile = () => {
     }));
   };
 
+  const addContactDetail = () => {
+    const newContact = {
+      id: `contact_${Date.now()}`,
+      label: 'New Contact',
+      value: '',
+      show: false
+    };
+    setAdditionalContacts(prev => [...prev, newContact]);
+  };
+
+  const updateAdditionalContact = (id: string, field: 'label' | 'value' | 'show', value: string | boolean) => {
+    setAdditionalContacts(prev => 
+      prev.map(contact => 
+        contact.id === id ? { ...contact, [field]: value } : contact
+      )
+    );
+  };
+
+  const removeAdditionalContact = (id: string) => {
+    setAdditionalContacts(prev => prev.filter(contact => contact.id !== id));
+  };
+
+  const updateFinancialInfo = (field: keyof typeof financialInfo, value: string) => {
+    setFinancialInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSaveContactSettings = () => {
     console.log('Saving contact settings:', contactSettings);
+    console.log('Saving additional contacts:', additionalContacts);
+    console.log('Saving financial info:', financialInfo);
     toast({
       title: "Contact Settings Saved",
       description: "Your contact visibility preferences have been updated.",
@@ -359,19 +401,19 @@ const Profile = () => {
                     <User className="w-4 h-4" />
                     <h3 className="font-semibold">Personal Contact</h3>
                   </div>
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1 mr-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Mail className="w-4 h-4" />
-                          <Label htmlFor="email">Email Address</Label>
+                          <Label htmlFor="email" className="text-sm">Email</Label>
                           {contactSettings.email.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
                         </div>
                         <Input
                           id="email"
                           value={contactSettings.email.value}
                           onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
-                          className="mb-2"
+                          className="text-sm"
                         />
                       </div>
                       <Switch
@@ -380,18 +422,18 @@ const Profile = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1 mr-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Phone className="w-4 h-4" />
-                          <Label htmlFor="phone">Phone Number</Label>
+                          <Label htmlFor="phone" className="text-sm">Phone</Label>
                           {contactSettings.phone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
                         </div>
                         <Input
                           id="phone"
                           value={contactSettings.phone.value}
                           onChange={(e) => updateContactSetting('phone', 'value', e.target.value)}
-                          className="mb-2"
+                          className="text-sm"
                         />
                       </div>
                       <Switch
@@ -410,19 +452,19 @@ const Profile = () => {
                     <Shield className="w-4 h-4" />
                     <h3 className="font-semibold">Manager Contact</h3>
                   </div>
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1 mr-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Mail className="w-4 h-4" />
-                          <Label htmlFor="managerEmail">Manager Email</Label>
+                          <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
                           {contactSettings.managerEmail.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
                         </div>
                         <Input
                           id="managerEmail"
                           value={contactSettings.managerEmail.value}
                           onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
-                          className="mb-2"
+                          className="text-sm"
                         />
                       </div>
                       <Switch
@@ -431,18 +473,18 @@ const Profile = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1 mr-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Phone className="w-4 h-4" />
-                          <Label htmlFor="managerPhone">Manager Phone</Label>
+                          <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
                           {contactSettings.managerPhone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
                         </div>
                         <Input
                           id="managerPhone"
                           value={contactSettings.managerPhone.value}
                           onChange={(e) => updateContactSetting('managerPhone', 'value', e.target.value)}
-                          className="mb-2"
+                          className="text-sm"
                         />
                       </div>
                       <Switch
@@ -453,8 +495,58 @@ const Profile = () => {
                   </div>
                 </div>
 
+                {/* Additional Contact Details */}
+                {additionalContacts.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Plus className="w-4 h-4" />
+                        <h3 className="font-semibold">Additional Contact Details</h3>
+                      </div>
+                      <div className="space-y-4">
+                        {additionalContacts.map((contact) => (
+                          <div key={contact.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex-1 mr-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Input
+                                  value={contact.label}
+                                  onChange={(e) => updateAdditionalContact(contact.id, 'label', e.target.value)}
+                                  placeholder="Contact Type"
+                                  className="text-sm max-w-32"
+                                />
+                                {contact.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                              </div>
+                              <Input
+                                value={contact.value}
+                                onChange={(e) => updateAdditionalContact(contact.id, 'value', e.target.value)}
+                                placeholder="Contact value"
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={contact.show}
+                                onCheckedChange={(checked) => updateAdditionalContact(contact.id, 'show', checked)}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeAdditionalContact(contact.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-between items-center pt-4">
-                  <Button variant="outline" className="flex items-center gap-2">
+                  <Button variant="outline" onClick={addContactDetail} className="flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     Add More Contact Details
                   </Button>
@@ -462,6 +554,76 @@ const Profile = () => {
                     Save Contact Settings
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Financial Information */}
+            <Card className="professional-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="w-5 h-5" />
+                  Financial Information
+                </CardTitle>
+                <CardDescription>
+                  Required for invoicing and payment processing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="accountName">Account Name *</Label>
+                    <Input
+                      id="accountName"
+                      value={financialInfo.accountName}
+                      onChange={(e) => updateFinancialInfo('accountName', e.target.value)}
+                      placeholder="Your full legal name or business name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bsb">BSB *</Label>
+                    <Input
+                      id="bsb"
+                      value={financialInfo.bsb}
+                      onChange={(e) => updateFinancialInfo('bsb', e.target.value)}
+                      placeholder="123-456"
+                      maxLength={7}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="accountNumber">Account Number *</Label>
+                    <Input
+                      id="accountNumber"
+                      value={financialInfo.accountNumber}
+                      onChange={(e) => updateFinancialInfo('accountNumber', e.target.value)}
+                      placeholder="Your bank account number"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="abn">ABN *</Label>
+                    <Input
+                      id="abn"
+                      value={financialInfo.abn}
+                      onChange={(e) => updateFinancialInfo('abn', e.target.value)}
+                      placeholder="12 345 678 901"
+                      maxLength={14}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm text-muted-foreground">
+                  <p>* Required fields for processing invoices and payments</p>
+                </div>
+
+                <Button onClick={handleSaveContactSettings} className="professional-button">
+                  Save Financial Information
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
