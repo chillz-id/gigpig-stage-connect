@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,9 @@ export const CreateEventForm: React.FC = () => {
     ageRestriction: '18+',
     dresscode: 'Casual',
     bannerUrl: '',
+    showLevel: '',
+    showType: '',
+    customShowType: '',
   });
 
   const [eventSpots, setEventSpots] = useState<Array<{
@@ -93,6 +95,9 @@ export const CreateEventForm: React.FC = () => {
       ageRestriction: data.ageRestriction || '18+',
       dresscode: data.dresscode || 'Casual',
       bannerUrl: data.bannerUrl || '',
+      showLevel: data.showLevel || '',
+      showType: data.showType || '',
+      customShowType: data.customShowType || '',
     });
     
     if (data.spots && Array.isArray(data.spots)) {
@@ -159,6 +164,9 @@ export const CreateEventForm: React.FC = () => {
 
     const eventDateTime = new Date(`${formData.date}T${formData.time}`);
 
+    // Determine the final show type value
+    const finalShowType = formData.showType === 'custom' ? formData.customShowType : formData.showType;
+
     const eventData = {
       promoter_id: user.id,
       title: formData.title,
@@ -170,7 +178,7 @@ export const CreateEventForm: React.FC = () => {
       event_date: eventDateTime.toISOString(),
       start_time: formData.time,
       end_time: formData.endTime || null,
-      type: formData.type,
+      type: finalShowType,
       description: formData.description,
       requirements: formData.requirements.join('\n'),
       is_verified_only: formData.isVerifiedOnly,
@@ -183,7 +191,9 @@ export const CreateEventForm: React.FC = () => {
       recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
       recurrenceEndDate: recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' ? recurringSettings.endDate : undefined,
       customDates: recurringSettings.isRecurring && recurringSettings.pattern === 'custom' ? recurringSettings.customDates : undefined,
-      spotDetails: eventSpots
+      spotDetails: eventSpots,
+      showLevel: formData.showLevel,
+      showType: finalShowType
     };
 
     console.log('Creating event:', eventData);
