@@ -258,7 +258,7 @@ const SubscriptionManager = () => {
         </CardContent>
       </Card>
 
-      {/* Compact Upgrade Options - directly under Subscription Status */}
+      {/* Upgrade Options */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Comedian Pro */}
         <Card className={`professional-card ${subscription?.has_comedian_pro ? 'ring-2 ring-pink-500' : ''}`}>
