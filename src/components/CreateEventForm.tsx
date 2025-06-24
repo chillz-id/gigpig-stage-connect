@@ -10,7 +10,8 @@ import { EventDateTimeSection } from './EventDateTimeSection';
 import { EventRequirementsSection } from './EventRequirementsSection';
 import { EventSpotManagerFixed } from './EventSpotManagerFixed';
 import { EventBannerUpload } from './EventBannerUpload';
-import { EventTemplateManager } from './EventTemplateManager';
+import { EventTemplateLoader } from './EventTemplateLoader';
+import { EventTemplateSaver } from './EventTemplateSaver';
 import { EventFormData, RecurringSettings, EventSpot } from '@/types/eventTypes';
 import { validateEventForm } from '@/utils/eventValidation';
 import { prepareEventData } from '@/utils/eventDataMapper';
@@ -104,12 +105,7 @@ export const CreateEventForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-end">
-        <EventTemplateManager
-          formData={formData}
-          eventSpots={eventSpots}
-          recurringSettings={recurringSettings}
-          onLoadTemplate={loadTemplate}
-        />
+        <EventTemplateLoader onLoadTemplate={loadTemplate} />
       </div>
 
       <EventBasicInfo
@@ -142,12 +138,17 @@ export const CreateEventForm: React.FC = () => {
       <div className="flex gap-4 justify-end">
         <Button 
           type="button" 
-          variant="outline" 
+          variant="destructive"
           onClick={() => navigate('/dashboard')}
-          className="text-white border-white/30 hover:bg-white/10"
+          className="bg-red-600 hover:bg-red-700 text-white"
         >
           Cancel
         </Button>
+        <EventTemplateSaver
+          formData={formData}
+          eventSpots={eventSpots}
+          recurringSettings={recurringSettings}
+        />
         <Button 
           type="submit"
           disabled={isCreating}

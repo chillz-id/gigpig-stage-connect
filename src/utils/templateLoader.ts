@@ -16,7 +16,7 @@ export const loadTemplateData = (
     city: data.city || '',
     state: data.state || '',
     country: data.country || 'Australia',
-    date: '',
+    date: '', // Always reset date for new events
     time: data.time || '',
     endTime: data.endTime || '',
     type: data.type || '',
@@ -28,19 +28,22 @@ export const loadTemplateData = (
     allowRecording: data.allowRecording || false,
     ageRestriction: data.ageRestriction || '18+',
     dresscode: data.dresscode || 'Casual',
-    bannerUrl: data.bannerUrl || '',
+    bannerUrl: '', // Always reset banner URL
     showLevel: data.showLevel || '',
     showType: data.showType || '',
     customShowType: data.customShowType || '',
   });
   
+  // Load event spots if they exist
   if (data.spots && Array.isArray(data.spots)) {
     setEventSpots(data.spots);
   }
   
+  // Load recurring settings if they exist
   if (data.recurringSettings) {
     setRecurringSettings({
       ...data.recurringSettings,
+      endDate: '', // Reset end date for new recurring events
       customDates: data.recurringSettings.customDates 
         ? data.recurringSettings.customDates.map((customDate: any) => ({
             date: new Date(customDate.date),
