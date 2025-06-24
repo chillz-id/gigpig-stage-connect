@@ -14,7 +14,6 @@ interface EventRequirementsSectionProps {
   formData: {
     requirements: string[];
     isVerifiedOnly: boolean;
-    isPaid: boolean;
     allowRecording: boolean;
     ageRestriction: string;
     dresscode: string;
@@ -165,14 +164,6 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
                 id="isVerifiedOnly"
                 checked={formData.isVerifiedOnly}
                 onCheckedChange={(checked) => onFormDataChange({ isVerifiedOnly: checked })}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="isPaid">Paid Event</Label>
-              <Switch
-                id="isPaid"
-                checked={formData.isPaid}
-                onCheckedChange={(checked) => onFormDataChange({ isPaid: checked })}
               />
             </div>
             <div className="flex items-center justify-between">

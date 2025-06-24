@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus, FileText } from 'lucide-react';
+import { Moon, Sun, Menu, X, User, Star, Bell, MessageCircle, Plus } from 'lucide-react';
 import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
@@ -140,9 +140,16 @@ const Navigation: React.FC = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <Link to="/pricing" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
-              Pricing
-            </Link>
+            {/* Conditional Pricing/Upgrade Link */}
+            {user ? (
+              <Link to="/profile" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
+                Upgrade
+              </Link>
+            ) : (
+              <Link to="/pricing" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
+                Pricing
+              </Link>
+            )}
             
             {/* Quick Action Buttons */}
             {user && (
@@ -160,20 +167,12 @@ const Navigation: React.FC = () => {
                   </Button>
                 </Link>
                 {hasRole('promoter') && (
-                  <>
-                    <Link to="/create-event">
-                      <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create
-                      </Button>
-                    </Link>
-                    <Link to="/invoices/new">
-                      <Button size="sm" variant="outline" className="transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Invoice
-                      </Button>
-                    </Link>
-                  </>
+                  <Link to="/create-event">
+                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Event
+                    </Button>
+                  </Link>
                 )}
               </div>
             )}
@@ -280,7 +279,7 @@ const Navigation: React.FC = () => {
               { to: '/profile', label: 'Profile' },
               { to: '/messages', label: 'Messages' },
               { to: '/notifications', label: 'Notifications' },
-              { to: '/pricing', label: 'Pricing' }
+              ...(user ? [{ to: '/profile', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }])
             ].map((link) => (
               <Link
                 key={link.to}
