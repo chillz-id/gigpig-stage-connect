@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,42 @@ import { EventRequirementsSection } from './EventRequirementsSection';
 import { EventSpotManagerFixed } from './EventSpotManagerFixed';
 import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateManager } from './EventTemplateManager';
+import { EventFormData, RecurringSettings, EventSpot } from '@/types/eventTypes';
+import { validateEventForm } from '@/utils/eventValidation';
+import { prepareEventData } from '@/utils/eventDataMapper';
+import { loadTemplateData } from '@/utils/templateLoader';
 
-interface CustomDate {
-  date: Date;
-  times: Array<{
-    startTime: string;
-    endTime: string;
-  }>;
-}
+const initialFormData: EventFormData = {
+  title: '',
+  venue: '',
+  address: '',
+  city: '',
+  state: '',
+  country: 'Australia',
+  date: '',
+  time: '',
+  endTime: '',
+  type: '',
+  spots: 5,
+  description: '',
+  requirements: [],
+  isVerifiedOnly: false,
+  isPaid: false,
+  allowRecording: false,
+  ageRestriction: '18+',
+  dresscode: 'Casual',
+  bannerUrl: '',
+  showLevel: '',
+  showType: '',
+  customShowType: '',
+};
+
+const initialRecurringSettings: RecurringSettings = {
+  isRecurring: false,
+  pattern: 'weekly',
+  endDate: '',
+  customDates: []
+};
 
 export const CreateEventForm: React.FC = () => {
   const { toast } = useToast();
@@ -25,98 +54,20 @@ export const CreateEventForm: React.FC = () => {
   const { createEvent, isCreating } = useEvents();
   const { user } = useUser();
   
-  const [formData, setFormData] = useState({
-    title: '',
-    venue: '',
-    address: '',
-    city: '',
-    state: '',
-    country: 'Australia',
-    date: '',
-    time: '',
-    endTime: '',
-    type: '',
-    spots: 5,
-    description: '',
-    requirements: [] as string[],
-    isVerifiedOnly: false,
-    isPaid: false,
-    allowRecording: false,
-    ageRestriction: '18+',
-    dresscode: 'Casual',
-    bannerUrl: '',
-    showLevel: '',
-    showType: '',
-    customShowType: '',
-  });
+  const [formData, setFormData] = useState<EventFormData>(initialFormData);
+  const [eventSpots, setEventSpots] = useState<EventSpot[]>([]);
+  const [recurringSettings, setRecurringSettings] = useState<RecurringSettings>(initialRecurringSettings);
 
-  const [eventSpots, setEventSpots] = useState<Array<{
-    spot_name: string;
-    is_paid: boolean;
-    payment_amount?: number;
-    currency: string;
-    duration_minutes?: number;
-  }>>([]);
-
-  const [recurringSettings, setRecurringSettings] = useState({
-    isRecurring: false,
-    pattern: 'weekly',
-    endDate: '',
-    customDates: [] as CustomDate[]
-  });
-
-  const handleFormDataChange = (updates: Partial<typeof formData>) => {
+  const handleFormDataChange = (updates: Partial<EventFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
   };
 
-  const handleRecurringSettingsChange = (updates: Partial<typeof recurringSettings>) => {
+  const handleRecurringSettingsChange = (updates: Partial<RecurringSettings>) => {
     setRecurringSettings(prev => ({ ...prev, ...updates }));
   };
 
   const loadTemplate = (template: any) => {
-    const data = template.template_data;
-    setFormData({
-      title: data.title || '',
-      venue: data.venue || '',
-      address: data.address || '',
-      city: data.city || '',
-      state: data.state || '',
-      country: data.country || 'Australia',
-      date: '',
-      time: data.time || '',
-      endTime: data.endTime || '',
-      type: data.type || '',
-      spots: data.spots || 5,
-      description: data.description || '',
-      requirements: data.requirements || [],
-      isVerifiedOnly: data.isVerifiedOnly || false,
-      isPaid: data.isPaid || false,
-      allowRecording: data.allowRecording || false,
-      ageRestriction: data.ageRestriction || '18+',
-      dresscode: data.dresscode || 'Casual',
-      bannerUrl: data.bannerUrl || '',
-      showLevel: data.showLevel || '',
-      showType: data.showType || '',
-      customShowType: data.customShowType || '',
-    });
-    
-    if (data.spots && Array.isArray(data.spots)) {
-      setEventSpots(data.spots);
-    }
-    
-    if (data.recurringSettings) {
-      // Convert ISO strings back to Date objects and handle the new CustomDate structure
-      setRecurringSettings({
-        ...data.recurringSettings,
-        customDates: data.recurringSettings.customDates 
-          ? data.recurringSettings.customDates.map((customDate: any) => ({
-              date: new Date(customDate.date),
-              times: customDate.times || [{ startTime: '19:00', endTime: '22:00' }]
-            }))
-          : []
-      });
-    }
-
+    loadTemplateData(template, setFormData, setEventSpots, setRecurringSettings);
     toast({
       title: "Template loaded",
       description: `Template "${template.name}" has been loaded successfully.`
@@ -134,75 +85,24 @@ export const CreateEventForm: React.FC = () => {
       });
       return;
     }
-    
-    if (!formData.title || !formData.venue || !formData.date || !formData.time) {
+
+    const validation = validateEventForm(formData, recurringSettings);
+    if (!validation.isValid) {
       toast({
         title: "Missing required fields",
-        description: "Please fill in all required fields.",
+        description: validation.error,
         variant: "destructive",
       });
       return;
     }
 
-    if (recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' && !recurringSettings.endDate) {
-      toast({
-        title: "Missing recurring end date",
-        description: "Please specify when the recurring events should end.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (recurringSettings.isRecurring && recurringSettings.pattern === 'custom' && recurringSettings.customDates.length === 0) {
-      toast({
-        title: "No custom dates selected",
-        description: "Please select at least one date for custom recurring events.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const eventDateTime = new Date(`${formData.date}T${formData.time}`);
-
-    // Determine the final show type value
-    const finalShowType = formData.showType === 'custom' ? formData.customShowType : formData.showType;
-
-    const eventData = {
-      promoter_id: user.id,
-      title: formData.title,
-      venue: formData.venue,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      country: formData.country,
-      event_date: eventDateTime.toISOString(),
-      start_time: formData.time,
-      end_time: formData.endTime || null,
-      type: finalShowType,
-      description: formData.description,
-      requirements: formData.requirements.join('\n'),
-      is_verified_only: formData.isVerifiedOnly,
-      is_paid: formData.isPaid,
-      allow_recording: formData.allowRecording,
-      age_restriction: formData.ageRestriction,
-      dress_code: formData.dresscode,
-      banner_url: formData.bannerUrl || null,
-      isRecurring: recurringSettings.isRecurring,
-      recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
-      recurrenceEndDate: recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' ? recurringSettings.endDate : undefined,
-      customDates: recurringSettings.isRecurring && recurringSettings.pattern === 'custom' ? recurringSettings.customDates : undefined,
-      spotDetails: eventSpots,
-      showLevel: formData.showLevel,
-      showType: finalShowType
-    };
-
+    const eventData = prepareEventData(formData, recurringSettings, eventSpots, user.id);
     console.log('Creating event:', eventData);
     createEvent(eventData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
-      {/* Template Manager */}
       <div className="flex justify-end">
         <EventTemplateManager
           formData={formData}
@@ -212,19 +112,16 @@ export const CreateEventForm: React.FC = () => {
         />
       </div>
 
-      {/* Basic Information */}
       <EventBasicInfo
         formData={formData}
         onFormDataChange={handleFormDataChange}
       />
 
-      {/* Event Banner */}
       <EventBannerUpload 
         bannerUrl={formData.bannerUrl}
         onBannerChange={(url) => handleFormDataChange({ bannerUrl: url })}
       />
 
-      {/* Date & Time */}
       <EventDateTimeSection
         formData={formData}
         recurringSettings={recurringSettings}
@@ -232,19 +129,16 @@ export const CreateEventForm: React.FC = () => {
         onRecurringSettingsChange={handleRecurringSettingsChange}
       />
 
-      {/* Event Spots Management */}
       <EventSpotManagerFixed 
         spots={eventSpots} 
         onSpotsChange={setEventSpots}
       />
 
-      {/* Requirements & Settings */}
       <EventRequirementsSection
         formData={formData}
         onFormDataChange={handleFormDataChange}
       />
 
-      {/* Submit */}
       <div className="flex gap-4 justify-end">
         <Button 
           type="button" 
