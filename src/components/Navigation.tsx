@@ -142,7 +142,7 @@ const Navigation: React.FC = () => {
 
             {/* Conditional Pricing/Upgrade Link */}
             {user ? (
-              <Link to="/profile" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
+              <Link to="/profile?tab=settings" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
                 Upgrade
               </Link>
             ) : (
@@ -279,7 +279,7 @@ const Navigation: React.FC = () => {
               { to: '/profile', label: 'Profile' },
               { to: '/messages', label: 'Messages' },
               { to: '/notifications', label: 'Notifications' },
-              ...(user ? [{ to: '/profile', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }])
+              ...(user ? [{ to: '/profile?tab=settings', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }])
             ].map((link) => (
               <Link
                 key={link.to}

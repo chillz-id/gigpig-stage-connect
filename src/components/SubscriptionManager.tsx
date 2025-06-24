@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, Calendar, AlertCircle, Zap, Crown } from 'lucide-react';
+import { Loader2, CreditCard, Calendar, AlertCircle, Zap, Crown, Check, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +66,26 @@ const SubscriptionManager = () => {
     }
   };
 
+  const createCheckoutSession = async (planType: 'comedian' | 'promoter') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planType }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create checkout session",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     checkSubscription();
   }, [user]);
@@ -89,134 +109,281 @@ const SubscriptionManager = () => {
     return comedianCost + promoterCost;
   };
 
+  const comedianFeatures = [
+    'Priority application visibility',
+    'Advanced profile customization',
+    'Detailed analytics & insights',
+    'Premium support',
+    'Calendar integration',
+    'Professional badge'
+  ];
+
+  const promoterFeatures = [
+    'Unlimited event creation',
+    'Advanced event management',
+    'Comedian database access',
+    'Custom branding options',
+    'Priority support',
+    'Analytics & reporting',
+    'Team collaboration tools'
+  ];
+
   return (
-    <Card className="professional-card">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
-              Subscription Status
-            </CardTitle>
-            <CardDescription>
-              Manage your subscription and billing
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={checkSubscription}
-            disabled={loading}
-            className="professional-button"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              'Refresh'
-            )}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {subscription ? (
-          <>
-            <div className="space-y-3">
-              {/* Current Plans */}
-              <div>
-                <p className="font-medium text-foreground mb-2">Current Plans:</p>
-                <div className="flex flex-wrap gap-2">
-                  {subscription.has_comedian_pro && (
-                    <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Comedian Pro - $20/month
-                    </Badge>
-                  )}
-                  {subscription.has_promoter_pro && (
-                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
-                      <Crown className="w-3 h-3 mr-1" />
-                      Promoter Pro - $25/month
-                    </Badge>
-                  )}
-                  {!subscription.has_comedian_pro && !subscription.has_promoter_pro && (
-                    <Badge variant="outline">Free Plan</Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* Total Cost */}
-              {(subscription.has_comedian_pro || subscription.has_promoter_pro) && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Monthly Total:</p>
-                  <p className="font-medium">
-                    ${getTotalCost()} AUD/month
-                    {subscription.has_comedian_pro && subscription.has_promoter_pro && (
-                      <span className="text-green-600 text-xs ml-2">($5/month savings)</span>
-                    )}
-                  </p>
-                </div>
-              )}
-
-              {/* Status and Period */}
-              <div className="flex items-center justify-between">
-                <div>
-                  {subscription.current_period_end && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {subscription.status === 'active' ? 'Renews' : 'Expires'} on{' '}
-                      {new Date(subscription.current_period_end).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                <Badge className={getStatusColor(subscription.status)}>
-                  {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
-                </Badge>
-              </div>
+    <div className="space-y-6">
+      <Card className="professional-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Subscription Status
+              </CardTitle>
+              <CardDescription>
+                Manage your subscription and billing
+              </CardDescription>
             </div>
-
-            {subscription.subscribed && subscription.status === 'active' && (
-              <Button
-                onClick={openCustomerPortal}
-                disabled={portalLoading}
-                className="w-full professional-button"
-              >
-                {portalLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Manage Subscription'
-                )}
-              </Button>
-            )}
-
-            {subscription.status === 'past_due' && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-yellow-800">
-                  <AlertCircle className="w-4 h-4" />
-                  <p className="text-sm font-medium">Payment Required</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={checkSubscription}
+              disabled={loading}
+              className="professional-button"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Refresh'
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {subscription ? (
+            <>
+              <div className="space-y-3">
+                {/* Current Plans */}
+                <div>
+                  <p className="font-medium text-foreground mb-2">Current Plans:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {subscription.has_comedian_pro && (
+                      <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
+                        <Zap className="w-3 h-3 mr-1" />
+                        Comedian Pro - $20/month
+                      </Badge>
+                    )}
+                    {subscription.has_promoter_pro && (
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                        <Crown className="w-3 h-3 mr-1" />
+                        Promoter Pro - $25/month
+                      </Badge>
+                    )}
+                    {!subscription.has_comedian_pro && !subscription.has_promoter_pro && (
+                      <Badge variant="outline">Free Plan</Badge>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Your subscription payment is past due. Please update your payment method to continue.
-                </p>
+
+                {/* Total Cost */}
+                {(subscription.has_comedian_pro || subscription.has_promoter_pro) && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Monthly Total:</p>
+                    <p className="font-medium">
+                      ${getTotalCost()} AUD/month
+                      {subscription.has_comedian_pro && subscription.has_promoter_pro && (
+                        <span className="text-green-600 text-xs ml-2">($5/month savings)</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Status and Period */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    {subscription.current_period_end && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {subscription.status === 'active' ? 'Renews' : 'Expires'} on{' '}
+                        {new Date(subscription.current_period_end).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className={getStatusColor(subscription.status)}>
+                    {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+
+              {subscription.subscribed && subscription.status === 'active' && (
                 <Button
-                  size="sm"
                   onClick={openCustomerPortal}
                   disabled={portalLoading}
-                  className="mt-2 bg-yellow-600 hover:bg-yellow-700"
+                  className="w-full professional-button"
                 >
-                  Update Payment Method
+                  {portalLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Manage Subscription'
+                  )}
                 </Button>
-              </div>
+              )}
+
+              {subscription.status === 'past_due' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-yellow-800">
+                    <AlertCircle className="w-4 h-4" />
+                    <p className="text-sm font-medium">Payment Required</p>
+                  </div>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Your subscription payment is past due. Please update your payment method to continue.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={openCustomerPortal}
+                    disabled={portalLoading}
+                    className="mt-2 bg-yellow-600 hover:bg-yellow-700"
+                  >
+                    Update Payment Method
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground">Loading subscription status...</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upgrade Options */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Comedian Pro */}
+        <Card className={`professional-card ${subscription?.has_comedian_pro ? 'ring-2 ring-pink-500' : ''}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-pink-500" />
+                Comedian Pro
+              </CardTitle>
+              {subscription?.has_comedian_pro && (
+                <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
+                  <Star className="w-3 h-3 mr-1" />
+                  Active
+                </Badge>
+              )}
+            </div>
+            <CardDescription>
+              Enhance your comedy career with professional tools
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center">
+              <span className="text-3xl font-bold">$20</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+            
+            <ul className="space-y-2">
+              {comedianFeatures.map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            {!subscription?.has_comedian_pro && (
+              <Button 
+                onClick={() => createCheckoutSession('comedian')}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              >
+                Upgrade to Comedian Pro
+              </Button>
             )}
-          </>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">Loading subscription status...</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+
+        {/* Promoter Pro */}
+        <Card className={`professional-card ${subscription?.has_promoter_pro ? 'ring-2 ring-purple-500' : ''}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-purple-500" />
+                Promoter Pro
+              </CardTitle>
+              {subscription?.has_promoter_pro && (
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                  <Star className="w-3 h-3 mr-1" />
+                  Active
+                </Badge>
+              )}
+            </div>
+            <CardDescription>
+              Professional event management and promotion tools
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center">
+              <span className="text-3xl font-bold">$25</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+            
+            <ul className="space-y-2">
+              {promoterFeatures.map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            {!subscription?.has_promoter_pro && (
+              <Button 
+                onClick={() => createCheckoutSession('promoter')}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              >
+                Upgrade to Promoter Pro
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bundle Option */}
+      {!subscription?.has_comedian_pro || !subscription?.has_promoter_pro ? (
+        <Card className="professional-card">
+          <CardHeader>
+            <CardTitle className="text-center">
+              💰 Bundle & Save $5/month
+            </CardTitle>
+            <CardDescription className="text-center">
+              Get both Comedian Pro and Promoter Pro for just $40/month (normally $45)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-4">
+              <div>
+                <span className="text-4xl font-bold">$40</span>
+                <span className="text-muted-foreground">/month</span>
+                <span className="ml-2 text-sm text-green-600 line-through">$45</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Perfect for comedians who also promote shows or promoters who perform
+              </p>
+              <Button 
+                onClick={() => createCheckoutSession('comedian')}
+                className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 hover:from-pink-600 hover:via-purple-600 hover:to-pink-600"
+                size="lg"
+              >
+                Get Complete Bundle
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
   );
 };
 

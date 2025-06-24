@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,16 +15,62 @@ import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
-import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube } from 'lucide-react';
+import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('profile');
+  const location = useLocation();
+  
+  // Get tab from URL parameter or default to 'profile'
+  const urlParams = new URLSearchParams(location.search);
+  const initialTab = urlParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
   const [showImageCrop, setShowImageCrop] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
+
+  // Mock invoices data
+  const mockInvoices = [
+    {
+      id: '1',
+      number: 'INV-00001',
+      clientName: 'Comedy Club Downtown',
+      amount: 500,
+      status: 'paid',
+      dueDate: '2024-01-15',
+      createdDate: '2024-01-01'
+    },
+    {
+      id: '2',
+      number: 'INV-00002',
+      clientName: 'Laugh Factory',
+      amount: 750,
+      status: 'pending',
+      dueDate: '2024-02-15',
+      createdDate: '2024-02-01'
+    },
+    {
+      id: '3',
+      number: 'INV-00003',
+      clientName: 'Open Mic Night Venue',
+      amount: 200,
+      status: 'overdue',
+      dueDate: '2024-01-30',
+      createdDate: '2024-01-15'
+    }
+  ];
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   if (!user) {
     return (
@@ -80,6 +126,15 @@ const Profile = () => {
         return 'bg-gradient-to-r from-blue-500 to-purple-500 text-white';
       default:
         return 'bg-gray-500 text-white';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'overdue': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -156,9 +211,9 @@ const Profile = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="vouches">Vouches</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
+            <TabsTrigger value="vouches">Vouches</TabsTrigger>
             <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -255,18 +310,86 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="contact">
-            <ContactSettings />
-          </TabsContent>
-
-          <TabsContent value="vouches">
-            <VouchSystem />
+            {/* Contact Information - Now at bottom of Profile tab */}
+            <Card className="professional-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="w-5 h-5" />
+                  Contact Information
+                </CardTitle>
+                <CardDescription>
+                  Your contact details for booking and collaboration
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="contact-email" className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email Address
+                    </Label>
+                    <Input id="contact-email" defaultValue="alex@example.com" className="mt-2" />
+                  </div>
+                  <div>
+                    <Label htmlFor="contact-phone" className="flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Mobile Number
+                    </Label>
+                    <Input id="contact-phone" defaultValue="+1 (555) 123-4567" className="mt-2" />
+                  </div>
+                </div>
+                <Button className="professional-button mt-4">
+                  Update Contact Info
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="calendar">
             <ProfileCalendarView />
+          </TabsContent>
+
+          <TabsContent value="invoices">
+            <Card className="professional-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Invoice Management
+                </CardTitle>
+                <CardDescription>
+                  View and manage your invoices
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockInvoices.map((invoice) => (
+                    <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-semibold">{invoice.number}</span>
+                          <Badge className={getStatusColor(invoice.status)}>
+                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{invoice.clientName}</p>
+                        <p className="text-xs text-muted-foreground">Due: {invoice.dueDate}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-semibold">${invoice.amount}</p>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="vouches">
+            <VouchSystem />
           </TabsContent>
 
           <TabsContent value="requests">
