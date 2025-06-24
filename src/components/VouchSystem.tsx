@@ -57,6 +57,11 @@ export const VouchSystem: React.FC = () => {
   const mockGivenVouches = [
     {
       id: '4',
+      fromUser: {
+        name: 'Alex Johnson',
+        avatar: '',
+        role: 'Comedian'
+      },
       toUser: {
         name: 'Jenny Walsh',
         avatar: '',
@@ -69,6 +74,11 @@ export const VouchSystem: React.FC = () => {
     },
     {
       id: '5',
+      fromUser: {
+        name: 'Alex Johnson',
+        avatar: '',
+        role: 'Comedian'
+      },
       toUser: {
         name: 'The Laugh Track',
         avatar: '',
