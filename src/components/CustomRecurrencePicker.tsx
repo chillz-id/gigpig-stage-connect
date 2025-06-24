@@ -129,7 +129,7 @@ export const CustomRecurrencePicker: React.FC<CustomRecurrencePickerProps> = ({
         {selectedDates.length > 0 && (
           <div className="space-y-4">
             <h4 className="text-sm font-medium">Selected Dates & Times ({selectedDates.length}):</h4>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-4">
               {selectedDates.map((customDate, dateIndex) => (
                 <Card key={dateIndex} className="bg-white/5 border-white/10">
                   <CardContent className="p-4">
@@ -157,49 +157,49 @@ export const CustomRecurrencePicker: React.FC<CustomRecurrencePickerProps> = ({
                       </div>
                       
                       {customDate.times.map((timeSlot, timeIndex) => (
-                        <div key={timeIndex} className="flex items-center gap-2">
+                        <div key={timeIndex} className="flex items-end gap-2">
                           <div className="flex-1">
-                            <Label className="text-xs text-gray-400">Start Time</Label>
+                            <Label className="text-xs text-gray-400">Start</Label>
                             <Input
                               type="time"
                               value={timeSlot.startTime}
                               onChange={(e) => updateTimeSlot(dateIndex, timeIndex, 'startTime', e.target.value)}
-                              className="bg-white/10 border-white/20 text-white text-sm"
+                              className="bg-white/10 border-white/20 text-white text-sm h-8"
                             />
                           </div>
                           <div className="flex-1">
-                            <Label className="text-xs text-gray-400">End Time</Label>
+                            <Label className="text-xs text-gray-400">End</Label>
                             <Input
                               type="time"
                               value={timeSlot.endTime}
                               onChange={(e) => updateTimeSlot(dateIndex, timeIndex, 'endTime', e.target.value)}
-                              className="bg-white/10 border-white/20 text-white text-sm"
+                              className="bg-white/10 border-white/20 text-white text-sm h-8"
                             />
                           </div>
-                          {customDate.times.length > 1 && (
+                          <div className="flex gap-1">
                             <Button
                               type="button"
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              onClick={() => removeTimeSlot(dateIndex, timeIndex)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20 mt-5"
+                              onClick={() => addTimeSlot(dateIndex)}
+                              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-8 px-2"
                             >
-                              <X className="w-3 h-3" />
+                              <Plus className="w-3 h-3" />
                             </Button>
-                          )}
+                            {customDate.times.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeTimeSlot(dateIndex, timeIndex)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20 h-8 px-2"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addTimeSlot(dateIndex)}
-                        className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add Time Slot
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
