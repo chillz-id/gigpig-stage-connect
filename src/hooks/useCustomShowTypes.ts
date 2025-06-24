@@ -17,14 +17,14 @@ export const useCustomShowTypes = () => {
     if (!user) return;
 
     try {
-      // Load from user's profile metadata or a separate table
+      // Load from user's profile metadata
       const { data: profile } = await supabase
         .from('profiles')
         .select('custom_show_types')
         .eq('id', user.id)
         .single();
 
-      if (profile?.custom_show_types) {
+      if (profile?.custom_show_types && Array.isArray(profile.custom_show_types)) {
         setCustomShowTypes(profile.custom_show_types);
       }
     } catch (error) {
@@ -39,12 +39,20 @@ export const useCustomShowTypes = () => {
     setCustomShowTypes(updatedTypes);
 
     try {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ custom_show_types: updatedTypes })
         .eq('id', user.id);
+
+      if (error) {
+        console.error('Error saving custom show type:', error);
+        // Revert local state on error
+        setCustomShowTypes(customShowTypes);
+      }
     } catch (error) {
       console.error('Error saving custom show type:', error);
+      // Revert local state on error
+      setCustomShowTypes(customShowTypes);
     }
   };
 

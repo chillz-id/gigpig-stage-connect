@@ -32,6 +32,9 @@ export const loadTemplateData = (
     showLevel: data.showLevel || '',
     showType: data.showType || '',
     customShowType: data.customShowType || '',
+    ticketingType: data.ticketingType || 'gigpigs',
+    externalTicketUrl: data.externalTicketUrl || '',
+    tickets: data.tickets || [],
   });
   
   // Load event spots if they exist

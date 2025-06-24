@@ -764,6 +764,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          custom_show_types: string[] | null
           email: string
           has_comedian_pro_badge: boolean | null
           has_promoter_pro_badge: boolean | null
@@ -779,6 +780,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          custom_show_types?: string[] | null
           email: string
           has_comedian_pro_badge?: boolean | null
           has_promoter_pro_badge?: boolean | null
@@ -794,6 +796,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          custom_show_types?: string[] | null
           email?: string
           has_comedian_pro_badge?: boolean | null
           has_promoter_pro_badge?: boolean | null
