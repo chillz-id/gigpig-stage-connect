@@ -35,6 +35,7 @@ export const loadTemplateData = (
     ticketingType: data.ticketingType || 'gigpigs',
     externalTicketUrl: data.externalTicketUrl || '',
     tickets: data.tickets || [],
+    feeHandling: data.feeHandling || 'absorb',
   });
   
   // Load event spots if they exist

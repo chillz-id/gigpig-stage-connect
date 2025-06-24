@@ -1,4 +1,3 @@
-
 export interface EventFormData {
   title: string;
   venue: string;
@@ -25,6 +24,7 @@ export interface EventFormData {
   ticketingType: 'gigpigs' | 'external';
   externalTicketUrl: string;
   tickets: EventTicket[];
+  feeHandling: 'absorb' | 'pass_to_customer';
 }
 
 export interface CustomDate {

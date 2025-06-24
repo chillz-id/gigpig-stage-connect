@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -44,6 +43,7 @@ const initialFormData: EventFormData = {
   ticketingType: 'gigpigs',
   externalTicketUrl: '',
   tickets: [],
+  feeHandling: 'absorb',
 };
 
 const initialRecurringSettings: RecurringSettings = {
@@ -138,9 +138,11 @@ export const CreateEventForm: React.FC = () => {
         ticketingType={formData.ticketingType}
         externalTicketUrl={formData.externalTicketUrl}
         tickets={formData.tickets}
+        feeHandling={formData.feeHandling}
         onTicketingTypeChange={(type) => handleFormDataChange({ ticketingType: type })}
         onExternalTicketUrlChange={(url) => handleFormDataChange({ externalTicketUrl: url })}
         onTicketsChange={(tickets) => handleFormDataChange({ tickets })}
+        onFeeHandlingChange={(handling) => handleFormDataChange({ feeHandling: handling })}
       />
 
       <EventRequirementsSection
