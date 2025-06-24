@@ -109,23 +109,54 @@ const SubscriptionManager = () => {
     return comedianCost + promoterCost;
   };
 
-  const comedianFeatures = [
-    'Priority application visibility',
-    'Advanced profile customization',
-    'Detailed analytics & insights',
-    'Premium support',
-    'Calendar integration',
-    'Professional badge'
-  ];
-
-  const promoterFeatures = [
-    'Unlimited event creation',
-    'Advanced event management',
-    'Comedian database access',
-    'Custom branding options',
-    'Priority support',
-    'Analytics & reporting',
-    'Team collaboration tools'
+  const upgradeOptions = [
+    {
+      title: "Comedian Pro",
+      price: "$19.99/month",
+      icon: Star,
+      features: [
+        "Verified comedian badge",
+        "Priority in search results",
+        "Advanced analytics",
+        "Custom profile themes",
+        "Direct messaging",
+        "Priority support"
+      ],
+      color: "from-blue-500 to-purple-500",
+      planType: 'comedian' as const
+    },
+    {
+      title: "Promoter Pro",
+      price: "$24.99/month", 
+      icon: Crown,
+      features: [
+        "Unlimited event creation",
+        "Advanced event management",
+        "Comedian recommendations",
+        "Bulk messaging tools",
+        "Analytics dashboard",
+        "Priority support"
+      ],
+      color: "from-purple-500 to-pink-500",
+      planType: 'promoter' as const
+    },
+    {
+      title: "Bundle & Save",
+      price: "$39.99/month",
+      originalPrice: "$44.98",
+      icon: Zap,
+      features: [
+        "All Comedian Pro features",
+        "All Promoter Pro features", 
+        "Cross-platform benefits",
+        "Exclusive networking events",
+        "Advanced insights",
+        "24/7 premium support"
+      ],
+      color: "from-yellow-500 to-orange-500",
+      badge: "Best Value",
+      planType: 'comedian' as const
+    }
   ];
 
   return (
@@ -258,131 +289,62 @@ const SubscriptionManager = () => {
         </CardContent>
       </Card>
 
-      {/* Upgrade Options */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Comedian Pro */}
-        <Card className={`professional-card ${subscription?.has_comedian_pro ? 'ring-2 ring-pink-500' : ''}`}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-pink-500" />
-                Comedian Pro
-              </CardTitle>
-              {subscription?.has_comedian_pro && (
-                <Badge className="bg-gradient-to-r from-pink-500 to-purple-500">
-                  <Star className="w-3 h-3 mr-1" />
-                  Active
-                </Badge>
-              )}
-            </div>
-            <CardDescription>
-              Enhance your comedy career with professional tools
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <span className="text-3xl font-bold">$20</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            
-            <ul className="space-y-2">
-              {comedianFeatures.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Upgrade Your Account Section */}
+      <Card className="professional-card">
+        <CardHeader>
+          <CardTitle>Upgrade Your Account</CardTitle>
+          <CardDescription>
+            Unlock premium features and grow your comedy career
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {upgradeOptions.map((option, index) => {
+              const IconComponent = option.icon;
+              return (
+                <div key={index} className="relative border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                  {option.badge && (
+                    <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-orange-500">
+                      {option.badge}
+                    </Badge>
+                  )}
+                  
+                  <div className="text-center mb-4">
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${option.color} flex items-center justify-center mx-auto mb-3`}>
+                      <IconComponent className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold">{option.title}</h3>
+                    <div className="mt-2">
+                      {option.originalPrice && (
+                        <span className="text-sm text-muted-foreground line-through mr-2">
+                          {option.originalPrice}
+                        </span>
+                      )}
+                      <span className="text-2xl font-bold">{option.price}</span>
+                    </div>
+                  </div>
 
-            {!subscription?.has_comedian_pro && (
-              <Button 
-                onClick={() => createCheckoutSession('comedian')}
-                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-              >
-                Upgrade to Comedian Pro
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                  <ul className="space-y-2 mb-6">
+                    {option.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center gap-2 text-sm">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-        {/* Promoter Pro */}
-        <Card className={`professional-card ${subscription?.has_promoter_pro ? 'ring-2 ring-purple-500' : ''}`}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-purple-500" />
-                Promoter Pro
-              </CardTitle>
-              {subscription?.has_promoter_pro && (
-                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
-                  <Star className="w-3 h-3 mr-1" />
-                  Active
-                </Badge>
-              )}
-            </div>
-            <CardDescription>
-              Professional event management and promotion tools
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <span className="text-3xl font-bold">$25</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            
-            <ul className="space-y-2">
-              {promoterFeatures.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            {!subscription?.has_promoter_pro && (
-              <Button 
-                onClick={() => createCheckoutSession('promoter')}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-              >
-                Upgrade to Promoter Pro
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bundle Option */}
-      {!subscription?.has_comedian_pro || !subscription?.has_promoter_pro ? (
-        <Card className="professional-card">
-          <CardHeader>
-            <CardTitle className="text-center">
-              💰 Bundle & Save $5/month
-            </CardTitle>
-            <CardDescription className="text-center">
-              Get both Comedian Pro and Promoter Pro for just $40/month (normally $45)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-4">
-              <div>
-                <span className="text-4xl font-bold">$40</span>
-                <span className="text-muted-foreground">/month</span>
-                <span className="ml-2 text-sm text-green-600 line-through">$45</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Perfect for comedians who also promote shows or promoters who perform
-              </p>
-              <Button 
-                onClick={() => createCheckoutSession('comedian')}
-                className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 hover:from-pink-600 hover:via-purple-600 hover:to-pink-600"
-                size="lg"
-              >
-                Get Complete Bundle
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+                  <Button 
+                    className={`w-full bg-gradient-to-r ${option.color} hover:opacity-90 transition-opacity`}
+                    onClick={() => createCheckoutSession(option.planType)}
+                  >
+                    Upgrade Now
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
