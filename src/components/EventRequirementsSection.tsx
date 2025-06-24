@@ -11,13 +11,15 @@ import { Plus, X } from 'lucide-react';
 
 interface EventRequirementsSectionProps {
   formData: {
-    type: string;
     requirements: string[];
     isVerifiedOnly: boolean;
     isPaid: boolean;
     allowRecording: boolean;
     ageRestriction: string;
     dresscode: string;
+    showLevel: string;
+    showType: string;
+    customShowType: string;
   };
   onFormDataChange: (updates: Partial<EventRequirementsSectionProps['formData']>) => void;
 }
@@ -49,20 +51,51 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
         <CardTitle>Requirements & Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-          <Label htmlFor="type">Show Type</Label>
-          <Select value={formData.type} onValueChange={(value) => onFormDataChange({ type: value })}>
-            <SelectTrigger className="bg-white/10 border-white/20 text-white">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Open Mic">Open Mic</SelectItem>
-              <SelectItem value="Semi-Pro">Semi-Pro</SelectItem>
-              <SelectItem value="Pro">Professional</SelectItem>
-              <SelectItem value="Mixed">Mixed</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Show Level and Show Type */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="showLevel">Show Level</Label>
+            <Select value={formData.showLevel} onValueChange={(value) => onFormDataChange({ showLevel: value })}>
+              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectValue placeholder="Select show level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open-mic">Open Mic</SelectItem>
+                <SelectItem value="semi-pro">Semi-Pro</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="showType">Show Type</Label>
+            <Select value={formData.showType} onValueChange={(value) => onFormDataChange({ showType: value })}>
+              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectValue placeholder="Select show type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lineup">Lineup</SelectItem>
+                <SelectItem value="solo-show">Solo Show</SelectItem>
+                <SelectItem value="live-podcast">Live Podcast</SelectItem>
+                <SelectItem value="corporate">Corporate</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        {/* Custom Show Type Input - only show when "custom" is selected */}
+        {formData.showType === 'custom' && (
+          <div>
+            <Label htmlFor="customShowType">Custom Show Type</Label>
+            <Input
+              id="customShowType"
+              value={formData.customShowType}
+              onChange={(e) => onFormDataChange({ customShowType: e.target.value })}
+              placeholder="Enter your custom show type"
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+            />
+          </div>
+        )}
 
         <div>
           <Label htmlFor="newRequirement">Add Requirements</Label>

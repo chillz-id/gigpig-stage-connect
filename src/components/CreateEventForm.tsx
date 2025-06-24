@@ -108,14 +108,14 @@ export const CreateEventForm: React.FC = () => {
         <EventTemplateLoader onLoadTemplate={loadTemplate} />
       </div>
 
-      <EventBasicInfo
-        formData={formData}
-        onFormDataChange={handleFormDataChange}
-      />
-
       <EventBannerUpload 
         bannerUrl={formData.bannerUrl}
         onBannerChange={(url) => handleFormDataChange({ bannerUrl: url })}
+      />
+
+      <EventBasicInfo
+        formData={formData}
+        onFormDataChange={handleFormDataChange}
       />
 
       <EventDateTimeSection
