@@ -308,18 +308,20 @@ const Browse = () => {
   };
 
   const ListView = () => (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {isLoading ? (
-        <div className="text-center py-8">
+        <div className="col-span-full text-center py-8">
           <div className="text-xl text-muted-foreground">Loading events...</div>
         </div>
       ) : filteredShows.length === 0 ? (
-        <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
-          <CardContent className="p-8 text-center">
-            <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-            <p className="text-muted-foreground">Try adjusting your search criteria</p>
-          </CardContent>
-        </Card>
+        <div className="col-span-full">
+          <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-xl font-semibold mb-2">No shows found</h3>
+              <p className="text-muted-foreground">Try adjusting your search criteria</p>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         filteredShows.map((show) => (
           <ShowCard key={show.id} show={show} />
@@ -380,7 +382,7 @@ const Browse = () => {
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
               <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                List View
+                Card View
               </TabsTrigger>
               <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Calendar
