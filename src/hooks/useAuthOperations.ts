@@ -51,17 +51,27 @@ export const useAuthOperations = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Attempting sign in for:', email);
+      console.log('=== SIGN IN ATTEMPT ===');
+      console.log('Email:', email);
+      console.log('Password length:', password.length);
+      console.log('Using Supabase URL:', supabase.supabaseUrl);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('Sign in response:', { data, error });
+      console.log('=== SIGN IN RESPONSE ===');
+      console.log('Data:', data);
+      console.log('Error:', error);
+      console.log('User ID:', data?.user?.id);
+      console.log('Email confirmed at:', data?.user?.email_confirmed_at);
+      console.log('Session exists:', !!data?.session);
 
       if (error) {
-        console.error('Sign in error:', error);
+        console.error('=== SIGN IN ERROR ===');
+        console.error('Error code:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
         
         // Provide more specific error messages
         let errorMessage = error.message;
@@ -81,15 +91,22 @@ export const useAuthOperations = () => {
         return { error };
       }
 
-      console.log('Sign in successful for user:', data.user?.email);
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
+      if (data?.user) {
+        console.log('=== SIGN IN SUCCESS ===');
+        console.log('User authenticated:', data.user.email);
+        console.log('Session token exists:', !!data.session?.access_token);
+        
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      }
 
       return { error: null };
     } catch (error: any) {
-      console.error('Sign in exception:', error);
+      console.error('=== SIGN IN EXCEPTION ===');
+      console.error('Exception:', error);
+      console.error('Exception message:', error.message);
       toast({
         title: "Sign In Error",
         description: error.message || 'An unexpected error occurred during sign in.',

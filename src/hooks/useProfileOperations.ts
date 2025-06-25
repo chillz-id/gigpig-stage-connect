@@ -9,7 +9,9 @@ export const useProfileOperations = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
+      console.log('=== FETCHING PROFILE ===');
+      console.log('User ID:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -17,33 +19,47 @@ export const useProfileOperations = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('=== PROFILE FETCH ERROR ===');
+        console.error('Error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         return null;
       }
-      console.log('Profile fetched successfully:', data);
+      
+      console.log('=== PROFILE FETCH SUCCESS ===');
+      console.log('Profile data:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('=== PROFILE FETCH EXCEPTION ===');
+      console.error('Exception:', error);
       return null;
     }
   };
 
   const fetchRoles = async (userId: string) => {
     try {
-      console.log('Fetching roles for user:', userId);
+      console.log('=== FETCHING ROLES ===');
+      console.log('User ID:', userId);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', userId);
       
       if (error) {
-        console.error('Error fetching roles:', error);
+        console.error('=== ROLES FETCH ERROR ===');
+        console.error('Error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         return [];
       }
-      console.log('Roles fetched successfully:', data);
+      
+      console.log('=== ROLES FETCH SUCCESS ===');
+      console.log('Roles data:', data);
       return data || [];
     } catch (error) {
-      console.error('Error fetching roles:', error);
+      console.error('=== ROLES FETCH EXCEPTION ===');
+      console.error('Exception:', error);
       return [];
     }
   };
@@ -52,14 +68,22 @@ export const useProfileOperations = () => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      console.log('Updating profile for user:', user.id);
+      console.log('=== UPDATING PROFILE ===');
+      console.log('User ID:', user.id);
+      console.log('Updates:', updates);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('=== PROFILE UPDATE ERROR ===');
+        console.error('Error:', error);
+        throw error;
+      }
 
+      console.log('=== PROFILE UPDATE SUCCESS ===');
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -67,7 +91,8 @@ export const useProfileOperations = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('Profile update error:', error);
+      console.error('=== PROFILE UPDATE EXCEPTION ===');
+      console.error('Exception:', error);
       toast({
         title: "Update Error",
         description: error.message,
@@ -81,10 +106,14 @@ export const useProfileOperations = () => {
     if (!user) return;
     
     try {
-      console.log('Checking subscription for user:', user.id);
+      console.log('=== CHECKING SUBSCRIPTION ===');
+      console.log('User ID:', user.id);
+      
       await supabase.functions.invoke('check-subscription');
+      console.log('=== SUBSCRIPTION CHECK COMPLETED ===');
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      console.error('=== SUBSCRIPTION CHECK ERROR ===');
+      console.error('Error:', error);
     }
   };
 
