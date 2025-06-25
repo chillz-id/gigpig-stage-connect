@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -202,10 +201,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting sign in for:', email);
-      console.log('Current Supabase client config:', {
-        url: supabase.supabaseUrl,
-        key: supabase.supabaseKey?.substring(0, 20) + '...'
-      });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
