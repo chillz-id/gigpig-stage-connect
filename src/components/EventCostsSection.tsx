@@ -95,7 +95,6 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
               value={newCost.currency}
               onChange={(currency) => setNewCost(prev => ({ ...prev, currency }))}
               className="bg-white/10 border-white/20 text-white"
-              disabled={newCost.is_percentage}
             />
           </div>
           <div className="flex flex-col justify-end">

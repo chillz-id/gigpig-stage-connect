@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -340,4 +339,5 @@ const Navigation: React.FC = () => {
   );
 };
 
+export { Navigation };
 export default Navigation;

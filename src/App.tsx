@@ -4,9 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Navigation } from "./components/Navigation";
-import { AuthContext } from "./contexts/AuthContext";
-import { UserContext } from "./contexts/UserContext";
+import Navigation from "./components/Navigation";
+import { AuthProvider } from "./contexts/AuthContext";
+import { UserProvider } from "./contexts/UserContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -24,7 +24,7 @@ import Marketplace from "./pages/Marketplace";
 import Invoices from "./pages/Invoices";
 import PromoterSettings from "./pages/PromoterSettings";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -35,8 +35,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthContext>
-            <UserContext>
+          <AuthProvider>
+            <UserProvider>
               <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
                 <Navigation />
                 <Routes>
@@ -114,8 +114,8 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
-            </UserContext>
-          </AuthContext>
+            </UserProvider>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
