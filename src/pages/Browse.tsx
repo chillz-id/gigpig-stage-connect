@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ const Browse = () => {
   const [selectedEventForTickets, setSelectedEventForTickets] = useState<any>(null);
   const [showTicketPage, setShowTicketPage] = useState(false);
 
-  // Mock events for the next 2 months
+  // Mock events for the next 2 months with banner images
   const mockEvents = [
     {
       id: 'mock-1',
@@ -48,7 +47,11 @@ const Browse = () => {
       applied_spots: 3,
       status: 'open',
       allow_recording: false,
-      dress_code: 'Smart Casual'
+      dress_code: 'Smart Casual',
+      banner_url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=800&h=400&fit=crop',
+      is_recurring: true,
+      recurrence_pattern: 'weekly',
+      series_id: 'series-1'
     },
     {
       id: 'mock-2',
@@ -69,7 +72,8 @@ const Browse = () => {
       applied_spots: 8,
       status: 'open',
       allow_recording: true,
-      dress_code: 'Casual'
+      dress_code: 'Casual',
+      banner_url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=400&fit=crop'
     },
     {
       id: 'mock-3',
@@ -90,7 +94,8 @@ const Browse = () => {
       applied_spots: 6,
       status: 'full',
       allow_recording: false,
-      dress_code: 'Smart Casual'
+      dress_code: 'Smart Casual',
+      banner_url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=400&fit=crop'
     },
     {
       id: 'mock-4',
@@ -111,7 +116,11 @@ const Browse = () => {
       applied_spots: 4,
       status: 'open',
       allow_recording: true,
-      dress_code: 'Casual'
+      dress_code: 'Casual',
+      banner_url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=400&fit=crop',
+      is_recurring: true,
+      recurrence_pattern: 'weekly',
+      series_id: 'series-2'
     },
     {
       id: 'mock-5',
@@ -132,7 +141,8 @@ const Browse = () => {
       applied_spots: 7,
       status: 'open',
       allow_recording: false,
-      dress_code: 'Weather Appropriate'
+      dress_code: 'Weather Appropriate',
+      banner_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&h=400&fit=crop'
     }
   ];
 
@@ -209,16 +219,16 @@ const Browse = () => {
     const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
     
     return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-xl">{show.title}</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                {show.venue} • {show.city}, {show.state}
-              </CardDescription>
-            </div>
-            <div className="flex flex-col gap-2">
+      <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors overflow-hidden">
+        {show.banner_url && (
+          <div className="aspect-[2/1] relative overflow-hidden">
+            <img 
+              src={show.banner_url} 
+              alt={show.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute top-2 right-2 flex gap-2">
               {show.is_verified_only && (
                 <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                   <Star className="w-3 h-3 mr-1" />
@@ -228,7 +238,36 @@ const Browse = () => {
               {availableSpots <= 0 && (
                 <Badge variant="destructive">Full</Badge>
               )}
+              {show.is_recurring && (
+                <Badge className="bg-blue-600">Recurring</Badge>
+              )}
             </div>
+          </div>
+        )}
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-xl">{show.title}</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                {show.venue} • {show.city}, {show.state}
+              </CardDescription>
+            </div>
+            {!show.banner_url && (
+              <div className="flex flex-col gap-2">
+                {show.is_verified_only && (
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                    <Star className="w-3 h-3 mr-1" />
+                    Verified Only
+                  </Badge>
+                )}
+                {availableSpots <= 0 && (
+                  <Badge variant="destructive">Full</Badge>
+                )}
+                {show.is_recurring && (
+                  <Badge className="bg-blue-600">Recurring</Badge>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -281,6 +320,15 @@ const Browse = () => {
             >
               Details
             </Button>
+            {show.is_recurring && (
+              <Button 
+                variant="outline" 
+                className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
+                onClick={() => navigate(`/series/${show.series_id}`)}
+              >
+                View Series
+              </Button>
+            )}
             {show.is_paid && (
               <Button 
                 variant="outline"

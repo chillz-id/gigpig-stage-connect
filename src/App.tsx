@@ -1,71 +1,125 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { UserProvider } from '@/contexts/UserContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { Toaster } from '@/components/ui/toaster';
-import Navigation from '@/components/Navigation';
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
-import Browse from '@/pages/Browse';
-import Dashboard from '@/pages/Dashboard';
-import Profile from '@/pages/Profile';
-import CreateEvent from '@/pages/CreateEvent';
-import EventDetails from '@/pages/EventDetails';
-import Applications from '@/pages/Applications';
-import Messages from '@/pages/Messages';
-import Notifications from '@/pages/Notifications';
-import Pricing from '@/pages/Pricing';
-import PromoterSettings from '@/pages/PromoterSettings';
-import Marketplace from '@/pages/Marketplace';
-import Invoices from '@/pages/Invoices';
-import NotFound from '@/pages/NotFound';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigation } from "./components/Navigation";
+import { AuthContext } from "./contexts/AuthContext";
+import { UserContext } from "./contexts/UserContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import Browse from "./pages/Browse";
+import Profile from "./pages/Profile";
+import CreateEvent from "./pages/CreateEvent";
+import EventDetails from "./pages/EventDetails";
+import EventSeries from "./pages/EventSeries";
+import Applications from "./pages/Applications";
+import Messages from "./pages/Messages";
+import Notifications from "./pages/Notifications";
+import Pricing from "./pages/Pricing";
+import Marketplace from "./pages/Marketplace";
+import Invoices from "./pages/Invoices";
+import PromoterSettings from "./pages/PromoterSettings";
+import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <UserProvider>
-            <Router>
-              <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthContext>
+            <UserContext>
+              <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
                 <Navigation />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/browse" element={<Browse />} />
                   <Route path="/event/:id" element={<EventDetails />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/create-event" element={<CreateEvent />} />
-                  <Route path="/applications" element={<Applications />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/series/:seriesId" element={<EventSeries />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/promoter-settings" element={<PromoterSettings />} />
                   <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="/invoices/*" element={<Invoices />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/create-event"
+                    element={
+                      <ProtectedRoute>
+                        <CreateEvent />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/applications"
+                    element={
+                      <ProtectedRoute>
+                        <Applications />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/messages"
+                    element={
+                      <ProtectedRoute>
+                        <Messages />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute>
+                        <Notifications />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/invoices"
+                    element={
+                      <ProtectedRoute>
+                        <Invoices />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/promoter-settings"
+                    element={
+                      <ProtectedRoute>
+                        <PromoterSettings />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <Toaster />
               </div>
-            </Router>
-          </UserProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
-}
+            </UserContext>
+          </AuthContext>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;

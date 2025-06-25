@@ -49,11 +49,19 @@ export interface EventSpot {
   payment_amount?: number;
   currency: string;
   duration_minutes?: number;
+  payment_type?: 'flat_fee' | 'percentage_ticket_sales' | 'percentage_door_sales';
 }
 
 export interface EventTicket {
   ticket_name: string;
   description?: string;
   price: number;
+  currency: string;
+}
+
+export interface EventCost {
+  cost_name: string;
+  is_percentage: boolean;
+  amount: number;
   currency: string;
 }

@@ -13,7 +13,8 @@ import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateLoader } from './EventTemplateLoader';
 import { EventTemplateSaver } from './EventTemplateSaver';
 import { EventTicketSection } from './EventTicketSection';
-import { EventFormData, RecurringSettings, EventSpot } from '@/types/eventTypes';
+import { EventCostsSection } from './EventCostsSection';
+import { EventFormData, RecurringSettings, EventSpot, EventCost } from '@/types/eventTypes';
 import { validateEventForm } from '@/utils/eventValidation';
 import { prepareEventData } from '@/utils/eventDataMapper';
 import { loadTemplateData } from '@/utils/templateLoader';
@@ -62,6 +63,7 @@ export const CreateEventForm: React.FC = () => {
   
   const [formData, setFormData] = useState<EventFormData>(initialFormData);
   const [eventSpots, setEventSpots] = useState<EventSpot[]>([]);
+  const [eventCosts, setEventCosts] = useState<EventCost[]>([]);
   const [recurringSettings, setRecurringSettings] = useState<RecurringSettings>(initialRecurringSettings);
 
   const handleFormDataChange = (updates: Partial<EventFormData>) => {
@@ -104,6 +106,7 @@ export const CreateEventForm: React.FC = () => {
 
     const eventData = prepareEventData(formData, recurringSettings, eventSpots, user.id);
     console.log('Creating event:', eventData);
+    console.log('Event costs:', eventCosts); // Log costs for now - will be saved to database later
     createEvent(eventData);
   };
 
@@ -144,6 +147,11 @@ export const CreateEventForm: React.FC = () => {
         onExternalTicketUrlChange={(url) => handleFormDataChange({ externalTicketUrl: url })}
         onTicketsChange={(tickets) => handleFormDataChange({ tickets })}
         onFeeHandlingChange={(handling) => handleFormDataChange({ feeHandling: handling })}
+      />
+
+      <EventCostsSection
+        costs={eventCosts}
+        onCostsChange={setEventCosts}
       />
 
       <EventRequirementsSection

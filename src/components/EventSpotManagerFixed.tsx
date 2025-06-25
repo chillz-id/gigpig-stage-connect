@@ -1,20 +1,14 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Users, DollarSign, GripVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencySelector } from '@/components/ui/currency-selector';
-
-interface EventSpot {
-  spot_name: string;
-  is_paid: boolean;
-  payment_amount?: number;
-  currency: string;
-  duration_minutes?: number;
-}
+import { Badge } from '@/components/ui/badge';
+import { Plus, X, Users, Clock, DollarSign } from 'lucide-react';
+import { EventSpot } from '@/types/eventTypes';
 
 interface EventSpotManagerFixedProps {
   spots: EventSpot[];
@@ -30,10 +24,9 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
     is_paid: false,
     payment_amount: 0,
     currency: 'AUD',
-    duration_minutes: 5
+    duration_minutes: 5,
+    payment_type: 'flat_fee' // New field for payment type
   });
-
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const addSpot = () => {
     if (newSpot.spot_name.trim()) {
@@ -43,7 +36,8 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
         is_paid: false,
         payment_amount: 0,
         currency: 'AUD',
-        duration_minutes: 5
+        duration_minutes: 5,
+        payment_type: 'flat_fee'
       });
     }
   };
@@ -52,38 +46,33 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
     onSpotsChange(spots.filter((_, i) => i !== index));
   };
 
-  const updateSpot = (index: number, updates: Partial<EventSpot>) => {
-    const updatedSpots = spots.map((spot, i) => 
-      i === index ? { ...spot, ...updates } : spot
-    );
-    onSpotsChange(updatedSpots);
+  const handlePaymentAmountChange = (value: string) => {
+    const numericValue = parseFloat(value.replace(/^0+(?=\d)/, '') || '0');
+    setNewSpot(prev => ({ ...prev, payment_amount: numericValue }));
   };
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
+  const isPercentagePayment = newSpot.payment_type === 'percentage_ticket_sales' || newSpot.payment_type === 'percentage_door_sales';
+
+  // Mock data for real-time calculation preview
+  const mockEventData = {
+    ticketSales: 1250.00,
+    doorSales: 800.00,
+    totalRevenue: 2050.00
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === dropIndex) return;
-
-    const updatedSpots = [...spots];
-    const draggedSpot = updatedSpots[draggedIndex];
-    updatedSpots.splice(draggedIndex, 1);
-    updatedSpots.splice(dropIndex, 0, draggedSpot);
+  const calculatePaymentPreview = (spot: typeof newSpot) => {
+    if (!spot.is_paid || spot.payment_amount <= 0) return 0;
     
-    onSpotsChange(updatedSpots);
-    setDraggedIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
+    switch (spot.payment_type) {
+      case 'flat_fee':
+        return spot.payment_amount;
+      case 'percentage_ticket_sales':
+        return (mockEventData.ticketSales * spot.payment_amount) / 100;
+      case 'percentage_door_sales':
+        return (mockEventData.doorSales * spot.payment_amount) / 100;
+      default:
+        return spot.payment_amount;
+    }
   };
 
   return (
@@ -91,192 +80,177 @@ export const EventSpotManagerFixed: React.FC<EventSpotManagerFixedProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="w-5 h-5" />
-          Event Spots Management
+          Performance Spots
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Add New Spot */}
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-lg">Add New Spot</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div>
+            <Label htmlFor="spotName">Spot Name *</Label>
+            <Input
+              id="spotName"
+              value={newSpot.spot_name}
+              onChange={(e) => setNewSpot(prev => ({ ...prev, spot_name: e.target.value }))}
+              placeholder="Opening Act, Feature, etc."
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="duration">Duration (min)</Label>
+            <Input
+              id="duration"
+              type="number"
+              min="1"
+              max="60"
+              value={newSpot.duration_minutes}
+              onChange={(e) => setNewSpot(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 5 }))}
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="paymentType">Payment Type</Label>
+            <Select 
+              value={newSpot.is_paid ? newSpot.payment_type : 'unpaid'} 
+              onValueChange={(value) => {
+                if (value === 'unpaid') {
+                  setNewSpot(prev => ({ ...prev, is_paid: false, payment_type: 'flat_fee', payment_amount: 0 }));
+                } else {
+                  setNewSpot(prev => ({ ...prev, is_paid: true, payment_type: value as any }));
+                }
+              }}
+            >
+              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unpaid">Unpaid</SelectItem>
+                <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                <SelectItem value="percentage_ticket_sales">% of Ticket Sales</SelectItem>
+                <SelectItem value="percentage_door_sales">% of Door Sales</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {newSpot.is_paid && (
+            <>
               <div>
-                <Label htmlFor="spot-name">Spot Name</Label>
+                <Label htmlFor="paymentAmount">
+                  Amount {isPercentagePayment ? '(%)' : `(${newSpot.currency})`}
+                </Label>
                 <Input
-                  id="spot-name"
-                  value={newSpot.spot_name}
-                  onChange={(e) => setNewSpot(prev => ({ ...prev, spot_name: e.target.value }))}
-                  placeholder="e.g., Opening Act, Headliner"
+                  id="paymentAmount"
+                  type="number"
+                  step={isPercentagePayment ? "0.1" : "0.01"}
+                  min="0"
+                  max={isPercentagePayment ? "100" : undefined}
+                  value={newSpot.payment_amount === 0 ? '' : newSpot.payment_amount}
+                  onChange={(e) => handlePaymentAmountChange(e.target.value)}
+                  placeholder={isPercentagePayment ? "10.0" : "0.00"}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                 />
               </div>
-              <div>
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={newSpot.duration_minutes}
-                  onChange={(e) => setNewSpot(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 5 }))}
-                  className="bg-white/10 border-white/20 text-white"
-                  min="1"
-                  max="60"
-                />
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3">
-              <Label htmlFor="is-paid">Paid Spot</Label>
-              {newSpot.is_paid && (
-                <Badge className="bg-green-500 text-xs">
-                  <DollarSign className="w-3 h-3 mr-1" />
-                  {newSpot.currency}
-                </Badge>
-              )}
-              <Switch
-                id="is-paid"
-                checked={newSpot.is_paid}
-                onCheckedChange={(checked) => setNewSpot(prev => ({ ...prev, is_paid: checked }))}
-              />
-            </div>
-
-            {newSpot.is_paid && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="payment-amount">Payment Amount</Label>
-                  <Input
-                    id="payment-amount"
-                    type="number"
-                    value={newSpot.payment_amount}
-                    onChange={(e) => setNewSpot(prev => ({ ...prev, payment_amount: parseFloat(e.target.value) || 0 }))}
-                    className="bg-white/10 border-white/20 text-white"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
+              {!isPercentagePayment && (
                 <div>
                   <Label htmlFor="currency">Currency</Label>
                   <CurrencySelector
                     value={newSpot.currency}
                     onChange={(currency) => setNewSpot(prev => ({ ...prev, currency }))}
-                    className="bg-white/10 border-white/20 text-white w-full"
+                    className="bg-white/10 border-white/20 text-white"
                   />
                 </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Payment Preview */}
+        {newSpot.is_paid && newSpot.payment_amount > 0 && (
+          <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-300/20">
+            <Label className="text-sm font-medium text-blue-200 mb-2 block">Payment Preview (Based on Mock Data)</Label>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="text-gray-300">Ticket Sales: AUD {mockEventData.ticketSales.toFixed(2)}</p>
+                <p className="text-gray-300">Door Sales: AUD {mockEventData.doorSales.toFixed(2)}</p>
               </div>
-            )}
-
-            <Button 
-              type="button" 
-              onClick={addSpot}
-              disabled={!newSpot.spot_name.trim()}
-              className="w-full bg-purple-500 hover:bg-purple-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Spot
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Existing Spots */}
-        {spots.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-lg font-semibold">Current Spots ({spots.length})</h4>
-            {spots.map((spot, index) => (
-              <Card 
-                key={index} 
-                className={`bg-white/5 border-white/10 transition-all ${
-                  draggedIndex === index ? 'opacity-50 scale-95' : ''
-                }`}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="cursor-move p-1 hover:bg-white/10 rounded">
-                      <GripVertical className="w-4 h-4 text-gray-400" />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h5 className="font-medium">{spot.spot_name}</h5>
-                        <Badge variant="outline" className="text-xs">
-                          {spot.duration_minutes}min
-                        </Badge>
-                        {spot.is_paid && (
-                          <Badge className="bg-green-500 text-xs">
-                            <DollarSign className="w-3 h-3 mr-1" />
-                            {spot.currency} {spot.payment_amount}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                        <Input
-                          value={spot.spot_name}
-                          onChange={(e) => updateSpot(index, { spot_name: e.target.value })}
-                          className="bg-white/10 border-white/20 text-white text-sm"
-                          placeholder="Spot name"
-                        />
-                        <Input
-                          type="number"
-                          value={spot.duration_minutes}
-                          onChange={(e) => updateSpot(index, { duration_minutes: parseInt(e.target.value) || 5 })}
-                          className="bg-white/10 border-white/20 text-white text-sm"
-                          min="1"
-                          max="60"
-                        />
-                        {spot.is_paid && (
-                          <>
-                            <Input
-                              type="number"
-                              value={spot.payment_amount}
-                              onChange={(e) => updateSpot(index, { payment_amount: parseFloat(e.target.value) || 0 })}
-                              className="bg-white/10 border-white/20 text-white text-sm"
-                              min="0"
-                              step="0.01"
-                              placeholder="Amount"
-                            />
-                            <CurrencySelector
-                              value={spot.currency}
-                              onChange={(currency) => updateSpot(index, { currency })}
-                              className="bg-white/10 border-white/20 text-white text-sm w-full"
-                            />
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs text-gray-300">Paid</span>
-                        <Switch
-                          checked={spot.is_paid}
-                          onCheckedChange={(checked) => updateSpot(index, { is_paid: checked })}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => removeSpot(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+              <div className="text-right">
+                <p className="text-green-300 font-medium">
+                  Estimated Payment: AUD {calculatePaymentPreview(newSpot).toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {newSpot.payment_type === 'flat_fee' && 'Fixed amount'}
+                  {newSpot.payment_type === 'percentage_ticket_sales' && `${newSpot.payment_amount}% of ticket sales`}
+                  {newSpot.payment_type === 'percentage_door_sales' && `${newSpot.payment_amount}% of door sales`}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {spots.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
-            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No spots added yet. Create your first spot above!</p>
+        <Button 
+          type="button" 
+          onClick={addSpot} 
+          disabled={!newSpot.spot_name.trim()}
+          className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Spot
+        </Button>
+
+        {spots.length > 0 && (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Performance Lineup</Label>
+            <div className="space-y-2">
+              {spots.map((spot, index) => (
+                <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-white border-white/30">
+                        {spot.spot_name}
+                      </Badge>
+                      <span className="text-sm text-gray-300 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {spot.duration_minutes}min
+                      </span>
+                    </div>
+                    <X 
+                      className="w-4 h-4 cursor-pointer hover:text-red-300" 
+                      onClick={() => removeSpot(index)}
+                    />
+                  </div>
+                  {spot.is_paid && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">
+                        {spot.payment_type === 'flat_fee' && `Flat Fee: ${spot.currency} ${spot.payment_amount?.toFixed(2)}`}
+                        {spot.payment_type === 'percentage_ticket_sales' && `${spot.payment_amount}% of ticket sales`}
+                        {spot.payment_type === 'percentage_door_sales' && `${spot.payment_amount}% of door sales`}
+                      </span>
+                      <span className="text-green-300">
+                        Est: AUD {calculatePaymentPreview(spot).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Total Payment Summary */}
+            <div className="p-3 bg-green-500/10 rounded-lg border border-green-300/20">
+              <Label className="text-sm font-medium text-green-200 mb-2 block">Total Payments (Estimated)</Label>
+              <div className="text-sm space-y-1">
+                <p className="text-green-300">
+                  Fixed Payments: AUD {spots.filter(s => s.is_paid && s.payment_type === 'flat_fee').reduce((sum, s) => sum + (s.payment_amount || 0), 0).toFixed(2)}
+                </p>
+                <p className="text-green-300">
+                  Variable Payments: AUD {spots.filter(s => s.is_paid && s.payment_type !== 'flat_fee').reduce((sum, s) => sum + calculatePaymentPreview(s), 0).toFixed(2)}
+                </p>
+                <p className="text-white font-medium">
+                  Total Estimated: AUD {spots.filter(s => s.is_paid).reduce((sum, s) => sum + calculatePaymentPreview(s), 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
