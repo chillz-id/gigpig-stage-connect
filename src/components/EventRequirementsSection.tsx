@@ -159,7 +159,7 @@ export const EventRequirementsSection: React.FC<EventRequirementsSectionProps> =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="isVerifiedOnly">Verified Comedians Only</Label>
+              <Label htmlFor="isVerifiedOnly">Only Comedian Pro</Label>
               <Switch
                 id="isVerifiedOnly"
                 checked={formData.isVerifiedOnly}

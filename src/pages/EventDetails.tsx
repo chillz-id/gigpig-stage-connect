@@ -60,6 +60,9 @@ const EventDetails = () => {
   }
 
   const eventDate = new Date(event.event_date);
+  const now = new Date();
+  const isUpcoming = eventDate >= now;
+  
   const filledSpots = spots?.filter(spot => spot.is_filled) || [];
   const availableSpots = spots?.filter(spot => !spot.is_filled) || [];
 
@@ -146,6 +149,16 @@ const EventDetails = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Show past event notice */}
+                  {!isUpcoming && (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <div className="flex items-center gap-2 text-yellow-400">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">This event has already occurred</span>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-purple-300" />
@@ -194,7 +207,7 @@ const EventDetails = () => {
                     {event.is_verified_only && (
                       <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                         <Star className="w-3 h-3 mr-1" />
-                        Verified Only
+                        Only Comedian Pro
                       </Badge>
                     )}
                     {event.allow_recording && (
@@ -255,7 +268,7 @@ const EventDetails = () => {
                     <div className="text-center py-8">
                       <Music className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                       <p className="text-gray-300">No confirmed comedians yet</p>
-                      <p className="text-sm text-gray-400">Be the first to apply!</p>
+                      {isUpcoming && <p className="text-sm text-gray-400">Be the first to apply!</p>}
                     </div>
                   )}
                 </CardContent>
@@ -269,34 +282,48 @@ const EventDetails = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    Spots Available
+                    {isUpcoming ? 'Spots Available' : 'Event Status'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-green-400 mb-2">
-                      {availableSpots.length}
-                    </div>
-                    <p className="text-gray-300">out of {spots?.length || 0} total spots</p>
-                    
-                    {availableSpots.length > 0 ? (
-                      <Button 
-                        onClick={handleApply}
-                        className="w-full mt-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-                      >
-                        Apply Now
-                      </Button>
+                    {isUpcoming ? (
+                      <>
+                        <div className="text-3xl font-bold text-green-400 mb-2">
+                          {availableSpots.length}
+                        </div>
+                        <p className="text-gray-300">out of {spots?.length || 0} total spots</p>
+                        
+                        {availableSpots.length > 0 ? (
+                          <Button 
+                            onClick={handleApply}
+                            className="w-full mt-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                          >
+                            Apply Now
+                          </Button>
+                        ) : (
+                          <Badge variant="destructive" className="mt-4">
+                            Show Full
+                          </Badge>
+                        )}
+                      </>
                     ) : (
-                      <Badge variant="destructive" className="mt-4">
-                        Show Full
-                      </Badge>
+                      <>
+                        <div className="text-3xl font-bold text-gray-400 mb-2">
+                          Past Event
+                        </div>
+                        <p className="text-gray-300">This event has concluded</p>
+                        <Badge variant="outline" className="mt-4 text-gray-400 border-gray-400">
+                          Event Completed
+                        </Badge>
+                      </>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Available Spots Details */}
-              {availableSpots.length > 0 && (
+              {/* Available Spots Details - only show for upcoming events */}
+              {isUpcoming && availableSpots.length > 0 && (
                 <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
                   <CardHeader>
                     <CardTitle className="text-lg">Available Spots</CardTitle>
@@ -339,8 +366,8 @@ const EventDetails = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Status:</span>
-                    <Badge variant={event.status === 'open' ? 'default' : 'secondary'}>
-                      {event.status || 'Open'}
+                    <Badge variant={isUpcoming && event.status === 'open' ? 'default' : 'secondary'}>
+                      {isUpcoming ? (event.status || 'Open') : 'Past Event'}
                     </Badge>
                   </div>
                   {event.is_recurring && (

@@ -23,7 +23,8 @@ export const TicketPage: React.FC<TicketPageProps> = ({
   const { toast } = useToast();
   const [selectedTickets, setSelectedTickets] = useState<{[key: string]: number}>({});
   const [customerInfo, setCustomerInfo] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: ''
   });
@@ -94,10 +95,10 @@ export const TicketPage: React.FC<TicketPageProps> = ({
       return;
     }
 
-    if (!customerInfo.name || !customerInfo.email) {
+    if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email) {
       toast({
         title: "Missing information",
-        description: "Please fill in your name and email address.",
+        description: "Please fill in your first name, last name, and email address.",
         variant: "destructive",
       });
       return;
@@ -209,16 +210,27 @@ export const TicketPage: React.FC<TicketPageProps> = ({
             <h4 className="font-semibold mb-3">Customer Information</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="customerName">Full Name *</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
-                  id="customerName"
-                  value={customerInfo.name}
-                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="John Doe"
+                  id="firstName"
+                  value={customerInfo.firstName}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                  placeholder="John"
                 />
               </div>
               <div>
-                <Label htmlFor="customerEmail">Email Address *</Label>
+                <Label htmlFor="lastName">Surname *</Label>
+                <Input
+                  id="lastName"
+                  value={customerInfo.lastName}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label htmlFor="customerEmail">Email *</Label>
                 <Input
                   id="customerEmail"
                   type="email"
@@ -227,16 +239,16 @@ export const TicketPage: React.FC<TicketPageProps> = ({
                   placeholder="john@example.com"
                 />
               </div>
-            </div>
-            <div className="mt-4">
-              <Label htmlFor="customerPhone">Phone Number (optional)</Label>
-              <Input
-                id="customerPhone"
-                type="tel"
-                value={customerInfo.phone}
-                onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="+1 (555) 123-4567"
-              />
+              <div>
+                <Label htmlFor="customerPhone">Phone</Label>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  value={customerInfo.phone}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+61 400 000 000"
+                />
+              </div>
             </div>
           </div>
 

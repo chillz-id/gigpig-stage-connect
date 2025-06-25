@@ -33,7 +33,7 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
   });
 
   const addCost = () => {
-    if (newCost.cost_name.trim()) {
+    if (newCost.cost_name.trim() && newCost.amount > 0) {
       onCostsChange([...costs, { ...newCost }]);
       setNewCost({
         cost_name: '',
@@ -62,8 +62,19 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
+        {/* Single row layout like the image */}
+        <div className="flex items-end gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={!newCost.is_percentage}
+              onCheckedChange={(checked) => 
+                setNewCost(prev => ({ ...prev, is_percentage: !checked }))
+              }
+            />
+            <Label className="text-sm whitespace-nowrap">Flat Amount</Label>
+          </div>
+          
+          <div className="flex-1">
             <Label htmlFor="costName">Cost Name *</Label>
             <Input
               id="costName"
@@ -73,9 +84,10 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
               className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
             />
           </div>
+
           <div>
             <Label htmlFor="costAmount">
-              Cost Amount * {newCost.is_percentage ? '(%)' : `(${newCost.currency})`}
+              Cost Amount * ({newCost.currency})
             </Label>
             <Input
               id="costAmount"
@@ -85,10 +97,11 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
               max={newCost.is_percentage ? "100" : undefined}
               value={newCost.amount === 0 ? '' : newCost.amount}
               onChange={(e) => handleAmountChange(e.target.value)}
-              placeholder={newCost.is_percentage ? "10.0" : "0.00"}
+              placeholder="0.00"
               className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
             />
           </div>
+
           <div>
             <Label htmlFor="costCurrency">Currency</Label>
             <CurrencySelector
@@ -97,39 +110,17 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
               className="bg-white/10 border-white/20 text-white"
             />
           </div>
-          <div className="flex flex-col justify-end">
-            <div className="flex items-center space-x-2 mb-2">
-              <Switch
-                checked={newCost.is_percentage}
-                onCheckedChange={(checked) => 
-                  setNewCost(prev => ({ ...prev, is_percentage: checked }))
-                }
-              />
-              <Label className="text-sm">
-                {newCost.is_percentage ? 'Percentage' : 'Flat Amount'}
-              </Label>
-            </div>
-            <Button 
-              type="button" 
-              onClick={addCost} 
-              disabled={!newCost.cost_name.trim() || newCost.amount <= 0}
-              className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Cost
-            </Button>
-          </div>
-        </div>
 
-        {/* Cost Preview */}
-        {newCost.cost_name.trim() && newCost.amount > 0 && (
-          <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-300/20">
-            <Label className="text-sm font-medium text-blue-200 mb-2 block">Cost Preview</Label>
-            <p className="text-white">
-              {newCost.cost_name}: {newCost.is_percentage ? `${newCost.amount}%` : `${newCost.currency} ${newCost.amount.toFixed(2)}`}
-            </p>
-          </div>
-        )}
+          <Button 
+            type="button" 
+            onClick={addCost} 
+            disabled={!newCost.cost_name.trim() || newCost.amount <= 0}
+            className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Cost
+          </Button>
+        </div>
 
         {costs.length > 0 && (
           <div className="space-y-3">

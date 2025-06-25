@@ -8,7 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { EventBasicInfo } from './EventBasicInfo';
 import { EventDateTimeSection } from './EventDateTimeSection';
 import { EventRequirementsSection } from './EventRequirementsSection';
-import { EventSpotManagerFixed } from './EventSpotManagerFixed';
+import { EventSpotManagerDraggable } from './EventSpotManagerDraggable';
 import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateLoader } from './EventTemplateLoader';
 import { EventTemplateSaver } from './EventTemplateSaver';
@@ -133,7 +133,7 @@ export const CreateEventForm: React.FC = () => {
         onRecurringSettingsChange={handleRecurringSettingsChange}
       />
 
-      <EventSpotManagerFixed 
+      <EventSpotManagerDraggable 
         spots={eventSpots} 
         onSpotsChange={setEventSpots}
       />
