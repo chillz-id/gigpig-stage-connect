@@ -54,7 +54,6 @@ export const useAuthOperations = () => {
       console.log('=== SIGN IN ATTEMPT ===');
       console.log('Email:', email);
       console.log('Password length:', password.length);
-      console.log('Using Supabase URL:', supabase.supabaseUrl);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
