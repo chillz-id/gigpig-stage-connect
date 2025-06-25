@@ -67,7 +67,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
       console.log('Profile fetched successfully:', data);
       setProfile(data);
     } catch (error) {
@@ -83,7 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('*')
         .eq('user_id', userId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching roles:', error);
+        return;
+      }
       console.log('Roles fetched successfully:', data);
       setRoles(data || []);
     } catch (error) {
@@ -196,22 +202,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting sign in for:', email);
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Current Supabase client config:', {
+        url: supabase.supabaseUrl,
+        key: supabase.supabaseKey?.substring(0, 20) + '...'
+      });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) {
         console.error('Sign in error:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = error.message;
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Please confirm your email address before signing in.';
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = 'Too many sign-in attempts. Please wait a moment and try again.';
+        }
+        
         toast({
           title: "Sign In Error",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
         return { error };
       }
 
-      console.log('Sign in successful');
+      console.log('Sign in successful for user:', data.user?.email);
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -222,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Sign in exception:', error);
       toast({
         title: "Sign In Error",
-        description: error.message,
+        description: error.message || 'An unexpected error occurred during sign in.',
         variant: "destructive",
       });
       return { error };
