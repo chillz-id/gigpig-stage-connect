@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell } from 'lucide-react';
@@ -12,24 +11,22 @@ import UserProfile from './UserProfile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { NotificationDropdown } from './NotificationDropdown';
-
 const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { setViewMode, isMemberView } = useViewMode();
-  const { user } = useUser();
-
-  return (
-    <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
+  const {
+    setViewMode,
+    isMemberView
+  } = useViewMode();
+  const {
+    user
+  } = useUser();
+  return <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo with Customer View Toggle */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center group">
-              <img 
-                src="/placeholder.svg" 
-                alt="Stand Up Sydney Logo" 
-                className="h-10 w-auto object-contain group-hover:opacity-80 transition-all duration-300"
-              />
+              <img alt="Stand Up Sydney Logo" src="/lovable-uploads/01533f67-2f0b-4cfd-8335-1bb360f481ef.png" className="h-10 w-auto group-hover:opacity-80 transition-all duration-300 object-contain" />
             </Link>
             
             <CustomerViewToggle onViewChange={setViewMode} />
@@ -50,15 +47,10 @@ const Navigation: React.FC = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <MobileNavigation
-            isMobileMenuOpen={isMobileMenuOpen}
-            setIsMobileMenuOpen={setIsMobileMenuOpen}
-          />
+          <MobileNavigation isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export { Navigation };
 export default Navigation;
