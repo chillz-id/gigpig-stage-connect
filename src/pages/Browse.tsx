@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarView } from '@/components/CalendarView';
@@ -15,7 +15,7 @@ import { TicketPage } from '@/components/TicketPage';
 import { useNavigate } from 'react-router-dom';
 
 const Browse = () => {
-  const { user } = useUser();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { events, isLoading } = useEvents();
@@ -25,6 +25,10 @@ const Browse = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedEventForTickets, setSelectedEventForTickets] = useState<any>(null);
   const [showTicketPage, setShowTicketPage] = useState(false);
+
+  // Check if user is comedian, promoter, or admin
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isConsumerUser = !isIndustryUser;
 
   // Mock events for the next 2 months with banner images
   const mockEvents = [
@@ -171,7 +175,7 @@ const Browse = () => {
       return;
     }
 
-    if (event.is_verified_only && !user.isVerified) {
+    if (event.is_verified_only && !user.is_verified) {
       toast({
         title: "Verification required",
         description: "This show requires verified comedians only. Upgrade to Pro to get verified!",
@@ -280,10 +284,13 @@ const Browse = () => {
               <Clock className="w-4 h-4" />
               <span>{show.start_time || 'Time TBA'}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Users className="w-4 h-4" />
-              <span>{Math.max(0, availableSpots)} spots left</span>
-            </div>
+            {/* Show spots left only to industry users (comedians/promoters) and only for paid events */}
+            {isIndustryUser && show.is_paid && (
+              <div className="flex items-center space-x-1">
+                <Users className="w-4 h-4" />
+                <span>{Math.max(0, availableSpots)} spots left</span>
+              </div>
+            )}
             <div className="flex items-center space-x-1">
               <DollarSign className="w-4 h-4" />
               <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
@@ -306,13 +313,27 @@ const Browse = () => {
           )}
 
           <div className="flex gap-2 flex-wrap">
-            <Button 
-              className="flex-1 bg-primary hover:bg-primary/90"
-              onClick={() => handleApply(show)}
-              disabled={availableSpots <= 0}
-            >
-              {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
-            </Button>
+            {/* Show Apply Now for industry users (comedians/promoters) */}
+            {isIndustryUser && (
+              <Button 
+                className="flex-1 bg-primary hover:bg-primary/90"
+                onClick={() => handleApply(show)}
+                disabled={availableSpots <= 0}
+              >
+                {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
+              </Button>
+            )}
+            
+            {/* Show Buy Tickets for consumer users and paid events */}
+            {isConsumerUser && show.is_paid && (
+              <Button 
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
+                onClick={() => handleBuyTickets(show)}
+              >
+                Buy Tickets
+              </Button>
+            )}
+            
             <Button 
               variant="outline" 
               className="text-foreground border-border hover:bg-accent"
@@ -320,6 +341,7 @@ const Browse = () => {
             >
               Details
             </Button>
+            
             {show.is_recurring && (
               <Button 
                 variant="outline" 
@@ -329,15 +351,7 @@ const Browse = () => {
                 View Series
               </Button>
             )}
-            {show.is_paid && (
-              <Button 
-                variant="outline"
-                className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-                onClick={() => handleBuyTickets(show)}
-              >
-                Buy Tickets
-              </Button>
-            )}
+            
             {show.address && (
               <Button
                 variant="outline"
