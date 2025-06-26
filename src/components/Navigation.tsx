@@ -49,38 +49,38 @@ const Navigation: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
-                    Shows
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
-                      <NavigationMenuLink asChild>
-                        <Link to="/browse" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                          <div className="text-sm font-semibold leading-none">Browse Shows</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Find comedy opportunities near you
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                      {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+            {/* Only show navigation menu for non-member views */}
+            {!isMemberView && (
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
+                      Shows
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
                         <NavigationMenuLink asChild>
-                          <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                            <div className="text-sm font-semibold leading-none">Create Event</div>
+                          <Link to="/browse" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                            <div className="text-sm font-semibold leading-none">Browse Shows</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Set up your comedy show
+                              Find comedy opportunities near you
                             </p>
                           </Link>
                         </NavigationMenuLink>
-                      )}
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+                        {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                          <NavigationMenuLink asChild>
+                            <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                              <div className="text-sm font-semibold leading-none">Create Event</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Set up your comedy show
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        )}
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-                {/* Only show Manage menu for Comedian and Promoter views */}
-                {!isMemberView && (
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                       Manage
@@ -126,43 +126,40 @@ const Navigation: React.FC = () => {
                       </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
-                )}
 
-                {/* Only show Settings for Promoter view */}
-                {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
-                      Settings
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
-                        <NavigationMenuLink asChild>
-                          <Link to="/promoter-settings" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                            <div className="text-sm font-semibold leading-none">Promoter Settings</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Customize branding and manage staff groups
-                            </p>
-                          </Link>
-                        </NavigationMenuLink>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                )}
-              </NavigationMenuList>
-            </NavigationMenu>
+                  {/* Only show Settings for Promoter view */}
+                  {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
+                        Settings
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
+                          <NavigationMenuLink asChild>
+                            <Link to="/promoter-settings" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                              <div className="text-sm font-semibold leading-none">Promoter Settings</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Customize branding and manage staff groups
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </div>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  )}
+                </NavigationMenuList>
+              </NavigationMenu>
+            )}
 
-            {/* Conditional Pricing/Upgrade Link - only show for Member view */}
-            {isMemberView ? (
-              user ? (
-                <Link to="/profile?tab=settings" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
-                  Upgrade
-                </Link>
-              ) : (
-                <Link to="/pricing" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
-                  Pricing
-                </Link>
-              )
-            ) : null}
+            {/* Book Comedian Button for Member view */}
+            {isMemberView && (
+              <Link to={user ? "/profile?tab=book-comedian" : "/auth"}>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                  <User className="w-4 h-4 mr-2" />
+                  Book Comedian
+                </Button>
+              </Link>
+            )}
             
             {/* Quick Action Buttons - hide for Member view */}
             {user && !isMemberView && (
@@ -282,7 +279,10 @@ const Navigation: React.FC = () => {
 
             {/* Mobile navigation links */}
             {[
-              { to: '/browse', label: 'Browse Shows' },
+              // Only show Browse Shows for non-member views
+              ...(!isMemberView ? [{ to: '/browse', label: 'Browse Shows' }] : []),
+              // Show Book Comedian for member view
+              ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
               // Only show Dashboard for non-member views
               ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
               // Only show promoter-specific items for promoter view
@@ -296,12 +296,7 @@ const Navigation: React.FC = () => {
               ...(!isMemberView ? [
                 { to: '/messages', label: 'Messages' },
                 { to: '/notifications', label: 'Notifications' }
-              ] : []),
-              // Show appropriate pricing/upgrade link
-              ...(isMemberView ? 
-                (user ? [{ to: '/profile?tab=settings', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }]) : 
-                []
-              )
+              ] : [])
             ].map((link) => (
               <Link
                 key={link.to}
