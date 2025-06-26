@@ -17,6 +17,16 @@ interface Comedian {
   specialties?: string[];
 }
 
+interface ProfileData {
+  id: string;
+  name: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+  is_verified: boolean | null;
+  email: string | null;
+}
+
 export const useComedians = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -30,7 +40,7 @@ export const useComedians = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, bio, location, avatar_url, is_verified, email')
-        .eq('has_comedian_pro_badge', true);
+        .eq('has_comedian_pro_badge', true) as { data: ProfileData[] | null; error: any };
 
       if (error) throw error;
       
