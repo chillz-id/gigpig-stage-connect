@@ -261,6 +261,41 @@ export type Database = {
           },
         ]
       }
+      event_co_promoters: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          event_id: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          event_id: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          event_id?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_co_promoters_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_spots: {
         Row: {
           comedian_id: string | null
@@ -808,12 +843,9 @@ export type Database = {
           created_at: string | null
           custom_show_types: string[] | null
           email: string
-          has_comedian_pro_badge: boolean | null
-          has_promoter_pro_badge: boolean | null
           id: string
           is_verified: boolean | null
           location: string | null
-          membership: string | null
           name: string | null
           stage_name: string | null
           updated_at: string | null
@@ -824,12 +856,9 @@ export type Database = {
           created_at?: string | null
           custom_show_types?: string[] | null
           email: string
-          has_comedian_pro_badge?: boolean | null
-          has_promoter_pro_badge?: boolean | null
           id: string
           is_verified?: boolean | null
           location?: string | null
-          membership?: string | null
           name?: string | null
           stage_name?: string | null
           updated_at?: string | null
@@ -840,60 +869,12 @@ export type Database = {
           created_at?: string | null
           custom_show_types?: string[] | null
           email?: string
-          has_comedian_pro_badge?: boolean | null
-          has_promoter_pro_badge?: boolean | null
           id?: string
           is_verified?: boolean | null
           location?: string | null
-          membership?: string | null
           name?: string | null
           stage_name?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      subscriptions: {
-        Row: {
-          created_at: string | null
-          current_period_end: string | null
-          current_period_start: string | null
-          has_comedian_pro: boolean | null
-          has_promoter_pro: boolean | null
-          id: string
-          plan_type: string | null
-          status: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          has_comedian_pro?: boolean | null
-          has_promoter_pro?: boolean | null
-          id?: string
-          plan_type?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          has_comedian_pro?: boolean | null
-          has_promoter_pro?: boolean | null
-          id?: string
-          plan_type?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -994,6 +975,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_co_promoter_for_event: {
+        Args: { _user_id: string; _event_id: string }
+        Returns: boolean
+      }
       send_notification: {
         Args: {
           _user_id: string
@@ -1006,7 +991,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "comedian" | "promoter" | "admin"
+      user_role: "comedian" | "promoter" | "admin" | "member" | "co_promoter"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1122,7 +1107,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["comedian", "promoter", "admin"],
+      user_role: ["comedian", "promoter", "admin", "member", "co_promoter"],
     },
   },
 } as const

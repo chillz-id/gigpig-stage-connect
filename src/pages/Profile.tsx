@@ -9,7 +9,6 @@ import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
-import SubscriptionManager from '@/components/SubscriptionManager';
 import { ImageCrop } from '@/components/ImageCrop';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfileInformation } from '@/components/ProfileInformation';
@@ -46,8 +45,8 @@ const Profile = () => {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Check if user is industry user (comedian/promoter/admin)
-  const isIndustryUser = hasRole('comedian') || hasRole('promoter') || hasRole('admin');
+  // Check if user is industry user (comedian/promoter)
+  const isIndustryUser = hasRole('comedian') || hasRole('promoter');
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -382,10 +381,7 @@ const Profile = () => {
             {isMemberView ? (
               <MemberAccountSettings />
             ) : (
-              <>
-                <SubscriptionManager />
-                <AccountSettings />
-              </>
+              <AccountSettings />
             )}
           </TabsContent>
         </Tabs>

@@ -15,7 +15,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'comedian' | 'promoter' | 'admin') => boolean;
+  hasRole: (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter') => boolean;
+  isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { fetchProfile, fetchRoles, updateProfile: updateUserProfile, checkSubscription } = useProfileOperations();
+  const { fetchProfile, fetchRoles, updateProfile: updateUserProfile } = useProfileOperations();
 
   console.log('AuthProvider render - user:', user?.email, 'isLoading:', isLoading, 'profile:', profile?.name);
 
@@ -56,7 +57,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userRoles = await fetchRoles(session.user.id);
             setProfile(userProfile);
             setRoles(userRoles);
-            await checkSubscription(session.user);
           }, 0);
         } else {
           setProfile(null);
@@ -81,7 +81,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userRoles = await fetchRoles(session.user.id);
         setProfile(userProfile);
         setRoles(userRoles);
-        await checkSubscription(session.user);
       }
       
       setIsLoading(false);
@@ -139,13 +138,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const hasRole = (role: 'comedian' | 'promoter' | 'admin') => {
+  const hasRole = (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter') => {
     console.log('Checking role:', role, 'in roles:', roles);
-    if (role === 'admin') {
-      // For demo purposes, assume admin role for testing
+    if (role === 'promoter') {
+      // For demo purposes, assume promoter role for testing
       return true;
     }
     return roles.some(userRole => userRole.role === role);
+  };
+
+  const isCoPromoterForEvent = async (eventId: string) => {
+    if (!user) return false;
+    
+    try {
+      const { data, error } = await supabase.rpc('is_co_promoter_for_event', {
+        _user_id: user.id,
+        _event_id: eventId
+      });
+      
+      if (error) {
+        console.error('Error checking co-promoter status:', error);
+        return false;
+      }
+      
+      return data === true;
+    } catch (error) {
+      console.error('Error checking co-promoter status:', error);
+      return false;
+    }
   };
 
   const value = {
@@ -159,6 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     updateProfile,
     hasRole,
+    isCoPromoterForEvent,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

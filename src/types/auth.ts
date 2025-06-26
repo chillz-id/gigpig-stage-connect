@@ -10,9 +10,6 @@ export interface Profile {
   location: string | null;
   avatar_url: string | null;
   is_verified: boolean;
-  membership: string;
-  has_comedian_pro_badge: boolean;
-  has_promoter_pro_badge: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +17,7 @@ export interface Profile {
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'comedian' | 'promoter' | 'admin';
+  role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter';
   created_at: string;
 }
 
@@ -34,5 +31,6 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'comedian' | 'promoter' | 'admin') => boolean;
+  hasRole: (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter') => boolean;
+  isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }

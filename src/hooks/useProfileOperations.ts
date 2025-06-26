@@ -102,20 +102,5 @@ export const useProfileOperations = () => {
     }
   };
 
-  const checkSubscription = async (user: User) => {
-    if (!user) return;
-    
-    try {
-      console.log('=== CHECKING SUBSCRIPTION ===');
-      console.log('User ID:', user.id);
-      
-      await supabase.functions.invoke('check-subscription');
-      console.log('=== SUBSCRIPTION CHECK COMPLETED ===');
-    } catch (error) {
-      console.error('=== SUBSCRIPTION CHECK ERROR ===');
-      console.error('Error:', error);
-    }
-  };
-
-  return { fetchProfile, fetchRoles, updateProfile, checkSubscription };
+  return { fetchProfile, fetchRoles, updateProfile };
 };

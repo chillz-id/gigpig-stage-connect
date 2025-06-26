@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Toggle } from '@/components/ui/toggle';
-import { User, Mic, Users } from 'lucide-react';
+import { User, Mic, Users, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUser } from '@/contexts/UserContext';
 
@@ -16,10 +16,10 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
   const { hasRole } = useAuth();
   const { switchToUser } = useUser();
 
-  console.log('CustomerViewToggle render - hasRole(admin):', hasRole('admin'));
+  console.log('CustomerViewToggle render - hasRole(promoter):', hasRole('promoter'));
 
-  // Only show for admin users
-  if (!hasRole('admin')) {
+  // Only show for promoter users (admin equivalent)
+  if (!hasRole('promoter')) {
     return null;
   }
 
@@ -44,7 +44,7 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
       case 'comedian':
         return <Mic className="w-4 h-4" />;
       case 'promoter':
-        return <Users className="w-4 h-4" />;
+        return <Crown className="w-4 h-4" />;
     }
   };
 

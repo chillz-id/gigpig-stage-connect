@@ -21,7 +21,7 @@ interface Promoter {
 }
 
 const PromoterMarketplace = () => {
-  const { user, profile } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const [promoters, setPromoters] = useState<Promoter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +30,14 @@ const PromoterMarketplace = () => {
 
   const fetchPromoters = async () => {
     try {
-      // Fetch promoters who have opted into the marketplace
+      // Fetch promoters from profiles joined with user_roles
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, bio, location, avatar_url, is_verified, email')
-        .eq('has_promoter_pro_badge', true);
+        .select(`
+          id, name, bio, location, avatar_url, is_verified, email,
+          user_roles!inner(role)
+        `)
+        .eq('user_roles.role', 'promoter');
 
       if (error) throw error;
       setPromoters(data || []);
@@ -80,22 +83,22 @@ const PromoterMarketplace = () => {
   };
 
   useEffect(() => {
-    if (profile?.has_comedian_pro_badge) {
+    if (hasRole('comedian') || hasRole('promoter')) {
       fetchPromoters();
     }
-  }, [profile]);
+  }, []);
 
-  if (!profile?.has_comedian_pro_badge) {
+  if (!hasRole('comedian') && !hasRole('promoter')) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Promoter Marketplace</CardTitle>
-          <CardDescription>Access requires Comedian Pro subscription</CardDescription>
+          <CardDescription>Access requires Comedian role</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            The Promoter Marketplace is available exclusively to Comedian Pro subscribers. 
-            Upgrade your plan to browse and contact promoters for gig opportunities.
+            The Promoter Marketplace is available to comedians. 
+            Contact an administrator to get the comedian role for marketplace access.
           </p>
         </CardContent>
       </Card>

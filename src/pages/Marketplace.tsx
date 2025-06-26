@@ -9,12 +9,12 @@ import ComedianMarketplace from '@/components/ComedianMarketplace';
 import PromoterMarketplace from '@/components/PromoterMarketplace';
 
 const Marketplace = () => {
-  const { profile } = useAuth();
+  const { hasRole } = useAuth();
 
-  const hasComedianPro = profile?.has_comedian_pro_badge || false;
-  const hasPromoterPro = profile?.has_promoter_pro_badge || false;
+  const hasComedianAccess = hasRole('comedian') || hasRole('promoter');
+  const hasPromoterAccess = hasRole('promoter');
 
-  if (!hasComedianPro && !hasPromoterPro) {
+  if (!hasComedianAccess && !hasPromoterAccess) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -30,14 +30,14 @@ const Marketplace = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Crown className="w-5 h-5 text-purple-600" />
                   <h3 className="font-semibold">Comedian Marketplace</h3>
-                  <Badge variant="secondary">Promoter Pro</Badge>
+                  <Badge variant="secondary">Promoter Only</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
                   Browse and contact talented comedians for your shows and events.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="w-4 h-4" />
-                  Requires Promoter Pro subscription
+                  Requires Promoter role
                 </div>
               </div>
 
@@ -45,21 +45,21 @@ const Marketplace = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-5 h-5 text-pink-600" />
                   <h3 className="font-semibold">Promoter Marketplace</h3>
-                  <Badge variant="secondary">Comedian Pro</Badge>
+                  <Badge variant="secondary">Comedian Access</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect with promoters and venues looking for comedy talent.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="w-4 h-4" />
-                  Requires Comedian Pro subscription
+                  Requires Comedian role
                 </div>
               </div>
             </div>
 
             <div className="text-center">
               <p className="text-muted-foreground">
-                Upgrade to Pro to access exclusive marketplace features and connect with industry professionals.
+                Contact an administrator to get the appropriate role for marketplace access.
               </p>
             </div>
           </CardContent>
@@ -69,7 +69,7 @@ const Marketplace = () => {
   }
 
   const availableTabs = [];
-  if (hasPromoterPro) {
+  if (hasPromoterAccess) {
     availableTabs.push({
       value: 'comedians',
       label: 'Comedian Marketplace',
@@ -77,7 +77,7 @@ const Marketplace = () => {
       component: <ComedianMarketplace />
     });
   }
-  if (hasComedianPro) {
+  if (hasComedianAccess) {
     availableTabs.push({
       value: 'promoters',
       label: 'Promoter Marketplace',

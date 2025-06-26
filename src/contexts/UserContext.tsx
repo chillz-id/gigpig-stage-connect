@@ -7,8 +7,7 @@ export interface User {
   email: string;
   avatar: string;
   isVerified: boolean;
-  roles: ('comedian' | 'promoter')[];
-  membership: 'free' | 'pro' | 'premium';
+  roles: ('comedian' | 'promoter' | 'member')[];
   bio?: string;
   location?: string;
   joinDate?: string;
@@ -42,7 +41,7 @@ export const useUser = () => {
   return context;
 };
 
-// Mock users for different personas
+// Mock users for different personas (updated without subscription data)
 const mockUsers = {
   comedian: {
     id: '1',
@@ -50,8 +49,7 @@ const mockUsers = {
     email: 'alex@comedy.com',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     isVerified: true,
-    roles: ['comedian', 'promoter'] as ('comedian' | 'promoter')[],
-    membership: 'premium' as const,
+    roles: ['comedian', 'promoter'] as ('comedian' | 'promoter' | 'member')[],
     bio: 'Stand-up comedian with 8+ years of experience. Love observational humor and connecting with audiences through relatable stories.',
     location: 'Los Angeles, CA',
     joinDate: 'March 2020',
@@ -71,8 +69,7 @@ const mockUsers = {
     email: 'sarah@promoter.com',
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b793?w=150&h=150&fit=crop&crop=face',
     isVerified: true,
-    roles: ['promoter'] as ('comedian' | 'promoter')[],
-    membership: 'pro' as const,
+    roles: ['promoter'] as ('comedian' | 'promoter' | 'member')[],
     bio: 'Event promoter specializing in comedy shows. Passionate about bringing the best comedic talent to Sydney venues.',
     location: 'Sydney, NSW',
     joinDate: 'January 2021',
@@ -92,8 +89,7 @@ const mockUsers = {
     email: 'chillz.id@gmail.com',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     isVerified: false,
-    roles: [] as ('comedian' | 'promoter')[],
-    membership: 'free' as const,
+    roles: ['member'] as ('comedian' | 'promoter' | 'member')[],
     bio: 'Comedy enthusiast and regular show attendee. Love supporting local comedians!',
     location: 'Sydney, NSW',
     joinDate: 'June 2024',
