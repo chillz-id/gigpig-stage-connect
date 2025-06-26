@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,7 +81,6 @@ export const GoogleMapsDemo: React.FC = () => {
               <AddressAutocomplete
                 onAddressSelect={handleAutocompleteSelect}
                 placeholder="Start typing an Australian address..."
-                showSetupCard={true}
               />
             </CardContent>
           </Card>
@@ -157,11 +155,11 @@ export const GoogleMapsDemo: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div>
-            <p className="font-medium">Required Google Cloud APIs:</p>
+            <p className="font-medium">Secure API Key Management:</p>
             <ul className="list-disc list-inside ml-4 text-muted-foreground">
-              <li>Maps JavaScript API - For interactive maps</li>
-              <li>Places API - For address autocomplete and place details</li>
-              <li>Geocoding API - For converting addresses to coordinates</li>
+              <li>Google Maps API key is stored securely in Supabase Edge Function Secrets</li>
+              <li>API requests are proxied through Supabase Edge Functions</li>
+              <li>No API keys are exposed to the frontend code</li>
             </ul>
           </div>
           <div>

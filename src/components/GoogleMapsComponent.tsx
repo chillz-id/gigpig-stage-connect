@@ -2,9 +2,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { MapPin, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 
 interface GoogleMapsComponentProps {
   onAddressSelect?: (address: string, lat: number, lng: number) => void;
@@ -16,7 +16,6 @@ interface GoogleMapsComponentProps {
 declare global {
   interface Window {
     google: any;
-    initMap: () => void;
   }
 }
 
@@ -31,41 +30,35 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
   const [map, setMap] = useState<any>(null);
   const [marker, setMarker] = useState<any>(null);
   const [autocomplete, setAutocomplete] = useState<any>(null);
-  const [apiKey, setApiKey] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const { toast } = useToast();
+  const { isLoaded, loadScript, reverseGeocode } = useGoogleMaps();
 
   useEffect(() => {
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
+    if (!isLoaded && !isInitializing) {
+      setIsInitializing(true);
+      loadScript()
+        .then(() => {
+          initializeMap();
+        })
+        .catch((error) => {
+          console.error('Failed to load Google Maps:', error);
+          toast({
+            title: "Maps loading failed",
+            description: "Unable to load Google Maps. Please try again later.",
+            variant: "destructive",
+          });
+        })
+        .finally(() => {
+          setIsInitializing(false);
+        });
+    } else if (isLoaded) {
       initializeMap();
-      return;
     }
-
-    // If no API key is set, show input
-    if (!apiKey) {
-      return;
-    }
-
-    // Load Google Maps script
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
-    script.async = true;
-    script.defer = true;
-
-    window.initMap = initializeMap;
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, [apiKey]);
+  }, [isLoaded]);
 
   const initializeMap = () => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !window.google) return;
 
     try {
       // Default to Sydney, Australia
@@ -87,15 +80,14 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
       });
 
       // Add marker drag listener
-      markerInstance.addListener('dragend', (e: any) => {
+      markerInstance.addListener('dragend', async (e: any) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
         
-        // Reverse geocode to get address
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
-          if (status === 'OK' && results[0]) {
-            const address = results[0].formatted_address;
+        try {
+          const result = await reverseGeocode(lat, lng);
+          if (result.results && result.results[0]) {
+            const address = result.results[0].formatted_address;
             if (onAddressSelect) {
               onAddressSelect(address, lat, lng);
             }
@@ -104,7 +96,9 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
               description: `New location: ${address}`,
             });
           }
-        });
+        } catch (error) {
+          console.error('Error getting address:', error);
+        }
       });
 
       setMap(mapInstance);
@@ -116,7 +110,7 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
           autocompleteRef.current,
           {
             types: ['address'],
-            componentRestrictions: { country: 'au' }, // Restrict to Australia
+            componentRestrictions: { country: 'au' },
           }
         );
 
@@ -164,81 +158,15 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
           }
         });
       }
-
-      setIsLoaded(true);
     } catch (error) {
       console.error('Error initializing Google Maps:', error);
       toast({
         title: "Maps initialization failed",
-        description: "Please check your API key and try again.",
+        description: "Unable to initialize the map. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  const handleApiKeySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key required",
-        description: "Please enter your Google Maps API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    toast({
-      title: "Loading Google Maps",
-      description: "Please wait while we load the map...",
-    });
-  };
-
-  if (!apiKey) {
-    return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            Google Maps Setup Required
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">
-            To use Google Maps functionality, please enter your Google Maps API key. 
-            You can get one from the{' '}
-            <a 
-              href="https://console.cloud.google.com/google/maps-apis" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Google Cloud Console
-            </a>.
-          </p>
-          <form onSubmit={handleApiKeySubmit} className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Enter your Google Maps API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="bg-background/50"
-            />
-            <Button type="submit" className="w-full">
-              Load Google Maps
-            </Button>
-          </form>
-          <div className="text-xs text-muted-foreground">
-            <p>Required APIs:</p>
-            <ul className="list-disc list-inside mt-1">
-              <li>Maps JavaScript API</li>
-              <li>Places API</li>
-              <li>Geocoding API</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border">
@@ -266,7 +194,7 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
           style={{ height }} 
           className="rounded-lg border border-border bg-muted/20"
         >
-          {!isLoaded && (
+          {(!isLoaded || isInitializing) && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <MapPin className="w-12 h-12 mx-auto mb-2 text-muted-foreground animate-pulse" />
