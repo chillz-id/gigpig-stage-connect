@@ -45,7 +45,7 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
           console.error('Failed to load Google Maps:', error);
           toast({
             title: "Maps loading failed",
-            description: "Unable to load Google Maps. Please try again later.",
+            description: "Unable to load Google Maps. Please check your API key configuration.",
             variant: "destructive",
           });
         })
@@ -162,7 +162,7 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
       console.error('Error initializing Google Maps:', error);
       toast({
         title: "Maps initialization failed",
-        description: "Unable to initialize the map. Please try again.",
+        description: "Please verify your Google Maps API key is valid and has the required APIs enabled.",
         variant: "destructive",
       });
     }

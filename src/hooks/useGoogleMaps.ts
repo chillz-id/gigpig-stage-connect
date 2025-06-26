@@ -8,6 +8,7 @@ interface GoogleMapsConfig {
   loadScript: () => Promise<void>;
   geocode: (address: string) => Promise<any>;
   reverseGeocode: (lat: number, lng: number) => Promise<any>;
+  searchPlaces: (input: string) => Promise<any>;
 }
 
 declare global {
@@ -91,10 +92,30 @@ export const useGoogleMaps = (): GoogleMapsConfig => {
     }
   };
 
+  const searchPlaces = async (input: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('google-maps-proxy', {
+        body: { action: 'places', input }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Places search error:', error);
+      toast({
+        title: "Places search failed",
+        description: "Unable to search for places.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return {
     isLoaded,
     loadScript,
     geocode,
-    reverseGeocode
+    reverseGeocode,
+    searchPlaces
   };
 };

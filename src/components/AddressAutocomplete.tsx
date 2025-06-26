@@ -41,8 +41,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         .catch((error) => {
           console.error('Failed to load Google Places:', error);
           toast({
-            title: "Places loading failed",
-            description: "Unable to load address autocomplete. Please try again later.",
+            title: "Maps loading failed",
+            description: "Unable to load address autocomplete. Please check your API key configuration.",
             variant: "destructive",
           });
         })
@@ -92,7 +92,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       console.error('Error initializing Google Places Autocomplete:', error);
       toast({
         title: "Autocomplete initialization failed",
-        description: "Please try refreshing the page.",
+        description: "Please verify your Google Maps API key is valid and has Places API enabled.",
         variant: "destructive",
       });
     }
