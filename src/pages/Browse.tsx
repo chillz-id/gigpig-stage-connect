@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CalendarView } from '@/components/CalendarView';
 import { MapView } from '@/components/MapView';
 import { TicketPage } from '@/components/TicketPage';
+import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { useNavigate } from 'react-router-dom';
 
 const Browse = () => {
@@ -25,7 +25,9 @@ const Browse = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedEventForTickets, setSelectedEventForTickets] = useState<any>(null);
+  const [selectedEventForDetails, setSelectedEventForDetails] = useState<any>(null);
   const [showTicketPage, setShowTicketPage] = useState(false);
+  const [showEventDetailsDialog, setShowEventDetailsDialog] = useState(false);
 
   // Check if user is comedian, promoter, or admin
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
@@ -219,6 +221,11 @@ const Browse = () => {
     }
   };
 
+  const handleShowDetails = (event: any) => {
+    setSelectedEventForDetails(event);
+    setShowEventDetailsDialog(true);
+  };
+
   const ShowCard = ({ show }: { show: any }) => {
     const eventDate = new Date(show.event_date);
     const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
@@ -285,7 +292,6 @@ const Browse = () => {
               <Clock className="w-4 h-4" />
               <span>{show.start_time || 'Time TBA'}</span>
             </div>
-            {/* Show spots left only to industry users (comedians/promoters) and only for paid events */}
             {isIndustryUser && show.is_paid && (
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
@@ -314,7 +320,6 @@ const Browse = () => {
           )}
 
           <div className="flex gap-2 flex-wrap">
-            {/* Show Apply Now for industry users (comedians/promoters) */}
             {isIndustryUser && (
               <Button 
                 className="flex-1 bg-primary hover:bg-primary/90"
@@ -325,7 +330,6 @@ const Browse = () => {
               </Button>
             )}
             
-            {/* Show Buy Tickets for consumer users and paid events */}
             {isConsumerUser && show.is_paid && (
               <Button 
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
@@ -338,7 +342,7 @@ const Browse = () => {
             <Button 
               variant="outline" 
               className="text-foreground border-border hover:bg-accent"
-              onClick={() => navigate(`/event/${show.id}`)}
+              onClick={() => handleShowDetails(show)}
             >
               Details
             </Button>
@@ -469,6 +473,18 @@ const Browse = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Event Details Popup */}
+      <EventDetailsPopup
+        event={selectedEventForDetails}
+        isOpen={showEventDetailsDialog}
+        onClose={() => setShowEventDetailsDialog(false)}
+        onApply={handleApply}
+        onBuyTickets={handleBuyTickets}
+        onGetDirections={handleGetDirections}
+        isIndustryUser={isIndustryUser}
+        isConsumerUser={isConsumerUser}
+      />
 
       {/* Ticket Purchase Modal */}
       <TicketPage
