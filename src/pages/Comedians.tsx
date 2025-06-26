@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,17 @@ interface Comedian {
   specialties?: string[];
 }
 
+// Separate interface for database results
+interface DatabaseProfile {
+  id: string;
+  name: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+  is_verified: boolean;
+  email: string | null;
+}
+
 const Comedians = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -38,7 +48,8 @@ const Comedians = () => {
         .from('profiles')
         .select('id, name, bio, location, avatar_url, is_verified, email')
         .eq('has_comedian_pro_badge', true)
-        .eq('public_profile', true);
+        .eq('public_profile', true)
+        .returns<DatabaseProfile[]>();
 
       if (error) throw error;
       
