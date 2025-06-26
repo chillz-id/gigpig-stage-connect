@@ -33,25 +33,26 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
+        <div className="space-y-4">
+          {/* Search - Full width on mobile */}
+          <div className="w-full">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search invoices, recipients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-12 text-base"
               />
             </div>
           </div>
           
-          {/* Status Filter */}
-          <div className="w-48">
+          {/* Filters Grid - Responsive layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Status Filter */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="h-12 text-base">
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -62,13 +63,11 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Date Filter */}
-          <div className="w-48">
+            {/* Date Filter */}
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by date" />
+              <SelectTrigger className="h-12 text-base">
+                <SelectValue placeholder="All Dates" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Dates</SelectItem>
@@ -79,13 +78,11 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Amount Filter */}
-          <div className="w-48">
+            {/* Amount Filter */}
             <Select value={amountFilter} onValueChange={setAmountFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by amount" />
+              <SelectTrigger className="h-12 text-base">
+                <SelectValue placeholder="All Amounts" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Amounts</SelectItem>
@@ -95,17 +92,17 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 <SelectItem value="1000+">$1,000+</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Clear Filters */}
-          <Button 
-            variant="outline" 
-            onClick={onClearFilters}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Clear
-          </Button>
+            {/* Clear Filters Button */}
+            <Button 
+              variant="outline" 
+              onClick={onClearFilters}
+              className="flex items-center justify-center gap-2 h-12 text-base"
+            >
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Clear</span>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

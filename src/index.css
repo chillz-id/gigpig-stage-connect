@@ -113,6 +113,8 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Light theme gradient */
@@ -150,6 +152,37 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--primary));
+  }
+
+  /* Mobile-first responsive design */
+  @media (max-width: 768px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    h1 {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    
+    h3 {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+  }
+
+  /* Touch-friendly tap targets */
+  @media (hover: none) and (pointer: coarse) {
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -195,4 +228,22 @@
 
 .pig .professional-button:hover {
   box-shadow: 0 4px 12px rgba(315, 100%, 65%, 0.3);
+}
+
+/* Mobile-optimized dropdowns */
+@media (max-width: 768px) {
+  [data-radix-popper-content-wrapper] {
+    z-index: 9999 !important;
+  }
+}
+
+/* Improved mobile touch interactions */
+@media (hover: none) {
+  .hover\:bg-accent:hover {
+    background-color: hsl(var(--accent));
+  }
+  
+  .hover\:text-primary:hover {
+    color: hsl(var(--primary));
+  }
 }

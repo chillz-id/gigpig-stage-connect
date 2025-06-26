@@ -34,10 +34,10 @@ const InvoiceList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Invoices</h2>
-        <Link to="/invoices/new">
-          <Button>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Invoices</h2>
+        <Link to="/invoices/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto h-12 text-base">
             <Plus className="w-4 h-4 mr-2" />
             Create Invoice
           </Button>
