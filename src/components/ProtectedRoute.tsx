@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,10 +6,10 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireRole?: 'comedian' | 'promoter' | 'admin';
+  roles?: ('comedian' | 'promoter' | 'admin')[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireRole }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
   const { user, isLoading, hasRole } = useAuth();
   const location = useLocation();
 
@@ -27,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireRole }
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (requireRole && !hasRole(requireRole)) {
+  if (roles && roles.length > 0 && !roles.some(role => hasRole(role))) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
