@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation, Heart } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation, Heart, Microphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import { CalendarView } from '@/components/CalendarView';
 import { MapView } from '@/components/MapView';
 import { TicketPage } from '@/components/TicketPage';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';
+import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
 import { useNavigate } from 'react-router-dom';
 import { useViewMode } from '@/contexts/ViewModeContext';
 
@@ -30,13 +31,14 @@ const Browse = () => {
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any>(null);
   const [showTicketPage, setShowTicketPage] = useState(false);
   const [showEventDetailsDialog, setShowEventDetailsDialog] = useState(false);
+  const [showRecurringDateSelector, setShowRecurringDateSelector] = useState(false);
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
 
   // Check if user is comedian, promoter, or admin
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
 
-  // Mock events for the next 2 months with banner images
+  // Mock events for the next 2 months with banner images - this data is now consistent across all views
   const mockEvents = [
     {
       id: 'mock-1',
@@ -156,10 +158,20 @@ const Browse = () => {
     }
   ];
 
-  // Combine real events with mock events
+  // Combine real events with mock events - this ensures consistency across all views
   const allEvents = [...events, ...mockEvents];
 
-  const filteredShows = allEvents.filter(event => {
+  // Filter to show only upcoming events for member view
+  const upcomingEvents = allEvents.filter(event => {
+    const eventDate = new Date(event.event_date);
+    const now = new Date();
+    return eventDate >= now;
+  });
+
+  // Use upcoming events for member view, all events for other views
+  const eventsToShow = isMemberView ? upcomingEvents : allEvents;
+
+  const filteredShows = eventsToShow.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          `${event.city}, ${event.state}`.toLowerCase().includes(searchTerm.toLowerCase());
@@ -206,8 +218,14 @@ const Browse = () => {
   };
 
   const handleBuyTickets = (event: any) => {
-    setSelectedEventForTickets(event);
-    setShowTicketPage(true);
+    // Check if event is recurring and doesn't have external ticket URL
+    if (event.is_recurring && !event.external_ticket_url) {
+      setSelectedEventForTickets(event);
+      setShowRecurringDateSelector(true);
+    } else {
+      setSelectedEventForTickets(event);
+      setShowTicketPage(true);
+    }
   };
 
   const handleToggleInterested = (event: any) => {
@@ -254,6 +272,11 @@ const Browse = () => {
   const handleShowDetails = (event: any) => {
     setSelectedEventForDetails(event);
     setShowEventDetailsDialog(true);
+  };
+
+  const handleDateSelected = (selectedDate: Date) => {
+    setShowRecurringDateSelector(false);
+    setShowTicketPage(true);
   };
 
   const ShowCard = ({ show }: { show: any }) => {
@@ -375,6 +398,15 @@ const Browse = () => {
                   {show.type}
                 </Badge>
               )}
+              <Badge variant="outline" className="text-foreground border-border">
+                {show.age_restriction || '18+'}
+              </Badge>
+            </div>
+          )}
+
+          {/* For member view, only show Age Restriction badge */}
+          {isMemberView && (
+            <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="text-foreground border-border">
                 {show.age_restriction || '18+'}
               </Badge>
@@ -519,7 +551,7 @@ const Browse = () => {
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
               <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Card View
+                {isMemberView ? 'Events' : 'Card View'}
               </TabsTrigger>
               <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Calendar
@@ -554,6 +586,14 @@ const Browse = () => {
         onGetDirections={handleGetDirections}
         isIndustryUser={isIndustryUser}
         isConsumerUser={isConsumerUser}
+      />
+
+      {/* Recurring Event Date Selector */}
+      <RecurringEventDateSelector
+        event={selectedEventForTickets}
+        isOpen={showRecurringDateSelector}
+        onClose={() => setShowRecurringDateSelector(false)}
+        onDateSelected={handleDateSelected}
       />
 
       {/* Ticket Purchase Modal */}

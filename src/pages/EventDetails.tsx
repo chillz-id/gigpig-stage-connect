@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,7 @@ import {
   Users, 
   Star, 
   ArrowLeft,
-  Music,
+  Microphone,
   AlertCircle,
   CheckCircle,
   Image as ImageIcon
@@ -228,11 +227,11 @@ const EventDetails = () => {
                 </CardContent>
               </Card>
 
-              {/* Confirmed Line-up */}
+              {/* Confirmed Line-up - Changed icon from Music to Microphone */}
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Music className="w-5 h-5" />
+                    <Microphone className="w-5 h-5" />
                     Confirmed Line-up ({filledSpots.length})
                   </CardTitle>
                 </CardHeader>
@@ -266,7 +265,7 @@ const EventDetails = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Music className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <Microphone className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                       <p className="text-gray-300">No confirmed comedians yet</p>
                       {isUpcoming && <p className="text-sm text-gray-400">Be the first to apply!</p>}
                     </div>

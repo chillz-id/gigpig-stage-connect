@@ -17,12 +17,13 @@ import {
   DollarSign, 
   Users, 
   Star, 
-  Music,
+  Microphone,
   AlertCircle,
   CheckCircle,
   Navigation
 } from 'lucide-react';
 import { useEventSpots } from '@/hooks/useEventSpots';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface EventDetailsPopupProps {
   event: any;
@@ -46,6 +47,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
   isConsumerUser
 }) => {
   const { spots, isLoading: spotsLoading } = useEventSpots(event?.id || '');
+  const { isMemberView } = useViewMode();
 
   if (!event) return null;
 
@@ -106,10 +108,13 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span>{event.city}, {event.state}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-muted-foreground" />
-                    <span>{event.is_paid ? 'Paid Event' : 'Free Event'}</span>
-                  </div>
+                  {/* Only show paid event info for non-member views */}
+                  {!isMemberView && (
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <span>{event.is_paid ? 'Paid Event' : 'Free Event'}</span>
+                    </div>
+                  )}
                 </div>
 
                 {event.address && (
@@ -127,31 +132,41 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  {event.type && (
+                  {/* For member view, only show age restriction */}
+                  {isMemberView ? (
                     <Badge variant="outline">
-                      {event.type}
+                      {event.age_restriction}
                     </Badge>
-                  )}
-                  <Badge variant="outline">
-                    {event.age_restriction}
-                  </Badge>
-                  <Badge variant="outline">
-                    {event.dress_code}
-                  </Badge>
-                  {event.is_verified_only && (
-                    <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                      <Star className="w-3 h-3 mr-1" />
-                      Only Comedian Pro
-                    </Badge>
-                  )}
-                  {event.allow_recording && (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      Recording Allowed
-                    </Badge>
+                  ) : (
+                    <>
+                      {event.type && (
+                        <Badge variant="outline">
+                          {event.type}
+                        </Badge>
+                      )}
+                      <Badge variant="outline">
+                        {event.age_restriction}
+                      </Badge>
+                      <Badge variant="outline">
+                        {event.dress_code}
+                      </Badge>
+                      {event.is_verified_only && (
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                          <Star className="w-3 h-3 mr-1" />
+                          Only Comedian Pro
+                        </Badge>
+                      )}
+                      {event.allow_recording && (
+                        <Badge variant="outline" className="text-green-600 border-green-600">
+                          Recording Allowed
+                        </Badge>
+                      )}
+                    </>
                   )}
                 </div>
 
-                {event.requirements && (
+                {/* Only show requirements for non-member views */}
+                {!isMemberView && event.requirements && (
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Requirements:</p>
                     <div className="bg-muted p-3 rounded-lg">
@@ -163,10 +178,10 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
 
               <Separator />
 
-              {/* Confirmed Line-up */}
+              {/* Confirmed Line-up - Changed icon from Music to Microphone */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Music className="w-5 h-5" />
+                  <Microphone className="w-5 h-5" />
                   Confirmed Line-up ({filledSpots.length})
                 </h3>
                 {filledSpots.length > 0 ? (
@@ -186,7 +201,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          {spot.is_paid && (
+                          {/* Only show payment info for non-member views */}
+                          {!isMemberView && spot.is_paid && (
                             <Badge className="bg-green-600">
                               ${spot.payment_amount} {spot.currency}
                             </Badge>
@@ -198,7 +214,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Music className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                    <Microphone className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                     <p className="text-muted-foreground">No confirmed comedians yet</p>
                     {isUpcoming && <p className="text-sm text-muted-foreground">Be the first to apply!</p>}
                   </div>
@@ -233,8 +249,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 </div>
               </div>
 
-              {/* Available Spots Details */}
-              {isUpcoming && availableSpots.length > 0 && (
+              {/* Available Spots Details - only show for non-member views */}
+              {!isMemberView && isUpcoming && availableSpots.length > 0 && (
                 <div className="border rounded-lg p-4">
                   <h3 className="font-semibold mb-4">Available Spots</h3>
                   <div className="space-y-3">
@@ -259,7 +275,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {isIndustryUser && isUpcoming && (
+                {isIndustryUser && isUpcoming && !isMemberView && (
                   <Button 
                     onClick={() => onApply(event)}
                     disabled={availableSpots.length <= 0}
@@ -269,7 +285,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                   </Button>
                 )}
                 
-                {isConsumerUser && event.is_paid && (
+                {(isConsumerUser || isMemberView) && event.is_paid && (
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700"
                     onClick={() => onBuyTickets(event)}
