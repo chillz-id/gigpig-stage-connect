@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Facebook, Youtube, Heart } from 'lucide-react';
+import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Facebook, Youtube, Heart, UserPlus } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface Comedian {
@@ -120,25 +120,37 @@ const ComedianCard: React.FC<ComedianCardProps> = ({
           )}
         </div>
 
-        <div className="flex gap-2">
-          {/* Vouch button for members */}
-          {isMemberView && onVouch && (
-            <Button
-              size="sm"
-              variant={isVouched ? "default" : "outline"}
-              className="flex-1"
-              onClick={() => onVouch(comedian.id)}
-            >
-              <Heart className={`w-4 h-4 mr-2 ${isVouched ? 'fill-current' : ''}`} />
-              {isVouched ? 'Vouched' : 'Vouch'}
-            </Button>
+        <div className="space-y-2">
+          {/* Member view - show both Vouch and Follow buttons */}
+          {isMemberView && (
+            <>
+              {onVouch && (
+                <Button
+                  size="sm"
+                  variant={isVouched ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => onVouch(comedian.id)}
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${isVouched ? 'fill-current' : ''}`} />
+                  {isVouched ? 'Vouched' : 'Vouch'}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Follow Comedian
+              </Button>
+            </>
           )}
 
-          {/* Contact button for industry users */}
+          {/* Industry view - show Contact button */}
           {!isMemberView && (
             <Button
               size="sm"
-              className="flex-1"
+              className="w-full"
               disabled={isContacting}
               onClick={() => onContact(comedian.id, comedian.email || '')}
             >
@@ -148,17 +160,6 @@ const ComedianCard: React.FC<ComedianCardProps> = ({
                 <Mail className="w-4 h-4 mr-2" />
               )}
               Contact
-            </Button>
-          )}
-
-          {/* Follow button for members when not showing vouch */}
-          {isMemberView && !onVouch && (
-            <Button
-              size="sm"
-              className="flex-1"
-              variant="outline"
-            >
-              Follow Comedian
             </Button>
           )}
         </div>
