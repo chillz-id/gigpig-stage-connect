@@ -49,7 +49,25 @@ const Navigation: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            {/* Only show navigation menu for non-member views */}
+            {/* Member View Navigation */}
+            {isMemberView && (
+              <div className="flex items-center space-x-6">
+                <Link 
+                  to="/browse" 
+                  className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+                >
+                  Shows
+                </Link>
+                <Link to={user ? "/profile?tab=book-comedian" : "/auth"}>
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+                    <User className="w-4 h-4 mr-2" />
+                    Book Comedian
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Non-Member View Navigation */}
             {!isMemberView && (
               <NavigationMenu>
                 <NavigationMenuList>
@@ -67,9 +85,9 @@ const Navigation: React.FC = () => {
                             </p>
                           </Link>
                         </NavigationMenuLink>
-                        {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                        {(isPromoterView || hasRole('promoter')) && (
                           <NavigationMenuLink asChild>
-                            <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                            <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                               <div className="text-sm font-semibold leading-none">Create Event</div>
                               <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                                 Set up your comedy show
@@ -95,7 +113,7 @@ const Navigation: React.FC = () => {
                             </p>
                           </Link>
                         </NavigationMenuLink>
-                        {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                        {(isPromoterView || hasRole('promoter')) && (
                           <>
                             <NavigationMenuLink asChild>
                               <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
@@ -128,7 +146,7 @@ const Navigation: React.FC = () => {
                   </NavigationMenuItem>
 
                   {/* Only show Settings for Promoter view */}
-                  {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                  {(isPromoterView || hasRole('promoter')) && (
                     <NavigationMenuItem>
                       <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                         Settings
@@ -150,16 +168,6 @@ const Navigation: React.FC = () => {
                 </NavigationMenuList>
               </NavigationMenu>
             )}
-
-            {/* Book Comedian Button for Member view */}
-            {isMemberView && (
-              <Link to={user ? "/profile?tab=book-comedian" : "/auth"}>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
-                  <User className="w-4 h-4 mr-2" />
-                  Book Comedian
-                </Button>
-              </Link>
-            )}
             
             {/* Quick Action Buttons - hide for Member view */}
             {user && !isMemberView && (
@@ -176,7 +184,7 @@ const Navigation: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
                   </Button>
                 </Link>
-                {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                {(isPromoterView || hasRole('promoter')) && (
                   <Link to="/create-event">
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                       <Plus className="w-4 h-4 mr-2" />
@@ -279,14 +287,14 @@ const Navigation: React.FC = () => {
 
             {/* Mobile navigation links */}
             {[
-              // Only show Browse Shows for non-member views
-              ...(!isMemberView ? [{ to: '/browse', label: 'Browse Shows' }] : []),
+              // Always show Browse Shows
+              { to: '/browse', label: 'Browse Shows' },
               // Show Book Comedian for member view
               ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
               // Only show Dashboard for non-member views
               ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
               // Only show promoter-specific items for promoter view
-              ...((isPromoterView || (!isMemberView && hasRole('promoter'))) ? [
+              ...((isPromoterView || hasRole('promoter')) ? [
                 { to: '/create-event', label: 'Create Event' },
                 { to: '/applications', label: 'Applications' },
                 { to: '/invoices', label: 'Invoices' }
