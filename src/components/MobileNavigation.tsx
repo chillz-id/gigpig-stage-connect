@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Menu, X, Star, Sun, Moon, Calendar } from 'lucide-react';
+import { Menu, X, Star, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -76,8 +75,8 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             { to: '/comedians', label: 'Comedians' },
             // Show Dashboard for comedian view
             ...(isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-            // Always show Calendar - point to profile calendar tab
-            { to: '/profile?tab=calendar', label: 'Calendar', icon: Calendar },
+            // Show Calendar for non-member views only
+            ...(!isMemberView ? [{ to: '/profile?tab=calendar', label: 'Calendar' }] : []),
             // Show Book Comedian for member view
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
             // Only show Dashboard for non-member views and non-comedian views
@@ -85,7 +84,6 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             // Only show promoter-specific items for actual promoters/admins AND not in comedian view
             ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
               { to: '/create-event', label: 'Create Event' },
-              { to: '/applications', label: 'Applications' },
               { to: '/invoices', label: 'Invoices' }
             ] : []),
             { to: '/profile', label: 'Profile' },
@@ -101,7 +99,6 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-200 py-2 px-1 rounded-lg hover:bg-accent"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {link.icon && <link.icon className="w-4 h-4" />}
               {link.label}
             </Link>
           ))}

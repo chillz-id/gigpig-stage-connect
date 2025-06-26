@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Edit, Trash2, Search, Plus } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, isThisMonth, isLastMonth, isThisQuarter, isThisYear, isBefore } from 'date-fns';
 import { Link } from 'react-router-dom';
+import InvoiceFilters from './InvoiceFilters';
 
 interface Invoice {
   id: string;
@@ -32,6 +30,8 @@ const InvoiceList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [amountFilter, setAmountFilter] = useState('all');
 
   useEffect(() => {
     fetchInvoices();
@@ -111,6 +111,47 @@ const InvoiceList: React.FC = () => {
     }
   };
 
+  const matchesDateFilter = (invoice: Invoice) => {
+    if (dateFilter === 'all') return true;
+    
+    const issueDate = new Date(invoice.issue_date);
+    const dueDate = new Date(invoice.due_date);
+    
+    switch (dateFilter) {
+      case 'this-month':
+        return isThisMonth(issueDate);
+      case 'last-month':
+        return isLastMonth(issueDate);
+      case 'this-quarter':
+        return isThisQuarter(issueDate);
+      case 'this-year':
+        return isThisYear(issueDate);
+      case 'overdue':
+        return isBefore(dueDate, new Date()) && invoice.status !== 'paid';
+      default:
+        return true;
+    }
+  };
+
+  const matchesAmountFilter = (invoice: Invoice) => {
+    if (amountFilter === 'all') return true;
+    
+    const amount = invoice.total_amount;
+    
+    switch (amountFilter) {
+      case '0-100':
+        return amount >= 0 && amount <= 100;
+      case '100-500':
+        return amount > 100 && amount <= 500;
+      case '500-1000':
+        return amount > 500 && amount <= 1000;
+      case '1000+':
+        return amount > 1000;
+      default:
+        return true;
+    }
+  };
+
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = 
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,8 +162,15 @@ const InvoiceList: React.FC = () => {
     
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesDateFilter(invoice) && matchesAmountFilter(invoice);
   });
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setAmountFilter('all');
+  };
 
   if (loading) {
     return (
@@ -151,39 +199,18 @@ const InvoiceList: React.FC = () => {
         </Link>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search invoices..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Filters */}
+      <InvoiceFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        amountFilter={amountFilter}
+        setAmountFilter={setAmountFilter}
+        onClearFilters={clearFilters}
+      />
 
       {/* Invoices List */}
       {filteredInvoices.length === 0 ? (

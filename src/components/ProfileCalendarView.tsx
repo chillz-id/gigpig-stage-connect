@@ -23,7 +23,7 @@ interface CalendarEvent {
 
 export const ProfileCalendarView: React.FC = () => {
   const { user } = useUser();
-  const { isMemberView } = useViewMode();
+  const { isMemberView, isComedianView } = useViewMode();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -141,7 +141,8 @@ export const ProfileCalendarView: React.FC = () => {
               <CalendarIcon className="w-5 h-5" />
               {isMemberView ? 'Event Calendar' : 'My Calendar'}
             </CardTitle>
-            {!isMemberView && (
+            {/* Only show Add Event button for non-member and non-comedian views (i.e., promoters) */}
+            {!isMemberView && !isComedianView && (
               <Button size="sm" onClick={handleAddEvent}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Event
