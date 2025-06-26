@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MapPin, Star, Mail, Calendar, Users } from 'lucide-react';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface Comedian {
   id: string;
@@ -26,6 +27,8 @@ interface ComedianCardProps {
 }
 
 const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onContact }) => {
+  const { isMemberView } = useViewMode();
+
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-colors">
       <CardHeader className="pb-4">
@@ -87,19 +90,33 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           )}
         </div>
 
-        <Button
-          size="sm"
-          className="w-full"
-          disabled={isContacting}
-          onClick={() => onContact(comedian.id, comedian.email || '')}
-        >
-          {isContacting ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : (
-            <Mail className="w-4 h-4 mr-2" />
-          )}
-          Contact
-        </Button>
+        {/* Only show contact button for industry users, not members */}
+        {!isMemberView && (
+          <Button
+            size="sm"
+            className="w-full"
+            disabled={isContacting}
+            onClick={() => onContact(comedian.id, comedian.email || '')}
+          >
+            {isContacting ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Mail className="w-4 h-4 mr-2" />
+            )}
+            Contact
+          </Button>
+        )}
+
+        {/* For members, show a different action */}
+        {isMemberView && (
+          <Button
+            size="sm"
+            className="w-full"
+            variant="outline"
+          >
+            Follow Comedian
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

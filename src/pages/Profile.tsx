@@ -19,7 +19,8 @@ import { InvoiceManagement } from '@/components/InvoiceManagement';
 import { AccountSettings } from '@/components/AccountSettings';
 import { MemberAccountSettings } from '@/components/MemberAccountSettings';
 import { BookComedianForm } from '@/components/BookComedianForm';
-import { Ticket, Calendar as CalendarIcon, MapPin, Clock, Heart } from 'lucide-react';
+import { NotificationSystem } from '@/components/NotificationSystem';
+import { Ticket, Calendar as CalendarIcon, MapPin, Clock, Heart, Bell } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -300,7 +301,7 @@ const Profile = () => {
   );
 
   // Tab configuration based on view mode
-  const memberTabs = ['profile', 'tickets', 'book-comedian', 'settings'];
+  const memberTabs = ['profile', 'tickets', 'notifications', 'book-comedian', 'settings'];
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'requests', 'settings'];
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
@@ -317,11 +318,17 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-4' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-5' : 'grid-cols-6'}`}>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value={isMemberView ? "tickets" : "calendar"}>
               {isMemberView ? "Tickets" : "Calendar"}
             </TabsTrigger>
+            {isMemberView && (
+              <TabsTrigger value="notifications">
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </TabsTrigger>
+            )}
             {isMemberView && <TabsTrigger value="book-comedian">Book Comedian</TabsTrigger>}
             {!isMemberView && (
               <TabsTrigger value={isIndustryUser ? "invoices" : "tickets"}>
@@ -349,6 +356,9 @@ const Profile = () => {
               <TabsContent value="tickets" className="space-y-6">
                 <TicketsListSection />
                 <InterestedEventsSection />
+              </TabsContent>
+              <TabsContent value="notifications">
+                <NotificationSystem userId={user?.id} />
               </TabsContent>
               <TabsContent value="book-comedian">
                 <BookComedianForm />

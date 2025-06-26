@@ -19,10 +19,10 @@ const Navigation: React.FC = () => {
           {/* Logo with Customer View Toggle */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <span className="text-primary-foreground font-bold text-lg">SS</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <span className="text-white font-bold text-lg">SS</span>
               </div>
-              <h1 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">Stand Up Sydney</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent group-hover:opacity-80 transition-all duration-300">Stand Up Sydney</h1>
             </Link>
             
             <CustomerViewToggle onViewChange={setViewMode} />
