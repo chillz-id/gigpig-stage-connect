@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,11 +25,10 @@ export const useComedians = () => {
 
   const fetchComedians = async (): Promise<void> => {
     try {
-      // Fetch comedians who have Comedian Pro badge
+      // Fetch all profiles for now (remove problematic query)
       const { data: profilesData, error } = await supabase
         .from('profiles')
-        .select('id, name, bio, location, avatar_url, is_verified, email')
-        .eq('has_comedian_pro_badge', true);
+        .select('id, name, bio, location, avatar_url, is_verified, email');
 
       if (error) throw error;
       
@@ -98,7 +96,7 @@ export const useComedians = () => {
         }
       ];
       
-      const dbComedians: Comedian[] = (profilesData || []).map((profile): Comedian => ({
+      const dbComedians: Comedian[] = (profilesData || []).map((profile) => ({
         id: profile.id,
         name: profile.name,
         bio: profile.bio,
