@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mic, Users, Sparkles } from 'lucide-react';
+import { Mic, Users, Sparkles, User } from 'lucide-react';
 
 const Auth = () => {
   const [signInEmail, setSignInEmail] = useState('');
@@ -18,6 +18,7 @@ const Auth = () => {
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
   const [signUpStageName, setSignUpStageName] = useState('');
+  const [isComedian, setIsComedian] = useState(false);
   const [isPromoter, setIsPromoter] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -50,15 +51,36 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    // Determine the primary role - default to comedian if both or neither are selected
+    let primaryRole = 'comedian';
+    if (isPromoter && !isComedian) {
+      primaryRole = 'promoter';
+    }
+    
     const userData = {
       name: signUpName,
       stage_name: signUpStageName,
-      role: isPromoter ? 'promoter' : 'comedian'
+      role: primaryRole,
+      roles: [
+        ...(isComedian ? ['comedian'] : []),
+        ...(isPromoter ? ['promoter'] : [])
+      ].filter(Boolean)
     };
     
     const { error } = await signUp(signUpEmail, signUpPassword, userData);
     
     setIsLoading(false);
+  };
+
+  const getRoleDescription = () => {
+    if (isComedian && isPromoter) {
+      return "You'll be able to both apply for comedy shows and create/manage events";
+    } else if (isComedian) {
+      return "You'll be able to apply for comedy shows and gigs";
+    } else if (isPromoter) {
+      return "You'll be able to create events and book comedians";
+    }
+    return "Select at least one role to continue";
   };
 
   return (
@@ -181,28 +203,42 @@ const Auth = () => {
                   
                   <div className="space-y-4">
                     <Label className="text-sm font-medium">I am a:</Label>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is-promoter"
-                        checked={isPromoter}
-                        onCheckedChange={(checked) => setIsPromoter(checked as boolean)}
-                      />
-                      <Label htmlFor="is-promoter" className="text-sm font-normal">
-                        Event Promoter
-                      </Label>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="is-comedian"
+                          checked={isComedian}
+                          onCheckedChange={(checked) => setIsComedian(checked as boolean)}
+                        />
+                        <Label htmlFor="is-comedian" className="text-sm font-normal flex items-center gap-2">
+                          <Mic className="w-4 h-4" />
+                          Comedian
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="is-promoter"
+                          checked={isPromoter}
+                          onCheckedChange={(checked) => setIsPromoter(checked as boolean)}
+                        />
+                        <Label htmlFor="is-promoter" className="text-sm font-normal flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Event Promoter
+                        </Label>
+                      </div>
                     </div>
+                    
                     <p className="text-xs text-muted-foreground">
-                      {isPromoter 
-                        ? "You'll be able to create events and book comedians"
-                        : "You'll be able to apply for comedy shows and gigs"
-                      }
+                      {getRoleDescription()}
                     </p>
                   </div>
 
                   <Button 
                     type="submit" 
                     className="w-full professional-button"
-                    disabled={isLoading}
+                    disabled={isLoading || (!isComedian && !isPromoter)}
                   >
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
@@ -223,8 +259,8 @@ const Auth = () => {
               <span>For Promoters</span>
             </div>
             <div className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4" />
-              <span>Built for Comedy</span>
+              <User className="w-4 h-4" />
+              <span>For Customers</span>
             </div>
           </div>
           <p>
