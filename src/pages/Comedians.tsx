@@ -49,7 +49,6 @@ const Comedians = () => {
         .select('id, name, bio, location, avatar_url, is_verified, email')
         .eq('has_comedian_pro_badge', true)
         .eq('public_profile', true)
-        .returns<DatabaseProfile[]>();
 
       if (error) throw error;
       
