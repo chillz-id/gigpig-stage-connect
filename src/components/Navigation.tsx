@@ -1,16 +1,22 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Bell } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
+import { useUser } from '@/contexts/UserContext';
 import CustomerViewToggle from './CustomerViewToggle';
 import DesktopNavigation from './DesktopNavigation';
 import MobileNavigation from './MobileNavigation';
 import ThemeControls from './ThemeControls';
 import UserProfile from './UserProfile';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { setViewMode } = useViewMode();
+  const { setViewMode, isMemberView } = useViewMode();
+  const { user } = useUser();
 
   return (
     <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
@@ -19,10 +25,12 @@ const Navigation: React.FC = () => {
           {/* Logo with Customer View Toggle */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <span className="text-white font-bold text-lg">SS</span>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent group-hover:opacity-80 transition-all duration-300">Stand Up Sydney</h1>
+              <img 
+                src="/placeholder.svg" 
+                alt="Stand Up Sydney Logo" 
+                className="h-10 w-auto object-contain group-hover:opacity-80 transition-all duration-300"
+              />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent group-hover:opacity-80 transition-all duration-300 hidden sm:block">Stand Up Sydney</h1>
             </Link>
             
             <CustomerViewToggle onViewChange={setViewMode} />
@@ -31,9 +39,10 @@ const Navigation: React.FC = () => {
           {/* Desktop Navigation */}
           <DesktopNavigation />
           
-          {/* Theme Controls */}
-          <div className="hidden md:flex">
+          {/* Theme Controls and Notifications */}
+          <div className="hidden md:flex items-center gap-2">
             <ThemeControls />
+            {user && isMemberView && <NotificationDropdown />}
           </div>
 
           {/* User Info or Auth Buttons */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -39,10 +38,10 @@ const Profile = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam) {
+    if (tabParam && tabParam !== activeTab) {
       setActiveTab(tabParam);
     }
-  }, [location]);
+  }, [location.search, activeTab]);
 
   if (!user) {
     return (
@@ -90,6 +89,18 @@ const Profile = () => {
     });
   };
 
+  // Handle tab changes and update URL
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    const newUrl = new URL(window.location.href);
+    if (newTab === 'profile') {
+      newUrl.searchParams.delete('tab');
+    } else {
+      newUrl.searchParams.set('tab', newTab);
+    }
+    window.history.replaceState({}, '', newUrl.toString());
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -103,7 +114,7 @@ const Profile = () => {
         {/* Profile Tabs */}
         <ProfileTabs
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
           user={user}

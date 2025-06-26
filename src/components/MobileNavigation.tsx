@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Menu, X, Star, Sun, Moon, Calendar } from 'lucide-react';
-import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -21,14 +20,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
 }) => {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
-  const { isMemberView, isPromoterView } = useViewMode();
+  const { isMemberView } = useViewMode();
 
   const toggleDarkMode = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
-  const togglePigMode = () => {
-    setTheme(theme === 'pig' ? 'light' : 'pig');
   };
 
   // Helper function to check if user has a specific role
@@ -65,7 +60,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                 </div>
                 <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                  USER
+                  {isMemberView ? (user.membership || 'member').toUpperCase() : 'USER'}
                 </Badge>
               </div>
             </div>
@@ -118,14 +113,6 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
               <span className="text-sm font-medium">Dark Mode</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={togglePigMode}
-              className={`p-2 rounded-lg ${theme === 'pig' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              <PigIcon className="w-4 h-4" />
-            </Button>
           </div>
 
           {!user && (

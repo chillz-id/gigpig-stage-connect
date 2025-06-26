@@ -97,6 +97,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 Message
               </Button>
             )}
+            {/* Show Vouch button for all users */}
             <Button variant="outline" size="sm">
               <Award className="w-4 h-4 mr-2" />
               Vouch

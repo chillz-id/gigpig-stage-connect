@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, MapPin, Star, Zap, Mail, Phone } from 'lucide-react';
+import { Loader2, Search, MapPin, Star, Zap, Mail, Instagram, Twitter, Facebook, Youtube, Globe } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,13 @@ interface Comedian {
   avatar_url: string;
   is_verified: boolean;
   email: string;
+  social_media?: {
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+    website?: string;
+  };
 }
 
 const ComedianMarketplace = () => {
@@ -31,7 +38,7 @@ const ComedianMarketplace = () => {
 
   const fetchComedians = async () => {
     try {
-      // Fetch comedians who have the comedian role
+      // Fetch comedians who have the comedian role, excluding admins
       const { data: comedianRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id')
@@ -44,11 +51,25 @@ const ComedianMarketplace = () => {
         return;
       }
 
-      const comedianIds = comedianRoles.map(role => role.user_id);
+      // Get admin user IDs to exclude them
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      const adminIds = adminRoles?.map(role => role.user_id) || [];
+      const comedianIds = comedianRoles
+        .map(role => role.user_id)
+        .filter(id => !adminIds.includes(id)); // Exclude admins
+
+      if (comedianIds.length === 0) {
+        setComedians([]);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, stage_name, bio, location, avatar_url, is_verified, email')
+        .select('id, name, stage_name, bio, location, avatar_url, is_verified, email, social_media')
         .in('id', comedianIds)
         .not('stage_name', 'is', null);
 
@@ -92,6 +113,23 @@ const ComedianMarketplace = () => {
       });
     } finally {
       setContacting(null);
+    }
+  };
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform) {
+      case 'instagram':
+        return Instagram;
+      case 'twitter':
+        return Twitter;
+      case 'facebook':
+        return Facebook;
+      case 'youtube':
+        return Youtube;
+      case 'website':
+        return Globe;
+      default:
+        return Globe;
     }
   };
 
@@ -193,6 +231,27 @@ const ComedianMarketplace = () => {
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {comedian.bio}
                   </p>
+                )}
+
+                {/* Social Media Links */}
+                {comedian.social_media && (
+                  <div className="flex gap-2">
+                    {Object.entries(comedian.social_media).map(([platform, url]) => {
+                      if (!url) return null;
+                      const IconComponent = getSocialIcon(platform);
+                      return (
+                        <Button
+                          key={platform}
+                          variant="outline"
+                          size="sm"
+                          className="p-2"
+                          onClick={() => window.open(url, '_blank')}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                        </Button>
+                      );
+                    })}
+                  </div>
                 )}
 
                 <div className="flex gap-2">

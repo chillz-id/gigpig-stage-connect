@@ -5,11 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 const UserProfile: React.FC = () => {
   const { user } = useUser();
+  const { isMemberView } = useViewMode();
 
   if (user) {
+    const membership = user.membership || (isMemberView ? 'member' : 'basic');
+    const badgeText = isMemberView ? membership.toUpperCase() : 'USER';
+    
     return (
       <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-xl p-3 transition-all duration-200 group">
         <img 
@@ -23,7 +28,7 @@ const UserProfile: React.FC = () => {
             {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
           </div>
           <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-            USER
+            {badgeText}
           </Badge>
         </div>
       </Link>

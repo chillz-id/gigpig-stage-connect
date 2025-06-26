@@ -4,42 +4,66 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2, Plus } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { useUser } from '@/contexts/UserContext';
+import { useViewMode } from '@/contexts/ViewModeContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export const ProfileCalendarView: React.FC = () => {
   const { user } = useUser();
+  const { isMemberView } = useViewMode();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Fetch user's calendar events
+  // Fetch calendar events based on user type
   const { data: calendarEvents = [], isLoading } = useQuery({
-    queryKey: ['calendar-events', user?.id],
+    queryKey: ['calendar-events', user?.id, isMemberView],
     queryFn: async () => {
       if (!user?.id) return [];
 
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .eq('comedian_id', user.id)
-        .order('event_date', { ascending: true });
+      if (isMemberView) {
+        // For members, fetch events they're interested in or attending
+        const { data, error } = await supabase
+          .from('user_interests')
+          .select('*, event:events(*)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data?.map(interest => ({
+          id: interest.id,
+          title: interest.event_title || interest.event?.title,
+          venue: interest.venue || interest.event?.venue,
+          event_date: interest.event_date || interest.event?.event_date,
+          status: 'interested',
+          calendar_sync_status: 'manual'
+        })) || [];
+      } else {
+        // For industry users, fetch their calendar events
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .select('*')
+          .eq('comedian_id', user.id)
+          .order('event_date', { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+      }
     },
     enabled: !!user?.id
   });
 
   // Filter events for the selected date
   const selectedDateEvents = calendarEvents.filter(event => 
-    isSameDay(parseISO(event.event_date), selectedDate)
+    event.event_date && isSameDay(parseISO(event.event_date), selectedDate)
   );
 
-  const datesWithEvents = calendarEvents.map(event => parseISO(event.event_date));
+  const datesWithEvents = calendarEvents
+    .filter(event => event.event_date)
+    .map(event => parseISO(event.event_date));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -49,6 +73,8 @@ export const ProfileCalendarView: React.FC = () => {
         return 'bg-yellow-500';
       case 'cancelled':
         return 'bg-red-500';
+      case 'interested':
+        return 'bg-blue-500';
       default:
         return 'bg-gray-500';
     }
@@ -68,6 +94,13 @@ export const ProfileCalendarView: React.FC = () => {
     });
   };
 
+  const handleAddEvent = () => {
+    toast({
+      title: "Add Event",
+      description: "Event creation functionality will be implemented soon"
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -79,18 +112,6 @@ export const ProfileCalendarView: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        <div className="space-y-4">
-          <div className="h-8 bg-muted rounded w-1/2"></div>
-          <Card className="bg-card/50 backdrop-blur-sm border-border">
-            <CardContent className="p-8">
-              <div className="animate-pulse space-y-4">
-                <div className="h-6 bg-muted rounded"></div>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     );
   }
@@ -99,10 +120,18 @@ export const ProfileCalendarView: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card className="bg-card/50 backdrop-blur-sm border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            My Calendar
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5" />
+              {isMemberView ? 'Event Calendar' : 'My Calendar'}
+            </CardTitle>
+            {!isMemberView && (
+              <Button size="sm" onClick={handleAddEvent}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Event
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="max-w-md mx-auto">
@@ -124,7 +153,10 @@ export const ProfileCalendarView: React.FC = () => {
             />
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
-            Dates with your events are highlighted
+            {isMemberView 
+              ? 'Dates with events you\'re interested in are highlighted'
+              : 'Dates with your events are highlighted'
+            }
           </div>
         </CardContent>
       </Card>
@@ -140,7 +172,10 @@ export const ProfileCalendarView: React.FC = () => {
               <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
               <p className="text-muted-foreground">
-                You don't have any events scheduled for this day
+                {isMemberView 
+                  ? "You don't have any events of interest for this day"
+                  : "You don't have any events scheduled for this day"
+                }
               </p>
             </CardContent>
           </Card>
@@ -164,33 +199,37 @@ export const ProfileCalendarView: React.FC = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{format(parseISO(event.event_date), 'h:mm a')}</span>
+                    <span>{event.event_date ? format(parseISO(event.event_date), 'h:mm a') : 'Time TBA'}</span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4" />
-                    <span>Calendar sync: {event.calendar_sync_status}</span>
-                  </div>
+                  {!isMemberView && (
+                    <div className="flex items-center space-x-1">
+                      <Users className="w-4 h-4" />
+                      <span>Sync: {event.calendar_sync_status}</span>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleEditEvent(event.id)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Details
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleCancelEvent(event.id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </div>
+                {!isMemberView && (
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleEditEvent(event.id)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Details
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleCancelEvent(event.id)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
