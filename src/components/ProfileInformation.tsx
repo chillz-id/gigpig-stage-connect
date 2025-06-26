@@ -38,14 +38,15 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" defaultValue={user.email} />
-        </div>
-
-        <div>
-          <Label htmlFor="mobile">Mobile</Label>
-          <Input id="mobile" type="tel" placeholder="+61 400 000 000" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" defaultValue={user.email} />
+          </div>
+          <div>
+            <Label htmlFor="mobile">Mobile</Label>
+            <Input id="mobile" type="tel" placeholder="+61 400 000 000" />
+          </div>
         </div>
 
         {!isMemberView && (
