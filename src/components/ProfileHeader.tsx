@@ -28,6 +28,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
+  // Provide default values for potentially undefined properties
+  const membership = user.membership || 'basic';
+  const userName = user.name || 'User';
+  const userBio = user.bio || 'No bio available';
+  const userLocation = user.location || 'Location not set';
+  const joinDate = user.joinDate || 'Recently joined';
+  const showsPerformed = user.stats?.showsPerformed || 0;
+
   return (
     <Card className="professional-card mb-8">
       <CardContent className="p-8">
@@ -35,7 +43,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className="relative">
             <Avatar className="w-32 h-32">
               <AvatarImage src={user.avatar} />
-              <AvatarFallback className="text-2xl">{user.name[0]}</AvatarFallback>
+              <AvatarFallback className="text-2xl">{userName[0]}</AvatarFallback>
             </Avatar>
             <div className="absolute bottom-0 right-0">
               <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -54,25 +62,25 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">{user.name}</h1>
+              <h1 className="text-3xl font-bold">{userName}</h1>
               {user.isVerified && <Shield className="w-6 h-6 text-blue-500" />}
-              <Badge className={getMembershipBadgeColor(user.membership)}>
-                {user.membership.toUpperCase()}
+              <Badge className={getMembershipBadgeColor(membership)}>
+                {membership.toUpperCase()}
               </Badge>
             </div>
-            <p className="text-muted-foreground mb-4">{user.bio}</p>
+            <p className="text-muted-foreground mb-4">{userBio}</p>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
-                <span>{user.location}</span>
+                <span>{userLocation}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>Member since {user.joinDate}</span>
+                <span>Member since {joinDate}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Trophy className="w-4 h-4 text-yellow-400 fill-current" />
-                <span>{user.stats.showsPerformed} shows performed</span>
+                <span>{showsPerformed} shows performed</span>
               </div>
             </div>
           </div>
