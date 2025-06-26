@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -152,7 +153,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                       {event.is_verified_only && (
                         <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                           <Star className="w-3 h-3 mr-1" />
-                          Only Comedian Pro
+                          Comedian Pro
                         </Badge>
                       )}
                       {event.allow_recording && (

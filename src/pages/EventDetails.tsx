@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,7 +79,7 @@ const EventDetails = () => {
     if (event.is_verified_only && !user.isVerified) {
       toast({
         title: "Verification required",
-        description: "This show requires verified comedians only. Upgrade to Pro to get verified!",
+        description: "This show requires Comedian Pro members only. Upgrade to Pro to get verified!",
         variant: "destructive",
       });
       return;
@@ -206,7 +207,7 @@ const EventDetails = () => {
                     {event.is_verified_only && (
                       <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                         <Star className="w-3 h-3 mr-1" />
-                        Only Comedian Pro
+                        Comedian Pro
                       </Badge>
                     )}
                     {event.allow_recording && (
