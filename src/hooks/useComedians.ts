@@ -24,7 +24,7 @@ export const useComedians = () => {
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState<string | null>(null);
 
-  const fetchComedians = async () => {
+  const fetchComedians = async (): Promise<void> => {
     try {
       // Fetch comedians who have Comedian Pro badge
       const { data, error } = await supabase
@@ -98,7 +98,7 @@ export const useComedians = () => {
         }
       ];
       
-      const dbComedians: Comedian[] = (data || []).map(profile => ({
+      const dbComedians: Comedian[] = (data || []).map((profile): Comedian => ({
         id: profile.id,
         name: profile.name,
         bio: profile.bio,
@@ -120,7 +120,7 @@ export const useComedians = () => {
     }
   };
 
-  const handleContact = async (comedianId: string, comedianEmail: string) => {
+  const handleContact = async (comedianId: string, comedianEmail: string): Promise<void> => {
     if (!user) {
       toast({
         title: "Authentication Required",
