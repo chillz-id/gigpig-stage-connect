@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
-import { format, isThisMonth, isLastMonth, isThisQuarter, isThisYear, isBefore } from 'date-fns';
+import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 import { Link } from 'react-router-dom';
 import InvoiceFilters from './InvoiceFilters';
 
@@ -121,7 +122,10 @@ const InvoiceList: React.FC = () => {
       case 'this-month':
         return isThisMonth(issueDate);
       case 'last-month':
-        return isLastMonth(issueDate);
+        const lastMonth = subMonths(new Date(), 1);
+        const lastMonthStart = startOfMonth(lastMonth);
+        const lastMonthEnd = endOfMonth(lastMonth);
+        return isAfter(issueDate, lastMonthStart) && isBefore(issueDate, lastMonthEnd);
       case 'this-quarter':
         return isThisQuarter(issueDate);
       case 'this-year':
