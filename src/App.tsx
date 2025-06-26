@@ -9,7 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { Navigation } from "@/components/Navigation";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
