@@ -69,14 +69,21 @@ export const MapView: React.FC = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <GoogleMapsComponent
-          height="500px"
-          showAddressInput={false}
-          onAddressSelect={(address, lat, lng) => {
-            // Find event near this location if needed
-            console.log('Map location selected:', address, lat, lng);
-          }}
-        />
+        <div className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="w-5 h-5" />
+            <h3 className="text-lg font-semibold">Event Locations</h3>
+          </div>
+          <div className="h-[500px] bg-muted/20 rounded-md flex items-center justify-center">
+            <div className="text-center">
+              <MapPin className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h4 className="text-lg font-semibold mb-2">Interactive Map</h4>
+              <p className="text-muted-foreground text-sm">
+                Map integration temporarily unavailable. Please use the event list to find locations.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">

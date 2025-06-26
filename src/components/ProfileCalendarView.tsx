@@ -105,23 +105,25 @@ export const ProfileCalendarView: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            modifiers={{
-              hasEvents: datesWithEvents
-            }}
-            modifiersStyles={{
-              hasEvents: { 
-                backgroundColor: 'hsl(var(--primary))', 
-                color: 'hsl(var(--primary-foreground))',
-                borderRadius: '6px'
-              }
-            }}
-            className="rounded-md border bg-background/50"
-          />
-          <div className="mt-4 text-sm text-muted-foreground">
+          <div className="max-w-md mx-auto">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              modifiers={{
+                hasEvents: datesWithEvents
+              }}
+              modifiersStyles={{
+                hasEvents: { 
+                  backgroundColor: 'hsl(var(--primary))', 
+                  color: 'hsl(var(--primary-foreground))',
+                  borderRadius: '6px'
+                }
+              }}
+              className="rounded-md border bg-background/50"
+            />
+          </div>
+          <div className="mt-4 text-sm text-muted-foreground text-center">
             Dates with your events are highlighted
           </div>
         </CardContent>
