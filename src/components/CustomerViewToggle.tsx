@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
 import { Toggle } from '@/components/ui/toggle';
-import { Badge } from '@/components/ui/badge';
 import { User, Mic, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 
 type ViewMode = 'member' | 'comedian' | 'promoter';
 
@@ -13,8 +12,9 @@ interface CustomerViewToggleProps {
 }
 
 const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('member');
+  const [viewMode, setViewMode] = useState<ViewMode>('comedian');
   const { hasRole } = useAuth();
+  const { switchToUser } = useUser();
 
   // Only show for admin users
   if (!hasRole('admin')) {
@@ -23,8 +23,15 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
 
   const handleViewChange = (newView: ViewMode) => {
     setViewMode(newView);
+    switchToUser(newView);
     onViewChange?.(newView);
   };
+
+  // Set initial view mode based on current user
+  useEffect(() => {
+    // Default to comedian view on component mount
+    handleViewChange('comedian');
+  }, []);
 
   const getViewIcon = (view: ViewMode) => {
     switch (view) {

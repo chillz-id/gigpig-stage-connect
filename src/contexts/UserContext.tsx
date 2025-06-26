@@ -29,6 +29,7 @@ interface UserContextType {
   login: (userData: User) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
+  switchToUser: (userType: 'comedian' | 'promoter' | 'member') => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -41,15 +42,16 @@ export const useUser = () => {
   return context;
 };
 
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>({
+// Mock users for different personas
+const mockUsers = {
+  comedian: {
     id: '1',
     name: 'Alex Thompson',
     email: 'alex@comedy.com',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     isVerified: true,
-    roles: ['comedian', 'promoter'],
-    membership: 'premium', // Changed from 'pro' to 'premium' to show proper status
+    roles: ['comedian', 'promoter'] as ('comedian' | 'promoter')[],
+    membership: 'premium' as const,
     bio: 'Stand-up comedian with 8+ years of experience. Love observational humor and connecting with audiences through relatable stories.',
     location: 'Los Angeles, CA',
     joinDate: 'March 2020',
@@ -62,7 +64,53 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalRevenue: 8960,
       activeGroups: 5,
     },
-  });
+  },
+  promoter: {
+    id: '2',
+    name: 'Sarah Mitchell',
+    email: 'sarah@promoter.com',
+    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b793?w=150&h=150&fit=crop&crop=face',
+    isVerified: true,
+    roles: ['promoter'] as ('comedian' | 'promoter')[],
+    membership: 'pro' as const,
+    bio: 'Event promoter specializing in comedy shows. Passionate about bringing the best comedic talent to Sydney venues.',
+    location: 'Sydney, NSW',
+    joinDate: 'January 2021',
+    stats: {
+      totalGigs: 0,
+      totalEarnings: 0,
+      showsPerformed: 0,
+      averageRating: 0,
+      totalEvents: 25,
+      totalRevenue: 15000,
+      activeGroups: 8,
+    },
+  },
+  member: {
+    id: '3',
+    name: 'Chris Hill',
+    email: 'chillz.id@gmail.com',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    isVerified: false,
+    roles: [] as ('comedian' | 'promoter')[],
+    membership: 'free' as const,
+    bio: 'Comedy enthusiast and regular show attendee. Love supporting local comedians!',
+    location: 'Sydney, NSW',
+    joinDate: 'June 2024',
+    stats: {
+      totalGigs: 0,
+      totalEarnings: 0,
+      showsPerformed: 0,
+      averageRating: 0,
+      totalEvents: 0,
+      totalRevenue: 0,
+      activeGroups: 0,
+    },
+  },
+};
+
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User>(mockUsers.comedian);
   const [isLoading] = useState(false);
 
   const login = (userData: User) => {
@@ -81,8 +129,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const switchToUser = (userType: 'comedian' | 'promoter' | 'member') => {
+    setUser(mockUsers[userType]);
+  };
+
   return (
-    <UserContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
+    <UserContext.Provider value={{ user, isLoading, login, logout, updateUser, switchToUser }}>
       {children}
     </UserContext.Provider>
   );
