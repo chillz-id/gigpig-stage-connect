@@ -20,8 +20,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
   const navigationLinks = [
     // Always show Browse Shows
     { to: '/browse', label: 'Browse Shows' },
-    // Show Invoices for comedian view
-    ...(isComedianView ? [{ to: '/invoices', label: 'Invoices' }] : []),
+    // Show Invoices for promoters only (not comedians)
+    ...(!isComedianView && hasRole('promoter') ? [{ to: '/invoices', label: 'Invoices' }] : []),
     // Always show Comedians
     { to: '/comedians', label: 'Comedians' },
     // Show Dashboard for comedian view
@@ -34,8 +34,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     ...(!isMemberView && !isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
     // Only show promoter-specific items for actual promoters/admins AND not in comedian view
     ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
-      { to: '/create-event', label: 'Create Event' },
-      { to: '/invoices', label: 'Invoices' }
+      { to: '/create-event', label: 'Create Event' }
     ] : []),
     { to: '/profile', label: 'Profile' },
     // Only show messages and notifications for non-member views

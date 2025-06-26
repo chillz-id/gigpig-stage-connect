@@ -12,12 +12,6 @@ const ComedianViewNavigation: React.FC = () => {
         Shows
       </Link>
       <Link 
-        to="/invoices" 
-        className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
-      >
-        Invoices
-      </Link>
-      <Link 
         to="/comedians" 
         className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
       >

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell } from 'lucide-react';
+import { Bell, User, Calendar, Receipt, UserCheck, Settings, Ticket, Heart } from 'lucide-react';
 import { ProfileInformation } from '@/components/ProfileInformation';
 import { MediaPortfolio } from '@/components/MediaPortfolio';
 import { ContactInformation } from '@/components/ContactInformation';
@@ -9,7 +9,6 @@ import { FinancialInformation } from '@/components/FinancialInformation';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { InvoiceManagement } from '@/components/InvoiceManagement';
 import { VouchSystem } from '@/components/VouchSystem';
-import { ContactRequests } from '@/components/ContactRequests';
 import { AccountSettings } from '@/components/AccountSettings';
 import { MemberAccountSettings } from '@/components/MemberAccountSettings';
 import { BookComedianForm } from '@/components/BookComedianForm';
@@ -38,34 +37,51 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   mockTickets,
   onSave
 }) => {
-  // Tab configuration based on view mode
+  // Tab configuration based on view mode - removed 'requests' tab
   const memberTabs = ['profile', 'tickets', 'notifications', 'book-comedian', 'settings'];
-  const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'requests', 'settings'];
+  const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-5' : 'grid-cols-6'}`}>
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value={isMemberView ? "tickets" : "calendar"}>
-          {isMemberView ? "Tickets" : "Calendar"}
+      <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-5' : 'grid-cols-5'}`}>
+        <TabsTrigger value="profile" className="flex items-center gap-2">
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Profile</span>
+        </TabsTrigger>
+        <TabsTrigger value={isMemberView ? "tickets" : "calendar"} className="flex items-center gap-2">
+          {isMemberView ? <Ticket className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+          <span className="hidden sm:inline">{isMemberView ? "Tickets" : "Calendar"}</span>
         </TabsTrigger>
         {isMemberView && (
-          <TabsTrigger value="notifications">
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
         )}
-        {isMemberView && <TabsTrigger value="book-comedian">Book Comedian</TabsTrigger>}
+        {isMemberView && (
+          <TabsTrigger value="book-comedian" className="flex items-center gap-2">
+            <Heart className="w-4 h-4" />
+            <span className="hidden sm:inline">Book Comedian</span>
+          </TabsTrigger>
+        )}
         {!isMemberView && (
-          <TabsTrigger value={isIndustryUser ? "invoices" : "tickets"}>
-            {isIndustryUser ? "Invoices" : "Tickets"}
+          <TabsTrigger value={isIndustryUser ? "invoices" : "tickets"} className="flex items-center gap-2">
+            {isIndustryUser ? <Receipt className="w-4 h-4" /> : <Ticket className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isIndustryUser ? "Invoices" : "Tickets"}</span>
           </TabsTrigger>
         )}
-        {!isMemberView && <TabsTrigger value="vouches">Vouches</TabsTrigger>}
-        {!isMemberView && <TabsTrigger value="requests">Requests</TabsTrigger>}
-        <TabsTrigger value="settings">Settings</TabsTrigger>
+        {!isMemberView && (
+          <TabsTrigger value="vouches" className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4" />
+            <span className="hidden sm:inline">Vouches</span>
+          </TabsTrigger>
+        )}
+        <TabsTrigger value="settings" className="flex items-center gap-2">
+          <Settings className="w-4 h-4" />
+          <span className="hidden sm:inline">Settings</span>
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile" className="space-y-6">
@@ -108,9 +124,6 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
           )}
           <TabsContent value="vouches">
             <VouchSystem />
-          </TabsContent>
-          <TabsContent value="requests">
-            <ContactRequests />
           </TabsContent>
         </>
       )}

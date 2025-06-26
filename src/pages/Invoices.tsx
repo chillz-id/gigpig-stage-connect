@@ -10,14 +10,15 @@ import { Crown } from 'lucide-react';
 const Invoices = () => {
   const { user } = useUser();
 
-  if (!user || !user.roles.includes('promoter')) {
+  // Block access for comedians since they won't be creating invoices anymore
+  if (!user || (!user.roles.includes('promoter') && !user.roles.includes('admin'))) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardContent className="p-8 text-center">
             <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
             <h1 className="text-2xl font-bold mb-4">Promoter Access Required</h1>
-            <p className="text-purple-200">You need promoter permissions to access the invoicing system.</p>
+            <p className="text-purple-200">Only promoters and admins can access the invoicing system. Comedian invoices are created automatically.</p>
           </CardContent>
         </Card>
       </div>
