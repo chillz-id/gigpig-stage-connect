@@ -16,12 +16,15 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
   const { hasRole } = useAuth();
   const { switchToUser } = useUser();
 
+  console.log('CustomerViewToggle render - hasRole(admin):', hasRole('admin'));
+
   // Only show for admin users
   if (!hasRole('admin')) {
     return null;
   }
 
   const handleViewChange = (newView: ViewMode) => {
+    console.log('Switching view to:', newView);
     setViewMode(newView);
     switchToUser(newView);
     onViewChange?.(newView);
@@ -29,6 +32,7 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
 
   // Set initial view mode based on current user
   useEffect(() => {
+    console.log('CustomerViewToggle useEffect - setting initial view');
     // Default to comedian view on component mount
     handleViewChange('comedian');
   }, []);
