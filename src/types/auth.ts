@@ -17,7 +17,7 @@ export interface Profile {
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter';
+  role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin';
   created_at: string;
 }
 
@@ -31,6 +31,6 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter') => boolean;
+  hasRole: (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => boolean;
   isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }

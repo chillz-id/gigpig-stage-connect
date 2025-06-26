@@ -22,7 +22,7 @@ interface Comedian {
 }
 
 const ComedianMarketplace = () => {
-  const { user, profile } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const [comedians, setComedians] = useState<Comedian[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,11 +31,25 @@ const ComedianMarketplace = () => {
 
   const fetchComedians = async () => {
     try {
-      // Fetch comedians who have opted into the marketplace
+      // Fetch comedians who have the comedian role
+      const { data: comedianRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'comedian');
+
+      if (rolesError) throw rolesError;
+
+      if (!comedianRoles || comedianRoles.length === 0) {
+        setComedians([]);
+        return;
+      }
+
+      const comedianIds = comedianRoles.map(role => role.user_id);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, stage_name, bio, location, avatar_url, is_verified, email')
-        .eq('has_comedian_pro_badge', true)
+        .in('id', comedianIds)
         .not('stage_name', 'is', null);
 
       if (error) throw error;
@@ -82,22 +96,22 @@ const ComedianMarketplace = () => {
   };
 
   useEffect(() => {
-    if (profile?.has_promoter_pro_badge) {
+    if (hasRole('promoter') || hasRole('admin')) {
       fetchComedians();
     }
-  }, [profile]);
+  }, [hasRole]);
 
-  if (!profile?.has_promoter_pro_badge) {
+  if (!hasRole('promoter') && !hasRole('admin')) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Comedian Marketplace</CardTitle>
-          <CardDescription>Access requires Promoter Pro subscription</CardDescription>
+          <CardDescription>Access requires Promoter role</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            The Comedian Marketplace is available exclusively to Promoter Pro subscribers. 
-            Upgrade your plan to browse and contact talented comedians for your shows.
+            The Comedian Marketplace is available exclusively to promoters. 
+            Contact an administrator to get promoter access.
           </p>
         </CardContent>
       </Card>

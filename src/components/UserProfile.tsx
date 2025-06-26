@@ -23,7 +23,7 @@ const UserProfile: React.FC = () => {
             {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
           </div>
           <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-            {user.membership?.toUpperCase() || 'FREE'}
+            USER
           </Badge>
         </div>
       </Link>
