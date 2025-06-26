@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -8,12 +9,14 @@ import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useViewMode } from '@/contexts/ViewModeContext';
 import CustomerViewToggle from './CustomerViewToggle';
 
 const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
+  const { viewMode, setViewMode, isMemberView, isComedianView, isPromoterView } = useViewMode();
 
   const toggleDarkMode = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -41,7 +44,7 @@ const Navigation: React.FC = () => {
               <h1 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">GigPig</h1>
             </Link>
             
-            <CustomerViewToggle />
+            <CustomerViewToggle onViewChange={setViewMode} />
           </div>
 
           {/* Desktop Menu */}
@@ -62,7 +65,7 @@ const Navigation: React.FC = () => {
                           </p>
                         </Link>
                       </NavigationMenuLink>
-                      {hasRole('promoter') && (
+                      {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
                         <NavigationMenuLink asChild>
                           <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                             <div className="text-sm font-semibold leading-none">Create Event</div>
@@ -76,53 +79,57 @@ const Navigation: React.FC = () => {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
-                    Manage
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
-                      <NavigationMenuLink asChild>
-                        <Link to="/dashboard" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                          <div className="text-sm font-semibold leading-none">Dashboard</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            View your activity and stats
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                      {hasRole('promoter') && (
-                        <>
-                          <NavigationMenuLink asChild>
-                            <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                              <div className="text-sm font-semibold leading-none">Applications</div>
-                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                Manage comedian applications
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link to="/invoices" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                              <div className="text-sm font-semibold leading-none">Invoices</div>
-                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                Create and manage invoices
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </>
-                      )}
-                      <NavigationMenuLink asChild>
-                        <Link to="/profile" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
-                          <div className="text-sm font-semibold leading-none">Profile</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Update your comedian profile
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+                {/* Only show Manage menu for Comedian and Promoter views */}
+                {!isMemberView && (
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
+                      Manage
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid gap-3 p-6 w-[500px] bg-background/95 backdrop-blur-lg border border-border shadow-xl rounded-lg">
+                        <NavigationMenuLink asChild>
+                          <Link to="/dashboard" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                            <div className="text-sm font-semibold leading-none">Dashboard</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              View your activity and stats
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                        {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
+                          <>
+                            <NavigationMenuLink asChild>
+                              <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                                <div className="text-sm font-semibold leading-none">Applications</div>
+                                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                  Manage comedian applications
+                                </p>
+                              </Link>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink asChild>
+                              <Link to="/invoices" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                                <div className="text-sm font-semibold leading-none">Invoices</div>
+                                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                  Create and manage invoices
+                                </p>
+                              </Link>
+                            </NavigationMenuLink>
+                          </>
+                        )}
+                        <NavigationMenuLink asChild>
+                          <Link to="/profile" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                            <div className="text-sm font-semibold leading-none">Profile</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Update your profile
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                )}
 
-                {hasRole('promoter') && (
+                {/* Only show Settings for Promoter view */}
+                {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                       Settings
@@ -144,19 +151,21 @@ const Navigation: React.FC = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            {/* Conditional Pricing/Upgrade Link */}
-            {user ? (
-              <Link to="/profile?tab=settings" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
-                Upgrade
-              </Link>
-            ) : (
-              <Link to="/pricing" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
-                Pricing
-              </Link>
-            )}
+            {/* Conditional Pricing/Upgrade Link - only show for Member view */}
+            {isMemberView ? (
+              user ? (
+                <Link to="/profile?tab=settings" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
+                  Upgrade
+                </Link>
+              ) : (
+                <Link to="/pricing" className="text-foreground hover:text-primary transition-colors duration-200 font-medium">
+                  Pricing
+                </Link>
+              )
+            ) : null}
             
-            {/* Quick Action Buttons */}
-            {user && (
+            {/* Quick Action Buttons - hide for Member view */}
+            {user && !isMemberView && (
               <div className="flex items-center space-x-3">
                 <Link to="/notifications">
                   <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
@@ -170,7 +179,7 @@ const Navigation: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
                   </Button>
                 </Link>
-                {hasRole('promoter') && (
+                {(isPromoterView || (!isMemberView && hasRole('promoter'))) && (
                   <Link to="/create-event">
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                       <Plus className="w-4 h-4 mr-2" />
@@ -274,16 +283,25 @@ const Navigation: React.FC = () => {
             {/* Mobile navigation links */}
             {[
               { to: '/browse', label: 'Browse Shows' },
-              { to: '/dashboard', label: 'Dashboard' },
-              ...(hasRole('promoter') ? [
+              // Only show Dashboard for non-member views
+              ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
+              // Only show promoter-specific items for promoter view
+              ...((isPromoterView || (!isMemberView && hasRole('promoter'))) ? [
                 { to: '/create-event', label: 'Create Event' },
                 { to: '/applications', label: 'Applications' },
                 { to: '/invoices', label: 'Invoices' }
               ] : []),
               { to: '/profile', label: 'Profile' },
-              { to: '/messages', label: 'Messages' },
-              { to: '/notifications', label: 'Notifications' },
-              ...(user ? [{ to: '/profile?tab=settings', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }])
+              // Only show messages and notifications for non-member views
+              ...(!isMemberView ? [
+                { to: '/messages', label: 'Messages' },
+                { to: '/notifications', label: 'Notifications' }
+              ] : []),
+              // Show appropriate pricing/upgrade link
+              ...(isMemberView ? 
+                (user ? [{ to: '/profile?tab=settings', label: 'Upgrade' }] : [{ to: '/pricing', label: 'Pricing' }]) : 
+                []
+              )
             ].map((link) => (
               <Link
                 key={link.to}

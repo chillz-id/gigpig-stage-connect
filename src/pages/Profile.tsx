@@ -2,15 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { ContactSettings } from '@/components/ContactSettings';
 import { VouchSystem } from '@/components/VouchSystem';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
@@ -24,15 +17,17 @@ import { ContactInformation } from '@/components/ContactInformation';
 import { FinancialInformation } from '@/components/FinancialInformation';
 import { InvoiceManagement } from '@/components/InvoiceManagement';
 import { AccountSettings } from '@/components/AccountSettings';
-import { User, MapPin, Calendar, Mail, Phone, Shield, Settings, Award, Users, MessageSquare, Trophy, LogOut, Camera, Youtube, CreditCard, Plus, Eye, Image, Building, X, Ticket } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const { hasRole } = useAuth();
+  const { isMemberView } = useViewMode();
   const { toast } = useToast();
   const location = useLocation();
   
@@ -101,7 +96,7 @@ const Profile = () => {
     });
   };
 
-  // Mock tickets data for consumer users
+  // Mock tickets data for member users
   const mockTickets = [
     {
       id: 1,
@@ -188,6 +183,12 @@ const Profile = () => {
     </Card>
   );
 
+  // Simplified member view tabs
+  const memberTabs = ['profile', 'tickets', 'settings'];
+  const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'requests', 'settings'];
+  
+  const availableTabs = isMemberView ? memberTabs : industryTabs;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -200,47 +201,62 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-3' : 'grid-cols-6'}`}>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            {/* Show Invoices for industry users, Tickets for consumer users */}
-            <TabsTrigger value={isIndustryUser ? "invoices" : "tickets"}>
-              {isIndustryUser ? "Invoices" : "Tickets"}
+            {!isMemberView && <TabsTrigger value="calendar">Calendar</TabsTrigger>}
+            <TabsTrigger value={isMemberView ? "tickets" : (isIndustryUser ? "invoices" : "tickets")}>
+              {isMemberView ? "Tickets" : (isIndustryUser ? "Invoices" : "Tickets")}
             </TabsTrigger>
-            <TabsTrigger value="vouches">Vouches</TabsTrigger>
-            <TabsTrigger value="requests">Requests</TabsTrigger>
+            {!isMemberView && <TabsTrigger value="vouches">Vouches</TabsTrigger>}
+            {!isMemberView && <TabsTrigger value="requests">Requests</TabsTrigger>}
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
             <ProfileInformation user={user} onSave={handleSaveProfile} />
-            <MediaPortfolio />
-            <ContactInformation />
-            <FinancialInformation />
+            {!isMemberView && (
+              <>
+                <MediaPortfolio />
+                <ContactInformation />
+                <FinancialInformation />
+              </>
+            )}
           </TabsContent>
 
-          <TabsContent value="calendar">
-            <ProfileCalendarView />
-          </TabsContent>
-
-          {/* Conditional tab content based on user type */}
-          {isIndustryUser ? (
-            <TabsContent value="invoices">
-              <InvoiceManagement />
-            </TabsContent>
-          ) : (
-            <TabsContent value="tickets">
-              <TicketsSection />
+          {!isMemberView && (
+            <TabsContent value="calendar">
+              <ProfileCalendarView />
             </TabsContent>
           )}
 
-          <TabsContent value="vouches">
-            <VouchSystem />
-          </TabsContent>
+          {/* Conditional tab content based on view mode and user type */}
+          {isMemberView ? (
+            <TabsContent value="tickets">
+              <TicketsSection />
+            </TabsContent>
+          ) : (
+            isIndustryUser ? (
+              <TabsContent value="invoices">
+                <InvoiceManagement />
+              </TabsContent>
+            ) : (
+              <TabsContent value="tickets">
+                <TicketsSection />
+              </TabsContent>
+            )
+          )}
 
-          <TabsContent value="requests">
-            <ContactRequests />
-          </TabsContent>
+          {!isMemberView && (
+            <>
+              <TabsContent value="vouches">
+                <VouchSystem />
+              </TabsContent>
+
+              <TabsContent value="requests">
+                <ContactRequests />
+              </TabsContent>
+            </>
+          )}
 
           <TabsContent value="settings" className="space-y-6">
             <SubscriptionManager />
