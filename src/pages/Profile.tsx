@@ -17,7 +17,8 @@ import { ContactInformation } from '@/components/ContactInformation';
 import { FinancialInformation } from '@/components/FinancialInformation';
 import { InvoiceManagement } from '@/components/InvoiceManagement';
 import { AccountSettings } from '@/components/AccountSettings';
-import { Ticket } from 'lucide-react';
+import { MemberAccountSettings } from '@/components/MemberAccountSettings';
+import { Ticket, Calendar as CalendarIcon, MapPin, Clock } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -96,7 +97,7 @@ const Profile = () => {
     });
   };
 
-  // Mock tickets data for member users
+  // Mock tickets data for member users with event images
   const mockTickets = [
     {
       id: 1,
@@ -107,7 +108,7 @@ const Profile = () => {
       ticketType: "General Admission",
       quantity: 2,
       totalPrice: 50.00,
-      status: "confirmed"
+      eventImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=200&fit=crop"
     },
     {
       id: 2,
@@ -118,7 +119,19 @@ const Profile = () => {
       ticketType: "VIP Package",
       quantity: 1,
       totalPrice: 65.00,
-      status: "confirmed"
+      eventImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=200&fit=crop"
+    }
+  ];
+
+  // Mock interested events for member calendar
+  const mockInterestedEvents = [
+    {
+      id: 'interested-1',
+      title: 'Rooftop Comedy Under Stars',
+      venue: 'Sky High Comedy',
+      date: '2024-08-10',
+      time: '7:00 PM',
+      type: 'interested'
     }
   ];
 
@@ -141,39 +154,46 @@ const Profile = () => {
         ) : (
           <div className="space-y-4">
             {mockTickets.map((ticket) => (
-              <div key={ticket.id} className="p-4 border rounded-lg bg-background/50">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-semibold">{ticket.eventTitle}</h3>
-                    <p className="text-sm text-muted-foreground">{ticket.venue}</p>
-                  </div>
-                  <Badge variant={ticket.status === 'confirmed' ? 'default' : 'secondary'}>
-                    {ticket.status}
-                  </Badge>
+              <div key={ticket.id} className="border rounded-lg bg-background/50 overflow-hidden">
+                <div className="aspect-[2/1] relative">
+                  <img 
+                    src={ticket.eventImage} 
+                    alt={ticket.eventTitle}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Date</p>
-                    <p>{new Date(ticket.date).toLocaleDateString()}</p>
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-semibold">{ticket.eventTitle}</h3>
+                      <p className="text-sm text-muted-foreground">{ticket.venue}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Time</p>
-                    <p>{ticket.time}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                    <div>
+                      <p className="text-muted-foreground">Date</p>
+                      <p>{new Date(ticket.date).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Time</p>
+                      <p>{ticket.time}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Ticket Type</p>
+                      <p>{ticket.ticketType}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Quantity</p>
+                      <p>{ticket.quantity}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Ticket Type</p>
-                    <p>{ticket.ticketType}</p>
+                  <div className="flex justify-between items-center pt-3 border-t">
+                    <span className="font-semibold">Total: ${ticket.totalPrice.toFixed(2)}</span>
+                    <Button variant="outline" size="sm">
+                      View Ticket
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Quantity</p>
-                    <p>{ticket.quantity}</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                  <span className="font-semibold">Total: ${ticket.totalPrice.toFixed(2)}</span>
-                  <Button variant="outline" size="sm">
-                    View Ticket
-                  </Button>
                 </div>
               </div>
             ))}
@@ -183,8 +203,71 @@ const Profile = () => {
     </Card>
   );
 
-  // Simplified member view tabs
-  const memberTabs = ['profile', 'tickets', 'settings'];
+  const MemberCalendarSection = () => (
+    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarIcon className="w-5 h-5" />
+          My Events
+        </CardTitle>
+        <CardDescription>
+          Events you've purchased tickets for or marked as interested
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <h4 className="font-medium">Purchased Tickets</h4>
+          {mockTickets.map((ticket) => (
+            <div key={ticket.id} className="p-3 border rounded-lg bg-background/30">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-medium">{ticket.eventTitle}</h5>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{ticket.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{new Date(ticket.date).toLocaleDateString()} at {ticket.time}</span>
+                    </div>
+                  </div>
+                </div>
+                <Badge className="bg-green-600">Ticketed</Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="font-medium">Interested Events</h4>
+          {mockInterestedEvents.map((event) => (
+            <div key={event.id} className="p-3 border rounded-lg bg-background/30">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-medium">{event.title}</h5>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{event.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{new Date(event.date).toLocaleDateString()} at {event.time}</span>
+                    </div>
+                  </div>
+                </div>
+                <Badge variant="outline" className="border-orange-400 text-orange-400">Interested</Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Tab configuration based on view mode
+  const memberTabs = ['profile', 'tickets', 'calendar', 'settings'];
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'requests', 'settings'];
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
@@ -201,11 +284,13 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-3' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-4' : 'grid-cols-6'}`}>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            {!isMemberView && <TabsTrigger value="calendar">Calendar</TabsTrigger>}
-            <TabsTrigger value={isMemberView ? "tickets" : (isIndustryUser ? "invoices" : "tickets")}>
-              {isMemberView ? "Tickets" : (isIndustryUser ? "Invoices" : "Tickets")}
+            <TabsTrigger value={isMemberView ? "tickets" : "calendar"}>
+              {isMemberView ? "Tickets" : "Calendar"}
+            </TabsTrigger>
+            <TabsTrigger value={isMemberView ? "calendar" : (isIndustryUser ? "invoices" : "tickets")}>
+              {isMemberView ? "Calendar" : (isIndustryUser ? "Invoices" : "Tickets")}
             </TabsTrigger>
             {!isMemberView && <TabsTrigger value="vouches">Vouches</TabsTrigger>}
             {!isMemberView && <TabsTrigger value="requests">Requests</TabsTrigger>}
@@ -223,35 +308,32 @@ const Profile = () => {
             )}
           </TabsContent>
 
-          {!isMemberView && (
-            <TabsContent value="calendar">
-              <ProfileCalendarView />
-            </TabsContent>
-          )}
-
-          {/* Conditional tab content based on view mode and user type */}
           {isMemberView ? (
-            <TabsContent value="tickets">
-              <TicketsSection />
-            </TabsContent>
-          ) : (
-            isIndustryUser ? (
-              <TabsContent value="invoices">
-                <InvoiceManagement />
-              </TabsContent>
-            ) : (
+            <>
               <TabsContent value="tickets">
                 <TicketsSection />
               </TabsContent>
-            )
-          )}
-
-          {!isMemberView && (
+              <TabsContent value="calendar">
+                <MemberCalendarSection />
+              </TabsContent>
+            </>
+          ) : (
             <>
+              <TabsContent value="calendar">
+                <ProfileCalendarView />
+              </TabsContent>
+              {isIndustryUser ? (
+                <TabsContent value="invoices">
+                  <InvoiceManagement />
+                </TabsContent>
+              ) : (
+                <TabsContent value="tickets">
+                  <TicketsSection />
+                </TabsContent>
+              )}
               <TabsContent value="vouches">
                 <VouchSystem />
               </TabsContent>
-
               <TabsContent value="requests">
                 <ContactRequests />
               </TabsContent>
@@ -259,8 +341,14 @@ const Profile = () => {
           )}
 
           <TabsContent value="settings" className="space-y-6">
-            <SubscriptionManager />
-            <AccountSettings />
+            {isMemberView ? (
+              <MemberAccountSettings />
+            ) : (
+              <>
+                <SubscriptionManager />
+                <AccountSettings />
+              </>
+            )}
           </TabsContent>
         </Tabs>
 

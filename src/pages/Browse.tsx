@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Users, Search, Star, Navigation, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
@@ -14,9 +14,11 @@ import { MapView } from '@/components/MapView';
 import { TicketPage } from '@/components/TicketPage';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { useNavigate } from 'react-router-dom';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 const Browse = () => {
   const { user, profile, hasRole } = useAuth();
+  const { isMemberView } = useViewMode();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { events, isLoading } = useEvents();
@@ -28,6 +30,7 @@ const Browse = () => {
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any>(null);
   const [showTicketPage, setShowTicketPage] = useState(false);
   const [showEventDetailsDialog, setShowEventDetailsDialog] = useState(false);
+  const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
 
   // Check if user is comedian, promoter, or admin
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
@@ -207,6 +210,33 @@ const Browse = () => {
     setShowTicketPage(true);
   };
 
+  const handleToggleInterested = (event: any) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to mark events as interested.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newInterestedEvents = new Set(interestedEvents);
+    if (interestedEvents.has(event.id)) {
+      newInterestedEvents.delete(event.id);
+      toast({
+        title: "Removed from interested",
+        description: `"${event.title}" has been removed from your interested events.`,
+      });
+    } else {
+      newInterestedEvents.add(event.id);
+      toast({
+        title: "Added to interested!",
+        description: `"${event.title}" has been added to your calendar as an interested event.`,
+      });
+    }
+    setInterestedEvents(newInterestedEvents);
+  };
+
   const handleGetDirections = (event: any) => {
     if (event.address) {
       const encodedAddress = encodeURIComponent(event.address);
@@ -229,6 +259,7 @@ const Browse = () => {
   const ShowCard = ({ show }: { show: any }) => {
     const eventDate = new Date(show.event_date);
     const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
+    const isInterested = interestedEvents.has(show.id);
     
     return (
       <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors overflow-hidden">
@@ -241,19 +272,33 @@ const Browse = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute top-2 right-2 flex gap-2">
-              {show.is_verified_only && (
+              {!isMemberView && show.is_verified_only && (
                 <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                   <Star className="w-3 h-3 mr-1" />
                   Verified Only
                 </Badge>
               )}
-              {availableSpots <= 0 && (
+              {!isMemberView && availableSpots <= 0 && (
                 <Badge variant="destructive">Full</Badge>
               )}
-              {show.is_recurring && (
+              {!isMemberView && show.is_recurring && (
                 <Badge className="bg-blue-600">Recurring</Badge>
               )}
             </div>
+            {isMemberView && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`absolute top-2 right-2 ${
+                  isInterested 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-white hover:text-red-500'
+                }`}
+                onClick={() => handleToggleInterested(show)}
+              >
+                <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+              </Button>
+            )}
           </div>
         )}
         <CardHeader>
@@ -266,17 +311,34 @@ const Browse = () => {
             </div>
             {!show.banner_url && (
               <div className="flex flex-col gap-2">
-                {show.is_verified_only && (
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                    <Star className="w-3 h-3 mr-1" />
-                    Verified Only
-                  </Badge>
-                )}
-                {availableSpots <= 0 && (
-                  <Badge variant="destructive">Full</Badge>
-                )}
-                {show.is_recurring && (
-                  <Badge className="bg-blue-600">Recurring</Badge>
+                {isMemberView ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`${
+                      isInterested 
+                        ? 'text-red-500 hover:text-red-600' 
+                        : 'text-muted-foreground hover:text-red-500'
+                    }`}
+                    onClick={() => handleToggleInterested(show)}
+                  >
+                    <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+                  </Button>
+                ) : (
+                  <>
+                    {show.is_verified_only && (
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                        <Star className="w-3 h-3 mr-1" />
+                        Verified Only
+                      </Badge>
+                    )}
+                    {availableSpots <= 0 && (
+                      <Badge variant="destructive">Full</Badge>
+                    )}
+                    {show.is_recurring && (
+                      <Badge className="bg-blue-600">Recurring</Badge>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -292,35 +354,39 @@ const Browse = () => {
               <Clock className="w-4 h-4" />
               <span>{show.start_time || 'Time TBA'}</span>
             </div>
-            {isIndustryUser && show.is_paid && (
+            {!isMemberView && isIndustryUser && show.is_paid && (
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
                 <span>{Math.max(0, availableSpots)} spots left</span>
               </div>
             )}
-            <div className="flex items-center space-x-1">
-              <DollarSign className="w-4 h-4" />
-              <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
-            </div>
+            {!isMemberView && (
+              <div className="flex items-center space-x-1">
+                <DollarSign className="w-4 h-4" />
+                <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {show.type && (
+          {!isMemberView && (
+            <div className="flex flex-wrap gap-2">
+              {show.type && (
+                <Badge variant="outline" className="text-foreground border-border">
+                  {show.type}
+                </Badge>
+              )}
               <Badge variant="outline" className="text-foreground border-border">
-                {show.type}
+                {show.age_restriction || '18+'}
               </Badge>
-            )}
-            <Badge variant="outline" className="text-foreground border-border">
-              {show.age_restriction || '18+'}
-            </Badge>
-          </div>
+            </div>
+          )}
 
           {show.description && (
             <p className="text-muted-foreground text-sm line-clamp-2">{show.description}</p>
           )}
 
           <div className="flex gap-2 flex-wrap">
-            {isIndustryUser && (
+            {isIndustryUser && !isMemberView && (
               <Button 
                 className="flex-1 bg-primary hover:bg-primary/90"
                 onClick={() => handleApply(show)}
@@ -330,7 +396,7 @@ const Browse = () => {
               </Button>
             )}
             
-            {isConsumerUser && show.is_paid && (
+            {(isConsumerUser || isMemberView) && (
               <Button 
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
                 onClick={() => handleBuyTickets(show)}
@@ -347,7 +413,7 @@ const Browse = () => {
               Details
             </Button>
             
-            {show.is_recurring && (
+            {!isMemberView && show.is_recurring && (
               <Button 
                 variant="outline" 
                 className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
@@ -403,7 +469,9 @@ const Browse = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
-            <p className="text-muted-foreground">Find gigs near you</p>
+            <p className="text-muted-foreground">
+              {isMemberView ? 'Find shows to attend and buy tickets' : 'Find gigs near you'}
+            </p>
           </div>
 
           {/* Search and Filters */}
@@ -430,18 +498,20 @@ const Browse = () => {
                   <SelectItem value="Perth">Perth, WA</SelectItem>
                 </SelectContent>
               </Select>
-              <Select onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
-                  <SelectValue placeholder="Show Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="open mic">Open Mic</SelectItem>
-                  <SelectItem value="semi-pro">Semi-Pro</SelectItem>
-                  <SelectItem value="pro">Professional</SelectItem>
-                  <SelectItem value="mixed">Mixed</SelectItem>
-                </SelectContent>
-              </Select>
+              {!isMemberView && (
+                <Select onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+                    <SelectValue placeholder="Show Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="open mic">Open Mic</SelectItem>
+                    <SelectItem value="semi-pro">Semi-Pro</SelectItem>
+                    <SelectItem value="pro">Professional</SelectItem>
+                    <SelectItem value="mixed">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
