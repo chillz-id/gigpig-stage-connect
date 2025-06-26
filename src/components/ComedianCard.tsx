@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Star, Mail, Calendar, Users } from 'lucide-react';
+import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Facebook, Youtube, Heart } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface Comedian {
@@ -17,16 +17,29 @@ interface Comedian {
   email: string | null;
   years_experience?: number;
   show_count?: number;
-  specialties?: string[];
+  social_media?: {
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+  };
 }
 
 interface ComedianCardProps {
   comedian: Comedian;
   isContacting: boolean;
   onContact: (comedianId: string, comedianEmail: string) => void;
+  onVouch?: (comedianId: string) => void;
+  isVouched?: boolean;
 }
 
-const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onContact }) => {
+const ComedianCard: React.FC<ComedianCardProps> = ({ 
+  comedian, 
+  isContacting, 
+  onContact, 
+  onVouch,
+  isVouched = false 
+}) => {
   const { isMemberView } = useViewMode();
 
   return (
@@ -42,12 +55,6 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <CardTitle className="text-lg">{comedian.name || 'Unknown'}</CardTitle>
-              {comedian.is_verified && (
-                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                  <Star className="w-3 h-3 mr-1" />
-                  Pro
-                </Badge>
-              )}
             </div>
             {comedian.location && (
               <div className="flex items-center justify-center text-sm text-muted-foreground mb-2">
@@ -65,13 +72,36 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           </p>
         )}
         
-        {comedian.specialties && comedian.specialties.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {comedian.specialties.slice(0, 3).map((specialty, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {specialty}
-              </Badge>
-            ))}
+        {comedian.social_media && Object.keys(comedian.social_media).length > 0 && (
+          <div className="flex justify-center gap-2">
+            {comedian.social_media.instagram && (
+              <a href={comedian.social_media.instagram} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="p-2">
+                  <Instagram className="w-4 h-4" />
+                </Button>
+              </a>
+            )}
+            {comedian.social_media.twitter && (
+              <a href={comedian.social_media.twitter} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="p-2">
+                  <Twitter className="w-4 h-4" />
+                </Button>
+              </a>
+            )}
+            {comedian.social_media.facebook && (
+              <a href={comedian.social_media.facebook} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="p-2">
+                  <Facebook className="w-4 h-4" />
+                </Button>
+              </a>
+            )}
+            {comedian.social_media.youtube && (
+              <a href={comedian.social_media.youtube} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="p-2">
+                  <Youtube className="w-4 h-4" />
+                </Button>
+              </a>
+            )}
           </div>
         )}
 
@@ -90,33 +120,48 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           )}
         </div>
 
-        {/* Only show contact button for industry users, not members */}
-        {!isMemberView && (
-          <Button
-            size="sm"
-            className="w-full"
-            disabled={isContacting}
-            onClick={() => onContact(comedian.id, comedian.email || '')}
-          >
-            {isContacting ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Mail className="w-4 h-4 mr-2" />
-            )}
-            Contact
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {/* Vouch button for members */}
+          {isMemberView && onVouch && (
+            <Button
+              size="sm"
+              variant={isVouched ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => onVouch(comedian.id)}
+            >
+              <Heart className={`w-4 h-4 mr-2 ${isVouched ? 'fill-current' : ''}`} />
+              {isVouched ? 'Vouched' : 'Vouch'}
+            </Button>
+          )}
 
-        {/* For members, show a different action */}
-        {isMemberView && (
-          <Button
-            size="sm"
-            className="w-full"
-            variant="outline"
-          >
-            Follow Comedian
-          </Button>
-        )}
+          {/* Contact button for industry users */}
+          {!isMemberView && (
+            <Button
+              size="sm"
+              className="flex-1"
+              disabled={isContacting}
+              onClick={() => onContact(comedian.id, comedian.email || '')}
+            >
+              {isContacting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Contact
+            </Button>
+          )}
+
+          {/* Follow button for members when not showing vouch */}
+          {isMemberView && !onVouch && (
+            <Button
+              size="sm"
+              className="flex-1"
+              variant="outline"
+            >
+              Follow Comedian
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
