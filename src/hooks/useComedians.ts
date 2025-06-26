@@ -17,16 +17,6 @@ interface Comedian {
   specialties?: string[];
 }
 
-interface ProfileData {
-  id: string;
-  name: string | null;
-  bio: string | null;
-  location: string | null;
-  avatar_url: string | null;
-  is_verified: boolean | null;
-  email: string | null;
-}
-
 export const useComedians = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -37,10 +27,10 @@ export const useComedians = () => {
   const fetchComedians = async (): Promise<void> => {
     try {
       // Fetch comedians who have Comedian Pro badge
-      const { data, error } = await supabase
+      const { data: profilesData, error } = await supabase
         .from('profiles')
         .select('id, name, bio, location, avatar_url, is_verified, email')
-        .eq('has_comedian_pro_badge', true) as { data: ProfileData[] | null; error: any };
+        .eq('has_comedian_pro_badge', true);
 
       if (error) throw error;
       
@@ -108,7 +98,7 @@ export const useComedians = () => {
         }
       ];
       
-      const dbComedians: Comedian[] = (data || []).map((profile): Comedian => ({
+      const dbComedians: Comedian[] = (profilesData || []).map((profile): Comedian => ({
         id: profile.id,
         name: profile.name,
         bio: profile.bio,
