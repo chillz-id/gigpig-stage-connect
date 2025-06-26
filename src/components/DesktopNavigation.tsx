@@ -9,7 +9,7 @@ import { useViewMode } from '@/contexts/ViewModeContext';
 
 const DesktopNavigation: React.FC = () => {
   const { user } = useUser();
-  const { isMemberView, isComedianView, isPromoterView } = useViewMode();
+  const { isMemberView, isComedianView } = useViewMode();
 
   // Helper function to check if user has a specific role
   const hasRole = (role: string) => {
@@ -84,7 +84,7 @@ const DesktopNavigation: React.FC = () => {
                     </Link>
                   </NavigationMenuLink>
                   {/* Only show Create Event for actual promoters/admins, not comedians */}
-                  {(hasRole('promoter') || hasRole('admin')) && (
+                  {(hasRole('promoter') || hasRole('admin')) && !isComedianView && (
                     <NavigationMenuLink asChild>
                       <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                         <div className="text-sm font-semibold leading-none">Create Event</div>
@@ -112,8 +112,8 @@ const DesktopNavigation: React.FC = () => {
                       </p>
                     </Link>
                   </NavigationMenuLink>
-                  {/* Only show promoter features for actual promoters/admins */}
-                  {(hasRole('promoter') || hasRole('admin')) && (
+                  {/* Only show promoter features for actual promoters/admins, not comedian view */}
+                  {(hasRole('promoter') || hasRole('admin')) && !isComedianView && (
                     <>
                       <NavigationMenuLink asChild>
                         <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
@@ -145,8 +145,8 @@ const DesktopNavigation: React.FC = () => {
               </NavigationMenuContent>
             </NavigationMenuItem>
 
-            {/* Only show Settings for actual promoters/admins */}
-            {(hasRole('promoter') || hasRole('admin')) && (
+            {/* Hide Settings for comedian view */}
+            {(hasRole('promoter') || hasRole('admin')) && !isComedianView && (
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                   Settings
@@ -169,7 +169,7 @@ const DesktopNavigation: React.FC = () => {
         </NavigationMenu>
       )}
       
-      {/* Quick Action Buttons - hide for Member view */}
+      {/* Quick Action Buttons - hide for Member view and hide Create Event for comedian view */}
       {user && !isMemberView && (
         <div className="flex items-center space-x-3">
           <Link to="/notifications">
@@ -184,8 +184,8 @@ const DesktopNavigation: React.FC = () => {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
             </Button>
           </Link>
-          {/* Only show Create Event for actual promoters/admins */}
-          {(hasRole('promoter') || hasRole('admin')) && (
+          {/* Hide Create Event for comedian view */}
+          {(hasRole('promoter') || hasRole('admin')) && !isComedianView && (
             <Link to="/create-event">
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                 <Plus className="w-4 h-4 mr-2" />

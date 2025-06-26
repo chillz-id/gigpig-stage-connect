@@ -20,7 +20,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
 }) => {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
-  const { isMemberView } = useViewMode();
+  const { isMemberView, isComedianView } = useViewMode();
 
   const toggleDarkMode = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -60,7 +60,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                 </div>
                 <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                  {isMemberView ? 'MEMBER' : 'USER'}
+                  {isMemberView ? 'MEMBER' : isComedianView ? 'COMEDIAN' : 'USER'}
                 </Badge>
               </div>
             </div>
@@ -78,8 +78,8 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
             // Only show Dashboard for non-member views
             ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-            // Only show promoter-specific items for actual promoters/admins (not comedians)
-            ...((hasRole('promoter') || hasRole('admin')) ? [
+            // Only show promoter-specific items for actual promoters/admins AND not in comedian view
+            ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
               { to: '/create-event', label: 'Create Event' },
               { to: '/applications', label: 'Applications' },
               { to: '/invoices', label: 'Invoices' }

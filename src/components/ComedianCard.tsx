@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Star, Mail, Calendar, Users } from 'lucide-react';
+import { Loader2, MapPin, Mail, Calendar, Users } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
+import VouchButton from './VouchButton';
 
 interface Comedian {
   id: string;
@@ -42,12 +43,6 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <CardTitle className="text-lg">{comedian.name || 'Unknown'}</CardTitle>
-              {comedian.is_verified && (
-                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                  <Star className="w-3 h-3 mr-1" />
-                  Pro
-                </Badge>
-              )}
             </div>
             {comedian.location && (
               <div className="flex items-center justify-center text-sm text-muted-foreground mb-2">
@@ -88,6 +83,16 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
               {comedian.show_count} shows
             </div>
           )}
+        </div>
+
+        {/* Vouch System */}
+        <div className="flex justify-center">
+          <VouchButton 
+            comedianId={comedian.id}
+            comedianName={comedian.name || 'Unknown'}
+            vouchCount={Math.floor(Math.random() * 5) + 1} // Mock vouch count
+            hasVouched={false} // Mock vouch status
+          />
         </div>
 
         {/* Only show contact button for industry users, not members */}
