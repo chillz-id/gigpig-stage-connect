@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Menu, X, Star, Sun, Moon } from 'lucide-react';
+import { Menu, X, Star, Sun, Moon, Calendar } from 'lucide-react';
 import { PigIcon } from '@/components/ui/pig-icon';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
@@ -75,12 +75,16 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
           {[
             // Always show Browse Shows
             { to: '/browse', label: 'Browse Shows' },
+            // Always show Comedians
+            { to: '/comedians', label: 'Comedians' },
+            // Always show Calendar
+            { to: '/profile?tab=calendar', label: 'Calendar', icon: Calendar },
             // Show Book Comedian for member view
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
             // Only show Dashboard for non-member views
             ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-            // Only show promoter-specific items for promoter view
-            ...((isPromoterView || hasRole('promoter')) ? [
+            // Only show promoter-specific items for actual promoters/admins (not comedians)
+            ...((hasRole('promoter') || hasRole('admin')) ? [
               { to: '/create-event', label: 'Create Event' },
               { to: '/applications', label: 'Applications' },
               { to: '/invoices', label: 'Invoices' }
@@ -95,9 +99,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             <Link
               key={link.to}
               to={link.to}
-              className="block text-foreground hover:text-primary transition-colors duration-200 py-2 px-1 rounded-lg hover:bg-accent"
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-200 py-2 px-1 rounded-lg hover:bg-accent"
               onClick={() => setIsMobileMenuOpen(false)}
             >
+              {link.icon && <link.icon className="w-4 h-4" />}
               {link.label}
             </Link>
           ))}

@@ -20,9 +20,9 @@ const Navigation: React.FC = () => {
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <span className="text-primary-foreground font-bold text-lg">GP</span>
+                <span className="text-primary-foreground font-bold text-lg">SS</span>
               </div>
-              <h1 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">GigPig</h1>
+              <h1 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">Stand Up Sydney</h1>
             </Link>
             
             <CustomerViewToggle onViewChange={setViewMode} />

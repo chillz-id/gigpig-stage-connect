@@ -1,30 +1,32 @@
 
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { UserProvider } from "@/contexts/UserContext";
+import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import Navigation from "@/components/Navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Navigation } from "@/components/Navigation";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import Browse from "./pages/Browse";
-import CreateEvent from "./pages/CreateEvent";
-import EventDetails from "./pages/EventDetails";
-import Applications from "./pages/Applications";
-import Invoices from "./pages/Invoices";
+import Comedians from "./pages/Comedians";
+import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import CreateEvent from "./pages/CreateEvent";
+import Applications from "./pages/Applications";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
-import PromoterSettings from "./pages/PromoterSettings";
+import Invoices from "./pages/Invoices";
+import Auth from "./pages/Auth";
+import EventDetails from "./pages/EventDetails";
+import EventSeries from "./pages/EventSeries";
 import Marketplace from "./pages/Marketplace";
 import Organizer from "./pages/Organizer";
-import EventSeries from "./pages/EventSeries";
 import Pricing from "./pages/Pricing";
+import PromoterSettings from "./pages/PromoterSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,22 +34,24 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <TooltipProvider>
           <Toaster />
+          <Sonner />
           <BrowserRouter>
             <AuthProvider>
-              <ViewModeProvider>
-                <UserProvider>
-                  <div className="min-h-screen bg-background">
+              <UserProvider>
+                <ViewModeProvider>
+                  <div className="min-h-screen bg-background font-sans antialiased">
                     <Navigation />
                     <Routes>
                       <Route path="/" element={<Index />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/comedians" element={<Comedians />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/pricing" element={<Pricing />} />
-                      <Route path="/browse" element={<Browse />} />
-                      <Route path="/events/:id" element={<EventDetails />} />
-                      <Route path="/marketplace" element={<Marketplace />} />
+                      <Route path="/event/:id" element={<EventDetails />} />
+                      <Route path="/series/:id" element={<EventSeries />} />
                       <Route
                         path="/dashboard"
                         element={
@@ -57,9 +61,17 @@ function App() {
                         }
                       />
                       <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/create-event"
                         element={
-                          <ProtectedRoute roles={['promoter']}>
+                          <ProtectedRoute>
                             <CreateEvent />
                           </ProtectedRoute>
                         }
@@ -67,24 +79,8 @@ function App() {
                       <Route
                         path="/applications"
                         element={
-                          <ProtectedRoute roles={['promoter']}>
-                            <Applications />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/invoices"
-                        element={
-                          <ProtectedRoute roles={['promoter']}>
-                            <Invoices />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/profile"
-                        element={
                           <ProtectedRoute>
-                            <Profile />
+                            <Applications />
                           </ProtectedRoute>
                         }
                       />
@@ -105,10 +101,18 @@ function App() {
                         }
                       />
                       <Route
-                        path="/promoter-settings"
+                        path="/invoices"
                         element={
-                          <ProtectedRoute roles={['promoter']}>
-                            <PromoterSettings />
+                          <ProtectedRoute>
+                            <Invoices />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/marketplace"
+                        element={
+                          <ProtectedRoute>
+                            <Marketplace />
                           </ProtectedRoute>
                         }
                       />
@@ -121,22 +125,22 @@ function App() {
                         }
                       />
                       <Route
-                        path="/events/:id/series"
+                        path="/promoter-settings"
                         element={
                           <ProtectedRoute>
-                            <EventSeries />
+                            <PromoterSettings />
                           </ProtectedRoute>
                         }
                       />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
-                </UserProvider>
-              </ViewModeProvider>
+                </ViewModeProvider>
+              </UserProvider>
             </AuthProvider>
           </BrowserRouter>
-        </ThemeProvider>
-      </TooltipProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

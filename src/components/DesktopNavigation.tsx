@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { User, Bell, MessageCircle, Plus } from 'lucide-react';
+import { User, Bell, MessageCircle, Plus, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -26,6 +26,19 @@ const DesktopNavigation: React.FC = () => {
             className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
           >
             Shows
+          </Link>
+          <Link 
+            to="/comedians" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+          >
+            Comedians
+          </Link>
+          <Link 
+            to="/profile?tab=calendar" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Calendar
           </Link>
           <Link to={user ? "/profile?tab=book-comedian" : "/auth"}>
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
@@ -54,7 +67,24 @@ const DesktopNavigation: React.FC = () => {
                       </p>
                     </Link>
                   </NavigationMenuLink>
-                  {(isPromoterView || hasRole('promoter')) && (
+                  <NavigationMenuLink asChild>
+                    <Link to="/comedians" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                      <div className="text-sm font-semibold leading-none">Comedians</div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Browse Stand Up Sydney comedians
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link to="/profile?tab=calendar" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                      <div className="text-sm font-semibold leading-none">Calendar</div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        View calendar of upcoming shows
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                  {/* Only show Create Event for actual promoters/admins, not comedians */}
+                  {(hasRole('promoter') || hasRole('admin')) && (
                     <NavigationMenuLink asChild>
                       <Link to="/create-event" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                         <div className="text-sm font-semibold leading-none">Create Event</div>
@@ -82,7 +112,8 @@ const DesktopNavigation: React.FC = () => {
                       </p>
                     </Link>
                   </NavigationMenuLink>
-                  {(isPromoterView || hasRole('promoter')) && (
+                  {/* Only show promoter features for actual promoters/admins */}
+                  {(hasRole('promoter') || hasRole('admin')) && (
                     <>
                       <NavigationMenuLink asChild>
                         <Link to="/applications" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
@@ -114,8 +145,8 @@ const DesktopNavigation: React.FC = () => {
               </NavigationMenuContent>
             </NavigationMenuItem>
 
-            {/* Only show Settings for Promoter view */}
-            {(isPromoterView || hasRole('promoter')) && (
+            {/* Only show Settings for actual promoters/admins */}
+            {(hasRole('promoter') || hasRole('admin')) && (
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium">
                   Settings
@@ -153,7 +184,8 @@ const DesktopNavigation: React.FC = () => {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
             </Button>
           </Link>
-          {(isPromoterView || hasRole('promoter')) && (
+          {/* Only show Create Event for actual promoters/admins */}
+          {(hasRole('promoter') || hasRole('admin')) && (
             <Link to="/create-event">
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                 <Plus className="w-4 h-4 mr-2" />

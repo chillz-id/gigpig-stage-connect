@@ -7,7 +7,6 @@ import { Calendar, Clock, DollarSign, Users, Star, Heart, Navigation } from 'luc
 import { useAuth } from '@/contexts/AuthContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 interface ShowCardProps {
   show: any;
@@ -32,7 +31,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 }) => {
   const { user, hasRole } = useAuth();
   const { isMemberView } = useViewMode();
-  const navigate = useNavigate();
 
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
@@ -47,6 +45,26 @@ export const ShowCard: React.FC<ShowCardProps> = ({
       onApply(show);
     }
   };
+
+  // Function to get recurring type badge text
+  const getRecurringBadgeText = (show: any) => {
+    if (!show.is_recurring) return null;
+    
+    // Check if show has a recurrence_pattern or default to "Multiple"
+    if (show.recurrence_pattern) {
+      switch (show.recurrence_pattern.toLowerCase()) {
+        case 'weekly':
+          return 'Weekly';
+        case 'monthly':
+          return 'Monthly';
+        default:
+          return 'Multiple';
+      }
+    }
+    return 'Multiple';
+  };
+
+  const recurringBadgeText = getRecurringBadgeText(show);
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors overflow-hidden">
@@ -68,8 +86,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({
             {!isMemberView && availableSpots <= 0 && (
               <Badge variant="destructive">Full</Badge>
             )}
-            {!isMemberView && show.is_recurring && (
-              <Badge className="bg-blue-600">Recurring</Badge>
+            {recurringBadgeText && (
+              <Badge className="bg-blue-600">{recurringBadgeText}</Badge>
             )}
           </div>
           {isMemberView && (
@@ -122,8 +140,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({
                   {availableSpots <= 0 && (
                     <Badge variant="destructive">Full</Badge>
                   )}
-                  {show.is_recurring && (
-                    <Badge className="bg-blue-600">Recurring</Badge>
+                  {recurringBadgeText && (
+                    <Badge className="bg-blue-600">{recurringBadgeText}</Badge>
                   )}
                 </>
               )}
@@ -207,17 +225,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
           >
             Details
           </Button>
-          
-          {/* Only show View Series for consumers/members, not for comedians/promoters */}
-          {isMemberView && show.is_recurring && (
-            <Button 
-              variant="outline" 
-              className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
-              onClick={() => navigate(`/series/${show.series_id}`)}
-            >
-              View Series
-            </Button>
-          )}
           
           {show.address && (
             <Button

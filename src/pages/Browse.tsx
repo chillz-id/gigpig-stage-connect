@@ -9,7 +9,6 @@ import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
 import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
 import { TicketPage } from '@/components/TicketPage';
-import { CardCalendar } from '@/components/CardCalendar';
 import { MonthFilter } from '@/components/MonthFilter';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { useViewMode } from '@/contexts/ViewModeContext';
@@ -21,7 +20,6 @@ const Browse = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(null);
   const [showRecurringApplicationSelector, setShowRecurringApplicationSelector] = useState(false);
   const [selectedRecurringEvent, setSelectedRecurringEvent] = useState<any>(null);
 
@@ -68,14 +66,6 @@ const Browse = () => {
     return matchesMonth && matchesSearch;
   });
 
-  // Filter events by selected calendar date if any
-  const calendarFilteredEvents = calendarSelectedDate 
-    ? filteredEvents.filter(event => {
-        const eventDate = new Date(event.event_date);
-        return eventDate.toDateString() === calendarSelectedDate.toDateString();
-      })
-    : filteredEvents;
-
   const handleRecurringApply = (event: any) => {
     setSelectedRecurringEvent(event);
     setShowRecurringApplicationSelector(true);
@@ -91,7 +81,6 @@ const Browse = () => {
   const handleMonthChange = (month: number, year: number) => {
     setSelectedMonth(month);
     setSelectedYear(year);
-    setCalendarSelectedDate(null); // Reset calendar selection when month changes
   };
 
   return (
@@ -125,55 +114,38 @@ const Browse = () => {
             onMonthChange={handleMonthChange}
           />
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Calendar Card - Takes first position */}
-            <div className="lg:col-span-1">
-              <CardCalendar
-                selectedMonth={selectedMonth}
-                selectedYear={selectedYear}
-                events={filteredEvents}
-                onDateSelect={setCalendarSelectedDate}
-                selectedDate={calendarSelectedDate}
-              />
-            </div>
-
-            {/* Event Cards Grid */}
-            <div className="lg:col-span-3">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="text-xl text-muted-foreground">Loading events...</div>
-                </div>
-              ) : calendarFilteredEvents.length === 0 ? (
-                <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
-                  <CardContent className="p-8 text-center">
-                    <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-                    <p className="text-muted-foreground">
-                      {calendarSelectedDate 
-                        ? `No events on ${calendarSelectedDate.toLocaleDateString()}`
-                        : 'Try selecting a different month or adjusting your search'
-                      }
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {calendarFilteredEvents.map((show) => (
-                    <ShowCard
-                      key={show.id}
-                      show={show}
-                      interestedEvents={interestedEvents}
-                      onToggleInterested={handleToggleInterested}
-                      onApply={handleApply}
-                      onBuyTickets={handleBuyTickets}
-                      onShowDetails={handleShowDetails}
-                      onGetDirections={handleGetDirections}
-                      onRecurringApply={handleRecurringApply}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* Event Cards */}
+          <div className="mt-6">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="text-xl text-muted-foreground">Loading events...</div>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+                <CardContent className="p-8 text-center">
+                  <h3 className="text-xl font-semibold mb-2">No shows found</h3>
+                  <p className="text-muted-foreground">
+                    Try selecting a different month or adjusting your search
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.map((show) => (
+                  <ShowCard
+                    key={show.id}
+                    show={show}
+                    interestedEvents={interestedEvents}
+                    onToggleInterested={handleToggleInterested}
+                    onApply={handleApply}
+                    onBuyTickets={handleBuyTickets}
+                    onShowDetails={handleShowDetails}
+                    onGetDirections={handleGetDirections}
+                    onRecurringApply={handleRecurringApply}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
