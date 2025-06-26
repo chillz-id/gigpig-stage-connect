@@ -57,6 +57,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="font-semibold">{user.name}</span>
+                  {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                 </div>
                 <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
                   {isMemberView ? 'MEMBER' : 'USER'}
@@ -71,8 +72,8 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             { to: '/browse', label: 'Browse Shows' },
             // Always show Comedians
             { to: '/comedians', label: 'Comedians' },
-            // Calendar link fixed to point to standalone page
-            { to: '/calendar', label: 'Calendar', icon: Calendar },
+            // Always show Calendar - point to profile calendar tab
+            { to: '/profile?tab=calendar', label: 'Calendar', icon: Calendar },
             // Show Book Comedian for member view
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
             // Only show Dashboard for non-member views

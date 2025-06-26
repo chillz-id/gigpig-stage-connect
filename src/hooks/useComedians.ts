@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,12 +13,7 @@ interface Comedian {
   email: string | null;
   years_experience?: number;
   show_count?: number;
-  social_media?: {
-    instagram?: string;
-    twitter?: string;
-    facebook?: string;
-    youtube?: string;
-  };
+  specialties?: string[];
 }
 
 export const useComedians = () => {
@@ -31,7 +25,14 @@ export const useComedians = () => {
 
   const fetchComedians = async (): Promise<void> => {
     try {
-      // Add mock data with social media
+      // Fetch all profiles for now (remove problematic query)
+      const { data: profilesData, error } = await supabase
+        .from('profiles')
+        .select('id, name, bio, location, avatar_url, is_verified, email');
+
+      if (error) throw error;
+      
+      // Add mock data for demonstration
       const mockComedians: Comedian[] = [
         {
           id: '1',
@@ -43,11 +44,7 @@ export const useComedians = () => {
           email: 'sarah@example.com',
           years_experience: 5,
           show_count: 120,
-          social_media: {
-            instagram: 'https://instagram.com/sarahmitchellcomedy',
-            twitter: 'https://twitter.com/sarahmitchell',
-            youtube: 'https://youtube.com/sarahmitchell'
-          }
+          specialties: ['Observational', 'Storytelling', 'Crowd Work']
         },
         {
           id: '2',
@@ -59,11 +56,7 @@ export const useComedians = () => {
           email: 'jake@example.com',
           years_experience: 3,
           show_count: 85,
-          social_media: {
-            instagram: 'https://instagram.com/jakethompsoncomedy',
-            facebook: 'https://facebook.com/jakethompson',
-            twitter: 'https://twitter.com/jakethompson'
-          }
+          specialties: ['Improvisation', 'Crowd Work', 'Physical Comedy']
         },
         {
           id: '3',
@@ -75,11 +68,7 @@ export const useComedians = () => {
           email: 'emma@example.com',
           years_experience: 2,
           show_count: 45,
-          social_media: {
-            instagram: 'https://instagram.com/emmachencomedy',
-            youtube: 'https://youtube.com/emmachen',
-            twitter: 'https://twitter.com/emmachen'
-          }
+          specialties: ['Cultural Comedy', 'Social Commentary', 'Storytelling']
         },
         {
           id: '4',
@@ -91,11 +80,7 @@ export const useComedians = () => {
           email: 'marcus@example.com',
           years_experience: 8,
           show_count: 200,
-          social_media: {
-            facebook: 'https://facebook.com/marcuswilliamscomedy',
-            twitter: 'https://twitter.com/marcuswilliams',
-            instagram: 'https://instagram.com/marcuswilliams'
-          }
+          specialties: ['Wordplay', 'Observational', 'Clean Comedy']
         },
         {
           id: '5',
@@ -107,14 +92,21 @@ export const useComedians = () => {
           email: 'lisa@example.com',
           years_experience: 4,
           show_count: 95,
-          social_media: {
-            instagram: 'https://instagram.com/lisarodriguezcomedy',
-            youtube: 'https://youtube.com/lisarodriguez'
-          }
+          specialties: ['Relatable Humor', 'Storytelling', 'Observational']
         }
       ];
       
-      setComedians(mockComedians);
+      const dbComedians: Comedian[] = (profilesData || []).map((profile) => ({
+        id: profile.id,
+        name: profile.name,
+        bio: profile.bio,
+        location: profile.location,
+        avatar_url: profile.avatar_url,
+        is_verified: profile.is_verified || false,
+        email: profile.email
+      }));
+      
+      setComedians([...dbComedians, ...mockComedians]);
     } catch (error: any) {
       toast({
         title: "Error",
