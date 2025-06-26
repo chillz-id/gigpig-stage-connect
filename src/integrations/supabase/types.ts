@@ -47,6 +47,48 @@ export type Database = {
           },
         ]
       }
+      booking_requests: {
+        Row: {
+          budget: number | null
+          created_at: string
+          event_date: string
+          event_time: string
+          id: string
+          notes: string | null
+          requested_comedian_id: string | null
+          requester_id: string
+          status: string | null
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          event_date: string
+          event_time: string
+          id?: string
+          notes?: string | null
+          requested_comedian_id?: string | null
+          requester_id: string
+          status?: string | null
+          updated_at?: string
+          venue: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          event_date?: string
+          event_time?: string
+          id?: string
+          notes?: string | null
+          requested_comedian_id?: string | null
+          requester_id?: string
+          status?: string | null
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           calendar_sync_status: string | null
@@ -852,6 +894,39 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_interests: {
+        Row: {
+          created_at: string
+          event_date: string | null
+          event_id: string
+          event_time: string | null
+          event_title: string
+          id: string
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string | null
+          event_id: string
+          event_time?: string | null
+          event_title: string
+          id?: string
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_date?: string | null
+          event_id?: string
+          event_time?: string | null
+          event_title?: string
+          id?: string
+          user_id?: string
+          venue?: string | null
         }
         Relationships: []
       }

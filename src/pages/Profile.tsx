@@ -19,6 +19,7 @@ import { FinancialInformation } from '@/components/FinancialInformation';
 import { InvoiceManagement } from '@/components/InvoiceManagement';
 import { AccountSettings } from '@/components/AccountSettings';
 import { MemberAccountSettings } from '@/components/MemberAccountSettings';
+import { BookComedianForm } from '@/components/BookComedianForm';
 import { Ticket, Calendar as CalendarIcon, MapPin, Clock, Heart } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +27,8 @@ import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 import { format, isSameDay, parseISO } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
@@ -53,6 +56,23 @@ const Profile = () => {
       setActiveTab(tabParam);
     }
   }, [location]);
+
+  // Fetch user interests from database
+  const { data: userInterests = [] } = useQuery({
+    queryKey: ['user-interests', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('user_interests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id && isMemberView,
+  });
 
   if (!user) {
     return (
@@ -100,7 +120,7 @@ const Profile = () => {
     });
   };
 
-  // Mock tickets data for member users with event images
+  // Mock tickets data for member users with larger event images
   const mockTickets = [
     {
       id: 1,
@@ -111,7 +131,7 @@ const Profile = () => {
       ticketType: "General Admission",
       quantity: 2,
       totalPrice: 50.00,
-      eventImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=200&h=120&fit=crop"
+      eventImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=300&h=200&fit=crop"
     },
     {
       id: 2,
@@ -122,135 +142,12 @@ const Profile = () => {
       ticketType: "VIP Package",
       quantity: 1,
       totalPrice: 65.00,
-      eventImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=120&fit=crop"
+      eventImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=200&fit=crop"
     }
   ];
-
-  // Mock interested events for member calendar
-  const mockInterestedEvents = [
-    {
-      id: 'interested-1',
-      title: 'Rooftop Comedy Under Stars',
-      venue: 'Sky High Comedy',
-      date: '2024-08-10',
-      time: '7:00 PM',
-      type: 'interested'
-    }
-  ];
-
-  // Combine both ticket and interested events for calendar
-  const allEvents = [
-    ...mockTickets.map(ticket => ({
-      ...ticket,
-      title: ticket.eventTitle,
-      type: 'purchased'
-    })),
-    ...mockInterestedEvents
-  ];
-
-  // Filter events for the selected date
-  const selectedDateEvents = allEvents.filter(event => 
-    isSameDay(parseISO(event.date), selectedDate)
-  );
-
-  const datesWithEvents = allEvents.map(event => parseISO(event.date));
-
-  const MemberTicketsSection = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Calendar Section */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            My Events Calendar
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            modifiers={{
-              hasEvents: datesWithEvents
-            }}
-            modifiersStyles={{
-              hasEvents: { 
-                backgroundColor: 'hsl(var(--primary))', 
-                color: 'hsl(var(--primary-foreground))',
-                borderRadius: '6px'
-              }
-            }}
-            className="rounded-md border bg-background/50"
-          />
-          <div className="mt-4 text-sm text-muted-foreground">
-            Dates with your events are highlighted
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Events for Selected Date */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold">
-          Events on {format(selectedDate, 'MMMM d, yyyy')}
-        </h3>
-        
-        {selectedDateEvents.length === 0 ? (
-          <Card className="bg-card/50 backdrop-blur-sm border-border">
-            <CardContent className="p-8 text-center">
-              <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
-              <p className="text-muted-foreground">
-                You don't have any events scheduled for this day
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          selectedDateEvents.map((event) => (
-            <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h5 className="font-medium">{event.title}</h5>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{event.venue}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{event.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {event.type === 'purchased' ? (
-                      <Badge className="bg-green-600">Purchased</Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-pink-400 text-pink-400 flex items-center gap-1">
-                        <Heart className="w-3 h-3 fill-pink-400" />
-                        Interested
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                {event.type === 'purchased' && (
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      View Tickets
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
-  );
 
   const TicketsListSection = () => (
-    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground mt-6">
+    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Ticket className="w-5 h-5" />
@@ -273,7 +170,7 @@ const Profile = () => {
                   <img 
                     src={ticket.eventImage} 
                     alt={ticket.eventTitle}
-                    className="w-24 h-16 object-cover rounded flex-shrink-0"
+                    className="w-32 h-24 object-cover rounded flex-shrink-0"
                   />
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">
@@ -316,8 +213,77 @@ const Profile = () => {
     </Card>
   );
 
+  const InterestedEventsSection = () => (
+    <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Heart className="w-5 h-5 text-pink-500" />
+          Events I'm Interested In
+        </CardTitle>
+        <CardDescription>
+          Events you've marked as interested
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {userInterests.length === 0 ? (
+          <div className="text-center py-8">
+            <Heart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h4 className="text-lg font-semibold mb-2">No interested events yet</h4>
+            <p className="text-muted-foreground">
+              Browse events and mark ones you're interested in to see them here
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {userInterests.map((interest) => (
+              <div key={interest.id} className="border rounded-lg bg-background/50 p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h5 className="font-medium">{interest.event_title}</h5>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                      {interest.venue && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          <span>{interest.venue}</span>
+                        </div>
+                      )}
+                      {interest.event_date && (
+                        <div className="flex items-center gap-1">
+                          <CalendarIcon className="w-3 h-3" />
+                          <span>{new Date(interest.event_date).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      {interest.event_time && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{interest.event_time}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="border-pink-400 text-pink-400 flex items-center gap-1">
+                    <Heart className="w-3 h-3 fill-pink-400" />
+                    Interested
+                  </Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1">
+                    View Event
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-muted-foreground">
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   // Tab configuration based on view mode
-  const memberTabs = ['profile', 'tickets', 'settings'];
+  const memberTabs = ['profile', 'tickets', 'book-comedian', 'settings'];
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'requests', 'settings'];
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
@@ -334,11 +300,12 @@ const Profile = () => {
 
         {/* Profile Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-3' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-4' : 'grid-cols-6'}`}>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value={isMemberView ? "tickets" : "calendar"}>
               {isMemberView ? "Tickets" : "Calendar"}
             </TabsTrigger>
+            {isMemberView && <TabsTrigger value="book-comedian">Book Comedian</TabsTrigger>}
             {!isMemberView && (
               <TabsTrigger value={isIndustryUser ? "invoices" : "tickets"}>
                 {isIndustryUser ? "Invoices" : "Tickets"}
@@ -361,10 +328,15 @@ const Profile = () => {
           </TabsContent>
 
           {isMemberView ? (
-            <TabsContent value="tickets" className="space-y-6">
-              <MemberTicketsSection />
-              <TicketsListSection />
-            </TabsContent>
+            <>
+              <TabsContent value="tickets" className="space-y-6">
+                <TicketsListSection />
+                <InterestedEventsSection />
+              </TabsContent>
+              <TabsContent value="book-comedian">
+                <BookComedianForm />
+              </TabsContent>
+            </>
           ) : (
             <>
               <TabsContent value="calendar">
