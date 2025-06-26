@@ -12,12 +12,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Comedian {
   id: string;
-  name: string;
-  bio: string;
-  location: string;
-  avatar_url: string;
+  name: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
   is_verified: boolean;
-  email: string;
+  email: string | null;
   years_experience?: number;
   show_count?: number;
   specialties?: string[];
@@ -43,7 +43,7 @@ const Comedians = () => {
       if (error) throw error;
       
       // Add mock data for demonstration
-      const mockComedians = [
+      const mockComedians: Comedian[] = [
         {
           id: '1',
           name: 'Sarah Mitchell',
@@ -106,7 +106,17 @@ const Comedians = () => {
         }
       ];
       
-      setComedians([...data || [], ...mockComedians]);
+      const dbComedians: Comedian[] = (data || []).map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        bio: profile.bio,
+        location: profile.location,
+        avatar_url: profile.avatar_url,
+        is_verified: profile.is_verified,
+        email: profile.email
+      }));
+      
+      setComedians([...dbComedians, ...mockComedians]);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -203,14 +213,14 @@ const Comedians = () => {
                 <CardHeader className="pb-4">
                   <div className="flex flex-col items-center space-y-3">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src={comedian.avatar_url} />
+                      <AvatarImage src={comedian.avatar_url || undefined} />
                       <AvatarFallback className="text-lg">
                         {comedian.name?.charAt(0) || 'C'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-2 mb-1">
-                        <CardTitle className="text-lg">{comedian.name}</CardTitle>
+                        <CardTitle className="text-lg">{comedian.name || 'Unknown'}</CardTitle>
                         {comedian.is_verified && (
                           <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
                             <Star className="w-3 h-3 mr-1" />
@@ -263,7 +273,7 @@ const Comedians = () => {
                     size="sm"
                     className="w-full"
                     disabled={contacting === comedian.id}
-                    onClick={() => handleContact(comedian.id, comedian.email)}
+                    onClick={() => handleContact(comedian.id, comedian.email || '')}
                   >
                     {contacting === comedian.id ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
