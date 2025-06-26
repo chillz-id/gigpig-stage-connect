@@ -5,16 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DateFilter, AmountFilter } from '@/types/invoice';
 
 interface InvoiceFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
-  dateFilter: string;
-  setDateFilter: (date: string) => void;
-  amountFilter: string;
-  setAmountFilter: (amount: string) => void;
+  dateFilter: DateFilter;
+  setDateFilter: (date: DateFilter) => void;
+  amountFilter: AmountFilter;
+  setAmountFilter: (amount: AmountFilter) => void;
   onClearFilters: () => void;
 }
 
