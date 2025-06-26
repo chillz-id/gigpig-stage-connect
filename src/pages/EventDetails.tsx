@@ -13,7 +13,7 @@ import {
   Users, 
   Star, 
   ArrowLeft,
-  Microphone,
+  Mic,
   AlertCircle,
   CheckCircle,
   Image as ImageIcon
@@ -227,11 +227,11 @@ const EventDetails = () => {
                 </CardContent>
               </Card>
 
-              {/* Confirmed Line-up - Changed icon from Music to Microphone */}
+              {/* Confirmed Line-up - Changed icon from Music to Mic */}
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Microphone className="w-5 h-5" />
+                    <Mic className="w-5 h-5" />
                     Confirmed Line-up ({filledSpots.length})
                   </CardTitle>
                 </CardHeader>
@@ -265,7 +265,7 @@ const EventDetails = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Microphone className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <Mic className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                       <p className="text-gray-300">No confirmed comedians yet</p>
                       {isUpcoming && <p className="text-sm text-gray-400">Be the first to apply!</p>}
                     </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -17,7 +16,7 @@ import {
   DollarSign, 
   Users, 
   Star, 
-  Microphone,
+  Mic,
   AlertCircle,
   CheckCircle,
   Navigation
@@ -178,10 +177,10 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
 
               <Separator />
 
-              {/* Confirmed Line-up - Changed icon from Music to Microphone */}
+              {/* Confirmed Line-up - Changed icon from Music to Mic */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Microphone className="w-5 h-5" />
+                  <Mic className="w-5 h-5" />
                   Confirmed Line-up ({filledSpots.length})
                 </h3>
                 {filledSpots.length > 0 ? (
@@ -214,7 +213,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Microphone className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                    <Mic className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                     <p className="text-muted-foreground">No confirmed comedians yet</p>
                     {isUpcoming && <p className="text-sm text-muted-foreground">Be the first to apply!</p>}
                   </div>
