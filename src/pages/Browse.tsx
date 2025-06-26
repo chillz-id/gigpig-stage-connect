@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { TicketPage } from '@/components/TicketPage';
 import { useNavigate } from 'react-router-dom';
 
 const Browse = () => {
-  const { user, hasRole } = useAuth();
+  const { user, profile, hasRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { events, isLoading } = useEvents();
@@ -175,7 +176,7 @@ const Browse = () => {
       return;
     }
 
-    if (event.is_verified_only && !user.is_verified) {
+    if (event.is_verified_only && !profile?.is_verified) {
       toast({
         title: "Verification required",
         description: "This show requires verified comedians only. Upgrade to Pro to get verified!",
