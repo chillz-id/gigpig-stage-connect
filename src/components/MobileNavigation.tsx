@@ -72,7 +72,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             { to: '/browse', label: 'Browse Shows' },
             // Always show Comedians
             { to: '/comedians', label: 'Comedians' },
-            // Always show Calendar
+            // Always show Calendar - point to profile calendar tab
             { to: '/profile?tab=calendar', label: 'Calendar', icon: Calendar },
             // Show Book Comedian for member view
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),

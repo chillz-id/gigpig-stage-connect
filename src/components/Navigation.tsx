@@ -24,13 +24,12 @@ const Navigation: React.FC = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo with Customer View Toggle */}
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center group">
               <img 
                 src="/placeholder.svg" 
                 alt="Stand Up Sydney Logo" 
                 className="h-10 w-auto object-contain group-hover:opacity-80 transition-all duration-300"
               />
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent group-hover:opacity-80 transition-all duration-300 hidden sm:block">Stand Up Sydney</h1>
             </Link>
             
             <CustomerViewToggle onViewChange={setViewMode} />
