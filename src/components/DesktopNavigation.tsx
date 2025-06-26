@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
@@ -49,8 +48,38 @@ const DesktopNavigation: React.FC = () => {
         </div>
       )}
 
-      {/* Non-Member View Navigation */}
-      {!isMemberView && (
+      {/* Comedian View Navigation */}
+      {isComedianView && (
+        <div className="flex items-center space-x-6">
+          <Link 
+            to="/browse" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+          >
+            Shows
+          </Link>
+          <Link 
+            to="/invoices" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+          >
+            Invoices
+          </Link>
+          <Link 
+            to="/comedians" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+          >
+            Comedians
+          </Link>
+          <Link 
+            to="/dashboard" 
+            className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
+          >
+            Dashboard
+          </Link>
+        </div>
+      )}
+
+      {/* Promoter View Navigation (unchanged) */}
+      {!isMemberView && !isComedianView && (
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -169,9 +198,18 @@ const DesktopNavigation: React.FC = () => {
         </NavigationMenu>
       )}
       
-      {/* Quick Action Buttons - hide for Member view and hide Create Event for comedian view */}
+      {/* Quick Action Buttons - show different icons for comedian view */}
       {user && !isMemberView && (
         <div className="flex items-center space-x-3">
+          {/* Calendar icon with blinking dot for comedian view */}
+          {isComedianView && (
+            <Link to="/profile?tab=calendar">
+              <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
+                <Calendar className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+              </Button>
+            </Link>
+          )}
           <Link to="/notifications">
             <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
               <Bell className="w-5 h-5" />

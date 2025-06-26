@@ -70,14 +70,18 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
           {[
             // Always show Browse Shows
             { to: '/browse', label: 'Browse Shows' },
+            // Show Invoices for comedian view
+            ...(isComedianView ? [{ to: '/invoices', label: 'Invoices' }] : []),
             // Always show Comedians
             { to: '/comedians', label: 'Comedians' },
+            // Show Dashboard for comedian view
+            ...(isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
             // Always show Calendar - point to profile calendar tab
             { to: '/profile?tab=calendar', label: 'Calendar', icon: Calendar },
             // Show Book Comedian for member view
             ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
-            // Only show Dashboard for non-member views
-            ...(!isMemberView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
+            // Only show Dashboard for non-member views and non-comedian views
+            ...(!isMemberView && !isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
             // Only show promoter-specific items for actual promoters/admins AND not in comedian view
             ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
               { to: '/create-event', label: 'Create Event' },
