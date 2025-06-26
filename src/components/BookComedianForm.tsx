@@ -229,15 +229,33 @@ export const BookComedianForm: React.FC = () => {
             />
           </div>
 
-          {/* Information Box */}
+          {/* Updated Information Box */}
           <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h4>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Your request will be sent to available comedians</li>
-              <li>• Comedians can view and respond to your request</li>
-              <li>• You'll receive notifications when comedians respond</li>
-              <li>• You can review comedian profiles and make your selection</li>
-            </ul>
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3">How it works:</h4>
+            
+            {requestType === 'specific' ? (
+              <div className="space-y-2">
+                <h5 className="font-medium text-blue-800 dark:text-blue-200">Specific Comedian Request:</h5>
+                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-4">
+                  <li>• Your request will be sent directly to the specified comedian</li>
+                  <li>• The comedian will review your event details and budget</li>
+                  <li>• They can accept, decline, or negotiate the terms</li>
+                  <li>• You'll receive a notification when they respond</li>
+                  <li>• If accepted, you can finalize booking details directly with them</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h5 className="font-medium text-blue-800 dark:text-blue-200">General Request:</h5>
+                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-4">
+                  <li>• Your request will be visible to all available comedians</li>
+                  <li>• Multiple comedians can submit proposals for your event</li>
+                  <li>• You'll receive notifications when comedians respond</li>
+                  <li>• Review comedian profiles, rates, and availability</li>
+                  <li>• Choose your preferred comedian and finalize the booking</li>
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

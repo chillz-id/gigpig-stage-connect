@@ -16,7 +16,9 @@ const Auth = () => {
   const [signInPassword, setSignInPassword] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
-  const [signUpName, setSignUpName] = useState('');
+  const [signUpFirstName, setSignUpFirstName] = useState('');
+  const [signUpLastName, setSignUpLastName] = useState('');
+  const [signUpMobile, setSignUpMobile] = useState('');
   const [signUpStageName, setSignUpStageName] = useState('');
   const [isComedian, setIsComedian] = useState(false);
   const [isPromoter, setIsPromoter] = useState(false);
@@ -49,6 +51,12 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!signUpFirstName.trim() || !signUpLastName.trim() || !signUpEmail.trim() || !signUpMobile.trim()) {
+      return; // Form validation will handle the error display
+    }
+    
     setIsLoading(true);
     
     // Determine the primary role - default to comedian if both or neither are selected
@@ -58,7 +66,10 @@ const Auth = () => {
     }
     
     const userData = {
-      name: signUpName,
+      name: `${signUpFirstName} ${signUpLastName}`,
+      first_name: signUpFirstName,
+      last_name: signUpLastName,
+      mobile: signUpMobile,
       stage_name: signUpStageName,
       role: primaryRole,
       roles: [
@@ -68,6 +79,11 @@ const Auth = () => {
     };
     
     const { error } = await signUp(signUpEmail, signUpPassword, userData);
+    
+    if (!error) {
+      // Redirect to profile page after successful signup
+      navigate('/profile', { replace: true });
+    }
     
     setIsLoading(false);
   };
@@ -156,7 +172,7 @@ const Auth = () => {
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">Email *</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -167,7 +183,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">Password *</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -177,14 +193,38 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="signup-first-name">First Name *</Label>
+                      <Input
+                        id="signup-first-name"
+                        type="text"
+                        placeholder="John"
+                        value={signUpFirstName}
+                        onChange={(e) => setSignUpFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="signup-last-name">Last Name *</Label>
+                      <Input
+                        id="signup-last-name"
+                        type="text"
+                        placeholder="Doe"
+                        value={signUpLastName}
+                        onChange={(e) => setSignUpLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-mobile">Mobile *</Label>
                     <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Your full name"
-                      value={signUpName}
-                      onChange={(e) => setSignUpName(e.target.value)}
+                      id="signup-mobile"
+                      type="tel"
+                      placeholder="+61 400 000 000"
+                      value={signUpMobile}
+                      onChange={(e) => setSignUpMobile(e.target.value)}
                       required
                     />
                   </div>

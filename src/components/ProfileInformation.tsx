@@ -29,23 +29,41 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="first-name">First Name</Label>
-            <Input id="first-name" defaultValue={user.name?.split(' ')[0] || ''} />
+            <Label htmlFor="first-name">First Name *</Label>
+            <Input 
+              id="first-name" 
+              defaultValue={user.name?.split(' ')[0] || ''} 
+              required
+            />
           </div>
           <div>
-            <Label htmlFor="last-name">Last Name</Label>
-            <Input id="last-name" defaultValue={user.name?.split(' ').slice(1).join(' ') || ''} />
+            <Label htmlFor="last-name">Last Name *</Label>
+            <Input 
+              id="last-name" 
+              defaultValue={user.name?.split(' ').slice(1).join(' ') || ''} 
+              required
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue={user.email} />
+            <Label htmlFor="email">Email *</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              defaultValue={user.email} 
+              required
+            />
           </div>
           <div>
-            <Label htmlFor="mobile">Mobile</Label>
-            <Input id="mobile" type="tel" placeholder="+61 400 000 000" />
+            <Label htmlFor="mobile">Mobile *</Label>
+            <Input 
+              id="mobile" 
+              type="tel" 
+              placeholder="+61 400 000 000" 
+              required
+            />
           </div>
         </div>
 
