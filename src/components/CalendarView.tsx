@@ -196,7 +196,33 @@ export const CalendarView: React.FC = () => {
               const availableSpots = (event.spots || 5) - (event.applied_spots || 0);
               
               return (
-                <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border">
+                <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border overflow-hidden">
+                  {/* Event Image */}
+                  {event.banner_url && (
+                    <div className="aspect-[2/1] relative overflow-hidden">
+                      <img 
+                        src={event.banner_url} 
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      {isMemberView && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`absolute top-2 right-2 ${
+                            isInterested 
+                              ? 'text-red-500 hover:text-red-600' 
+                              : 'text-white hover:text-red-500'
+                          }`}
+                          onClick={() => handleToggleInterested(event)}
+                        >
+                          <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -204,34 +230,36 @@ export const CalendarView: React.FC = () => {
                         <p className="text-muted-foreground text-sm">{event.venue}</p>
                         <p className="text-muted-foreground text-sm">{event.city}, {event.state}</p>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {isMemberView ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`${
-                              isInterested 
-                                ? 'text-red-500 hover:text-red-600' 
-                                : 'text-muted-foreground hover:text-red-500'
-                            }`}
-                            onClick={() => handleToggleInterested(event)}
-                          >
-                            <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-                          </Button>
-                        ) : (
-                          <>
-                            {event.is_verified_only && (
-                              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                                <Star className="w-3 h-3 mr-1" />
-                                Comedian Pro
-                              </Badge>
-                            )}
-                            {availableSpots <= 0 && (
-                              <Badge variant="destructive">Full</Badge>
-                            )}
-                          </>
-                        )}
-                      </div>
+                      {!event.banner_url && (
+                        <div className="flex flex-col gap-2">
+                          {isMemberView ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`${
+                                isInterested 
+                                  ? 'text-red-500 hover:text-red-600' 
+                                  : 'text-muted-foreground hover:text-red-500'
+                              }`}
+                              onClick={() => handleToggleInterested(event)}
+                            >
+                              <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+                            </Button>
+                          ) : (
+                            <>
+                              {event.is_verified_only && (
+                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                                  <Star className="w-3 h-3 mr-1" />
+                                  Comedian Pro
+                                </Badge>
+                              )}
+                              {availableSpots <= 0 && (
+                                <Badge variant="destructive">Full</Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">

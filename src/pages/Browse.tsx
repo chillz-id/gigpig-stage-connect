@@ -1,15 +1,16 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
-import { CalendarView } from '@/components/CalendarView';
-import { MapView } from '@/components/MapView';
-import { TicketPage } from '@/components/TicketPage';
+import { ShowCard } from '@/components/ShowCard';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
-import { ShowCard } from '@/components/ShowCard';
-import { SearchAndFilters } from '@/components/SearchAndFilters';
+import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
+import { TicketPage } from '@/components/TicketPage';
+import { CardCalendar } from '@/components/CardCalendar';
+import { MonthFilter } from '@/components/MonthFilter';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import { mockEvents } from '@/data/mockEvents';
@@ -17,10 +18,12 @@ import { mockEvents } from '@/data/mockEvents';
 const Browse = () => {
   const { isMemberView } = useViewMode();
   const { events, isLoading } = useEvents();
-  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map'>('list');
   const [searchTerm, setSearchTerm] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(null);
+  const [showRecurringApplicationSelector, setShowRecurringApplicationSelector] = useState(false);
+  const [selectedRecurringEvent, setSelectedRecurringEvent] = useState<any>(null);
 
   const {
     selectedEventForTickets,
@@ -42,7 +45,7 @@ const Browse = () => {
     setShowRecurringDateSelector,
   } = useBrowseLogic();
 
-  // Combine real events with mock events - this ensures consistency across all views
+  // Combine real events with mock events
   const allEvents = [...events, ...mockEvents];
 
   // Filter to show only upcoming events (from today onwards)
@@ -54,52 +57,42 @@ const Browse = () => {
     return eventDate >= today;
   });
 
-  // Always use upcoming events for all views
-  const eventsToShow = upcomingEvents;
-
-  const filteredShows = eventsToShow.filter(event => {
+  // Filter events by selected month/year and search term
+  const filteredEvents = upcomingEvents.filter(event => {
+    const eventDate = new Date(event.event_date);
+    const matchesMonth = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          `${event.city}, ${event.state}`.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !locationFilter || locationFilter === 'all' || 
-                           `${event.city}, ${event.state}`.includes(locationFilter);
-    const matchesType = !typeFilter || typeFilter === 'all' || 
-                       (event.type && event.type.toLowerCase().includes(typeFilter.toLowerCase()));
     
-    return matchesSearch && matchesLocation && matchesType;
+    return matchesMonth && matchesSearch;
   });
 
-  const ListView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {isLoading ? (
-        <div className="col-span-full text-center py-8">
-          <div className="text-xl text-muted-foreground">Loading events...</div>
-        </div>
-      ) : filteredShows.length === 0 ? (
-        <div className="col-span-full">
-          <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
-            <CardContent className="p-8 text-center">
-              <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria</p>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        filteredShows.map((show) => (
-          <ShowCard
-            key={show.id}
-            show={show}
-            interestedEvents={interestedEvents}
-            onToggleInterested={handleToggleInterested}
-            onApply={handleApply}
-            onBuyTickets={handleBuyTickets}
-            onShowDetails={handleShowDetails}
-            onGetDirections={handleGetDirections}
-          />
-        ))
-      )}
-    </div>
-  );
+  // Filter events by selected calendar date if any
+  const calendarFilteredEvents = calendarSelectedDate 
+    ? filteredEvents.filter(event => {
+        const eventDate = new Date(event.event_date);
+        return eventDate.toDateString() === calendarSelectedDate.toDateString();
+      })
+    : filteredEvents;
+
+  const handleRecurringApply = (event: any) => {
+    setSelectedRecurringEvent(event);
+    setShowRecurringApplicationSelector(true);
+  };
+
+  const handleRecurringApplicationSubmit = (event: any, selectedDates: Date[]) => {
+    // Handle the application for multiple dates
+    console.log('Applying for event:', event.title, 'on dates:', selectedDates);
+    // This would normally make API calls for each selected date
+    handleApply(event); // For now, just use the regular apply logic
+  };
+
+  const handleMonthChange = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    setCalendarSelectedDate(null); // Reset calendar selection when month changes
+  };
 
   return (
     <>
@@ -112,40 +105,76 @@ const Browse = () => {
             </p>
           </div>
 
-          <SearchAndFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            locationFilter={locationFilter}
-            setLocationFilter={setLocationFilter}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search for events"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+
+          {/* Month Filter */}
+          <MonthFilter
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
           />
 
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-md bg-card/50 backdrop-blur-sm">
-              <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                {isMemberView ? 'Events' : 'Card View'}
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Calendar
-              </TabsTrigger>
-              <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Map
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="list" className="mt-6">
-              <ListView />
-            </TabsContent>
-            
-            <TabsContent value="calendar" className="mt-6">
-              <CalendarView />
-            </TabsContent>
-            
-            <TabsContent value="map" className="mt-6">
-              <MapView />
-            </TabsContent>
-          </Tabs>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Calendar Card - Takes first position */}
+            <div className="lg:col-span-1">
+              <CardCalendar
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                events={filteredEvents}
+                onDateSelect={setCalendarSelectedDate}
+                selectedDate={calendarSelectedDate}
+              />
+            </div>
+
+            {/* Event Cards Grid */}
+            <div className="lg:col-span-3">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="text-xl text-muted-foreground">Loading events...</div>
+                </div>
+              ) : calendarFilteredEvents.length === 0 ? (
+                <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+                  <CardContent className="p-8 text-center">
+                    <h3 className="text-xl font-semibold mb-2">No shows found</h3>
+                    <p className="text-muted-foreground">
+                      {calendarSelectedDate 
+                        ? `No events on ${calendarSelectedDate.toLocaleDateString()}`
+                        : 'Try selecting a different month or adjusting your search'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {calendarFilteredEvents.map((show) => (
+                    <ShowCard
+                      key={show.id}
+                      show={show}
+                      interestedEvents={interestedEvents}
+                      onToggleInterested={handleToggleInterested}
+                      onApply={handleApply}
+                      onBuyTickets={handleBuyTickets}
+                      onShowDetails={handleShowDetails}
+                      onGetDirections={handleGetDirections}
+                      onRecurringApply={handleRecurringApply}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -165,6 +194,13 @@ const Browse = () => {
         isOpen={showRecurringDateSelector}
         onClose={() => setShowRecurringDateSelector(false)}
         onDateSelected={handleDateSelected}
+      />
+
+      <RecurringApplicationDateSelector
+        event={selectedRecurringEvent}
+        isOpen={showRecurringApplicationSelector}
+        onClose={() => setShowRecurringApplicationSelector(false)}
+        onApply={handleRecurringApplicationSubmit}
       />
 
       <TicketPage

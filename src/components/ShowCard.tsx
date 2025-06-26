@@ -17,6 +17,7 @@ interface ShowCardProps {
   onBuyTickets: (event: any) => void;
   onShowDetails: (event: any) => void;
   onGetDirections: (event: any) => void;
+  onRecurringApply?: (event: any) => void;
 }
 
 export const ShowCard: React.FC<ShowCardProps> = ({
@@ -27,6 +28,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   onBuyTickets,
   onShowDetails,
   onGetDirections,
+  onRecurringApply,
 }) => {
   const { user, hasRole } = useAuth();
   const { isMemberView } = useViewMode();
@@ -37,6 +39,14 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   const eventDate = new Date(show.event_date);
   const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
   const isInterested = interestedEvents.has(show.id);
+
+  const handleApplyClick = () => {
+    if (show.is_recurring && onRecurringApply) {
+      onRecurringApply(show);
+    } else {
+      onApply(show);
+    }
+  };
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors overflow-hidden">
@@ -174,7 +184,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
           {isIndustryUser && !isMemberView && (
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90"
-              onClick={() => onApply(show)}
+              onClick={handleApplyClick}
               disabled={availableSpots <= 0}
             >
               {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
@@ -198,7 +208,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({
             Details
           </Button>
           
-          {!isMemberView && show.is_recurring && (
+          {/* Only show View Series for consumers/members, not for comedians/promoters */}
+          {isMemberView && show.is_recurring && (
             <Button 
               variant="outline" 
               className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
