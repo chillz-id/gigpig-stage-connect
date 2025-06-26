@@ -60,7 +60,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                 </div>
                 <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-                  {isMemberView ? (user.membership || 'member').toUpperCase() : 'USER'}
+                  {isMemberView ? 'MEMBER' : 'USER'}
                 </Badge>
               </div>
             </div>

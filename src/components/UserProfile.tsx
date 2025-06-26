@@ -12,8 +12,7 @@ const UserProfile: React.FC = () => {
   const { isMemberView } = useViewMode();
 
   if (user) {
-    const membership = user.membership || (isMemberView ? 'member' : 'basic');
-    const badgeText = isMemberView ? membership.toUpperCase() : 'USER';
+    const badgeText = isMemberView ? 'MEMBER' : 'USER';
     
     return (
       <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-xl p-3 transition-all duration-200 group">

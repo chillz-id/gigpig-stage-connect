@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,20 +13,27 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+}
+
 export const NotificationDropdown: React.FC = () => {
   const { user } = useUser();
   
   // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, title, message, created_at')
         .eq('user_id', user.id)
-        .eq('read', false)
+        .is('read_at', null)
         .order('created_at', { ascending: false })
         .limit(5);
       

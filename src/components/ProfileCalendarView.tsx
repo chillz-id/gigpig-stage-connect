@@ -12,6 +12,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  venue: string;
+  event_date: string;
+  status: string;
+  calendar_sync_status?: string;
+}
+
 export const ProfileCalendarView: React.FC = () => {
   const { user } = useUser();
   const { isMemberView } = useViewMode();
@@ -19,28 +28,28 @@ export const ProfileCalendarView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Fetch calendar events based on user type
-  const { data: calendarEvents = [], isLoading } = useQuery({
+  const { data: calendarEvents = [], isLoading } = useQuery<CalendarEvent[]>({
     queryKey: ['calendar-events', user?.id, isMemberView],
     queryFn: async () => {
       if (!user?.id) return [];
 
       if (isMemberView) {
-        // For members, fetch events they're interested in or attending
+        // For members, fetch events they're interested in
         const { data, error } = await supabase
           .from('user_interests')
-          .select('*, event:events(*)')
+          .select('id, event_title, venue, event_date')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return data?.map(interest => ({
+        return (data || []).map(interest => ({
           id: interest.id,
-          title: interest.event_title || interest.event?.title,
-          venue: interest.venue || interest.event?.venue,
-          event_date: interest.event_date || interest.event?.event_date,
+          title: interest.event_title || 'Event',
+          venue: interest.venue || 'Venue TBA',
+          event_date: interest.event_date || new Date().toISOString(),
           status: 'interested',
           calendar_sync_status: 'manual'
-        })) || [];
+        }));
       } else {
         // For industry users, fetch their calendar events
         const { data, error } = await supabase
@@ -50,7 +59,14 @@ export const ProfileCalendarView: React.FC = () => {
           .order('event_date', { ascending: true });
 
         if (error) throw error;
-        return data || [];
+        return (data || []).map(event => ({
+          id: event.id,
+          title: event.title,
+          venue: event.venue,
+          event_date: event.event_date,
+          status: event.status,
+          calendar_sync_status: event.calendar_sync_status
+        }));
       }
     },
     enabled: !!user?.id
@@ -201,7 +217,7 @@ export const ProfileCalendarView: React.FC = () => {
                     <Clock className="w-4 h-4" />
                     <span>{event.event_date ? format(parseISO(event.event_date), 'h:mm a') : 'Time TBA'}</span>
                   </div>
-                  {!isMemberView && (
+                  {!isMemberView && event.calendar_sync_status && (
                     <div className="flex items-center space-x-1">
                       <Users className="w-4 h-4" />
                       <span>Sync: {event.calendar_sync_status}</span>
