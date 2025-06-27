@@ -5,13 +5,13 @@ import { Star } from 'lucide-react';
 
 interface ShowCardBadgesProps {
   show: any;
-  isMemberView: boolean;
+  isMemberView?: boolean;
   isShowFull: boolean;
 }
 
 export const ShowCardBadges: React.FC<ShowCardBadgesProps> = ({
   show,
-  isMemberView,
+  isMemberView = false,
   isShowFull,
 }) => {
   // Function to get recurring type badge text
