@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
@@ -7,6 +6,7 @@ import EventsTable from './EventsTable';
 import EventDetails from './EventDetails';
 import { useEventManagement } from '@/hooks/useEventManagement';
 import { useEventSubscriptions } from '@/hooks/useEventSubscriptions';
+import { useTicketSalesSubscription } from '@/hooks/useTicketSalesSubscription';
 
 const EventManagementContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +33,9 @@ const EventManagementContent = () => {
     fetchComedianBookings,
     selectedEvent
   );
+
+  // Add ticket sales real-time subscription
+  useTicketSalesSubscription();
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import EventManagement from '@/components/admin/EventManagement';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import MetaPixelSettings from '@/components/admin/MetaPixelSettings';
 import SystemSettings from '@/components/admin/SystemSettings';
+import TicketSalesManagement from '@/components/admin/TicketSalesManagement';
 
 const AdminDashboard = () => {
   const { user, hasRole } = useAuth();
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 backdrop-blur-sm min-w-fit">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-white/10 backdrop-blur-sm min-w-fit">
               <TabsTrigger 
                 value="overview" 
                 className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
@@ -81,6 +81,12 @@ const AdminDashboard = () => {
                 className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
               >
                 Events
+              </TabsTrigger>
+              <TabsTrigger 
+                value="sales" 
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+              >
+                Ticket Sales
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
@@ -107,6 +113,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="events" className="space-y-4 md:space-y-6">
             <EventManagement />
+          </TabsContent>
+
+          <TabsContent value="sales" className="space-y-4 md:space-y-6">
+            <TicketSalesManagement />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4 md:space-y-6">
