@@ -59,6 +59,18 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
 
   const { month, day } = formatDate(show.event_date);
 
+  // Determine action text based on user type and show status
+  const getActionText = () => {
+    if (isIndustryUser) {
+      // Check if user has already applied (this would need to be passed as a prop or determined from data)
+      // For now, using a simple check - you may need to adjust based on your data structure
+      const hasApplied = false; // This should be determined from your application data
+      return hasApplied ? 'Applied' : 'Apply';
+    } else {
+      return isShowFull ? 'Join Waitlist' : 'Get Tickets';
+    }
+  };
+
   return (
     <div 
       className="group relative w-full aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
@@ -74,6 +86,9 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
       
       {/* Overlay Gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      
+      {/* Bottom Text Overlay Rectangle */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-black/60" />
       
       {/* Content */}
       <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
@@ -103,12 +118,19 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
           )}
         </div>
 
-        {/* Bottom Section - Event Info - Much smaller and lower */}
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold leading-tight">{show.title}</h3>
-          <div className="flex items-center gap-1 text-xs opacity-80">
-            <MapPin className="w-3 h-3" />
-            <span>{show.city}, {show.state}</span>
+        {/* Bottom Section - Event Info and Action Text */}
+        <div className="flex justify-between items-end">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold leading-tight">{show.title}</h3>
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <MapPin className="w-3 h-3" />
+              <span>{show.city}, {show.state}</span>
+            </div>
+          </div>
+          
+          {/* Action Text - Bottom Right */}
+          <div className="text-xs font-medium opacity-90">
+            {getActionText()}
           </div>
         </div>
       </div>
