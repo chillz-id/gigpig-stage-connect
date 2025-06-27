@@ -98,7 +98,8 @@ const CustomizationSettings = () => {
       }
 
       if (data) {
-        setSettings(data.settings_data as CustomizationData);
+        // Properly type cast the Json data to CustomizationData
+        setSettings(data.settings_data as unknown as CustomizationData);
       } else {
         // Load default settings
         setSettings({
@@ -195,7 +196,7 @@ const CustomizationSettings = () => {
         .insert({
           name: themeName,
           description: themeDescription,
-          settings_data: settings,
+          settings_data: settings as any, // Cast to any for Json compatibility
           is_active: false,
           created_by: user.id
         });
@@ -231,7 +232,8 @@ const CustomizationSettings = () => {
         .single();
 
       if (error) throw error;
-      setSettings(data.settings_data as CustomizationData);
+      // Properly type cast the Json data to CustomizationData
+      setSettings(data.settings_data as unknown as CustomizationData);
       
       toast({
         title: "Success",
