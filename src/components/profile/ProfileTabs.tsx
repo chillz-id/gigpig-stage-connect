@@ -43,8 +43,14 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
+  // Handle tab change with logging for debugging
+  const handleTabChange = (newTab: string) => {
+    console.log('Tab change requested:', newTab);
+    setActiveTab(newTab);
+  };
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-5' : 'grid-cols-5'}`}>
         <TabsTrigger value="profile" className="flex items-center gap-2">
           <User className="w-4 h-4" />
