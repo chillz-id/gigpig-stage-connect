@@ -1,22 +1,20 @@
 
 import { useEventSelection } from './useEventSelection';
-import { useTicketSalesData } from './useTicketSalesData';
+import { useTicketSalesManagement } from './useTicketSalesManagement';
 import { useComedianBookingsData } from './useComedianBookingsData';
 
 export const useEventDetailsManager = () => {
   const { selectedEvent, handleViewEventDetails, handleCloseEventDetails } = useEventSelection();
-  const { ticketSales, setTicketSales, fetchTicketSales } = useTicketSalesData();
+  const { ticketSales, addTicketSale, updateTicketSale } = useTicketSalesManagement(selectedEvent || undefined);
   const { comedianBookings, setComedianBookings, fetchComedianBookings } = useComedianBookingsData();
 
   const handleViewEventDetailsWithData = (eventId: string) => {
     handleViewEventDetails(eventId);
-    fetchTicketSales(eventId);
     fetchComedianBookings(eventId);
   };
 
   const handleCloseEventDetailsWithCleanup = () => {
     handleCloseEventDetails();
-    setTicketSales([]);
     setComedianBookings([]);
   };
 
@@ -24,7 +22,6 @@ export const useEventDetailsManager = () => {
     selectedEvent,
     ticketSales,
     comedianBookings,
-    fetchTicketSales,
     fetchComedianBookings,
     handleViewEventDetails: handleViewEventDetailsWithData,
     handleCloseEventDetails: handleCloseEventDetailsWithCleanup,
