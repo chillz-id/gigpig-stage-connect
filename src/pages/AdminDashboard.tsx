@@ -33,8 +33,8 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 overflow-hidden">
-      <div className="container mx-auto px-4 py-4 md:py-8 h-screen overflow-y-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Crown className="w-6 md:w-8 h-6 md:h-8 text-yellow-400 flex-shrink-0" />
@@ -63,43 +63,43 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-white/10 backdrop-blur-sm min-w-fit">
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="inline-flex bg-white/10 backdrop-blur-sm min-w-full">
               <TabsTrigger 
                 value="overview" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Overview
+                <span className="truncate">Overview</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="users" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Users
+                <span className="truncate">Users</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="events" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Events
+                <span className="truncate">Events</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="sales" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Ticket Sales
+                <span className="truncate">Ticket Sales</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Analytics
+                <span className="truncate">Analytics</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 min-h-[44px] text-xs md:text-sm whitespace-nowrap"
+                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
               >
-                Settings
+                <span className="truncate">Settings</span>
               </TabsTrigger>
             </TabsList>
           </div>
