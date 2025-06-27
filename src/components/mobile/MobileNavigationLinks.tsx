@@ -2,18 +2,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavigationLinksProps {
-  user: any;
-  hasRole: (role: string) => boolean;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
 const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
-  user,
-  hasRole,
   setIsMobileMenuOpen,
 }) => {
+  const { user, hasRole } = useAuth();
+
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
   };

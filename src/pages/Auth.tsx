@@ -19,9 +19,7 @@ const Auth = () => {
   const [signUpFirstName, setSignUpFirstName] = useState('');
   const [signUpLastName, setSignUpLastName] = useState('');
   const [signUpMobile, setSignUpMobile] = useState('');
-  const [signUpStageName, setSignUpStageName] = useState('');
-  const [isComedian, setIsComedian] = useState(false);
-  const [isPromoter, setIsPromoter] = useState(false);
+  const [isComedian, setIsComedian] = useState(true); // Default to comedian
   const [isLoading, setIsLoading] = useState(false);
   
   const { signIn, signUp, user } = useAuth();
@@ -59,23 +57,13 @@ const Auth = () => {
     
     setIsLoading(true);
     
-    // Determine the primary role - default to comedian if both or neither are selected
-    let primaryRole = 'comedian';
-    if (isPromoter && !isComedian) {
-      primaryRole = 'promoter';
-    }
-    
     const userData = {
       name: `${signUpFirstName} ${signUpLastName}`,
       first_name: signUpFirstName,
       last_name: signUpLastName,
       mobile: signUpMobile,
-      stage_name: signUpStageName,
-      role: primaryRole,
-      roles: [
-        ...(isComedian ? ['comedian'] : []),
-        ...(isPromoter ? ['promoter'] : [])
-      ].filter(Boolean)
+      role: 'comedian', // Always comedian by default
+      roles: ['comedian'] // Only comedian role available
     };
     
     const { error } = await signUp(signUpEmail, signUpPassword, userData);
@@ -86,17 +74,6 @@ const Auth = () => {
     }
     
     setIsLoading(false);
-  };
-
-  const getRoleDescription = () => {
-    if (isComedian && isPromoter) {
-      return "You'll be able to both apply for comedy shows and create/manage events";
-    } else if (isComedian) {
-      return "You'll be able to apply for comedy shows and gigs";
-    } else if (isPromoter) {
-      return "You'll be able to create events and book comedians";
-    }
-    return "Select at least one role to continue";
   };
 
   return (
@@ -164,9 +141,9 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-xl">Create your account</CardTitle>
+                <CardTitle className="text-xl">Join the comedy community</CardTitle>
                 <CardDescription>
-                  Join the comedy community today
+                  Create your comedian account today
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -228,59 +205,27 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-stage-name">Stage Name (Optional)</Label>
-                    <Input
-                      id="signup-stage-name"
-                      type="text"
-                      placeholder="Your stage name"
-                      value={signUpStageName}
-                      onChange={(e) => setSignUpStageName(e.target.value)}
-                    />
-                  </div>
                   
                   <Separator />
                   
                   <div className="space-y-4">
-                    <Label className="text-sm font-medium">I am a:</Label>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="is-comedian"
-                          checked={isComedian}
-                          onCheckedChange={(checked) => setIsComedian(checked as boolean)}
-                        />
-                        <Label htmlFor="is-comedian" className="text-sm font-normal flex items-center gap-2">
-                          <Mic className="w-4 h-4" />
-                          Comedian
-                        </Label>
+                    <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Mic className="w-5 h-5 text-primary" />
+                        <span className="font-medium text-primary">Comedian Account</span>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="is-promoter"
-                          checked={isPromoter}
-                          onCheckedChange={(checked) => setIsPromoter(checked as boolean)}
-                        />
-                        <Label htmlFor="is-promoter" className="text-sm font-normal flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          Event Promoter
-                        </Label>
-                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        You'll be able to apply for comedy shows and gigs. You can add your stage name and other details to your profile after signing up.
+                      </p>
                     </div>
-                    
-                    <p className="text-xs text-muted-foreground">
-                      {getRoleDescription()}
-                    </p>
                   </div>
 
                   <Button 
                     type="submit" 
                     className="w-full professional-button"
-                    disabled={isLoading || (!isComedian && !isPromoter)}
+                    disabled={isLoading}
                   >
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                    {isLoading ? 'Creating Account...' : 'Create Comedian Account'}
                   </Button>
                 </form>
               </CardContent>
@@ -295,12 +240,8 @@ const Auth = () => {
               <span>For Comedians</span>
             </div>
             <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span>For Promoters</span>
-            </div>
-            <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
-              <span>For Customers</span>
+              <span>For Everyone</span>
             </div>
           </div>
           <p>

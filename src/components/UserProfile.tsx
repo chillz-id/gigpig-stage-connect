@@ -4,27 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const UserProfile: React.FC = () => {
-  const { user } = useUser();
+  const { user, profile, hasRole } = useAuth();
 
-  if (user) {
+  if (user && profile) {
     return (
       <Link to="/profile" className="flex items-center space-x-3 hover:bg-accent rounded-xl p-3 transition-all duration-200 group">
-        <img 
-          src={user.avatar} 
-          alt={user.name}
-          className="w-10 h-10 rounded-full border-2 border-border group-hover:border-primary transition-colors duration-200"
-        />
+        <div className="w-10 h-10 rounded-full border-2 border-border group-hover:border-primary transition-colors duration-200 bg-primary/10 flex items-center justify-center">
+          <span className="text-sm font-semibold text-primary">
+            {profile.name ? profile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+          </span>
+        </div>
         <div className="text-foreground">
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-semibold">{user.name}</span>
-            {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+            <span className="text-sm font-semibold">{profile.name || user.email}</span>
+            {profile.is_verified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
           </div>
-          <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-            USER
-          </Badge>
+          <div className="flex items-center space-x-1">
+            <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
+              {hasRole('admin') ? 'ADMIN' : hasRole('promoter') ? 'PROMOTER' : 'COMEDIAN'}
+            </Badge>
+          </div>
         </div>
       </Link>
     );
