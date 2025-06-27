@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,13 +43,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       const url = await uploadFile(file);
       if (url) {
         console.log('Avatar uploaded successfully:', url);
-        // Create a synthetic event to pass to the original handler
-        const syntheticEvent = {
-          target: {
-            files: [file]
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
-        onImageSelect(syntheticEvent);
+        // Pass the original event to maintain compatibility
+        onImageSelect(event);
       }
     }
   };
