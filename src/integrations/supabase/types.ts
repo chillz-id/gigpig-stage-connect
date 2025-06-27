@@ -175,6 +175,57 @@ export type Database = {
         }
         Relationships: []
       }
+      comedian_bookings: {
+        Row: {
+          comedian_id: string | null
+          created_at: string | null
+          event_id: string | null
+          id: string
+          payment_status: string | null
+          performance_fee: number | null
+          performance_notes: string | null
+          set_duration: number | null
+          xero_bill_id: string | null
+        }
+        Insert: {
+          comedian_id?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          payment_status?: string | null
+          performance_fee?: number | null
+          performance_notes?: string | null
+          set_duration?: number | null
+          xero_bill_id?: string | null
+        }
+        Update: {
+          comedian_id?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          payment_status?: string | null
+          performance_fee?: number | null
+          performance_notes?: string | null
+          set_duration?: number | null
+          xero_bill_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comedian_bookings_comedian_id_fkey"
+            columns: ["comedian_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comedian_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_requests: {
         Row: {
           comedian_id: string
@@ -474,6 +525,9 @@ export type Database = {
           duration_minutes: number | null
           end_time: string | null
           event_date: string
+          eventbrite_event_id: string | null
+          filled_slots: number | null
+          humanitix_event_id: string | null
           id: string
           is_paid: boolean | null
           is_recurring: boolean | null
@@ -481,19 +535,26 @@ export type Database = {
           parent_event_id: string | null
           pay: string | null
           pay_per_comedian: number | null
+          profit_margin: number | null
           promoter_id: string
           recurrence_end_date: string | null
           recurrence_pattern: string | null
           requirements: string | null
           series_id: string | null
+          settlement_status: string | null
           spots: number | null
           start_time: string | null
           state: string | null
           status: string | null
+          ticket_price: number | null
+          tickets_sold: number | null
           title: string
+          total_costs: number | null
+          total_revenue: number | null
           type: string | null
           updated_at: string | null
           venue: string
+          xero_invoice_id: string | null
         }
         Insert: {
           address: string
@@ -512,6 +573,9 @@ export type Database = {
           duration_minutes?: number | null
           end_time?: string | null
           event_date: string
+          eventbrite_event_id?: string | null
+          filled_slots?: number | null
+          humanitix_event_id?: string | null
           id?: string
           is_paid?: boolean | null
           is_recurring?: boolean | null
@@ -519,19 +583,26 @@ export type Database = {
           parent_event_id?: string | null
           pay?: string | null
           pay_per_comedian?: number | null
+          profit_margin?: number | null
           promoter_id: string
           recurrence_end_date?: string | null
           recurrence_pattern?: string | null
           requirements?: string | null
           series_id?: string | null
+          settlement_status?: string | null
           spots?: number | null
           start_time?: string | null
           state?: string | null
           status?: string | null
+          ticket_price?: number | null
+          tickets_sold?: number | null
           title: string
+          total_costs?: number | null
+          total_revenue?: number | null
           type?: string | null
           updated_at?: string | null
           venue: string
+          xero_invoice_id?: string | null
         }
         Update: {
           address?: string
@@ -550,6 +621,9 @@ export type Database = {
           duration_minutes?: number | null
           end_time?: string | null
           event_date?: string
+          eventbrite_event_id?: string | null
+          filled_slots?: number | null
+          humanitix_event_id?: string | null
           id?: string
           is_paid?: boolean | null
           is_recurring?: boolean | null
@@ -557,24 +631,87 @@ export type Database = {
           parent_event_id?: string | null
           pay?: string | null
           pay_per_comedian?: number | null
+          profit_margin?: number | null
           promoter_id?: string
           recurrence_end_date?: string | null
           recurrence_pattern?: string | null
           requirements?: string | null
           series_id?: string | null
+          settlement_status?: string | null
           spots?: number | null
           start_time?: string | null
           state?: string | null
           status?: string | null
+          ticket_price?: number | null
+          tickets_sold?: number | null
           title?: string
+          total_costs?: number | null
+          total_revenue?: number | null
           type?: string | null
           updated_at?: string | null
           venue?: string
+          xero_invoice_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "fk_events_parent"
             columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_reports: {
+        Row: {
+          attendance_rate: number | null
+          event_id: string | null
+          generated_at: string | null
+          id: string
+          marketing_costs: number | null
+          net_profit: number | null
+          profit_margin_percentage: number | null
+          report_period_end: string | null
+          report_period_start: string | null
+          tickets_sold: number | null
+          total_performer_costs: number | null
+          total_ticket_revenue: number | null
+          venue_costs: number | null
+        }
+        Insert: {
+          attendance_rate?: number | null
+          event_id?: string | null
+          generated_at?: string | null
+          id?: string
+          marketing_costs?: number | null
+          net_profit?: number | null
+          profit_margin_percentage?: number | null
+          report_period_end?: string | null
+          report_period_start?: string | null
+          tickets_sold?: number | null
+          total_performer_costs?: number | null
+          total_ticket_revenue?: number | null
+          venue_costs?: number | null
+        }
+        Update: {
+          attendance_rate?: number | null
+          event_id?: string | null
+          generated_at?: string | null
+          id?: string
+          marketing_costs?: number | null
+          net_profit?: number | null
+          profit_margin_percentage?: number | null
+          report_period_end?: string | null
+          report_period_start?: string | null
+          tickets_sold?: number | null
+          total_performer_costs?: number | null
+          total_ticket_revenue?: number | null
+          venue_costs?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_reports_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
@@ -957,6 +1094,59 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      ticket_sales: {
+        Row: {
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          event_id: string | null
+          id: string
+          platform: string | null
+          platform_order_id: string | null
+          purchase_date: string | null
+          refund_status: string | null
+          ticket_quantity: number
+          ticket_type: string | null
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          event_id?: string | null
+          id?: string
+          platform?: string | null
+          platform_order_id?: string | null
+          purchase_date?: string | null
+          refund_status?: string | null
+          ticket_quantity?: number
+          ticket_type?: string | null
+          total_amount: number
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          event_id?: string | null
+          id?: string
+          platform?: string | null
+          platform_order_id?: string | null
+          purchase_date?: string | null
+          refund_status?: string | null
+          ticket_quantity?: number
+          ticket_type?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_sales_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_interests: {
         Row: {
