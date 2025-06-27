@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut } from 'lucide-react';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfileHeaderProps {
   user: any;
@@ -17,6 +19,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onImageSelect,
   onLogout
 }) => {
+  const { toast } = useToast();
+  const { uploadFile, uploading } = useFileUpload({
+    bucket: 'profile-images',
+    maxSize: 5 * 1024 * 1024, // 5MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp']
+  });
+
   const getMembershipBadgeColor = (membership: string) => {
     switch (membership) {
       case 'premium':
@@ -25,6 +34,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         return 'bg-gradient-to-r from-blue-500 to-purple-500 text-white';
       default:
         return 'bg-gradient-to-r from-purple-600 to-pink-500 text-white';
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('Avatar upload started:', file.name);
+      const url = await uploadFile(file);
+      if (url) {
+        console.log('Avatar uploaded successfully:', url);
+        // Create a synthetic event to pass to the original handler
+        const syntheticEvent = {
+          target: {
+            files: [file]
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        onImageSelect(syntheticEvent);
+      }
     }
   };
 
@@ -55,8 +82,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 id="avatar-upload"
                 type="file"
                 accept="image/*"
-                onChange={onImageSelect}
+                onChange={handleAvatarUpload}
                 className="hidden"
+                disabled={uploading}
               />
             </div>
           </div>

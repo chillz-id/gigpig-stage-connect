@@ -23,8 +23,11 @@ export const useFileUpload = ({
   const uploadFile = async (file: File): Promise<string | null> => {
     if (!file) return null;
 
+    console.log('Starting file upload:', file.name, 'to bucket:', bucket);
+
     // Validate file size
     if (file.size > maxSize) {
+      console.error('File too large:', file.size, 'max:', maxSize);
       toast({
         title: "File too large",
         description: `File must be smaller than ${Math.round(maxSize / 1024 / 1024)}MB`,
@@ -35,6 +38,7 @@ export const useFileUpload = ({
 
     // Validate file type
     if (!allowedTypes.includes(file.type)) {
+      console.error('Invalid file type:', file.type, 'allowed:', allowedTypes);
       toast({
         title: "Invalid file type",
         description: `Only ${allowedTypes.join(', ')} files are allowed`,
@@ -49,6 +53,7 @@ export const useFileUpload = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.error('User not authenticated');
         throw new Error('User not authenticated');
       }
 
@@ -56,6 +61,8 @@ export const useFileUpload = ({
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+      console.log('Uploading file to path:', filePath);
 
       // Upload file
       const { data, error } = await supabase.storage
@@ -65,12 +72,19 @@ export const useFileUpload = ({
           upsert: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+
+      console.log('File uploaded successfully:', data.path);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(data.path);
+
+      console.log('Public URL generated:', publicUrl);
 
       setUploadProgress(100);
       
@@ -96,11 +110,18 @@ export const useFileUpload = ({
 
   const deleteFile = async (filePath: string): Promise<boolean> => {
     try {
+      console.log('Deleting file:', filePath, 'from bucket:', bucket);
+      
       const { error } = await supabase.storage
         .from(bucket)
         .remove([filePath]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+
+      console.log('File deleted successfully');
 
       toast({
         title: "File deleted",
