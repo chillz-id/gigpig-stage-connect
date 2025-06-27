@@ -209,10 +209,27 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
         1080
       );
 
-      const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
-      console.log('Crop completed successfully, data URL length:', croppedDataUrl.length);
-      
-      onCrop(croppedDataUrl);
+      // Try to export as data URL
+      try {
+        const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
+        console.log('Crop completed successfully, data URL length:', croppedDataUrl.length);
+        onCrop(croppedDataUrl);
+      } catch (corsError) {
+        console.error('CORS error when exporting canvas. Trying alternative approach:', corsError);
+        
+        // Alternative: Convert to blob and create object URL
+        cropCanvas.toBlob((blob) => {
+          if (blob) {
+            const objectUrl = URL.createObjectURL(blob);
+            console.log('Crop completed using blob URL:', objectUrl);
+            onCrop(objectUrl);
+          } else {
+            console.error('Failed to create blob from canvas');
+            // Last resort: return original image
+            onCrop(imageUrl);
+          }
+        }, 'image/jpeg', 0.9);
+      }
     } catch (error) {
       console.error('Error during cropping process:', error);
     }
@@ -267,6 +284,7 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
               src={imageUrl}
               alt="Crop preview"
               className="hidden"
+              crossOrigin="anonymous"
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
