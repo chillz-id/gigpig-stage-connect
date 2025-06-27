@@ -23,6 +23,7 @@ interface Event {
   profit_margin: number;
   settlement_status: string;
   promoter_id: string;
+  capacity: number;
 }
 
 interface TicketSale {
@@ -60,12 +61,41 @@ const EventManagement = () => {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          id,
+          title,
+          event_date,
+          venue,
+          status,
+          ticket_price,
+          tickets_sold,
+          comedian_slots,
+          filled_slots,
+          total_revenue,
+          total_costs,
+          profit_margin,
+          settlement_status,
+          promoter_id,
+          capacity
+        `)
         .order('event_date', { ascending: false });
       
       if (error) throw error;
       
-      setEvents(data || []);
+      // Ensure all numeric fields have proper defaults
+      const processedEvents = data?.map(event => ({
+        ...event,
+        tickets_sold: event.tickets_sold || 0,
+        comedian_slots: event.comedian_slots || 5,
+        filled_slots: event.filled_slots || 0,
+        total_revenue: event.total_revenue || 0,
+        total_costs: event.total_costs || 0,
+        profit_margin: event.profit_margin || 0,
+        capacity: event.capacity || 0,
+        ticket_price: event.ticket_price || 0
+      })) || [];
+      
+      setEvents(processedEvents);
     } catch (error: any) {
       console.error('Error fetching events:', error);
       toast({
@@ -123,11 +153,22 @@ const EventManagement = () => {
   useEffect(() => {
     fetchEvents();
 
-    // Set up real-time subscriptions
+    // Set up real-time subscriptions for live updates
+    const eventsSubscription = supabase
+      .channel('events_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, 
+        () => {
+          console.log('Events table changed, refreshing data...');
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
     const ticketSalesSubscription = supabase
       .channel('ticket_sales_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_sales' }, 
         () => {
+          console.log('Ticket sales changed, refreshing data...');
           fetchEvents(); // Refresh events to get updated counts
           if (selectedEvent) fetchTicketSales(selectedEvent);
         }
@@ -138,6 +179,7 @@ const EventManagement = () => {
       .channel('comedian_bookings_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comedian_bookings' }, 
         () => {
+          console.log('Comedian bookings changed, refreshing data...');
           fetchEvents();
           if (selectedEvent) fetchComedianBookings(selectedEvent);
         }
@@ -145,6 +187,7 @@ const EventManagement = () => {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(eventsSubscription);
       supabase.removeChannel(ticketSalesSubscription);
       supabase.removeChannel(comedianBookingsSubscription);
     };
@@ -158,6 +201,10 @@ const EventManagement = () => {
   });
 
   const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('events')
@@ -167,6 +214,12 @@ const EventManagement = () => {
       if (error) throw error;
 
       setEvents(events.filter(event => event.id !== eventId));
+      
+      // Close event details if the deleted event was selected
+      if (selectedEvent === eventId) {
+        handleCloseEventDetails();
+      }
+
       toast({
         title: "Event Deleted",
         description: "Event has been successfully deleted.",
@@ -182,6 +235,7 @@ const EventManagement = () => {
   };
 
   const handleViewEventDetails = (eventId: string) => {
+    console.log('Viewing details for event:', eventId);
     setSelectedEvent(eventId);
     fetchTicketSales(eventId);
     fetchComedianBookings(eventId);
@@ -229,12 +283,14 @@ const EventManagement = () => {
         </CardContent>
       </Card>
 
-      <EventDetails 
-        selectedEvent={selectedEvent}
-        ticketSales={ticketSales}
-        comedianBookings={comedianBookings}
-        onClose={handleCloseEventDetails}
-      />
+      {selectedEvent && (
+        <EventDetails 
+          selectedEvent={selectedEvent}
+          ticketSales={ticketSales}
+          comedianBookings={comedianBookings}
+          onClose={handleCloseEventDetails}
+        />
+      )}
     </div>
   );
 };

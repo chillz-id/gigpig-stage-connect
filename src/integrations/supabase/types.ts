@@ -514,6 +514,7 @@ export type Database = {
           allow_recording: boolean | null
           applied_spots: number | null
           banner_url: string | null
+          capacity: number | null
           city: string | null
           comedian_slots: number | null
           country: string | null
@@ -562,6 +563,7 @@ export type Database = {
           allow_recording?: boolean | null
           applied_spots?: number | null
           banner_url?: string | null
+          capacity?: number | null
           city?: string | null
           comedian_slots?: number | null
           country?: string | null
@@ -610,6 +612,7 @@ export type Database = {
           allow_recording?: boolean | null
           applied_spots?: number | null
           banner_url?: string | null
+          capacity?: number | null
           city?: string | null
           comedian_slots?: number | null
           country?: string | null
