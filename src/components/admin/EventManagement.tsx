@@ -1,14 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Search, Eye, Edit, Trash2, MapPin, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import EventFilters from './EventFilters';
+import EventsTable from './EventsTable';
+import EventDetails from './EventDetails';
 
 interface Event {
   id: string;
@@ -152,25 +150,6 @@ const EventManagement = () => {
     };
   }, [selectedEvent]);
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'open': return 'default';
-      case 'ongoing': return 'secondary';
-      case 'completed': return 'outline';
-      case 'cancelled': return 'destructive';
-      default: return 'outline';
-    }
-  };
-
-  const getSettlementBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'pending': return 'secondary';
-      case 'completed': return 'default';
-      case 'overdue': return 'destructive';
-      default: return 'outline';
-    }
-  };
-
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.venue.toLowerCase().includes(searchTerm.toLowerCase());
@@ -208,6 +187,12 @@ const EventManagement = () => {
     fetchComedianBookings(eventId);
   };
 
+  const handleCloseEventDetails = () => {
+    setSelectedEvent(null);
+    setTicketSales([]);
+    setComedianBookings([]);
+  };
+
   if (loading) {
     return (
       <Card className="bg-white/10 backdrop-blur-sm border-white/20">
@@ -229,218 +214,27 @@ const EventManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search events..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-gray-300"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-white/20 border-white/30 text-white">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Events Table */}
-          <div className="rounded-lg border border-white/20 bg-white/5">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/20">
-                  <TableHead className="text-gray-300">Event</TableHead>
-                  <TableHead className="text-gray-300">Date & Venue</TableHead>
-                  <TableHead className="text-gray-300">Status</TableHead>
-                  <TableHead className="text-gray-300">Tickets</TableHead>
-                  <TableHead className="text-gray-300">Comedians</TableHead>
-                  <TableHead className="text-gray-300">Revenue</TableHead>
-                  <TableHead className="text-gray-300">Settlement</TableHead>
-                  <TableHead className="text-gray-300">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEvents.map((event) => (
-                  <TableRow key={event.id} className="border-white/20">
-                    <TableCell>
-                      <div className="text-white">
-                        <div className="font-medium">{event.title}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-white">
-                        <div className="text-sm">{new Date(event.event_date).toLocaleDateString()}</div>
-                        <div className="text-xs text-gray-300 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {event.venue}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(event.status)}>
-                        {event.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-white">
-                      <div className="text-sm">
-                        {event.tickets_sold} sold
-                      </div>
-                      <div className="text-xs text-gray-300">
-                        ${event.ticket_price || 0} each
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-white">
-                      <div className="text-sm">
-                        {event.filled_slots}/{event.comedian_slots}
-                      </div>
-                      <div className="w-full bg-white/20 rounded-full h-1.5 mt-1">
-                        <div 
-                          className="bg-purple-500 h-1.5 rounded-full" 
-                          style={{ width: `${(event.filled_slots / event.comedian_slots) * 100}%` }}
-                        ></div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-white">
-                      <div className="flex items-center gap-1 text-sm">
-                        <DollarSign className="w-3 h-3" />
-                        {event.total_revenue.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-300">
-                        Profit: ${event.profit_margin.toFixed(2)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getSettlementBadgeVariant(event.settlement_status)}>
-                        {event.settlement_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                          onClick={() => handleViewEventDetails(event.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-white/20">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/20"
-                          onClick={() => handleDeleteEvent(event.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {filteredEvents.length === 0 && (
-            <div className="text-center py-8 text-gray-300">
-              <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No events found matching your criteria.</p>
-            </div>
-          )}
+          <EventFilters 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+          
+          <EventsTable 
+            events={filteredEvents}
+            onViewDetails={handleViewEventDetails}
+            onDeleteEvent={handleDeleteEvent}
+          />
         </CardContent>
       </Card>
 
-      {/* Event Details Modal/Section */}
-      {selectedEvent && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Ticket Sales
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setSelectedEvent(null)}
-                  className="ml-auto text-white hover:bg-white/20"
-                >
-                  ×
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {ticketSales.length > 0 ? (
-                  ticketSales.map((sale) => (
-                    <div key={sale.id} className="p-3 bg-white/5 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-white font-medium">{sale.customer_name}</p>
-                          <p className="text-sm text-gray-300">{sale.customer_email}</p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(sale.purchase_date).toLocaleDateString()} via {sale.platform}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white">${sale.total_amount}</p>
-                          <p className="text-sm text-gray-300">{sale.ticket_quantity} tickets</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-300 text-center py-4">No ticket sales yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Comedian Bookings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {comedianBookings.length > 0 ? (
-                  comedianBookings.map((booking) => (
-                    <div key={booking.id} className="p-3 bg-white/5 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-white font-medium">Comedian ID: {booking.comedian_id}</p>
-                          <p className="text-sm text-gray-300">{booking.set_duration} minutes</p>
-                          <Badge variant={booking.payment_status === 'paid' ? 'default' : 'secondary'}>
-                            {booking.payment_status}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white">${booking.performance_fee}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-300 text-center py-4">No comedian bookings yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <EventDetails 
+        selectedEvent={selectedEvent}
+        ticketSales={ticketSales}
+        comedianBookings={comedianBookings}
+        onClose={handleCloseEventDetails}
+      />
     </div>
   );
 };
