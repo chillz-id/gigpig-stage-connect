@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Mail, MapPin, Calendar, Trophy, Video, Image as ImageIcon, Music, Share2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { mockComedians } from '@/data/mockComedians';
 import ComedianHeader from '@/components/comedian-profile/ComedianHeader';
 import ComedianBio from '@/components/comedian-profile/ComedianBio';
 import ComedianMedia from '@/components/comedian-profile/ComedianMedia';
@@ -20,25 +21,48 @@ import ComedianProducingEvents from '@/components/comedian-profile/ComedianProdu
 const ComedianProfile = () => {
   const { slug } = useParams<{ slug: string }>();
 
-  // Query comedian data by slug (for now using name matching)
+  // Query comedian data by slug
   const { data: comedian, isLoading, error } = useQuery({
     queryKey: ['comedian-profile', slug],
     queryFn: async () => {
       if (!slug) throw new Error('No comedian slug provided');
+      
+      console.log('Looking for comedian with slug:', slug);
       
       // Convert slug back to name for database query
       const name = slug.split('-').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ');
       
-      const { data, error } = await supabase
+      console.log('Converted name:', name);
+      
+      // First try to find in database
+      const { data: dbData, error: dbError } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('name', `%${name}%`)
-        .single();
+        .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
+        .maybeSingle();
       
-      if (error) throw error;
-      return data;
+      console.log('Database result:', dbData, 'Error:', dbError);
+      
+      if (dbData) {
+        return dbData;
+      }
+      
+      // If not found in database, check mock data
+      const mockComedian = mockComedians.find(comedian => {
+        if (!comedian.name) return false;
+        const comedianSlug = comedian.name.toLowerCase().replace(/\s+/g, '-');
+        return comedianSlug === slug;
+      });
+      
+      console.log('Mock comedian found:', mockComedian);
+      
+      if (mockComedian) {
+        return mockComedian;
+      }
+      
+      throw new Error(`Comedian not found: ${name}`);
     },
     enabled: !!slug,
   });
@@ -86,6 +110,8 @@ const ComedianProfile = () => {
 
   // Handle error state
   if (error || !comedian) {
+    console.error('Error loading comedian:', error);
+    
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -95,7 +121,7 @@ const ComedianProfile = () => {
             </div>
             <h1 className="text-2xl font-bold mb-4">Comedian Not Found</h1>
             <p className="text-muted-foreground mb-6">
-              We couldn't find a comedian with the name "{slug?.replace('-', ' ')}"
+              We couldn't find a comedian with the name "{slug?.replace(/-/g, ' ')}"
             </p>
             <Button onClick={() => window.history.back()}>
               Go Back
