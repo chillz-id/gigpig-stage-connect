@@ -51,9 +51,10 @@ export const useAuthOperations = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('=== SIGN IN ATTEMPT ===');
+      console.log('=== ADMIN SIGN IN ATTEMPT ===');
       console.log('Email:', email);
       console.log('Password length:', password.length);
+      console.log('Attempting to sign in admin user...');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -76,6 +77,7 @@ export const useAuthOperations = () => {
         let errorMessage = error.message;
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          console.log('Suggestion: Try using email: info@standupsydney.com with password: Ztxreb890-');
         } else if (error.message.includes('Email not confirmed')) {
           errorMessage = 'Please confirm your email address before signing in.';
         } else if (error.message.includes('Too many requests')) {
@@ -95,9 +97,17 @@ export const useAuthOperations = () => {
         console.log('User authenticated:', data.user.email);
         console.log('Session token exists:', !!data.session?.access_token);
         
+        // Check if user has admin role
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id);
+        
+        console.log('User roles:', roles);
+        
         toast({
           title: "Welcome back!",
-          description: "You have successfully signed in.",
+          description: `Successfully signed in as ${data.user.email}`,
         });
       }
 

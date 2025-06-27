@@ -55,6 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             const userProfile = await fetchProfile(session.user.id);
             const userRoles = await fetchRoles(session.user.id);
+            console.log('Fetched profile:', userProfile);
+            console.log('Fetched roles:', userRoles);
             setProfile(userProfile);
             setRoles(userRoles);
           }, 0);
@@ -79,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         const userProfile = await fetchProfile(session.user.id);
         const userRoles = await fetchRoles(session.user.id);
+        console.log('Initial profile:', userProfile);
+        console.log('Initial roles:', userRoles);
         setProfile(userProfile);
         setRoles(userRoles);
       }
@@ -93,12 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('Signing in:', email);
+    console.log('AuthContext signIn called for:', email);
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (error) {
+      console.error('AuthContext signIn error:', error);
+    }
     setIsLoading(false);
     return { error };
   };
@@ -139,11 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const hasRole = (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
-    console.log('Checking role:', role, 'in roles:', roles);
-    if (role === 'promoter') {
-      // For demo purposes, assume promoter role for testing
-      return true;
-    }
+    console.log('Checking role:', role, 'in roles:', roles.map(r => r.role));
     return roles.some(userRole => userRole.role === role);
   };
 
