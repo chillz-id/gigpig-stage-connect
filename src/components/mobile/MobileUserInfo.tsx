@@ -1,36 +1,34 @@
 
 import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Star } from 'lucide-react';
 
 interface MobileUserInfoProps {
   user: any;
-  isMemberView: boolean;
-  isComedianView: boolean;
 }
 
-const MobileUserInfo: React.FC<MobileUserInfoProps> = ({
-  user,
-  isMemberView,
-  isComedianView,
-}) => {
+const MobileUserInfo: React.FC<MobileUserInfoProps> = ({ user }) => {
   if (!user) return null;
 
   return (
-    <div className="flex items-center space-x-3 pb-4 border-b border-border">
-      <img
-        src={user.avatar}
-        alt={user.name}
-        className="w-12 h-12 rounded-full border-2 border-border"
-      />
-      <div>
-        <div className="flex items-center space-x-2">
-          <span className="font-semibold text-sm">{user.name}</span>
-          {user.isVerified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+    <div className="flex items-center gap-3 py-4 border-b border-border/50">
+      <Avatar className="h-12 w-12">
+        <AvatarImage src={user.avatar} alt={user.name} />
+        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+          {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-foreground truncate">
+          {user.name || user.email}
+        </p>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {user.roles?.map((role: string) => (
+            <Badge key={role} variant="secondary" className="text-xs capitalize">
+              {role}
+            </Badge>
+          ))}
         </div>
-        <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-          {isMemberView ? 'MEMBER' : isComedianView ? 'COMEDIAN' : 'USER'}
-        </Badge>
       </div>
     </div>
   );

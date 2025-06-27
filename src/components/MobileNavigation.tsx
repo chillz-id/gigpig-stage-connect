@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useUser } from '@/contexts/UserContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import MobileMenuButton from './mobile/MobileMenuButton';
 import MobileUserInfo from './mobile/MobileUserInfo';
 import MobileNavigationLinks from './mobile/MobileNavigationLinks';
@@ -17,12 +16,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
 }) => {
-  const { user } = useUser();
-  const { isMemberView, isComedianView } = useViewMode();
-
-  const hasRole = (role: string) => {
-    return user?.roles?.includes(role as any) || false;
-  };
+  const { user, hasRole } = useAuth();
 
   return (
     <>
@@ -34,16 +28,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
       {isMobileMenuOpen && (
         <div className="md:hidden pb-6 space-y-4 text-foreground animate-fade-in bg-background/95 backdrop-blur-lg border-t border-border">
           <div className="px-4 py-2">
-            <MobileUserInfo 
-              user={user}
-              isMemberView={isMemberView}
-              isComedianView={isComedianView}
-            />
+            <MobileUserInfo user={user} />
             
             <MobileNavigationLinks
               user={user}
-              isMemberView={isMemberView}
-              isComedianView={isComedianView}
               hasRole={hasRole}
               setIsMobileMenuOpen={setIsMobileMenuOpen}
             />

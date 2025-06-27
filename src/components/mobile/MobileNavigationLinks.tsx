@@ -1,63 +1,120 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3 } from 'lucide-react';
 
 interface MobileNavigationLinksProps {
   user: any;
-  isMemberView: boolean;
-  isComedianView: boolean;
   hasRole: (role: string) => boolean;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
 const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
   user,
-  isMemberView,
-  isComedianView,
   hasRole,
   setIsMobileMenuOpen,
 }) => {
-  const navigationLinks = [
-    // Always show Browse Shows
-    { to: '/browse', label: 'Browse Shows' },
-    // Show Invoices for promoters only (not comedians)
-    ...(!isComedianView && hasRole('promoter') ? [{ to: '/invoices', label: 'Invoices' }] : []),
-    // Always show Comedians
-    { to: '/comedians', label: 'Comedians' },
-    // Show Dashboard for comedian view
-    ...(isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-    // Show Calendar for non-member views only
-    ...(!isMemberView ? [{ to: '/profile?tab=calendar', label: 'Calendar' }] : []),
-    // Show Book Comedian for member view
-    ...(isMemberView ? [{ to: user ? '/profile?tab=book-comedian' : '/auth', label: 'Book Comedian' }] : []),
-    // Only show Dashboard for non-member views and non-comedian views
-    ...(!isMemberView && !isComedianView ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-    // Only show promoter-specific items for actual promoters/admins AND not in comedian view
-    ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
-      { to: '/create-event', label: 'Create Event' }
-    ] : []),
-    // Show Admin Dashboard for admins only
-    ...(hasRole('admin') ? [{ to: '/admin', label: 'Admin Dashboard' }] : []),
-    { to: '/profile', label: 'Profile' },
-    // Only show messages and notifications for non-member views
-    ...(!isMemberView ? [
-      { to: '/messages', label: 'Messages' },
-      { to: '/notifications', label: 'Notifications' }
-    ] : [])
-  ];
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
-    <div className="space-y-2">
-      {navigationLinks.map((link) => (
+    <div className="space-y-2 py-4">
+      {/* Main Navigation */}
+      <Link
+        to="/browse"
+        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+        onClick={handleLinkClick}
+      >
+        <Home className="w-5 h-5" />
+        <span>Shows</span>
+      </Link>
+
+      <Link
+        to="/comedians"
+        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+        onClick={handleLinkClick}
+      >
+        <Users className="w-5 h-5" />
+        <span>Comedians</span>
+      </Link>
+
+      {/* Authenticated User Links */}
+      {user && (
+        <>
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>Dashboard</span>
+          </Link>
+
+          <Link
+            to="/profile?tab=calendar"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <Calendar className="w-5 h-5" />
+            <span>Calendar</span>
+          </Link>
+
+          <Link
+            to="/notifications"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <Bell className="w-5 h-5" />
+            <span>Notifications</span>
+          </Link>
+
+          <Link
+            to="/messages"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span>Messages</span>
+          </Link>
+
+          {/* Admin Dashboard */}
+          {hasRole('admin') && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Crown className="w-5 h-5 text-yellow-400" />
+              <span>Admin Dashboard</span>
+            </Link>
+          )}
+
+          {/* Create Event for promoters/admins */}
+          {(hasRole('promoter') || hasRole('admin')) && (
+            <Link
+              to="/create-event"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Create Event</span>
+            </Link>
+          )}
+        </>
+      )}
+
+      {/* Book Comedian for non-authenticated users */}
+      {!user && (
         <Link
-          key={link.to}
-          to={link.to}
-          className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-200 py-3 px-2 rounded-lg hover:bg-accent text-base"
-          onClick={() => setIsMobileMenuOpen(false)}
+          to="/auth"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+          onClick={handleLinkClick}
         >
-          {link.label}
+          <User className="w-5 h-5" />
+          <span>Book Comedian</span>
         </Link>
-      ))}
+      )}
     </div>
   );
 };
