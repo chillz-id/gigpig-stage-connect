@@ -28,6 +28,7 @@ import Marketplace from "./pages/Marketplace";
 import Organizer from "./pages/Organizer";
 import Pricing from "./pages/Pricing";
 import PromoterSettings from "./pages/PromoterSettings";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,14 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Dashboard />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/admin"
+                          element={
+                            <ProtectedRoute roles={['admin']}>
+                              <AdminDashboard />
                             </ProtectedRoute>
                           }
                         />

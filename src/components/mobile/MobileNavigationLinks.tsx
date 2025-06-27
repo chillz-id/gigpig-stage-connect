@@ -36,6 +36,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     ...((hasRole('promoter') || hasRole('admin')) && !isComedianView ? [
       { to: '/create-event', label: 'Create Event' }
     ] : []),
+    // Show Admin Dashboard for admins only
+    ...(hasRole('admin') ? [{ to: '/admin', label: 'Admin Dashboard' }] : []),
     { to: '/profile', label: 'Profile' },
     // Only show messages and notifications for non-member views
     ...(!isMemberView ? [

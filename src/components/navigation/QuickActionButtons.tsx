@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageCircle, Calendar, Plus } from 'lucide-react';
+import { Bell, MessageCircle, Calendar, Plus, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface QuickActionButtonsProps {
@@ -21,6 +21,15 @@ const QuickActionButtons: React.FC<QuickActionButtonsProps> = ({
 
   return (
     <div className="flex items-center space-x-3">
+      {/* Admin Dashboard link */}
+      {hasRole('admin') && (
+        <Link to="/admin">
+          <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 rounded-lg">
+            <Crown className="w-5 h-5 text-yellow-400" />
+          </Button>
+        </Link>
+      )}
+      
       {/* Calendar icon with blinking dot for comedian view */}
       {isComedianView && (
         <Link to="/profile?tab=calendar">
