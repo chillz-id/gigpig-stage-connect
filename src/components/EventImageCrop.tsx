@@ -113,69 +113,87 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
   };
 
   const handleCrop = () => {
+    console.log('Apply button clicked - starting crop process');
     const canvas = canvasRef.current;
     const image = imageRef.current;
-    if (!canvas || !image) return;
-
-    // Create a new canvas for the cropped image
-    const cropCanvas = document.createElement('canvas');
-    const cropCtx = cropCanvas.getContext('2d');
-    if (!cropCtx) return;
-
-    // Set final dimensions (1920x1080)
-    cropCanvas.width = 1920;
-    cropCanvas.height = 1080;
-
-    // Calculate the crop area on the original image
-    const containerWidth = 500;
-    const containerHeight = 400;
-    const imageAspect = image.naturalWidth / image.naturalHeight;
-    const containerAspect = containerWidth / containerHeight;
-    
-    let displayWidth, displayHeight;
-    if (imageAspect > containerAspect) {
-      displayWidth = containerWidth * scale[0];
-      displayHeight = (containerWidth / imageAspect) * scale[0];
-    } else {
-      displayHeight = containerHeight * scale[0];
-      displayWidth = (containerHeight * imageAspect) * scale[0];
+    if (!canvas || !image) {
+      console.error('Canvas or image not available for cropping');
+      return;
     }
 
-    const x = (containerWidth - displayWidth) / 2 + crop.x;
-    const y = (containerHeight - displayHeight) / 2 + crop.y;
-    
-    const scaleX = image.naturalWidth / displayWidth;
-    const scaleY = image.naturalHeight / displayHeight;
-    
-    const cropX = (containerWidth - CROP_WIDTH) / 2;
-    const cropY = (containerHeight - CROP_HEIGHT) / 2;
-    
-    const sourceX = (cropX - x) * scaleX;
-    const sourceY = (cropY - y) * scaleY;
-    const sourceWidth = CROP_WIDTH * scaleX;
-    const sourceHeight = CROP_HEIGHT * scaleY;
+    try {
+      // Create a new canvas for the cropped image
+      const cropCanvas = document.createElement('canvas');
+      const cropCtx = cropCanvas.getContext('2d');
+      if (!cropCtx) {
+        console.error('Could not get 2D context for crop canvas');
+        return;
+      }
 
-    // Draw the cropped portion at full resolution
-    cropCtx.drawImage(
-      image,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      sourceHeight,
-      0,
-      0,
-      1920,
-      1080
-    );
+      // Set final dimensions (1920x1080)
+      cropCanvas.width = 1920;
+      cropCanvas.height = 1080;
 
-    const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
-    onCrop(croppedDataUrl);
-    onClose();
+      // Calculate the crop area on the original image
+      const containerWidth = 500;
+      const containerHeight = 400;
+      const imageAspect = image.naturalWidth / image.naturalHeight;
+      const containerAspect = containerWidth / containerHeight;
+      
+      let displayWidth, displayHeight;
+      if (imageAspect > containerAspect) {
+        displayWidth = containerWidth * scale[0];
+        displayHeight = (containerWidth / imageAspect) * scale[0];
+      } else {
+        displayHeight = containerHeight * scale[0];
+        displayWidth = (containerHeight * imageAspect) * scale[0];
+      }
+
+      const x = (containerWidth - displayWidth) / 2 + crop.x;
+      const y = (containerHeight - displayHeight) / 2 + crop.y;
+      
+      const scaleX = image.naturalWidth / displayWidth;
+      const scaleY = image.naturalHeight / displayHeight;
+      
+      const cropX = (containerWidth - CROP_WIDTH) / 2;
+      const cropY = (containerHeight - CROP_HEIGHT) / 2;
+      
+      const sourceX = Math.max(0, (cropX - x) * scaleX);
+      const sourceY = Math.max(0, (cropY - y) * scaleY);
+      const sourceWidth = Math.min(image.naturalWidth - sourceX, CROP_WIDTH * scaleX);
+      const sourceHeight = Math.min(image.naturalHeight - sourceY, CROP_HEIGHT * scaleY);
+
+      // Draw the cropped portion at full resolution
+      cropCtx.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        1920,
+        1080
+      );
+
+      const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
+      console.log('Crop completed successfully, data URL length:', croppedDataUrl.length);
+      
+      onCrop(croppedDataUrl);
+    } catch (error) {
+      console.error('Error during cropping process:', error);
+    }
   };
 
   const resetCrop = () => {
     setCrop({ x: 0, y: 0 });
     setScale([1]);
+    console.log('Crop reset to default values');
+  };
+
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully for cropping');
+    setImageLoaded(true);
   };
 
   return (
@@ -201,7 +219,8 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
               src={imageUrl}
               alt="Crop preview"
               className="hidden"
-              onLoad={() => setImageLoaded(true)}
+              onLoad={handleImageLoad}
+              onError={(e) => console.error('Image failed to load:', e)}
             />
           </div>
           
