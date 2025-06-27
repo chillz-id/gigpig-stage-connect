@@ -34,7 +34,7 @@ const EventDetails = ({ selectedEvent, ticketSales, comedianBookings, onClose }:
   if (!selectedEvent) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 event-grid">
       <TicketSalesCard ticketSales={ticketSales} onClose={onClose} />
       <ComedianBookingsCard comedianBookings={comedianBookings} />
     </div>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, X } from 'lucide-react';
 
 interface TicketSale {
   id: string;
@@ -24,16 +24,16 @@ const TicketSalesCard = ({ ticketSales, onClose }: TicketSalesCardProps) => {
   return (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Users className="w-5 h-5" />
+        <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
+          <Users className="w-5 h-5 flex-shrink-0" />
           Ticket Sales
           <Button 
             size="sm" 
             variant="ghost" 
             onClick={onClose}
-            className="ml-auto text-white hover:bg-white/20"
+            className="ml-auto text-white hover:bg-white/20 min-h-[44px] min-w-[44px] p-2"
           >
-            ×
+            <X className="w-4 h-4" />
           </Button>
         </CardTitle>
       </CardHeader>
@@ -42,23 +42,26 @@ const TicketSalesCard = ({ ticketSales, onClose }: TicketSalesCardProps) => {
           {ticketSales.length > 0 ? (
             ticketSales.map((sale) => (
               <div key={sale.id} className="p-3 bg-white/5 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-white font-medium">{sale.customer_name}</p>
-                    <p className="text-sm text-gray-300">{sale.customer_email}</p>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm md:text-base truncate">{sale.customer_name}</p>
+                    <p className="text-sm text-gray-300 truncate">{sale.customer_email}</p>
                     <p className="text-xs text-gray-400">
                       {new Date(sale.purchase_date).toLocaleDateString()} via {sale.platform}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-white">${sale.total_amount}</p>
+                  <div className="text-left sm:text-right flex-shrink-0">
+                    <p className="text-white font-medium">${sale.total_amount}</p>
                     <p className="text-sm text-gray-300">{sale.ticket_quantity} tickets</p>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-300 text-center py-4">No ticket sales yet</p>
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50 text-gray-300" />
+              <p className="text-gray-300 text-content">No ticket sales yet</p>
+            </div>
           )}
         </div>
       </CardContent>

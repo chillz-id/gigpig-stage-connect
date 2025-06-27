@@ -175,6 +175,51 @@
       font-size: 1.25rem;
       line-height: 1.75rem;
     }
+
+    /* Admin tables should scroll horizontally */
+    .admin-table { 
+      overflow-x: auto; 
+      display: block;
+      white-space: nowrap;
+    }
+    
+    /* Event cards should stack vertically */
+    .event-grid { 
+      grid-template-columns: 1fr !important; 
+      gap: 1rem;
+    }
+    
+    /* Forms should be single column */
+    .form-row { 
+      flex-direction: column; 
+    }
+    
+    /* Buttons should be full width and touch-friendly */
+    .button-group { 
+      flex-direction: column; 
+      width: 100%;
+      gap: 0.5rem;
+    }
+    
+    /* Text should be readable */
+    .text-content { 
+      font-size: 16px; 
+      line-height: 1.5; 
+    }
+
+    /* Ensure tables are scrollable on mobile */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Stack table actions vertically on very small screens */
+    @media (max-width: 640px) {
+      .table-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+    }
   }
 
   /* Touch-friendly tap targets */
@@ -245,5 +290,21 @@
   
   .hover\:text-primary:hover {
     color: hsl(var(--primary));
+  }
+}
+
+/* Mobile-specific table improvements */
+@media (max-width: 768px) {
+  .responsive-table {
+    font-size: 14px;
+  }
+  
+  .responsive-table th,
+  .responsive-table td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .responsive-table .mobile-hide {
+    display: none;
   }
 }
