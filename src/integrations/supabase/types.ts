@@ -179,6 +179,7 @@ export type Database = {
         Row: {
           comedian_id: string | null
           created_at: string | null
+          currency: string | null
           event_id: string | null
           id: string
           payment_status: string | null
@@ -190,6 +191,7 @@ export type Database = {
         Insert: {
           comedian_id?: string | null
           created_at?: string | null
+          currency?: string | null
           event_id?: string | null
           id?: string
           payment_status?: string | null
@@ -201,6 +203,7 @@ export type Database = {
         Update: {
           comedian_id?: string | null
           created_at?: string | null
+          currency?: string | null
           event_id?: string | null
           id?: string
           payment_status?: string | null
@@ -903,6 +906,62 @@ export type Database = {
           },
         ]
       }
+      marketing_costs: {
+        Row: {
+          amount: number
+          campaign_name: string | null
+          clicks: number | null
+          conversions: number | null
+          cost_type: string | null
+          created_at: string | null
+          currency: string | null
+          event_id: string | null
+          id: string
+          impressions: number | null
+          platform: string | null
+          spend_date: string | null
+          xero_bill_id: string | null
+        }
+        Insert: {
+          amount?: number
+          campaign_name?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          cost_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          event_id?: string | null
+          id?: string
+          impressions?: number | null
+          platform?: string | null
+          spend_date?: string | null
+          xero_bill_id?: string | null
+        }
+        Update: {
+          amount?: number
+          campaign_name?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          cost_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          event_id?: string | null
+          id?: string
+          impressions?: number | null
+          platform?: string | null
+          spend_date?: string | null
+          xero_bill_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_costs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -1125,7 +1184,7 @@ export type Database = {
           refund_status?: string | null
           ticket_quantity?: number
           ticket_type?: string | null
-          total_amount: number
+          total_amount?: number
         }
         Update: {
           created_at?: string | null
@@ -1205,6 +1264,59 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_costs: {
+        Row: {
+          amount: number
+          cost_date: string | null
+          cost_type: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          event_id: string
+          id: string
+          is_recurring: boolean | null
+          payment_status: string | null
+          updated_at: string | null
+          xero_bill_id: string | null
+        }
+        Insert: {
+          amount?: number
+          cost_date?: string | null
+          cost_type?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          event_id: string
+          id?: string
+          is_recurring?: boolean | null
+          payment_status?: string | null
+          updated_at?: string | null
+          xero_bill_id?: string | null
+        }
+        Update: {
+          amount?: number
+          cost_date?: string | null
+          cost_type?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          event_id?: string
+          id?: string
+          is_recurring?: boolean | null
+          payment_status?: string | null
+          updated_at?: string | null
+          xero_bill_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_costs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vouches: {
         Row: {
           created_at: string | null
@@ -1232,11 +1344,177 @@ export type Database = {
         }
         Relationships: []
       }
+      xero_bills: {
+        Row: {
+          bill_status: string | null
+          comedian_booking_id: string | null
+          created_at: string | null
+          created_in_xero_at: string | null
+          currency: string | null
+          due_date: string | null
+          id: string
+          last_synced_at: string | null
+          sync_status: string | null
+          total_amount: number
+          xero_bill_id: string
+          xero_bill_number: string | null
+        }
+        Insert: {
+          bill_status?: string | null
+          comedian_booking_id?: string | null
+          created_at?: string | null
+          created_in_xero_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          last_synced_at?: string | null
+          sync_status?: string | null
+          total_amount: number
+          xero_bill_id: string
+          xero_bill_number?: string | null
+        }
+        Update: {
+          bill_status?: string | null
+          comedian_booking_id?: string | null
+          created_at?: string | null
+          created_in_xero_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          last_synced_at?: string | null
+          sync_status?: string | null
+          total_amount?: number
+          xero_bill_id?: string
+          xero_bill_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xero_bills_comedian_booking_id_fkey"
+            columns: ["comedian_booking_id"]
+            isOneToOne: false
+            referencedRelation: "comedian_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xero_integrations: {
+        Row: {
+          access_token: string | null
+          connection_status: string | null
+          created_at: string | null
+          id: string
+          last_sync_at: string | null
+          refresh_token: string | null
+          settings: Json | null
+          tenant_id: string
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          settings?: Json | null
+          tenant_id: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          settings?: Json | null
+          tenant_id?: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xero_invoices: {
+        Row: {
+          created_at: string | null
+          created_in_xero_at: string | null
+          currency: string | null
+          event_id: string | null
+          id: string
+          invoice_status: string | null
+          last_synced_at: string | null
+          sync_status: string | null
+          ticket_sale_id: string | null
+          total_amount: number
+          xero_invoice_id: string
+          xero_invoice_number: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_in_xero_at?: string | null
+          currency?: string | null
+          event_id?: string | null
+          id?: string
+          invoice_status?: string | null
+          last_synced_at?: string | null
+          sync_status?: string | null
+          ticket_sale_id?: string | null
+          total_amount: number
+          xero_invoice_id: string
+          xero_invoice_number?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_in_xero_at?: string | null
+          currency?: string | null
+          event_id?: string | null
+          id?: string
+          invoice_status?: string | null
+          last_synced_at?: string | null
+          sync_status?: string | null
+          ticket_sale_id?: string | null
+          total_amount?: number
+          xero_invoice_id?: string
+          xero_invoice_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xero_invoices_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xero_invoices_ticket_sale_id_fkey"
+            columns: ["ticket_sale_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_event_profitability: {
+        Args: { event_id_param: string }
+        Returns: {
+          event_id: string
+          total_revenue: number
+          total_costs: number
+          net_profit: number
+          profit_margin: number
+          tickets_sold: number
+        }[]
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
