@@ -51,7 +51,7 @@ const DesktopNavigation: React.FC = () => {
             </Link>
           )}
           
-          {/* Calendar - Always visible for authenticated users */}
+          {/* Calendar - Always visible for authenticated users, especially admins */}
           <Link to="/profile?tab=calendar">
             <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
               <Calendar className="w-5 h-5" />

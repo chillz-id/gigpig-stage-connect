@@ -1,7 +1,7 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
-export type Theme = 'light' | 'dark' | 'pig';
+export type Theme = 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -19,13 +19,17 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const theme: Theme = 'dark';
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('light', 'dark', 'pig');
-    root.classList.add(theme);
-  }, [theme]);
+    root.classList.remove('light', 'pig');
+    root.classList.add('dark');
+  }, []);
+
+  const setTheme = () => {
+    // No-op since we only support dark mode
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

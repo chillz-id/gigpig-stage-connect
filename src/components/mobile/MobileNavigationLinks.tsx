@@ -27,7 +27,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
       {/* Main Navigation */}
       <Link
         to="/browse"
-        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Home className="w-5 h-5" />
@@ -36,7 +36,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 
       <Link
         to="/comedians"
-        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Users className="w-5 h-5" />
@@ -48,7 +48,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
         <>
           <Link
             to="/dashboard"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <BarChart3 className="w-5 h-5" />
@@ -57,7 +57,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 
           <Link
             to="/profile?tab=calendar"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <Calendar className="w-5 h-5" />
@@ -66,7 +66,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 
           <Link
             to="/notifications"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <Bell className="w-5 h-5" />
@@ -75,7 +75,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 
           <Link
             to="/messages"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <MessageCircle className="w-5 h-5" />
@@ -86,7 +86,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
           {isAdmin && (
             <Link
               to="/admin"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
               onClick={handleLinkClick}
             >
               <Crown className="w-5 h-5 text-yellow-400" />
@@ -98,7 +98,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
           {isPromoter && (
             <Link
               to="/create-event"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
               onClick={handleLinkClick}
             >
               <Plus className="w-5 h-5" />
@@ -112,7 +112,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
       {!user && (
         <Link
           to="/auth"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
           onClick={handleLinkClick}
         >
           <User className="w-5 h-5" />

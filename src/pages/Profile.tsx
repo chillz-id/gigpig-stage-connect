@@ -26,8 +26,8 @@ const Profile = () => {
   const [showImageCrop, setShowImageCrop] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
 
-  // Check if user is industry user (comedian/promoter)
-  const isIndustryUser = hasRole('comedian') || hasRole('promoter');
+  // Check if user is industry user (comedian/promoter/admin)
+  const isIndustryUser = hasRole('comedian') || hasRole('promoter') || hasRole('admin');
   
   // For now, set isMemberView to false since we're removing the member view concept
   const isMemberView = false;
@@ -45,10 +45,10 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to view your profile</h1>
-          <Button>Sign In</Button>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center max-w-md w-full">
+          <h1 className="text-xl sm:text-2xl font-bold mb-4">Please sign in to view your profile</h1>
+          <Button className="w-full">Sign In</Button>
         </div>
       </div>
     );
@@ -113,7 +113,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Profile Header */}
         <ProfileHeader 
           user={userForComponents}
