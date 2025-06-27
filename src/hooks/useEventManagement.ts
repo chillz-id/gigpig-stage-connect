@@ -49,7 +49,7 @@ export const useEventManagement = () => {
   const [comedianBookings, setComedianBookings] = useState<ComedianBooking[]>([]);
   const { toast } = useToast();
 
-  // Fetch events from database
+  // Fetch events from database with enhanced data
   const fetchEvents = async () => {
     try {
       const { data, error } = await supabase
@@ -75,18 +75,39 @@ export const useEventManagement = () => {
       
       if (error) throw error;
       
-      // Ensure all numeric fields have proper defaults
-      const processedEvents = data?.map(event => ({
-        ...event,
-        tickets_sold: event.tickets_sold || 0,
-        comedian_slots: event.comedian_slots || 5,
-        filled_slots: event.filled_slots || 0,
-        total_revenue: event.total_revenue || 0,
-        total_costs: event.total_costs || 0,
-        profit_margin: event.profit_margin || 0,
-        capacity: event.capacity || 0,
-        ticket_price: event.ticket_price || 0
-      })) || [];
+      // Process events and calculate real-time metrics
+      const processedEvents = await Promise.all(
+        (data || []).map(async (event) => {
+          // Get actual ticket sales count
+          const { data: salesData } = await supabase
+            .from('ticket_sales')
+            .select('ticket_quantity, total_amount')
+            .eq('event_id', event.id);
+          
+          // Get actual comedian bookings count
+          const { data: bookingsData } = await supabase
+            .from('comedian_bookings')
+            .select('performance_fee')
+            .eq('event_id', event.id);
+          
+          const actualTicketsSold = salesData?.reduce((sum, sale) => sum + sale.ticket_quantity, 0) || 0;
+          const actualRevenue = salesData?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
+          const actualCosts = bookingsData?.reduce((sum, booking) => sum + booking.performance_fee, 0) || 0;
+          const actualFilledSlots = bookingsData?.length || 0;
+          
+          return {
+            ...event,
+            tickets_sold: actualTicketsSold,
+            total_revenue: actualRevenue,
+            total_costs: actualCosts,
+            filled_slots: actualFilledSlots,
+            profit_margin: actualRevenue - actualCosts,
+            comedian_slots: event.comedian_slots || 5,
+            capacity: event.capacity || 0,
+            ticket_price: event.ticket_price || 0
+          };
+        })
+      );
       
       setEvents(processedEvents);
     } catch (error: any) {
