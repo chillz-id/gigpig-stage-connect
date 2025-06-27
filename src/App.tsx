@@ -3,14 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Navigation } from "@/components/Navigation";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Comedians from "./pages/Comedians";
 import Dashboard from "./pages/Dashboard";
@@ -50,7 +49,7 @@ function App() {
                   <div className="min-h-screen bg-background font-sans antialiased">
                     <Navigation />
                     <Routes>
-                      <Route path="/" element={<Index />} />
+                      <Route path="/" element={<Navigate to="/browse" replace />} />
                       <Route path="/browse" element={<Browse />} />
                       <Route path="/comedians" element={<Comedians />} />
                       <Route path="/comedian/:slug" element={<ComedianProfile />} />
