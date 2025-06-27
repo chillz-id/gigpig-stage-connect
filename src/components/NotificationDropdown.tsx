@@ -9,40 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-}
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationItem } from '@/components/notification/NotificationItem';
 
 export const NotificationDropdown: React.FC = () => {
-  const { user } = useAuth();
-  
-  // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
-    queryKey: ['notifications', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('id, title, message, created_at')
-        .eq('user_id', user.id)
-        .is('read_at', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id
-  });
-
+  const { data: notifications = [], isLoading } = useNotifications();
   const unreadCount = notifications.length;
 
   return (
@@ -67,10 +38,7 @@ export const NotificationDropdown: React.FC = () => {
           <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
         ) : (
           notifications.map((notification) => (
-            <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3">
-              <div className="font-medium text-sm">{notification.title}</div>
-              <div className="text-xs text-muted-foreground mt-1">{notification.message}</div>
-            </DropdownMenuItem>
+            <NotificationItem key={notification.id} notification={notification} />
           ))
         )}
       </DropdownMenuContent>
