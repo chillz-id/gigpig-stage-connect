@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,8 +33,8 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
-      <div className="container mx-auto px-4 py-4 md:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 overflow-hidden">
+      <div className="container mx-auto px-4 py-4 md:py-8 h-screen overflow-y-auto">
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Crown className="w-6 md:w-8 h-6 md:h-8 text-yellow-400 flex-shrink-0" />
