@@ -170,24 +170,38 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
         return;
       }
 
-      const x = (containerWidth - displayWidth) / 2 + crop.x;
-      const y = (containerHeight - displayHeight) / 2 + crop.y;
+      // Calculate image position in canvas
+      const imageX = (containerWidth - displayWidth) / 2 + crop.x;
+      const imageY = (containerHeight - displayHeight) / 2 + crop.y;
       
-      const scaleX = image.naturalWidth / displayWidth;
-      const scaleY = image.naturalHeight / displayHeight;
-      
+      // Calculate crop area position
       const cropX = (containerWidth - CROP_WIDTH) / 2;
       const cropY = (containerHeight - CROP_HEIGHT) / 2;
       
-      const sourceX = Math.max(0, (cropX - x) * scaleX);
-      const sourceY = Math.max(0, (cropY - y) * scaleY);
-      const sourceWidth = Math.min(image.naturalWidth - sourceX, CROP_WIDTH * scaleX);
-      const sourceHeight = Math.min(image.naturalHeight - sourceY, CROP_HEIGHT * scaleY);
+      // Calculate the scaling factors from displayed image to original image
+      const scaleFactorX = image.naturalWidth / displayWidth;
+      const scaleFactorY = image.naturalHeight / displayHeight;
+      
+      // Calculate source coordinates on the original image
+      // We need to find where the crop rectangle intersects with the displayed image
+      const sourceX = Math.max(0, (cropX - imageX) * scaleFactorX);
+      const sourceY = Math.max(0, (cropY - imageY) * scaleFactorY);
+      
+      // Calculate source dimensions, ensuring we don't exceed image bounds
+      const maxSourceWidth = image.naturalWidth - sourceX;
+      const maxSourceHeight = image.naturalHeight - sourceY;
+      
+      const sourceWidth = Math.min(maxSourceWidth, CROP_WIDTH * scaleFactorX);
+      const sourceHeight = Math.min(maxSourceHeight, CROP_HEIGHT * scaleFactorY);
 
       console.log('Crop parameters:', {
         sourceX, sourceY, sourceWidth, sourceHeight,
         imageNaturalWidth: image.naturalWidth,
-        imageNaturalHeight: image.naturalHeight
+        imageNaturalHeight: image.naturalHeight,
+        scaleFactorX, scaleFactorY,
+        displayWidth, displayHeight,
+        imageX, imageY,
+        cropX, cropY
       });
 
       // Ensure we have valid source dimensions
