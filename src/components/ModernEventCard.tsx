@@ -19,9 +19,13 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   onActionClick,
 }) => {
   const { user, hasRole } = useAuth();
+  const isComedian = user && hasRole('comedian');
   const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
   const isInterested = interestedEvents.has(event.id);
   const availableSpots = (event.spots || 5) - (event.applied_spots || 0);
+
+  // Check if comedian has already applied (this would need to be passed as prop or fetched)
+  const hasApplied = false; // This should be determined based on actual application data
 
   const eventDate = new Date(event.event_date);
   const dateNumber = eventDate.getDate();
@@ -43,14 +47,21 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   };
 
   const getActionText = () => {
-    if (isConsumer) return 'Get Tickets';
-    return availableSpots <= 0 ? 'Show Full' : 'Apply Now';
+    if (isComedian) {
+      if (hasApplied) return 'Applied';
+      if (availableSpots <= 0) return 'Show Full';
+      return 'Apply';
+    }
+    return 'Tickets';
   };
 
   const getActionClass = () => {
-    if (isConsumer) return 'bg-green-600/80 text-white';
-    if (availableSpots <= 0) return 'bg-gray-600/80 text-white';
-    return 'bg-primary/80 text-white';
+    if (isComedian) {
+      if (hasApplied) return 'bg-gray-600/80 text-white';
+      if (availableSpots <= 0) return 'bg-gray-600/80 text-white';
+      return 'bg-primary/80 text-white';
+    }
+    return 'bg-green-600/80 text-white';
   };
 
   return (
@@ -187,7 +198,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
           <button
             className={`card-action-text transition-all duration-200 hover:opacity-90 ${getActionClass()}`}
             onClick={handleActionClick}
-            disabled={!isConsumer && availableSpots <= 0}
+            disabled={(isComedian && availableSpots <= 0) || (isComedian && hasApplied)}
             style={{
               fontSize: '11px',
               fontWeight: '600',
@@ -196,7 +207,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
               backdropFilter: 'blur(8px)',
               whiteSpace: 'nowrap',
               border: 'none',
-              cursor: availableSpots <= 0 && !isConsumer ? 'not-allowed' : 'pointer',
+              cursor: ((isComedian && availableSpots <= 0) || (isComedian && hasApplied)) ? 'not-allowed' : 'pointer',
             }}
           >
             {getActionText()}
