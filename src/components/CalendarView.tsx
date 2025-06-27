@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Users, Star, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockEvents } from '@/data/mockEvents';
@@ -114,29 +115,29 @@ export const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-50 min-h-screen p-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card className="bg-white shadow-sm border-gray-200">
-          <CardHeader className="border-b border-gray-100">
+        <Card className="bg-card/50 backdrop-blur-sm border-border">
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-gray-900">
+              <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="border-gray-200">
+                <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={goToNextMonth} className="border-gray-200">
+                <Button variant="outline" size="sm" onClick={goToNextMonth}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="grid grid-cols-7 gap-1 mb-4">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center text-sm font-medium text-gray-600 p-2">
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
                   {day}
                 </div>
               ))}
@@ -152,11 +153,11 @@ export const CalendarView: React.FC = () => {
                   <div
                     key={index}
                     className={`
-                      min-h-[80px] p-1 border border-gray-100 cursor-pointer transition-colors rounded-lg
-                      ${isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'}
-                      ${isToday ? 'bg-blue-50 border-blue-200' : ''}
-                      ${isSelected ? 'bg-blue-100 border-blue-300' : ''}
-                      hover:bg-gray-50
+                      min-h-[80px] p-1 border border-border cursor-pointer transition-colors
+                      ${isCurrentMonth ? 'bg-card/30' : 'bg-muted/20 text-muted-foreground'}
+                      ${isToday ? 'bg-primary/20 border-primary' : ''}
+                      ${isSelected ? 'bg-primary/30 border-primary' : ''}
+                      hover:bg-card/50
                     `}
                     onClick={() => setSelectedDate(day)}
                   >
@@ -165,13 +166,13 @@ export const CalendarView: React.FC = () => {
                       {dayEvents.slice(0, 2).map(event => (
                         <div
                           key={event.id}
-                          className="text-xs p-1 bg-blue-500 text-white rounded truncate"
+                          className="text-xs p-1 bg-primary/80 text-primary-foreground rounded truncate"
                         >
                           {event.title}
                         </div>
                       ))}
                       {dayEvents.length > 2 && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           +{dayEvents.length - 2} more
                         </div>
                       )}
@@ -184,8 +185,8 @@ export const CalendarView: React.FC = () => {
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-gray-900">
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">
           {selectedDate ? `Events on ${selectedDate.toLocaleDateString()}` : 'Select a date'}
         </h3>
 
@@ -205,11 +206,11 @@ export const CalendarView: React.FC = () => {
             ))}
           </div>
         ) : (
-          <Card className="bg-white shadow-sm border-gray-200">
+          <Card className="bg-card/50 backdrop-blur-sm border-border">
             <CardContent className="p-8 text-center">
-              <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h4 className="text-lg font-semibold mb-2 text-gray-900">No events scheduled</h4>
-              <p className="text-gray-600">
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
+              <p className="text-muted-foreground">
                 {selectedDate ? 'No events found for this date.' : 'Select a date to view events.'}
               </p>
             </CardContent>
