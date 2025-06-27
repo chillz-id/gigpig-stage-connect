@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Toggle } from '@/components/ui/toggle';
 import { User, Mic, Users, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUser } from '@/contexts/UserContext';
 
 type ViewMode = 'member' | 'comedian' | 'promoter';
 
@@ -14,7 +13,6 @@ interface CustomerViewToggleProps {
 const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('comedian');
   const { hasRole } = useAuth();
-  const { switchToUser } = useUser();
 
   console.log('CustomerViewToggle render - hasRole(promoter):', hasRole('promoter'));
 
@@ -26,7 +24,6 @@ const CustomerViewToggle: React.FC<CustomerViewToggleProps> = ({ onViewChange })
   const handleViewChange = (newView: ViewMode) => {
     console.log('Switching view to:', newView);
     setViewMode(newView);
-    switchToUser(newView);
     onViewChange?.(newView);
   };
 
