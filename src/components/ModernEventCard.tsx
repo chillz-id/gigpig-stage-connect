@@ -66,70 +66,55 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
       
       {/* Content */}
       <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-        {/* Top Section */}
+        {/* Top Section - Just Date Badge */}
         <div className="flex justify-between items-start">
-          {/* Date Badge */}
           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 text-center border border-white/30">
             <div className="text-xs font-medium opacity-80">{month}</div>
             <div className="text-lg font-bold leading-none">{day}</div>
           </div>
-          
-          {/* Heart Icon for Consumers */}
-          {isConsumerUser && (
-            <button
-              onClick={() => onToggleInterested(show)}
-              className={`p-2 rounded-full backdrop-blur-sm border transition-all ${
-                isInterested 
-                  ? 'bg-red-500/80 text-white border-red-500/50' 
-                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-              }`}
-            >
-              <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-            </button>
-          )}
         </div>
 
         {/* Bottom Section */}
-        <div className="space-y-4">
-          {/* Event Info */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold leading-tight">{show.title}</h3>
-            <div className="flex items-center gap-4 text-sm opacity-90">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>{show.venue}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{show.start_time}</span>
-              </div>
-            </div>
-            <div className="text-sm opacity-75">
-              {show.city}, {show.state}
-            </div>
+        <div className="space-y-3">
+          {/* Event Title */}
+          <h3 className="text-xl font-bold leading-tight">{show.title}</h3>
+          
+          {/* Venue and Location */}
+          <div className="flex items-center gap-1 text-sm opacity-90">
+            <MapPin className="w-4 h-4" />
+            <span>{show.venue}</span>
+          </div>
+          
+          {/* Location */}
+          <div className="text-sm opacity-75">
+            {show.city}, {show.state}
           </div>
 
-          {/* Badges */}
+          {/* Time */}
+          <div className="flex items-center gap-1 text-sm opacity-90">
+            <Clock className="w-4 h-4" />
+            <span>{show.start_time}</span>
+          </div>
+
+          {/* Compact Badges Row */}
           <div className="flex gap-2 flex-wrap">
             {isIndustryUser && show.is_verified_only && (
-              <Badge className="bg-gradient-to-r from-yellow-500/80 to-orange-500/80 text-white border-0 text-xs backdrop-blur-sm">
-                <Star className="w-3 h-3 mr-1" />
+              <Badge className="bg-gradient-to-r from-yellow-500/80 to-orange-500/80 text-white border-0 text-xs backdrop-blur-sm px-2 py-1">
                 Pro
               </Badge>
             )}
             {show.type && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm">
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
                 {show.type}
               </Badge>
             )}
             {show.age_restriction && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm">
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
                 {show.age_restriction}
               </Badge>
             )}
             {isIndustryUser && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm">
-                <Users className="w-3 h-3 mr-1" />
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
                 {availableSpots} spots
               </Badge>
             )}
@@ -168,16 +153,14 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
               Details
             </Button>
             
-            {show.address && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onGetDirections(show)}
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm p-2"
-              >
-                <Navigation className="w-4 h-4" />
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onGetDirections(show)}
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm p-2"
+            >
+              <Navigation className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
