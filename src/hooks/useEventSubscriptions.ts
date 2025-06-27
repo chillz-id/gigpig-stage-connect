@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useEventSubscriptions = (
   fetchEvents: () => void,
-  fetchTicketSales: (eventId: string) => void,
   fetchComedianBookings: (eventId: string) => void,
   selectedEvent: string | null
 ) => {
@@ -28,7 +27,6 @@ export const useEventSubscriptions = (
         () => {
           console.log('Ticket sales changed, refreshing data...');
           fetchEvents(); // Refresh events to get updated counts
-          if (selectedEvent) fetchTicketSales(selectedEvent);
         }
       )
       .subscribe();
@@ -49,5 +47,5 @@ export const useEventSubscriptions = (
       supabase.removeChannel(ticketSalesSubscription);
       supabase.removeChannel(comedianBookingsSubscription);
     };
-  }, [selectedEvent, fetchEvents, fetchTicketSales, fetchComedianBookings]);
+  }, [selectedEvent, fetchEvents, fetchComedianBookings]);
 };

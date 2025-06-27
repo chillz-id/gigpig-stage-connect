@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
@@ -19,7 +20,6 @@ const EventManagementContent = () => {
     ticketSales,
     comedianBookings,
     fetchEvents,
-    fetchTicketSales,
     fetchComedianBookings,
     handleDeleteEvent,
     handleViewEventDetails,
@@ -29,7 +29,6 @@ const EventManagementContent = () => {
   // Set up real-time subscriptions
   useEventSubscriptions(
     fetchEvents,
-    fetchTicketSales,
     fetchComedianBookings,
     selectedEvent
   );
