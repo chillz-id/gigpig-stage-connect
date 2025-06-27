@@ -73,16 +73,31 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
               required
             />
           </div>
-          <div>
-            <Label htmlFor="venue">Venue Name *</Label>
-            <Input
-              id="venue"
-              value={formData.venue}
-              onChange={(e) => onFormDataChange({ venue: e.target.value })}
-              placeholder="The Comedy Club"
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="venue">Venue Name *</Label>
+              <Input
+                id="venue"
+                value={formData.venue}
+                onChange={(e) => onFormDataChange({ venue: e.target.value })}
+                placeholder="The Comedy Club"
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="capacity">Capacity *</Label>
+              <Input
+                id="capacity"
+                type="number"
+                min="1"
+                value={formData.capacity || ''}
+                onChange={(e) => onFormDataChange({ capacity: parseInt(e.target.value) || 0 })}
+                placeholder="150"
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                required
+              />
+            </div>
           </div>
         </div>
 
@@ -97,20 +112,17 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <Label htmlFor="capacity">Capacity *</Label>
-            <Input
-              id="capacity"
-              type="number"
-              min="1"
-              value={formData.capacity || ''}
-              onChange={(e) => onFormDataChange({ capacity: parseInt(e.target.value) || 0 })}
-              placeholder="150"
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="address">Full Address</Label>
+          <AddressAutocomplete
+            onAddressSelect={handleAddressSelect}
+            placeholder="Start typing to search for an address..."
+            defaultValue={formData.address}
+            className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="city">City *</Label>
             <Input
@@ -155,16 +167,6 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        <div>
-          <Label htmlFor="address">Full Address</Label>
-          <AddressAutocomplete
-            onAddressSelect={handleAddressSelect}
-            placeholder="Start typing to search for an address..."
-            defaultValue={formData.address}
-            className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
-          />
         </div>
       </CardContent>
     </Card>

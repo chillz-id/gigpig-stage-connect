@@ -150,7 +150,7 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
             <img 
               src={bannerUrl} 
               alt="Event banner preview" 
-              className="w-full max-w-md h-32 object-cover rounded-lg border border-white/20"
+              className="w-full max-w-md h-auto aspect-video object-cover rounded-lg border border-white/20"
             />
           </div>
         )}
