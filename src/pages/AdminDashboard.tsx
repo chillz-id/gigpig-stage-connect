@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Crown, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Crown, Shield, Palette } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import UserManagement from '@/components/admin/UserManagement';
 import EventManagement from '@/components/admin/EventManagement';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
@@ -38,6 +40,25 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
           </div>
           <p className="text-purple-200">Manage all aspects of Stand Up Sydney</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/customization">
+                  <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white">
+                    <Palette className="w-4 h-4 mr-2" />
+                    Customize Website
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
