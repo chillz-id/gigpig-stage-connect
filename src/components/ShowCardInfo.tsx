@@ -5,14 +5,12 @@ import { Calendar, Clock, DollarSign, Users } from 'lucide-react';
 
 interface ShowCardInfoProps {
   show: any;
-  isMemberView: boolean;
   isIndustryUser: boolean;
   availableSpots: number;
 }
 
 export const ShowCardInfo: React.FC<ShowCardInfoProps> = ({
   show,
-  isMemberView,
   isIndustryUser,
   availableSpots,
 }) => {
@@ -29,40 +27,28 @@ export const ShowCardInfo: React.FC<ShowCardInfoProps> = ({
           <Clock className="w-4 h-4" />
           <span>{show.start_time || 'Time TBA'}</span>
         </div>
-        {!isMemberView && isIndustryUser && show.is_paid && (
+        {isIndustryUser && show.is_paid && (
           <div className="flex items-center space-x-1">
             <Users className="w-4 h-4" />
             <span>{Math.max(0, availableSpots)} spots left</span>
           </div>
         )}
-        {!isMemberView && (
-          <div className="flex items-center space-x-1">
-            <DollarSign className="w-4 h-4" />
-            <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
-          </div>
-        )}
+        <div className="flex items-center space-x-1">
+          <DollarSign className="w-4 h-4" />
+          <span>{show.is_paid ? 'Paid Event' : 'Free'}</span>
+        </div>
       </div>
 
-      {!isMemberView && (
-        <div className="flex flex-wrap gap-2">
-          {show.type && (
-            <Badge variant="outline" className="text-foreground border-border">
-              {show.type}
-            </Badge>
-          )}
+      <div className="flex flex-wrap gap-2">
+        {show.type && (
           <Badge variant="outline" className="text-foreground border-border">
-            {show.age_restriction || '18+'}
+            {show.type}
           </Badge>
-        </div>
-      )}
-
-      {isMemberView && (
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-foreground border-border">
-            {show.age_restriction || '18+'}
-          </Badge>
-        </div>
-      )}
+        )}
+        <Badge variant="outline" className="text-foreground border-border">
+          {show.age_restriction || '18+'}
+        </Badge>
+      </div>
 
       {show.description && (
         <p className="text-muted-foreground text-sm line-clamp-2">{show.description}</p>

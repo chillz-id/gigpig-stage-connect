@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -30,9 +29,12 @@ const Profile = () => {
 
   // Check if user is industry user (comedian/promoter)
   const isIndustryUser = hasRole('comedian') || hasRole('promoter');
+  
+  // For now, set isMemberView to false since we're removing the member view concept
+  const isMemberView = false;
 
   // Get profile data using custom hook
-  const { userInterests, mockTickets } = useProfileData(user?.id);
+  const { userInterests, mockTickets } = useProfileData(user?.id, isMemberView);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -114,6 +116,7 @@ const Profile = () => {
         <ProfileTabs
           activeTab={activeTab}
           setActiveTab={handleTabChange}
+          isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
           user={user}
           userInterests={userInterests}

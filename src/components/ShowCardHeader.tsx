@@ -7,7 +7,6 @@ import { ShowCardBadges } from './ShowCardBadges';
 
 interface ShowCardHeaderProps {
   show: any;
-  isMemberView: boolean;
   isInterested: boolean;
   isShowFull: boolean;
   onToggleInterested: (show: any) => void;
@@ -15,7 +14,6 @@ interface ShowCardHeaderProps {
 
 export const ShowCardHeader: React.FC<ShowCardHeaderProps> = ({
   show,
-  isMemberView,
   isInterested,
   isShowFull,
   onToggleInterested,
@@ -33,24 +31,21 @@ export const ShowCardHeader: React.FC<ShowCardHeaderProps> = ({
           <div className="absolute top-2 right-2">
             <ShowCardBadges 
               show={show} 
-              isMemberView={isMemberView} 
               isShowFull={isShowFull} 
             />
           </div>
-          {isMemberView && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`absolute top-2 right-2 ${
-                isInterested 
-                  ? 'text-red-500 hover:text-red-600' 
-                  : 'text-white hover:text-red-500'
-              }`}
-              onClick={() => onToggleInterested(show)}
-            >
-              <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`absolute top-2 right-2 ${
+              isInterested 
+                ? 'text-red-500 hover:text-red-600' 
+                : 'text-white hover:text-red-500'
+            }`}
+            onClick={() => onToggleInterested(show)}
+          >
+            <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+          </Button>
         </div>
       )}
       <CardHeader>
@@ -63,26 +58,22 @@ export const ShowCardHeader: React.FC<ShowCardHeaderProps> = ({
           </div>
           {!show.banner_url && (
             <div className="flex flex-col gap-2">
-              {isMemberView ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`${
-                    isInterested 
-                      ? 'text-red-500 hover:text-red-600' 
-                      : 'text-muted-foreground hover:text-red-500'
-                  }`}
-                  onClick={() => onToggleInterested(show)}
-                >
-                  <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-                </Button>
-              ) : (
-                <ShowCardBadges 
-                  show={show} 
-                  isMemberView={isMemberView} 
-                  isShowFull={isShowFull} 
-                />
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`${
+                  isInterested 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-muted-foreground hover:text-red-500'
+                }`}
+                onClick={() => onToggleInterested(show)}
+              >
+                <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
+              </Button>
+              <ShowCardBadges 
+                show={show} 
+                isShowFull={isShowFull} 
+              />
             </div>
           )}
         </div>

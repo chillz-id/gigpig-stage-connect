@@ -5,14 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Users, DollarSign, Star, Plus, Settings, Bell, MessageCircle, User, Zap, TrendingUp, ArrowUp, ArrowDown, Trophy } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { mockApplications, mockEvents, mockUpcomingGigs } from '@/data/mockData';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { user, profile, hasRole } = useAuth();
-  const { isComedianView } = useViewMode();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<'comedian' | 'promoter' | 'both'>('comedian');
 
@@ -364,7 +362,7 @@ const Dashboard = () => {
         </div>
 
         {/* Role Selector - Hide for comedian view */}
-        {!isComedianView && (
+        
           <div className="mb-6">
             <Tabs value={userRole} onValueChange={(value) => setUserRole(value as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
@@ -401,12 +399,12 @@ const Dashboard = () => {
               </TabsContent>
             </Tabs>
           </div>
-        )}
+        
 
         {/* Show only comedian dashboard when in comedian view */}
-        {isComedianView && (
+        
           <ComedianDashboard />
-        )}
+        
       </div>
     </div>
   );

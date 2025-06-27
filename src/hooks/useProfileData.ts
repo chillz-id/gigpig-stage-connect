@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useProfileData = (userId: string | undefined, isMemberView: boolean) => {
+export const useProfileData = (userId: string | undefined, isMemberView: boolean = false) => {
   // Fetch user interests from database
   const { data: userInterests = [] } = useQuery({
     queryKey: ['user-interests', userId],
@@ -17,10 +17,10 @@ export const useProfileData = (userId: string | undefined, isMemberView: boolean
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userId && isMemberView,
+    enabled: !!userId,
   });
 
-  // Mock tickets data for member users with much larger event images
+  // Mock tickets data with much larger event images
   const mockTickets = [
     {
       id: 1,

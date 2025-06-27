@@ -8,7 +8,6 @@ interface ShowCardActionsProps {
   show: any;
   isIndustryUser: boolean;
   isConsumerUser: boolean;
-  isMemberView: boolean;
   isShowFull: boolean;
   onApply: (show: any) => void;
   onRecurringApply?: (show: any) => void;
@@ -21,7 +20,6 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
   show,
   isIndustryUser,
   isConsumerUser,
-  isMemberView,
   isShowFull,
   onApply,
   onRecurringApply,
@@ -39,7 +37,7 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
 
   return (
     <div className="flex gap-2 flex-wrap">
-      {isIndustryUser && !isMemberView && (
+      {isIndustryUser && (
         <>
           {!isShowFull ? (
             <Button 
@@ -63,7 +61,7 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
         </>
       )}
       
-      {(isConsumerUser || isMemberView) && (
+      {isConsumerUser && (
         <Button 
           className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
           onClick={() => onBuyTickets(show)}
