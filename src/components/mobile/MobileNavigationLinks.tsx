@@ -13,6 +13,11 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 }) => {
   const { user, hasRole } = useAuth();
 
+  // Admin should have access to everything
+  const isAdmin = hasRole('admin');
+  const isPromoter = hasRole('promoter') || isAdmin;
+  const isComedian = hasRole('comedian') || isAdmin;
+
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
   };
@@ -77,8 +82,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             <span>Messages</span>
           </Link>
 
-          {/* Admin Dashboard */}
-          {hasRole('admin') && (
+          {/* Admin Dashboard - Always visible for admins */}
+          {isAdmin && (
             <Link
               to="/admin"
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"
@@ -89,8 +94,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             </Link>
           )}
 
-          {/* Create Event for promoters/admins */}
-          {(hasRole('promoter') || hasRole('admin')) && (
+          {/* Create Event for promoters/admins - Admin should always see this */}
+          {isPromoter && (
             <Link
               to="/create-event"
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors"

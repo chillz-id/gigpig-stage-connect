@@ -8,6 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 const DesktopNavigation: React.FC = () => {
   const { user, hasRole } = useAuth();
 
+  // Admin should have access to everything
+  const isAdmin = hasRole('admin');
+  const isPromoter = hasRole('promoter') || isAdmin;
+  const isComedian = hasRole('comedian') || isAdmin;
+
   return (
     <div className="hidden md:flex items-center space-x-6">
       {/* Main Navigation Links */}
@@ -37,8 +42,8 @@ const DesktopNavigation: React.FC = () => {
       {/* Action Buttons for authenticated users */}
       {user && (
         <div className="flex items-center space-x-3">
-          {/* Admin Dashboard link */}
-          {hasRole('admin') && (
+          {/* Admin Dashboard link - Always visible for admins */}
+          {isAdmin && (
             <Link to="/admin">
               <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 rounded-lg">
                 <Crown className="w-5 h-5 text-yellow-400" />
@@ -46,7 +51,7 @@ const DesktopNavigation: React.FC = () => {
             </Link>
           )}
           
-          {/* Calendar */}
+          {/* Calendar - Always visible for authenticated users */}
           <Link to="/profile?tab=calendar">
             <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent hover:text-accent-foreground relative transition-all duration-200 rounded-lg">
               <Calendar className="w-5 h-5" />
@@ -70,8 +75,8 @@ const DesktopNavigation: React.FC = () => {
             </Button>
           </Link>
 
-          {/* Create Event for promoters/admins */}
-          {(hasRole('promoter') || hasRole('admin')) && (
+          {/* Create Event for promoters/admins - Admin should always see this */}
+          {isPromoter && (
             <Link to="/create-event">
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
                 <Plus className="w-4 h-4 mr-2" />

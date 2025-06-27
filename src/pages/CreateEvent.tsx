@@ -2,15 +2,19 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CreateEventForm } from '@/components/CreateEventForm';
 
 const CreateEvent = () => {
-  const { user } = useUser();
+  const { user, hasRole } = useAuth();
   const navigate = useNavigate();
 
-  if (!user || !user.roles.includes('promoter')) {
+  // Admin should have access to everything, including creating events
+  const isAdmin = hasRole('admin');
+  const isPromoter = hasRole('promoter') || isAdmin;
+
+  if (!user || !isPromoter) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">

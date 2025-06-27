@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userRoles = await fetchRoles(session.user.id);
             console.log('Fetched profile:', userProfile);
             console.log('Fetched roles:', userRoles);
+            console.log('User roles array:', userRoles.map(r => r.role));
             setProfile(userProfile);
             setRoles(userRoles);
           }, 0);
@@ -83,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userRoles = await fetchRoles(session.user.id);
         console.log('Initial profile:', userProfile);
         console.log('Initial roles:', userRoles);
+        console.log('Initial user roles array:', userRoles.map(r => r.role));
         setProfile(userProfile);
         setRoles(userRoles);
       }
@@ -146,8 +148,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const hasRole = (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
-    console.log('Checking role:', role, 'in roles:', roles.map(r => r.role));
-    return roles.some(userRole => userRole.role === role);
+    const hasTheRole = roles.some(userRole => userRole.role === role);
+    console.log(`Checking role: ${role} in roles: [${roles.map(r => r.role).join(', ')}] - Result: ${hasTheRole}`);
+    return hasTheRole;
   };
 
   const isCoPromoterForEvent = async (eventId: string) => {

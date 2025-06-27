@@ -26,7 +26,9 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
 }) => {
   const { user, hasRole } = useAuth();
 
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  // Admin should have access to all features
+  const isAdmin = hasRole('admin');
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || isAdmin);
   const isConsumerUser = !isIndustryUser;
   const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
   const isInterested = interestedEvents.has(show.id);
