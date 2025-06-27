@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Upload, Image, Link, Crop } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { ImageCrop } from '@/components/ImageCrop';
+import { EventImageCrop } from '@/components/EventImageCrop';
 
 interface EventBannerUploadProps {
   bannerUrl: string;
@@ -144,7 +144,7 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
           Recommended size: 1920x1080px. Images will be cropped to this aspect ratio.
         </p>
 
-        <ImageCrop
+        <EventImageCrop
           isOpen={isCropDialogOpen}
           onClose={() => {
             setIsCropDialogOpen(false);
