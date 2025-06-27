@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Users, Star, Heart, MapPin } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MapEventDetailsProps {
   selectedShow: any;
@@ -23,7 +23,10 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
   onBuyTickets,
   onBackToList,
 }) => {
-  const { isMemberView } = useViewMode();
+  const { user, hasRole } = useAuth();
+  
+  // Determine if user is a consumer (not an industry user)
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border">
@@ -35,7 +38,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
             <p className="text-muted-foreground text-sm">{selectedShow.city}, {selectedShow.state}</p>
           </div>
           <div className="flex flex-col gap-2">
-            {isMemberView ? (
+            {isConsumer ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -68,7 +71,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
             <Clock className="w-4 h-4 text-muted-foreground" />
             <span>{selectedShow.start_time}</span>
           </div>
-          {!isMemberView && (
+          {!isConsumer && (
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4 text-muted-foreground" />
               <span>{selectedShow.spots - selectedShow.applied_spots} spots available</span>
@@ -80,12 +83,12 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
           </div>
         </div>
 
-        {/* Only show age restriction for member view */}
+        {/* Only show age restriction for consumers */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="text-foreground border-border">
             {selectedShow.age_restriction}
           </Badge>
-          {!isMemberView && selectedShow.type && (
+          {!isConsumer && selectedShow.type && (
             <Badge variant="outline" className="text-foreground border-border">
               {selectedShow.type}
             </Badge>
@@ -97,7 +100,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
         )}
         
         <div className="flex gap-2">
-          {!isMemberView && (
+          {!isConsumer && (
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90"
               onClick={() => onApply(selectedShow)}
@@ -107,7 +110,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
             </Button>
           )}
           
-          {(isMemberView || selectedShow.is_paid) && (
+          {(isConsumer || selectedShow.is_paid) && (
             <Button 
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
               onClick={() => onBuyTickets(selectedShow)}

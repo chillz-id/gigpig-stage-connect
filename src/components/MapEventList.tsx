@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { mockEvents } from '@/data/mockEvents';
 
 interface MapEventListProps {
@@ -13,8 +12,6 @@ export const MapEventList: React.FC<MapEventListProps> = ({
   onEventSelect,
   selectedShow,
 }) => {
-  const { isMemberView } = useViewMode();
-
   // Filter to show only upcoming events (from today onwards)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -26,7 +23,7 @@ export const MapEventList: React.FC<MapEventListProps> = ({
 
   return (
     <div className="space-y-2">
-      <h4 className="font-semibold">All {isMemberView ? 'Events' : 'Shows'} ({upcomingEvents.length})</h4>
+      <h4 className="font-semibold">All Shows ({upcomingEvents.length})</h4>
       <div className="max-h-96 overflow-y-auto space-y-2">
         {upcomingEvents.map((show) => (
           <button

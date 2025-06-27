@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleMapsComponent } from '@/components/GoogleMapsComponent';
@@ -12,7 +11,6 @@ import { MapEventList } from '@/components/MapEventList';
 export const MapView: React.FC = () => {
   const [selectedShow, setSelectedShow] = useState<any>(null);
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
-  const { isMemberView } = useViewMode();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -105,7 +103,7 @@ export const MapView: React.FC = () => {
             <CardContent className="p-8 text-center">
               <MapPin className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h4 className="text-lg font-semibold mb-2">
-                {isMemberView ? 'Explore Events Across Australia' : 'Explore Australia\'s Comedy Scene'}
+                Explore Australia's Comedy Scene
               </h4>
               <p className="text-muted-foreground text-sm">
                 Select an event from the list below to see details

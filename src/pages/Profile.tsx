@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -9,7 +10,6 @@ import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useProfileData } from '@/hooks/useProfileData';
@@ -17,7 +17,6 @@ import { useProfileData } from '@/hooks/useProfileData';
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const { hasRole } = useAuth();
-  const { isMemberView } = useViewMode();
   const { toast } = useToast();
   const location = useLocation();
   
@@ -33,7 +32,7 @@ const Profile = () => {
   const isIndustryUser = hasRole('comedian') || hasRole('promoter');
 
   // Get profile data using custom hook
-  const { userInterests, mockTickets } = useProfileData(user?.id, isMemberView);
+  const { userInterests, mockTickets } = useProfileData(user?.id);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -115,7 +114,6 @@ const Profile = () => {
         <ProfileTabs
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
           user={user}
           userInterests={userInterests}

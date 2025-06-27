@@ -1,13 +1,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 export const useBrowseLogic = () => {
   const { user, profile, hasRole } = useAuth();
-  const { isMemberView } = useViewMode();
   const { toast } = useToast();
   const navigate = useNavigate();
   

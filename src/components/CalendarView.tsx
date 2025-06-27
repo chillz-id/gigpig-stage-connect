@@ -2,9 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Users, Star, Heart } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
+import { Badge } from '@/components/ui/badge';import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Users, Star, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockEvents } from '@/data/mockEvents';
@@ -13,8 +11,7 @@ export const CalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
-  const { isMemberView } = useViewMode();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
 
   // Filter to show only upcoming events (from today onwards)
@@ -28,6 +25,9 @@ export const CalendarView: React.FC = () => {
 
   // Use upcoming events for all views
   const eventsToShow = upcomingEvents;
+
+  // Determine if user is a consumer (not an industry user)
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
 
   const handleToggleInterested = (event: any) => {
     if (!user) {
@@ -206,7 +206,7 @@ export const CalendarView: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      {isMemberView && (
+                      {isConsumer && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -222,101 +222,68 @@ export const CalendarView: React.FC = () => {
                       )}
                     </div>
                   )}
-                  
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{event.title}</CardTitle>
-                        <p className="text-muted-foreground text-sm">{event.venue}</p>
-                        <p className="text-muted-foreground text-sm">{event.city}, {event.state}</p>
-                      </div>
-                      {!event.banner_url && (
-                        <div className="flex flex-col gap-2">
-                          {isMemberView ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`${
-                                isInterested 
-                                  ? 'text-red-500 hover:text-red-600' 
-                                  : 'text-muted-foreground hover:text-red-500'
-                              }`}
-                              onClick={() => handleToggleInterested(event)}
-                            >
-                              <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-                            </Button>
-                          ) : (
-                            <>
-                              {event.is_verified_only && (
-                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                                  <Star className="w-3 h-3 mr-1" />
-                                  Comedian Pro
-                                </Badge>
-                              )}
-                              {availableSpots <= 0 && (
-                                <Badge variant="destructive">Full</Badge>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{event.start_time}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{event.city}, {event.state}</span>
-                      </div>
-                      {!isMemberView && (
-                        <div className="flex items-center space-x-1">
-                          <Users className="w-4 h-4" />
-                          <span>{Math.max(0, availableSpots)} spots left</span>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {isMemberView ? (
-                        <Badge variant="outline" className="text-foreground border-border">
-                          {event.age_restriction}
-                        </Badge>
-                      ) : (
-                        <>
-                          {event.type && (
-                            <Badge variant="outline" className="text-foreground border-border">
-                              {event.type}
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className="text-foreground border-border">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-lg">{event.title}</h4>
+                        <p className="text-muted-foreground">{event.venue}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        {/* For consumers, only show age restriction */}
+                        {isConsumer ? (
+                          <Badge variant="outline" className="text-xs">
                             {event.age_restriction}
                           </Badge>
-                        </>
+                        ) : (
+                          <>
+                            {event.is_verified_only && (
+                              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-xs">
+                                <Star className="w-3 h-3 mr-1" />
+                                Pro
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {event.type}
+                            </Badge>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {event.start_time}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {event.city}, {event.state}
+                      </div>
+                      {!isConsumer && (
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {availableSpots} spots
+                        </div>
                       )}
                     </div>
 
-                    {event.description && (
-                      <p className="text-muted-foreground text-sm line-clamp-2">{event.description}</p>
-                    )}
-
-                    <div className="flex gap-2 flex-wrap">
-                      {!isMemberView && (
+                    <div className="flex gap-2">
+                      {!isConsumer && (
                         <Button 
-                          className="flex-1 bg-primary hover:bg-primary/90"
+                          size="sm" 
+                          className="flex-1"
                           onClick={() => handleApply(event)}
                           disabled={availableSpots <= 0}
                         >
-                          {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
+                          {availableSpots <= 0 ? 'Full' : 'Apply'}
                         </Button>
                       )}
                       
-                      {(isMemberView || event.is_paid) && (
+                      {(isConsumer || event.is_paid) && (
                         <Button 
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                          size="sm" 
+                          className="flex-1 bg-green-600 hover:bg-green-700"
                           onClick={() => handleBuyTickets(event)}
                         >
                           Buy Tickets
@@ -328,25 +295,13 @@ export const CalendarView: React.FC = () => {
               );
             })}
           </div>
-        ) : selectedDate ? (
-          <Card className="bg-card/50 backdrop-blur-sm border-border">
-            <CardContent className="p-8 text-center">
-              <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">No events on this date</h4>
-              <p className="text-muted-foreground text-sm">
-                Check other dates for upcoming shows
-              </p>
-            </CardContent>
-          </Card>
         ) : (
           <Card className="bg-card/50 backdrop-blur-sm border-border">
             <CardContent className="p-8 text-center">
               <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">
-                {isMemberView ? 'Find Events to Attend' : 'Find Shows to Apply For'}
-              </h4>
-              <p className="text-muted-foreground text-sm">
-                Click on any date to see available {isMemberView ? 'events' : 'shows'}
+              <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
+              <p className="text-muted-foreground">
+                {selectedDate ? 'No events found for this date.' : 'Select a date to view events.'}
               </p>
             </CardContent>
           </Card>

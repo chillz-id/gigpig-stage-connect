@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
-import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Navigation } from "@/components/Navigation";
@@ -48,118 +47,116 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <UserProvider>
-                  <ViewModeProvider>
-                    <div className="min-h-screen bg-background font-sans antialiased">
-                      <Navigation />
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/browse" element={<Browse />} />
-                        <Route path="/comedians" element={<Comedians />} />
-                        <Route path="/comedian/:slug" element={<ComedianProfile />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/pricing" element={<Pricing />} />
-                        <Route path="/event/:id" element={<EventDetails />} />
-                        <Route path="/series/:id" element={<EventSeries />} />
-                        <Route
-                          path="/dashboard"
-                          element={
-                            <ProtectedRoute>
-                              <Dashboard />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin"
-                          element={
-                            <ProtectedRoute roles={['admin']}>
-                              <AdminDashboard />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/customization"
-                          element={
-                            <ProtectedRoute roles={['admin']}>
-                              <CustomizationSettings />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/profile"
-                          element={
-                            <ProtectedRoute>
-                              <Profile />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/create-event"
-                          element={
-                            <ProtectedRoute>
-                              <CreateEvent />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/applications"
-                          element={
-                            <ProtectedRoute>
-                              <Applications />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/messages"
-                          element={
-                            <ProtectedRoute>
-                              <Messages />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/notifications"
-                          element={
-                            <ProtectedRoute>
-                              <Notifications />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/invoices"
-                          element={
-                            <ProtectedRoute>
-                              <Invoices />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/marketplace"
-                          element={
-                            <ProtectedRoute>
-                              <Marketplace />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/organizer"
-                          element={
-                            <ProtectedRoute>
-                              <Organizer />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/promoter-settings"
-                          element={
-                            <ProtectedRoute>
-                              <PromoterSettings />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </div>
-                  </ViewModeProvider>
+                  <div className="min-h-screen bg-background font-sans antialiased">
+                    <Navigation />
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/comedians" element={<Comedians />} />
+                      <Route path="/comedian/:slug" element={<ComedianProfile />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                      <Route path="/event/:id" element={<EventDetails />} />
+                      <Route path="/series/:id" element={<EventSeries />} />
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin"
+                        element={
+                          <ProtectedRoute roles={['admin']}>
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/customization"
+                        element={
+                          <ProtectedRoute roles={['admin']}>
+                            <CustomizationSettings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/create-event"
+                        element={
+                          <ProtectedRoute>
+                            <CreateEvent />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/applications"
+                        element={
+                          <ProtectedRoute>
+                            <Applications />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/messages"
+                        element={
+                          <ProtectedRoute>
+                            <Messages />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <Notifications />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/invoices"
+                        element={
+                          <ProtectedRoute>
+                            <Invoices />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/marketplace"
+                        element={
+                          <ProtectedRoute>
+                            <Marketplace />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/organizer"
+                        element={
+                          <ProtectedRoute>
+                            <Organizer />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promoter-settings"
+                        element={
+                          <ProtectedRoute>
+                            <PromoterSettings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
                 </UserProvider>
               </AuthProvider>
             </BrowserRouter>

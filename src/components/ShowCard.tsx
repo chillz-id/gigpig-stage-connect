@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { ShowCardHeader } from './ShowCardHeader';
 import { ShowCardInfo } from './ShowCardInfo';
 import { ShowCardActions } from './ShowCardActions';
@@ -29,7 +28,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   onRecurringApply,
 }) => {
   const { user, hasRole } = useAuth();
-  const { isMemberView } = useViewMode();
 
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
@@ -41,7 +39,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
     <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground hover:bg-card/70 transition-colors overflow-hidden">
       <ShowCardHeader
         show={show}
-        isMemberView={isMemberView}
         isInterested={isInterested}
         isShowFull={isShowFull}
         onToggleInterested={onToggleInterested}
@@ -49,7 +46,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
       <CardContent className="space-y-4">
         <ShowCardInfo
           show={show}
-          isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
           availableSpots={availableSpots}
         />
@@ -57,7 +53,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({
           show={show}
           isIndustryUser={isIndustryUser}
           isConsumerUser={isConsumerUser}
-          isMemberView={isMemberView}
           isShowFull={isShowFull}
           onApply={onApply}
           onRecurringApply={onRecurringApply}

@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Youtube } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import VouchButton from './VouchButton';
 import { Comedian } from '@/types/comedian';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ComedianCardProps {
   comedian: Comedian;
@@ -14,7 +15,7 @@ interface ComedianCardProps {
 }
 
 const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onContact }) => {
-  const { isMemberView } = useViewMode();
+  const { user, hasRole } = useAuth();
 
   // Mock social media data for demonstration
   const mockSocialMedia = {
@@ -25,6 +26,7 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
   };
 
   const socialMedia = comedian.social_media || mockSocialMedia;
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-colors">
@@ -111,8 +113,8 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           />
         </div>
 
-        {/* Only show contact button for industry users, not members */}
-        {!isMemberView && (
+        {/* Only show contact button for industry users */}
+        {isIndustryUser && (
           <Button
             size="sm"
             className="w-full"
@@ -128,8 +130,8 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
           </Button>
         )}
 
-        {/* For members, show a different action */}
-        {isMemberView && (
+        {/* For consumers, show a different action */}
+        {!isIndustryUser && (
           <Button
             size="sm"
             className="w-full"

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface ProfileHeaderProps {
   user: any;
@@ -18,8 +17,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onImageSelect,
   onLogout
 }) => {
-  const { isMemberView } = useViewMode();
-
   const getMembershipBadgeColor = (membership: string) => {
     switch (membership) {
       case 'premium':
@@ -32,14 +29,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   };
 
   // Provide default values for potentially undefined properties
-  const membership = user.membership || (isMemberView ? 'member' : 'basic');
+  const membership = user.membership || 'basic';
   const userName = user.name || 'User';
   const userBio = user.bio || 'No bio available';
   const userLocation = user.location || 'Location not set';
   const joinDate = user.joinDate || 'Recently joined';
-  const showCount = isMemberView 
-    ? (user.stats?.showsAttended || 0)
-    : (user.stats?.showsPerformed || 0);
+  const showCount = user.stats?.showsPerformed || 0;
 
   return (
     <Card className="professional-card mb-8">
@@ -85,19 +80,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </div>
               <div className="flex items-center gap-1">
                 <Trophy className="w-4 h-4 text-yellow-400 fill-current" />
-                <span>{showCount} shows {isMemberView ? 'attended' : 'performed'}</span>
+                <span>{showCount} shows performed</span>
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {/* Only show Message button for non-member view (industry users) */}
-            {!isMemberView && (
-              <Button variant="outline" size="sm">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Message
-              </Button>
-            )}
-            {/* Show Vouch button for all users */}
+            <Button variant="outline" size="sm">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Message
+            </Button>
             <Button variant="outline" size="sm">
               <Award className="w-4 h-4 mr-2" />
               Vouch

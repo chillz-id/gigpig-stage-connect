@@ -3,7 +3,6 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import { useViewMode } from '@/contexts/ViewModeContext';
 
 interface SearchAndFiltersProps {
   searchTerm: string;
@@ -22,8 +21,6 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   typeFilter,
   setTypeFilter,
 }) => {
-  const { isMemberView } = useViewMode();
-
   return (
     <div className="mb-6 space-y-4">
       <div className="flex flex-col md:flex-row gap-4">
@@ -64,20 +61,18 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             <SelectItem value="Toowoomba">Toowoomba, QLD</SelectItem>
           </SelectContent>
         </Select>
-        {!isMemberView && (
-          <Select onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
-              <SelectValue placeholder="Show Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="open mic">Open Mic</SelectItem>
-              <SelectItem value="semi-pro">Semi-Pro</SelectItem>
-              <SelectItem value="pro">Professional</SelectItem>
-              <SelectItem value="mixed">Mixed</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
+        <Select onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+            <SelectValue placeholder="Show Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="open mic">Open Mic</SelectItem>
+            <SelectItem value="semi-pro">Semi-Pro</SelectItem>
+            <SelectItem value="pro">Professional</SelectItem>
+            <SelectItem value="mixed">Mixed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

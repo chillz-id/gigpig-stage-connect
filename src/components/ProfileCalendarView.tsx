@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2, Plus } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { useUser } from '@/contexts/UserContext';
-import { useViewMode } from '@/contexts/ViewModeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,18 +23,22 @@ interface CalendarEvent {
 
 export const ProfileCalendarView: React.FC = () => {
   const { user } = useUser();
-  const { isMemberView, isComedianView } = useViewMode();
+  const { hasRole } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
+  // Determine if user is a consumer (not an industry user)
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
+  const isComedian = hasRole('comedian');
+
   // Fetch calendar events based on user type
   const { data: calendarEvents = [], isLoading } = useQuery<CalendarEvent[]>({
-    queryKey: ['calendar-events', user?.id, isMemberView],
+    queryKey: ['calendar-events', user?.id, isConsumer],
     queryFn: async () => {
       if (!user?.id) return [];
 
-      if (isMemberView) {
-        // For members, fetch events they're interested in
+      if (isConsumer) {
+        // For consumers, fetch events they're interested in
         const { data, error } = await supabase
           .from('user_interests')
           .select('id, event_title, venue, event_date')
@@ -139,10 +143,10 @@ export const ProfileCalendarView: React.FC = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              {isMemberView ? 'Event Calendar' : 'My Calendar'}
+              {isConsumer ? 'Event Calendar' : 'My Calendar'}
             </CardTitle>
-            {/* Only show Add Event button for non-member and non-comedian views (i.e., promoters) */}
-            {!isMemberView && !isComedianView && (
+            {/* Only show Add Event button for promoters */}
+            {!isConsumer && !isComedian && (
               <Button size="sm" onClick={handleAddEvent}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Event
@@ -170,7 +174,7 @@ export const ProfileCalendarView: React.FC = () => {
             />
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
-            {isMemberView 
+            {isConsumer 
               ? 'Dates with events you\'re interested in are highlighted'
               : 'Dates with your events are highlighted'
             }
@@ -189,7 +193,7 @@ export const ProfileCalendarView: React.FC = () => {
               <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
               <p className="text-muted-foreground">
-                {isMemberView 
+                {isConsumer 
                   ? "You don't have any events of interest for this day"
                   : "You don't have any events scheduled for this day"
                 }
@@ -218,7 +222,7 @@ export const ProfileCalendarView: React.FC = () => {
                     <Clock className="w-4 h-4" />
                     <span>{event.event_date ? format(parseISO(event.event_date), 'h:mm a') : 'Time TBA'}</span>
                   </div>
-                  {!isMemberView && event.calendar_sync_status && (
+                  {!isConsumer && event.calendar_sync_status && (
                     <div className="flex items-center space-x-1">
                       <Users className="w-4 h-4" />
                       <span>Sync: {event.calendar_sync_status}</span>
@@ -226,7 +230,7 @@ export const ProfileCalendarView: React.FC = () => {
                   )}
                 </div>
                 
-                {!isMemberView && (
+                {!isConsumer && (
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 

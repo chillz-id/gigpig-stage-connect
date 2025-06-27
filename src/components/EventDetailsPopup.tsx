@@ -23,7 +23,7 @@ import {
   Navigation
 } from 'lucide-react';
 import { useEventSpots } from '@/hooks/useEventSpots';
-import { useViewMode } from '@/contexts/ViewModeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EventDetailsPopupProps {
   event: any;
@@ -47,7 +47,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
   isConsumerUser
 }) => {
   const { spots, isLoading: spotsLoading } = useEventSpots(event?.id || '');
-  const { isMemberView } = useViewMode();
+  const { user, hasRole } = useAuth();
 
   if (!event) return null;
 
@@ -57,6 +57,9 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
   
   const filledSpots = spots?.filter(spot => spot.is_filled) || [];
   const availableSpots = spots?.filter(spot => !spot.is_filled) || [];
+
+  // Determine if user is a consumer (not an industry user)
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -108,8 +111,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span>{event.city}, {event.state}</span>
                   </div>
-                  {/* Only show paid event info for non-member views */}
-                  {!isMemberView && (
+                  {/* Show paid event info for industry users */}
+                  {!isConsumer && (
                     <div className="flex items-center space-x-2">
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <span>{event.is_paid ? 'Paid Event' : 'Free Event'}</span>
@@ -132,8 +135,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  {/* For member view, only show age restriction */}
-                  {isMemberView ? (
+                  {/* For consumers, only show age restriction */}
+                  {isConsumer ? (
                     <Badge variant="outline">
                       {event.age_restriction}
                     </Badge>
@@ -165,8 +168,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                   )}
                 </div>
 
-                {/* Only show requirements for non-member views */}
-                {!isMemberView && event.requirements && (
+                {/* Only show requirements for industry users */}
+                {!isConsumer && event.requirements && (
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Requirements:</p>
                     <div className="bg-muted p-3 rounded-lg">
@@ -178,7 +181,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
 
               <Separator />
 
-              {/* Confirmed Line-up - Changed icon from Music to Mic */}
+              {/* Confirmed Line-up */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Mic className="w-5 h-5" />
@@ -201,8 +204,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          {/* Only show payment info for non-member views */}
-                          {!isMemberView && spot.is_paid && (
+                          {/* Only show payment info for industry users */}
+                          {!isConsumer && spot.is_paid && (
                             <Badge className="bg-green-600">
                               ${spot.payment_amount} {spot.currency}
                             </Badge>
@@ -249,8 +252,8 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 </div>
               </div>
 
-              {/* Available Spots Details - only show for non-member views */}
-              {!isMemberView && isUpcoming && availableSpots.length > 0 && (
+              {/* Available Spots Details - only show for industry users */}
+              {!isConsumer && isUpcoming && availableSpots.length > 0 && (
                 <div className="border rounded-lg p-4">
                   <h3 className="font-semibold mb-4">Available Spots</h3>
                   <div className="space-y-3">
@@ -275,7 +278,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {isIndustryUser && isUpcoming && !isMemberView && (
+                {isIndustryUser && isUpcoming && !isConsumer && (
                   <Button 
                     onClick={() => onApply(event)}
                     disabled={availableSpots.length <= 0}
@@ -285,7 +288,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                   </Button>
                 )}
                 
-                {(isConsumerUser || isMemberView) && event.is_paid && (
+                {(isConsumerUser || isConsumer) && event.is_paid && (
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700"
                     onClick={() => onBuyTickets(event)}

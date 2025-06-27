@@ -11,11 +11,9 @@ import { RecurringApplicationDateSelector } from '@/components/RecurringApplicat
 import { TicketPage } from '@/components/TicketPage';
 import { MonthFilter } from '@/components/MonthFilter';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
-import { useViewMode } from '@/contexts/ViewModeContext';
 import { mockEvents } from '@/data/mockEvents';
 
 const Browse = () => {
-  const { isMemberView } = useViewMode();
   const { events, isLoading } = useEvents();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -90,7 +88,7 @@ const Browse = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
             <p className="text-muted-foreground">
-              {isMemberView ? 'Find shows to attend and buy tickets' : 'Find gigs near you'}
+              Find gigs near you
             </p>
           </div>
 
