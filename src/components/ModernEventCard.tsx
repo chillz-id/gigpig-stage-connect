@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEventApplications } from '@/hooks/useEventApplications';
 
 interface ModernEventCardProps {
   show: any;
@@ -25,6 +26,16 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   onRecurringApply,
 }) => {
   const { user, hasRole } = useAuth();
+  const { userApplications } = useEventApplications();
+  const [hasApplied, setHasApplied] = useState(false);
+
+  // Check if user has applied to this event
+  useEffect(() => {
+    if (user && userApplications) {
+      const application = userApplications.find(app => app.event_id === show.id);
+      setHasApplied(!!application);
+    }
+  }, [user, userApplications, show.id]);
 
   // Admin should have access to all features
   const isAdmin = hasRole('admin');
@@ -34,16 +45,18 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   const isInterested = interestedEvents.has(show.id);
   const isShowFull = availableSpots <= 0;
 
-  const handleApplyClick = () => {
+  const handleApplyClick = async () => {
     if (show.is_recurring && onRecurringApply) {
       onRecurringApply(show);
     } else {
-      onApply(show);
+      await onApply(show);
     }
+    // Update local state to reflect application
+    setHasApplied(true);
   };
 
   const handleCardClick = () => {
-    if (isIndustryUser && !isShowFull) {
+    if (isIndustryUser && !isShowFull && !hasApplied) {
       handleApplyClick();
     } else if (isConsumerUser) {
       onBuyTickets(show);
@@ -64,9 +77,6 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   // Determine action text based on user type and show status
   const getActionText = () => {
     if (isIndustryUser) {
-      // Check if user has already applied (this would need to be passed as a prop or determined from data)
-      // For now, using a simple check - you may need to adjust based on your data structure
-      const hasApplied = false; // This should be determined from your application data
       return hasApplied ? 'Applied' : 'Apply';
     } else {
       return isShowFull ? 'Join Waitlist' : 'Get Tickets';
@@ -131,7 +141,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
           </div>
           
           {/* Action Text - Bottom Right */}
-          <div className="text-xs font-medium opacity-90">
+          <div className={`text-xs font-medium ${hasApplied ? 'text-green-400' : 'opacity-90'}`}>
             {getActionText()}
           </div>
         </div>

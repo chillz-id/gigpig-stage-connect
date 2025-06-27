@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Sun } from 'lucide-react';
-import { PigIcon } from '@/components/ui/pig-icon';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const ThemeControls: React.FC = () => {
@@ -11,10 +10,6 @@ const ThemeControls: React.FC = () => {
 
   const toggleDarkMode = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
-  const togglePigMode = () => {
-    setTheme(theme === 'pig' ? 'light' : 'pig');
   };
 
   return (
@@ -28,15 +23,6 @@ const ThemeControls: React.FC = () => {
         />
         <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'} transition-colors duration-200`} />
       </div>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={togglePigMode}
-        className={`w-10 h-10 p-0 rounded-lg transition-all duration-200 ${theme === 'pig' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
-      >
-        <PigIcon className="w-5 h-5" />
-      </Button>
     </div>
   );
 };

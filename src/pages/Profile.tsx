@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -7,15 +8,13 @@ import { ContactRequests } from '@/components/ContactRequests';
 import { ImageCrop } from '@/components/ImageCrop';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
-import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useProfileData } from '@/hooks/useProfileData';
 
 const Profile = () => {
-  const { user, logout, updateUser } = useUser();
-  const { hasRole } = useAuth();
+  const { user, profile, signOut, updateProfile, hasRole } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   
@@ -67,7 +66,7 @@ const Profile = () => {
       title: "Signed Out",
       description: "You have been successfully signed out.",
     });
-    logout();
+    signOut();
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +82,7 @@ const Profile = () => {
   };
 
   const handleCroppedImage = (croppedImage: string) => {
-    updateUser({ avatar: croppedImage });
+    updateProfile({ avatar_url: croppedImage });
     toast({
       title: "Profile Picture Updated",
       description: "Your profile picture has been successfully updated.",
@@ -102,12 +101,22 @@ const Profile = () => {
     window.history.replaceState({}, '', newUrl.toString());
   };
 
+  // Create a user object that matches the expected interface for ProfileHeader and ProfileTabs
+  const userForComponents = {
+    id: user.id,
+    email: user.email || '',
+    name: profile?.name || '',
+    avatar: profile?.avatar_url || '',
+    role: hasRole('admin') ? 'admin' : hasRole('promoter') ? 'promoter' : 'comedian',
+    isVerified: profile?.is_verified || false
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Profile Header */}
         <ProfileHeader 
-          user={user}
+          user={userForComponents}
           onImageSelect={handleImageSelect}
           onLogout={handleLogout}
         />
@@ -118,7 +127,7 @@ const Profile = () => {
           setActiveTab={handleTabChange}
           isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
-          user={user}
+          user={userForComponents}
           userInterests={userInterests}
           mockTickets={mockTickets}
           onSave={handleSaveProfile}
