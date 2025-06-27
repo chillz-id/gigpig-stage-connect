@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
-import { ModernEventCard } from '@/components/ModernEventCard';
+import { ShowCard } from '@/components/ShowCard';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
 import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
@@ -64,26 +64,16 @@ const Browse = () => {
     return matchesMonth && matchesSearch;
   });
 
-  const handleCardClick = (event: any) => {
-    handleShowDetails(event);
-  };
-
-  const handleActionClick = (event: any) => {
-    if (!isIndustryUser) {
-      handleBuyTickets(event);
-    } else {
-      if (event.is_recurring) {
-        setSelectedRecurringEvent(event);
-        setShowRecurringApplicationSelector(true);
-      } else {
-        handleApply(event);
-      }
-    }
+  const handleRecurringApply = (event: any) => {
+    setSelectedRecurringEvent(event);
+    setShowRecurringApplicationSelector(true);
   };
 
   const handleRecurringApplicationSubmit = (event: any, selectedDates: Date[]) => {
+    // Handle the application for multiple dates
     console.log('Applying for event:', event.title, 'on dates:', selectedDates);
-    handleApply(event);
+    // This would normally make API calls for each selected date
+    handleApply(event); // For now, just use the regular apply logic
   };
 
   const handleMonthChange = (month: number, year: number) => {
@@ -93,65 +83,63 @@ const Browse = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          {/* Header Section */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover Comedy Events</h1>
-            <p className="text-gray-600">
-              Find amazing comedy shows near you
+            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
+            <p className="text-muted-foreground">
+              Find gigs near you
             </p>
           </div>
 
-          {/* Search Section */}
-          <div className="mb-8">
-            <div className="max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Search events, venues, or locations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-                />
-              </div>
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search for events"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
+              />
             </div>
           </div>
 
           {/* Month Filter */}
-          <div className="mb-8">
-            <MonthFilter
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={handleMonthChange}
-            />
-          </div>
+          <MonthFilter
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
+          />
 
-          {/* Events Grid */}
-          <div className="mt-8">
+          {/* Event Cards */}
+          <div className="mt-6">
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="text-xl text-gray-500">Loading events...</div>
+              <div className="text-center py-8">
+                <div className="text-xl text-muted-foreground">Loading events...</div>
               </div>
             ) : filteredEvents.length === 0 ? (
-              <Card className="bg-white border-gray-200 shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
-                  <p className="text-gray-500">
+              <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
+                <CardContent className="p-8 text-center">
+                  <h3 className="text-xl font-semibold mb-2">No shows found</h3>
+                  <p className="text-muted-foreground">
                     Try selecting a different month or adjusting your search
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-                {filteredEvents.map((event) => (
-                  <ModernEventCard
-                    key={event.id}
-                    event={event}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.map((show) => (
+                  <ShowCard
+                    key={show.id}
+                    show={show}
                     interestedEvents={interestedEvents}
                     onToggleInterested={handleToggleInterested}
-                    onCardClick={handleCardClick}
-                    onActionClick={handleActionClick}
+                    onApply={handleApply}
+                    onBuyTickets={handleBuyTickets}
+                    onShowDetails={handleShowDetails}
+                    onGetDirections={handleGetDirections}
+                    onRecurringApply={handleRecurringApply}
                   />
                 ))}
               </div>
