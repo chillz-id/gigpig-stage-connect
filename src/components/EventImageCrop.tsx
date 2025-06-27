@@ -88,8 +88,10 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
   }, [crop, scale, imageLoaded]);
 
   React.useEffect(() => {
-    drawCanvas();
-  }, [drawCanvas]);
+    if (imageLoaded) {
+      drawCanvas();
+    }
+  }, [drawCanvas, imageLoaded]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -116,12 +118,18 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
     console.log('Apply button clicked - starting crop process');
     const canvas = canvasRef.current;
     const image = imageRef.current;
-    if (!canvas || !image) {
-      console.error('Canvas or image not available for cropping');
+    
+    if (!canvas || !image || !imageLoaded) {
+      console.error('Canvas, image, or imageLoaded not available for cropping', { 
+        canvas: !!canvas, 
+        image: !!image, 
+        imageLoaded 
+      });
       return;
     }
 
     try {
+      console.log('Creating crop canvas...');
       // Create a new canvas for the cropped image
       const cropCanvas = document.createElement('canvas');
       const cropCtx = cropCanvas.getContext('2d');
@@ -137,6 +145,13 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
       // Calculate the crop area on the original image
       const containerWidth = 500;
       const containerHeight = 400;
+      
+      // Prevent division by zero
+      if (image.naturalHeight === 0) {
+        console.error('Image natural height is 0');
+        return;
+      }
+      
       const imageAspect = image.naturalWidth / image.naturalHeight;
       const containerAspect = containerWidth / containerHeight;
       
@@ -147,6 +162,12 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
       } else {
         displayHeight = containerHeight * scale[0];
         displayWidth = (containerHeight * imageAspect) * scale[0];
+      }
+
+      // Prevent division by zero
+      if (displayWidth === 0 || displayHeight === 0) {
+        console.error('Display dimensions are 0', { displayWidth, displayHeight });
+        return;
       }
 
       const x = (containerWidth - displayWidth) / 2 + crop.x;
@@ -162,6 +183,18 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
       const sourceY = Math.max(0, (cropY - y) * scaleY);
       const sourceWidth = Math.min(image.naturalWidth - sourceX, CROP_WIDTH * scaleX);
       const sourceHeight = Math.min(image.naturalHeight - sourceY, CROP_HEIGHT * scaleY);
+
+      console.log('Crop parameters:', {
+        sourceX, sourceY, sourceWidth, sourceHeight,
+        imageNaturalWidth: image.naturalWidth,
+        imageNaturalHeight: image.naturalHeight
+      });
+
+      // Ensure we have valid source dimensions
+      if (sourceWidth <= 0 || sourceHeight <= 0) {
+        console.error('Invalid source dimensions', { sourceWidth, sourceHeight });
+        return;
+      }
 
       // Draw the cropped portion at full resolution
       cropCtx.drawImage(
@@ -196,6 +229,21 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
     setImageLoaded(true);
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Image failed to load:', e);
+    setImageLoaded(false);
+  };
+
+  // Reset state when dialog opens/closes
+  React.useEffect(() => {
+    if (isOpen) {
+      setImageLoaded(false);
+      setCrop({ x: 0, y: 0 });
+      setScale([1]);
+      setIsDragging(false);
+    }
+  }, [isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl bg-gray-800 border-gray-600 text-white">
@@ -220,7 +268,7 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
               alt="Crop preview"
               className="hidden"
               onLoad={handleImageLoad}
-              onError={(e) => console.error('Image failed to load:', e)}
+              onError={handleImageError}
             />
           </div>
           
@@ -238,6 +286,7 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
 
           <p className="text-sm text-gray-300">
             Drag to position the image. The cropped banner will be 1920x1080 pixels.
+            {!imageLoaded && imageUrl && <span className="text-yellow-400"> (Loading image...)</span>}
           </p>
 
           <div className="flex gap-2">
@@ -249,7 +298,11 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleCrop} className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500">
+            <Button 
+              onClick={handleCrop} 
+              className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500"
+              disabled={!imageLoaded}
+            >
               <Check className="w-4 h-4 mr-2" />
               Apply
             </Button>
