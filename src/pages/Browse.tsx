@@ -110,6 +110,7 @@ const Browse = () => {
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onMonthChange={handleMonthChange}
+            events={upcomingEvents}
           />
 
           {/* Event Cards */}

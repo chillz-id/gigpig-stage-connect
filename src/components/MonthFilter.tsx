@@ -6,12 +6,14 @@ interface MonthFilterProps {
   selectedMonth: number;
   selectedYear: number;
   onMonthChange: (month: number, year: number) => void;
+  events?: any[]; // Add events prop to check which months have events
 }
 
 export const MonthFilter: React.FC<MonthFilterProps> = ({
   selectedMonth,
   selectedYear,
-  onMonthChange
+  onMonthChange,
+  events = []
 }) => {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -21,6 +23,14 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
+
+  // Function to check if a month has any events
+  const hasEventsInMonth = (monthIndex: number, year: number) => {
+    return events.some(event => {
+      const eventDate = new Date(event.event_date);
+      return eventDate.getMonth() === monthIndex && eventDate.getFullYear() === year;
+    });
+  };
 
   return (
     <div className="flex items-center justify-between mb-6">
@@ -59,7 +69,9 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
         {months.map((month, index) => {
           const isSelected = selectedMonth === index && selectedYear === selectedYear;
           const isCurrentMonth = index === currentMonth && selectedYear === currentYear;
-          const isDisabled = selectedYear === currentYear && index < currentMonth;
+          const isPastMonth = selectedYear === currentYear && index < currentMonth;
+          const hasEvents = hasEventsInMonth(index, selectedYear);
+          const isDisabled = isPastMonth || !hasEvents;
           
           return (
             <button
