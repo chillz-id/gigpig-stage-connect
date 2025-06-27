@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Users, Star, Heart 
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockEvents } from '@/data/mockEvents';
+import { ModernEventCard } from '@/components/ModernEventCard';
 
 export const CalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -192,109 +192,18 @@ export const CalendarView: React.FC = () => {
 
         {selectedDate && selectedDateEvents.length > 0 ? (
           <div className="space-y-4">
-            {selectedDateEvents.map(event => {
-              const isInterested = interestedEvents.has(event.id);
-              const availableSpots = (event.spots || 5) - (event.applied_spots || 0);
-              
-              return (
-                <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border overflow-hidden">
-                  {/* Event Image */}
-                  {event.banner_url && (
-                    <div className="aspect-[2/1] relative overflow-hidden">
-                      <img 
-                        src={event.banner_url} 
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      {isConsumer && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`absolute top-2 right-2 ${
-                            isInterested 
-                              ? 'text-red-500 hover:text-red-600' 
-                              : 'text-white hover:text-red-500'
-                          }`}
-                          onClick={() => handleToggleInterested(event)}
-                        >
-                          <Heart className={`w-5 h-5 ${isInterested ? 'fill-current' : ''}`} />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold text-lg">{event.title}</h4>
-                        <p className="text-muted-foreground">{event.venue}</p>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {/* For consumers, only show age restriction */}
-                        {isConsumer ? (
-                          <Badge variant="outline" className="text-xs">
-                            {event.age_restriction}
-                          </Badge>
-                        ) : (
-                          <>
-                            {event.is_verified_only && (
-                              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-xs">
-                                <Star className="w-3 h-3 mr-1" />
-                                Pro
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="text-xs">
-                              {event.type}
-                            </Badge>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {event.start_time}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {event.city}, {event.state}
-                      </div>
-                      {!isConsumer && (
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {availableSpots} spots
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {!isConsumer && (
-                        <Button 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => handleApply(event)}
-                          disabled={availableSpots <= 0}
-                        >
-                          {availableSpots <= 0 ? 'Full' : 'Apply'}
-                        </Button>
-                      )}
-                      
-                      {(isConsumer || event.is_paid) && (
-                        <Button 
-                          size="sm" 
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                          onClick={() => handleBuyTickets(event)}
-                        >
-                          Buy Tickets
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {selectedDateEvents.map(event => (
+              <ModernEventCard
+                key={event.id}
+                show={event}
+                interestedEvents={interestedEvents}
+                onToggleInterested={handleToggleInterested}
+                onApply={handleApply}
+                onBuyTickets={handleBuyTickets}
+                onShowDetails={() => {}} // No details handler needed for calendar
+                onGetDirections={() => {}} // No directions handler needed for calendar
+              />
+            ))}
           </div>
         ) : (
           <Card className="bg-card/50 backdrop-blur-sm border-border">

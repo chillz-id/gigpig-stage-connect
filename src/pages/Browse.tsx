@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
-import { ShowCard } from '@/components/ShowCard';
+import { ModernEventCard } from '@/components/ModernEventCard';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';
 import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
 import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
@@ -130,7 +130,7 @@ const Browse = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map((show) => (
-                  <ShowCard
+                  <ModernEventCard
                     key={show.id}
                     show={show}
                     interestedEvents={interestedEvents}
