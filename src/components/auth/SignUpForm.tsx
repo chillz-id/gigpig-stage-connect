@@ -26,7 +26,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [isComedian, setIsComedian] = useState(true);
+  const [isComedian, setIsComedian] = useState(false);
   const { toast } = useToast();
 
   const handleIsComedianChange = (checked: boolean | "indeterminate") => {
