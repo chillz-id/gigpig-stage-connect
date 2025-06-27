@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,7 @@ const initialFormData: EventFormData = {
   externalTicketUrl: '',
   tickets: [],
   feeHandling: 'absorb',
+  capacity: 0,
 };
 
 const initialRecurringSettings: RecurringSettings = {

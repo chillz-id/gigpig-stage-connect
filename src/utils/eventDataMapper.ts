@@ -30,6 +30,7 @@ export const prepareEventData = (
     age_restriction: formData.ageRestriction,
     dress_code: formData.dresscode,
     banner_url: formData.bannerUrl || null,
+    capacity: formData.capacity,
     isRecurring: recurringSettings.isRecurring,
     recurrencePattern: recurringSettings.isRecurring ? recurringSettings.pattern : undefined,
     recurrenceEndDate: recurringSettings.isRecurring && recurringSettings.pattern !== 'custom' ? recurringSettings.endDate : undefined,

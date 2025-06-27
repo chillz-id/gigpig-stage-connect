@@ -1,4 +1,3 @@
-
 export interface EventFormData {
   title: string;
   venue: string;
@@ -26,6 +25,7 @@ export interface EventFormData {
   externalTicketUrl: string;
   tickets: EventTicket[];
   feeHandling: 'absorb' | 'pass_to_customer';
+  capacity: number;
 }
 
 export interface CustomDate {

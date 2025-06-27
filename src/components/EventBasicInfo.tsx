@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star } from 'lucide-react';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 interface EventBasicInfoProps {
   formData: {
@@ -16,11 +17,41 @@ interface EventBasicInfoProps {
     state: string;
     country: string;
     description: string;
+    capacity?: number;
   };
   onFormDataChange: (updates: Partial<EventBasicInfoProps['formData']>) => void;
 }
 
 export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onFormDataChange }) => {
+  const handleAddressSelect = (address: string, placeDetails?: any) => {
+    console.log('Address selected:', address, placeDetails);
+    
+    // Update address
+    onFormDataChange({ address });
+    
+    // Extract city and state from place details if available
+    if (placeDetails?.address_components) {
+      let city = '';
+      let state = '';
+      
+      placeDetails.address_components.forEach((component: any) => {
+        if (component.types.includes('locality')) {
+          city = component.long_name;
+        }
+        if (component.types.includes('administrative_area_level_1')) {
+          state = component.short_name;
+        }
+      });
+      
+      if (city || state) {
+        onFormDataChange({ 
+          city: city || formData.city, 
+          state: state || formData.state 
+        });
+      }
+    }
+  };
+
   return (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
       <CardHeader>
@@ -66,7 +97,20 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <Label htmlFor="capacity">Capacity *</Label>
+            <Input
+              id="capacity"
+              type="number"
+              min="1"
+              value={formData.capacity || ''}
+              onChange={(e) => onFormDataChange({ capacity: parseInt(e.target.value) || 0 })}
+              placeholder="150"
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+              required
+            />
+          </div>
           <div>
             <Label htmlFor="city">City *</Label>
             <Input
@@ -115,11 +159,10 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
 
         <div>
           <Label htmlFor="address">Full Address</Label>
-          <Input
-            id="address"
-            value={formData.address}
-            onChange={(e) => onFormDataChange({ address: e.target.value })}
-            placeholder="123 Comedy Street, Sydney NSW 2000"
+          <AddressAutocomplete
+            onAddressSelect={handleAddressSelect}
+            placeholder="Start typing to search for an address..."
+            defaultValue={formData.address}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
           />
         </div>

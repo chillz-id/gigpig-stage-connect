@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,8 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
   // Event banner dimensions (16:9 aspect ratio)
   const CROP_WIDTH = 400;
   const CROP_HEIGHT = 225; // 400 * 9/16 = 225
+  const FINAL_WIDTH = 1920;
+  const FINAL_HEIGHT = 1080;
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -120,17 +121,12 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
     const image = imageRef.current;
     
     if (!canvas || !image || !imageLoaded) {
-      console.error('Canvas, image, or imageLoaded not available for cropping', { 
-        canvas: !!canvas, 
-        image: !!image, 
-        imageLoaded 
-      });
+      console.error('Canvas, image, or imageLoaded not available for cropping');
       return;
     }
 
     try {
       console.log('Creating crop canvas...');
-      // Create a new canvas for the cropped image
       const cropCanvas = document.createElement('canvas');
       const cropCtx = cropCanvas.getContext('2d');
       if (!cropCtx) {
@@ -138,20 +134,13 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
         return;
       }
 
-      // Set final dimensions (1920x1080)
-      cropCanvas.width = 1920;
-      cropCanvas.height = 1080;
+      // Set final dimensions to exact banner size
+      cropCanvas.width = FINAL_WIDTH;
+      cropCanvas.height = FINAL_HEIGHT;
 
-      // Calculate the crop area on the original image
+      // Calculate display dimensions
       const containerWidth = 500;
       const containerHeight = 400;
-      
-      // Prevent division by zero
-      if (image.naturalHeight === 0) {
-        console.error('Image natural height is 0');
-        return;
-      }
-      
       const imageAspect = image.naturalWidth / image.naturalHeight;
       const containerAspect = containerWidth / containerHeight;
       
@@ -164,85 +153,75 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
         displayWidth = (containerHeight * imageAspect) * scale[0];
       }
 
-      // Prevent division by zero
-      if (displayWidth === 0 || displayHeight === 0) {
-        console.error('Display dimensions are 0', { displayWidth, displayHeight });
-        return;
-      }
-
-      // Calculate image position in canvas
+      // Calculate positions
       const imageX = (containerWidth - displayWidth) / 2 + crop.x;
       const imageY = (containerHeight - displayHeight) / 2 + crop.y;
-      
-      // Calculate crop area position
       const cropX = (containerWidth - CROP_WIDTH) / 2;
       const cropY = (containerHeight - CROP_HEIGHT) / 2;
       
-      // Calculate the scaling factors from displayed image to original image
+      // Calculate what portion of the original image to use
       const scaleFactorX = image.naturalWidth / displayWidth;
       const scaleFactorY = image.naturalHeight / displayHeight;
       
-      // Calculate source coordinates on the original image
-      // We need to find where the crop rectangle intersects with the displayed image
-      const sourceX = Math.max(0, (cropX - imageX) * scaleFactorX);
-      const sourceY = Math.max(0, (cropY - imageY) * scaleFactorY);
+      // Find the intersection of the crop area with the displayed image
+      const intersectionLeft = Math.max(cropX, imageX);
+      const intersectionTop = Math.max(cropY, imageY);
+      const intersectionRight = Math.min(cropX + CROP_WIDTH, imageX + displayWidth);
+      const intersectionBottom = Math.min(cropY + CROP_HEIGHT, imageY + displayHeight);
       
-      // Calculate source dimensions, ensuring we don't exceed image bounds
-      const maxSourceWidth = image.naturalWidth - sourceX;
-      const maxSourceHeight = image.naturalHeight - sourceY;
+      const intersectionWidth = intersectionRight - intersectionLeft;
+      const intersectionHeight = intersectionBottom - intersectionTop;
       
-      const sourceWidth = Math.min(maxSourceWidth, CROP_WIDTH * scaleFactorX);
-      const sourceHeight = Math.min(maxSourceHeight, CROP_HEIGHT * scaleFactorY);
-
-      console.log('Crop parameters:', {
-        sourceX, sourceY, sourceWidth, sourceHeight,
-        imageNaturalWidth: image.naturalWidth,
-        imageNaturalHeight: image.naturalHeight,
-        scaleFactorX, scaleFactorY,
-        displayWidth, displayHeight,
-        imageX, imageY,
-        cropX, cropY
-      });
-
-      // Ensure we have valid source dimensions
-      if (sourceWidth <= 0 || sourceHeight <= 0) {
-        console.error('Invalid source dimensions', { sourceWidth, sourceHeight });
+      if (intersectionWidth <= 0 || intersectionHeight <= 0) {
+        console.error('No intersection between crop area and image');
         return;
       }
+      
+      // Map back to source image coordinates
+      const sourceX = (intersectionLeft - imageX) * scaleFactorX;
+      const sourceY = (intersectionTop - imageY) * scaleFactorY;
+      const sourceWidth = intersectionWidth * scaleFactorX;
+      const sourceHeight = intersectionHeight * scaleFactorY;
+      
+      // Calculate destination coordinates on the crop canvas
+      const destX = (intersectionLeft - cropX) * (FINAL_WIDTH / CROP_WIDTH);
+      const destY = (intersectionTop - cropY) * (FINAL_HEIGHT / CROP_HEIGHT);
+      const destWidth = intersectionWidth * (FINAL_WIDTH / CROP_WIDTH);
+      const destHeight = intersectionHeight * (FINAL_HEIGHT / CROP_HEIGHT);
 
-      // Draw the cropped portion at full resolution
+      console.log('Final crop parameters:', {
+        source: { x: sourceX, y: sourceY, width: sourceWidth, height: sourceHeight },
+        dest: { x: destX, y: destY, width: destWidth, height: destHeight },
+        canvas: { width: FINAL_WIDTH, height: FINAL_HEIGHT }
+      });
+
+      // Fill with black background first (in case image doesn't cover full area)
+      cropCtx.fillStyle = '#000000';
+      cropCtx.fillRect(0, 0, FINAL_WIDTH, FINAL_HEIGHT);
+
+      // Draw the cropped portion
       cropCtx.drawImage(
         image,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        0,
-        0,
-        1920,
-        1080
+        sourceX, sourceY, sourceWidth, sourceHeight,
+        destX, destY, destWidth, destHeight
       );
 
-      // Try to export as data URL
+      // Export as high quality JPEG
       try {
-        const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
-        console.log('Crop completed successfully, data URL length:', croppedDataUrl.length);
+        const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.95);
+        console.log('Crop completed successfully');
         onCrop(croppedDataUrl);
       } catch (corsError) {
-        console.error('CORS error when exporting canvas. Trying alternative approach:', corsError);
-        
-        // Alternative: Convert to blob and create object URL
+        console.error('CORS error, trying blob approach:', corsError);
         cropCanvas.toBlob((blob) => {
           if (blob) {
             const objectUrl = URL.createObjectURL(blob);
-            console.log('Crop completed using blob URL:', objectUrl);
             onCrop(objectUrl);
           } else {
-            console.error('Failed to create blob from canvas');
-            // Last resort: return original image
+            console.error('Failed to create blob');
             onCrop(imageUrl);
           }
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.95);
       }
     } catch (error) {
       console.error('Error during cropping process:', error);
