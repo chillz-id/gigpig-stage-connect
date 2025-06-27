@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +54,21 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
       applied_at: '2024-12-17T15:30:00Z',
       status: 'accepted' as const,
       message: 'Excited to bring my tech humor to your show!',
+    },
+    {
+      id: '3',
+      comedian_id: '3',
+      comedian_name: 'Lisa Rodriguez',
+      comedian_avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+      comedian_experience: '1 year',
+      comedian_rating: 3.8,
+      event_id: eventId,
+      event_title: eventTitle,
+      event_venue: 'Comedy Club',
+      event_date: '2024-12-20',
+      applied_at: '2024-12-16T14:20:00Z',
+      status: 'declined' as const,
+      message: 'Looking forward to sharing my observational comedy style.',
     },
   ];
 
