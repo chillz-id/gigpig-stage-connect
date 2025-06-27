@@ -30,6 +30,7 @@ import Pricing from "./pages/Pricing";
 import PromoterSettings from "./pages/PromoterSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import CustomizationSettings from "./pages/CustomizationSettings";
+import ComedianProfile from "./pages/ComedianProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/browse" element={<Browse />} />
                         <Route path="/comedians" element={<Comedians />} />
+                        <Route path="/comedian/:slug" element={<ComedianProfile />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/pricing" element={<Pricing />} />
                         <Route path="/event/:id" element={<EventDetails />} />
