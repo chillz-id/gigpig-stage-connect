@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TicketSale {
@@ -27,8 +27,9 @@ export const useEventDetailsManager = () => {
   const [ticketSales, setTicketSales] = useState<TicketSale[]>([]);
   const [comedianBookings, setComedianBookings] = useState<ComedianBooking[]>([]);
 
-  const fetchComedianBookings = async (eventId: string) => {
+  const fetchComedianBookings = useCallback(async (eventId: string) => {
     try {
+      console.log('Fetching comedian bookings for event:', eventId);
       const { data, error } = await supabase
         .from('comedian_bookings')
         .select('*')
@@ -39,15 +40,17 @@ export const useEventDetailsManager = () => {
         return;
       }
 
+      console.log('Comedian bookings fetched:', data?.length || 0);
       setComedianBookings(data || []);
     } catch (error) {
       console.error('Error fetching comedian bookings:', error);
       setComedianBookings([]);
     }
-  };
+  }, []);
 
-  const fetchTicketSales = async (eventId: string) => {
+  const fetchTicketSales = useCallback(async (eventId: string) => {
     try {
+      console.log('Fetching ticket sales for event:', eventId);
       const { data, error } = await supabase
         .from('ticket_sales')
         .select('*')
@@ -58,14 +61,15 @@ export const useEventDetailsManager = () => {
         return;
       }
 
+      console.log('Ticket sales fetched:', data?.length || 0);
       setTicketSales(data || []);
     } catch (error) {
       console.error('Error fetching ticket sales:', error);
       setTicketSales([]);
     }
-  };
+  }, []);
 
-  const handleViewEventDetails = async (eventId: string) => {
+  const handleViewEventDetails = useCallback(async (eventId: string) => {
     console.log('Viewing event details for:', eventId);
     setSelectedEvent(eventId);
     
@@ -74,14 +78,14 @@ export const useEventDetailsManager = () => {
       fetchTicketSales(eventId),
       fetchComedianBookings(eventId)
     ]);
-  };
+  }, [fetchTicketSales, fetchComedianBookings]);
 
-  const handleCloseEventDetails = () => {
+  const handleCloseEventDetails = useCallback(() => {
     console.log('Closing event details');
     setSelectedEvent(null);
     setTicketSales([]);
     setComedianBookings([]);
-  };
+  }, []);
 
   return {
     selectedEvent,

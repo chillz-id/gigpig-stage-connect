@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,9 +26,11 @@ export const useEventData = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Fetching events...');
+      
       const { data, error } = await supabase
         .from('events')
         .select(`
@@ -55,21 +57,31 @@ export const useEventData = () => {
         throw error;
       }
       
-      // Process events and calculate real-time metrics
+      console.log('Events fetched:', data?.length || 0);
+      
+      // Process events and calculate real-time metrics safely
       const processedEvents = await Promise.all(
         (data || []).map(async (event) => {
           try {
             // Get actual ticket sales count
-            const { data: salesData } = await supabase
+            const { data: salesData, error: salesError } = await supabase
               .from('ticket_sales')
               .select('ticket_quantity, total_amount')
               .eq('event_id', event.id);
             
+            if (salesError) {
+              console.warn(`Error fetching sales for event ${event.id}:`, salesError);
+            }
+            
             // Get actual comedian bookings count
-            const { data: bookingsData } = await supabase
+            const { data: bookingsData, error: bookingsError } = await supabase
               .from('comedian_bookings')
               .select('performance_fee')
               .eq('event_id', event.id);
+            
+            if (bookingsError) {
+              console.warn(`Error fetching bookings for event ${event.id}:`, bookingsError);
+            }
             
             const actualTicketsSold = salesData?.reduce((sum, sale) => sum + (sale.ticket_quantity || 0), 0) || 0;
             const actualRevenue = salesData?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
@@ -105,6 +117,7 @@ export const useEventData = () => {
         })
       );
       
+      console.log('Events processed successfully:', processedEvents.length);
       setEvents(processedEvents);
     } catch (error: any) {
       console.error('Error fetching events:', error);
@@ -117,11 +130,11 @@ export const useEventData = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
   return {
     events,
