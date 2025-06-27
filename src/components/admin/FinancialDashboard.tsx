@@ -18,22 +18,26 @@ const FinancialDashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-white/10 backdrop-blur-sm border-white/20">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">
+        <TabsList className="bg-white/10 backdrop-blur-sm border-white/20 w-full justify-start overflow-hidden">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 flex-shrink-0">
             <DollarSign className="w-4 h-4 mr-2" />
-            Overview
+            <span className="hidden sm:inline">Overview</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
-          <TabsTrigger value="profitability" className="data-[state=active]:bg-white/20">
+          <TabsTrigger value="profitability" className="data-[state=active]:bg-white/20 flex-shrink-0">
             <TrendingUp className="w-4 h-4 mr-2" />
-            Event Profitability
+            <span className="hidden sm:inline">Event Profitability</span>
+            <span className="sm:hidden">Events</span>
           </TabsTrigger>
-          <TabsTrigger value="costs" className="data-[state=active]:bg-white/20">
+          <TabsTrigger value="costs" className="data-[state=active]:bg-white/20 flex-shrink-0">
             <Calendar className="w-4 h-4 mr-2" />
-            Cost Management
+            <span className="hidden sm:inline">Cost Management</span>
+            <span className="sm:hidden">Costs</span>
           </TabsTrigger>
-          <TabsTrigger value="xero" className="data-[state=active]:bg-white/20">
+          <TabsTrigger value="xero" className="data-[state=active]:bg-white/20 flex-shrink-0">
             <FileText className="w-4 h-4 mr-2" />
-            XERO Integration
+            <span className="hidden sm:inline">XERO Integration</span>
+            <span className="sm:hidden">XERO</span>
           </TabsTrigger>
         </TabsList>
 
