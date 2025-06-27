@@ -74,16 +74,21 @@ export const useXeroIntegration = () => {
 
   const connectToXero = useMutation({
     mutationFn: async () => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       // This would typically redirect to XERO OAuth flow
       // For now, we'll simulate a successful connection
       const { data, error } = await supabase
         .from('xero_integrations')
-        .insert([{
+        .insert({
+          user_id: user.id,
           tenant_id: 'demo-tenant-' + Date.now(),
           connection_status: 'active',
           access_token: 'demo-token',
           refresh_token: 'demo-refresh-token'
-        }])
+        })
         .select()
         .single();
 

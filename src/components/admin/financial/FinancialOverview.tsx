@@ -12,7 +12,9 @@ interface FinancialOverviewProps {
 }
 
 const FinancialOverview = ({ selectedPeriod, setSelectedPeriod }: FinancialOverviewProps) => {
-  const { metrics, chartData, isLoading } = useFinancialMetrics(selectedPeriod);
+  const { data, isLoading } = useFinancialMetrics(selectedPeriod);
+  const metrics = data?.metrics;
+  const chartData = data?.chartData;
 
   if (isLoading) {
     return (

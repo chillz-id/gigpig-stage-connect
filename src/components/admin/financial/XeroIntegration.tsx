@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useXeroIntegration } from '@/hooks/useXeroIntegration';
-import { ExternalLink, Sync, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { ExternalLink, RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const XeroIntegration = () => {
@@ -66,7 +66,7 @@ const XeroIntegration = () => {
         <h2 className="text-xl font-semibold text-white">XERO Integration</h2>
         {integration?.connection_status === 'active' && (
           <Button onClick={handleSync} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
-            <Sync className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4 mr-2" />
             Sync Data
           </Button>
         )}
