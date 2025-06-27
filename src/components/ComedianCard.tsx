@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Mail, Calendar, Users } from 'lucide-react';
+import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Music, Twitter, Youtube } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import VouchButton from './VouchButton';
 
@@ -19,6 +19,12 @@ interface Comedian {
   years_experience?: number;
   show_count?: number;
   specialties?: string[];
+  social_media?: {
+    instagram?: string;
+    tiktok?: string;
+    twitter?: string;
+    youtube?: string;
+  };
 }
 
 interface ComedianCardProps {
@@ -29,6 +35,16 @@ interface ComedianCardProps {
 
 const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onContact }) => {
   const { isMemberView } = useViewMode();
+
+  // Mock social media data for demonstration
+  const mockSocialMedia = {
+    instagram: '@sarahmitchell_comedy',
+    tiktok: '@sarahcomedy',
+    twitter: '@sarahmitchell',
+    youtube: 'Sarah Mitchell Comedy'
+  };
+
+  const socialMedia = comedian.social_media || mockSocialMedia;
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-colors">
@@ -67,6 +83,32 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
                 {specialty}
               </Badge>
             ))}
+          </div>
+        )}
+
+        {/* Social Media Icons */}
+        {socialMedia && (
+          <div className="flex justify-center space-x-2">
+            {socialMedia.instagram && (
+              <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                <Instagram className="w-4 h-4 text-pink-500" />
+              </Button>
+            )}
+            {socialMedia.tiktok && (
+              <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                <Music className="w-4 h-4 text-black dark:text-white" />
+              </Button>
+            )}
+            {socialMedia.twitter && (
+              <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                <Twitter className="w-4 h-4 text-blue-400" />
+              </Button>
+            )}
+            {socialMedia.youtube && (
+              <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                <Youtube className="w-4 h-4 text-red-500" />
+              </Button>
+            )}
           </div>
         )}
 

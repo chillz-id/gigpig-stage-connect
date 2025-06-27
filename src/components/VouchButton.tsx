@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Loader2 } from 'lucide-react';
+import { Crown, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -79,7 +79,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
   if (!hasRole('comedian')) {
     return currentVouchCount > 0 ? (
       <Badge variant="outline" className="text-xs">
-        <Heart className="w-3 h-3 mr-1" />
+        <Crown className="w-3 h-3 mr-1 text-yellow-400 fill-current" />
         {currentVouchCount} vouch{currentVouchCount !== 1 ? 'es' : ''}
       </Badge>
     ) : null;
@@ -97,7 +97,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
         {isVouching ? (
           <Loader2 className="w-3 h-3 animate-spin mr-1" />
         ) : (
-          <Heart className={`w-3 h-3 mr-1 ${userHasVouched ? 'fill-current' : ''}`} />
+          <Crown className={`w-3 h-3 mr-1 text-yellow-400 ${userHasVouched ? 'fill-current' : ''}`} />
         )}
         {userHasVouched ? 'Vouched' : 'Vouch'}
       </Button>

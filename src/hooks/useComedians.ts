@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,12 @@ interface Comedian {
   years_experience?: number;
   show_count?: number;
   specialties?: string[];
+  social_media?: {
+    instagram?: string;
+    tiktok?: string;
+    twitter?: string;
+    youtube?: string;
+  };
 }
 
 export const useComedians = () => {
@@ -44,7 +51,13 @@ export const useComedians = () => {
           email: 'sarah@example.com',
           years_experience: 5,
           show_count: 120,
-          specialties: ['Observational', 'Storytelling', 'Crowd Work']
+          specialties: ['Observational', 'Storytelling', 'Crowd Work'],
+          social_media: {
+            instagram: '@sarahmitchell_comedy',
+            tiktok: '@sarahcomedy',
+            twitter: '@sarahmitchell',
+            youtube: 'Sarah Mitchell Comedy'
+          }
         },
         {
           id: '2',
@@ -56,7 +69,12 @@ export const useComedians = () => {
           email: 'jake@example.com',
           years_experience: 3,
           show_count: 85,
-          specialties: ['Improvisation', 'Crowd Work', 'Physical Comedy']
+          specialties: ['Improvisation', 'Crowd Work', 'Physical Comedy'],
+          social_media: {
+            instagram: '@jakethompsoncomedy',
+            twitter: '@jakethompson',
+            youtube: 'Jake Thompson Laughs'
+          }
         },
         {
           id: '3',
@@ -68,7 +86,12 @@ export const useComedians = () => {
           email: 'emma@example.com',
           years_experience: 2,
           show_count: 45,
-          specialties: ['Cultural Comedy', 'Social Commentary', 'Storytelling']
+          specialties: ['Cultural Comedy', 'Social Commentary', 'Storytelling'],
+          social_media: {
+            instagram: '@emmachen_comedy',
+            tiktok: '@emmachencomedy',
+            twitter: '@emmachen'
+          }
         },
         {
           id: '4',
@@ -80,7 +103,12 @@ export const useComedians = () => {
           email: 'marcus@example.com',
           years_experience: 8,
           show_count: 200,
-          specialties: ['Wordplay', 'Observational', 'Clean Comedy']
+          specialties: ['Wordplay', 'Observational', 'Clean Comedy'],
+          social_media: {
+            instagram: '@marcuswilliamscomedy',
+            twitter: '@marcuswilliams',
+            youtube: 'Marcus Williams Comedy'
+          }
         },
         {
           id: '5',
@@ -92,7 +120,12 @@ export const useComedians = () => {
           email: 'lisa@example.com',
           years_experience: 4,
           show_count: 95,
-          specialties: ['Relatable Humor', 'Storytelling', 'Observational']
+          specialties: ['Relatable Humor', 'Storytelling', 'Observational'],
+          social_media: {
+            instagram: '@lisarodriguezcomedy',
+            tiktok: '@lisacomedy',
+            twitter: '@lisarodriguez'
+          }
         }
       ];
       
