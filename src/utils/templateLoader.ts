@@ -36,6 +36,7 @@ export const loadTemplateData = (
     externalTicketUrl: data.externalTicketUrl || '',
     tickets: data.tickets || [],
     feeHandling: data.feeHandling || 'absorb',
+    capacity: data.capacity || 0,
   });
   
   // Load event spots if they exist
