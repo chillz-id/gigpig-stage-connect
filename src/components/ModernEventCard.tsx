@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Heart, MapPin, Clock, Users, Star, Navigation } from 'lucide-react';
+import { Heart, MapPin, Clock, Users, Star, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ModernEventCardProps {
@@ -42,6 +41,24 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
     }
   };
 
+  const handleCardClick = () => {
+    onShowDetails(show);
+  };
+
+  const handlePrimaryAction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isIndustryUser) {
+      handleApplyClick();
+    } else {
+      onBuyTickets(show);
+    }
+  };
+
+  const handleHeartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleInterested(show);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const month = date.toLocaleDateString('en-US', { month: 'short' });
@@ -52,118 +69,117 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   const { month, day } = formatDate(show.event_date);
 
   return (
-    <div className="group relative h-80 rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+    <div 
+      className="group relative h-80 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100"
+      onClick={handleCardClick}
+    >
       {/* Background Image */}
-      {show.banner_url && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-          style={{ backgroundImage: `url(${show.banner_url})` }}
-        />
-      )}
+      <div className="absolute inset-0">
+        {show.banner_url ? (
+          <img 
+            src={show.banner_url}
+            alt={show.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100" />
+        )}
+      </div>
       
-      {/* Overlay Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+      {/* Subtle Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
       
-      {/* Content */}
-      <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-        {/* Top Section - Just Date Badge */}
-        <div className="flex justify-between items-start">
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 text-center border border-white/30">
-            <div className="text-xs font-medium opacity-80">{month}</div>
-            <div className="text-lg font-bold leading-none">{day}</div>
+      {/* Top Row - Date & Heart */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+        {/* Date Badge */}
+        <div className="bg-white/90 backdrop-blur-md rounded-xl px-3 py-2 text-center shadow-sm">
+          <div className="text-xs font-medium text-gray-600">{month}</div>
+          <div className="text-lg font-bold text-gray-900 leading-none">{day}</div>
+        </div>
+        
+        {/* Heart Icon for Consumers */}
+        {isConsumerUser && (
+          <button
+            onClick={handleHeartClick}
+            className={`p-2.5 rounded-full backdrop-blur-md transition-all shadow-sm ${
+              isInterested 
+                ? 'bg-red-500/90 text-white' 
+                : 'bg-white/90 text-gray-600 hover:bg-white hover:text-red-500'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isInterested ? 'fill-current' : ''}`} />
+          </button>
+        )}
+      </div>
+
+      {/* Bottom Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+        {/* Event Title & Venue */}
+        <div className="mb-3">
+          <h3 className="text-xl font-bold mb-1 line-clamp-2">{show.title}</h3>
+          <div className="flex items-center gap-4 text-sm text-white/90">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span className="truncate">{show.venue}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{show.start_time}</span>
+            </div>
+          </div>
+          <div className="text-sm text-white/80 mt-1">
+            {show.city}, {show.state}
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="space-y-3">
-          {/* Event Title */}
-          <h3 className="text-xl font-bold leading-tight">{show.title}</h3>
-          
-          {/* Venue and Location */}
-          <div className="flex items-center gap-1 text-sm opacity-90">
-            <MapPin className="w-4 h-4" />
-            <span>{show.venue}</span>
-          </div>
-          
-          {/* Location */}
-          <div className="text-sm opacity-75">
-            {show.city}, {show.state}
-          </div>
-
-          {/* Time */}
-          <div className="flex items-center gap-1 text-sm opacity-90">
-            <Clock className="w-4 h-4" />
-            <span>{show.start_time}</span>
-          </div>
-
-          {/* Compact Badges Row */}
+        {/* Badges Row */}
+        <div className="flex items-center justify-between">
           <div className="flex gap-2 flex-wrap">
             {isIndustryUser && show.is_verified_only && (
-              <Badge className="bg-gradient-to-r from-yellow-500/80 to-orange-500/80 text-white border-0 text-xs backdrop-blur-sm px-2 py-1">
+              <Badge className="bg-yellow-500/90 text-white border-0 text-xs">
+                <Star className="w-3 h-3 mr-1" />
                 Pro
               </Badge>
             )}
             {show.type && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm">
                 {show.type}
               </Badge>
             )}
-            {show.age_restriction && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
-                {show.age_restriction}
-              </Badge>
-            )}
             {isIndustryUser && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm px-2 py-1">
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs backdrop-blur-sm">
+                <Users className="w-3 h-3 mr-1" />
                 {availableSpots} spots
               </Badge>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            {isIndustryUser && (
-              <Button 
-                className={`flex-1 font-medium ${
-                  isShowFull 
-                    ? 'bg-gray-600/80 hover:bg-gray-600/90 text-white' 
-                    : 'bg-blue-600/80 hover:bg-blue-700/90 text-white'
-                } backdrop-blur-sm border-0`}
-                onClick={handleApplyClick}
-                disabled={isShowFull}
-              >
-                {isShowFull ? 'Full' : 'Apply'}
-              </Button>
-            )}
-            
-            {isConsumerUser && (
-              <Button 
-                className="flex-1 bg-green-600/80 hover:bg-green-700/90 text-white font-medium backdrop-blur-sm border-0"
-                onClick={() => onBuyTickets(show)}
-              >
+          {/* Action Button */}
+          <button
+            onClick={handlePrimaryAction}
+            disabled={isIndustryUser && isShowFull}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all backdrop-blur-md shadow-sm flex items-center gap-1 ${
+              isIndustryUser
+                ? isShowFull
+                  ? 'bg-gray-500/80 text-white cursor-not-allowed'
+                  : 'bg-blue-600/90 hover:bg-blue-700 text-white'
+                : 'bg-green-600/90 hover:bg-green-700 text-white'
+            }`}
+          >
+            {isIndustryUser ? (
+              isShowFull ? 'Full' : 'Apply'
+            ) : (
+              <>
                 Tickets
-              </Button>
+                <ExternalLink className="w-3 h-3" />
+              </>
             )}
-            
-            <Button 
-              variant="outline" 
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
-              onClick={() => onShowDetails(show)}
-            >
-              Details
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onGetDirections(show)}
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm p-2"
-            >
-              <Navigation className="w-4 h-4" />
-            </Button>
-          </div>
+          </button>
         </div>
       </div>
+
+      {/* Hover Overlay for Additional Info */}
+      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </div>
   );
 };
