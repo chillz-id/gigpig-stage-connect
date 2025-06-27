@@ -76,12 +76,13 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       
       {/* Content */}
-      <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-        {/* Top Section - Date */}
+      <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+        {/* Top Section - Date and Heart */}
         <div className="flex justify-between items-start">
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 text-center border border-white/30">
-            <div className="text-xs font-medium opacity-80">{day}</div>
-            <div className="text-sm font-bold leading-none">{month}</div>
+          {/* Clean Date Text */}
+          <div className="text-white">
+            <div className="text-xs font-medium opacity-90">{month}</div>
+            <div className="text-sm font-bold">{day}</div>
           </div>
           
           {/* Heart Icon for Consumers - Only visible on hover */}
@@ -102,21 +103,12 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
           )}
         </div>
 
-        {/* Bottom Section - Event Info */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold leading-tight">{show.title}</h3>
-          <div className="flex items-center gap-1 text-sm opacity-90">
-            <MapPin className="w-4 h-4" />
+        {/* Bottom Section - Event Info - Much smaller and lower */}
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold leading-tight">{show.title}</h3>
+          <div className="flex items-center gap-1 text-xs opacity-80">
+            <MapPin className="w-3 h-3" />
             <span>{show.city}, {show.state}</span>
-          </div>
-          
-          {/* Action Text - Only visible on hover */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="text-xs text-white/80 mt-2">
-              {isIndustryUser && !isShowFull && 'Click to Apply'}
-              {isIndustryUser && isShowFull && 'Show Full'}
-              {isConsumerUser && 'Get Tickets'}
-            </div>
           </div>
         </div>
       </div>
