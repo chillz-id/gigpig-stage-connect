@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,17 +21,30 @@ import {
 import { useTicketSalesManagement } from '@/hooks/useTicketSalesManagement';
 import { useEventData } from '@/hooks/useEventData';
 
+type PlatformType = 'manual' | 'humanitix' | 'eventbrite';
+
+interface NewSaleState {
+  event_id: string;
+  customer_name: string;
+  customer_email: string;
+  ticket_quantity: number;
+  ticket_type: string;
+  total_amount: number;
+  platform: PlatformType;
+  platform_order_id: string;
+}
+
 const TicketSalesManagement = () => {
   const [selectedEventId, setSelectedEventId] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newSale, setNewSale] = useState({
+  const [newSale, setNewSale] = useState<NewSaleState>({
     event_id: '',
     customer_name: '',
     customer_email: '',
     ticket_quantity: 1,
     ticket_type: 'general',
     total_amount: 0,
-    platform: 'manual' as const,
+    platform: 'manual',
     platform_order_id: '',
   });
 
@@ -194,7 +206,7 @@ const TicketSalesManagement = () => {
                     </div>
                     <div>
                       <Label className="text-white">Platform</Label>
-                      <Select value={newSale.platform} onValueChange={(value: 'manual' | 'humanitix' | 'eventbrite') => setNewSale(prev => ({ ...prev, platform: value }))}>
+                      <Select value={newSale.platform} onValueChange={(value: PlatformType) => setNewSale(prev => ({ ...prev, platform: value }))}>
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue />
                         </SelectTrigger>
