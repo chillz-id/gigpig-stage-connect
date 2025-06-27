@@ -13,6 +13,7 @@ import LayoutTab from '@/components/customization/LayoutTab';
 import LivePreview from '@/components/customization/LivePreview';
 import ActionsPanel from '@/components/customization/ActionsPanel';
 import SavedThemes from '@/components/customization/SavedThemes';
+import { CustomizationData } from '@/types/customization';
 
 const CustomizationSettings = () => {
   const { user, hasRole } = useAuth();
@@ -67,14 +68,32 @@ const CustomizationSettings = () => {
     const themeData = await loadTheme(themeId);
     if (themeData) {
       // Update the current settings with the loaded theme data
-      Object.keys(themeData).forEach(section => {
-        Object.keys(themeData[section as keyof typeof themeData]).forEach(key => {
-          updateSettings(
-            section as keyof typeof themeData,
-            key,
-            themeData[section as keyof typeof themeData][key as keyof typeof themeData[typeof section]]
-          );
-        });
+      // Use proper type casting to handle the dynamic property access
+      const typedThemeData = themeData as CustomizationData;
+      
+      // Update colors
+      Object.keys(typedThemeData.colors).forEach(key => {
+        updateSettings('colors', key, typedThemeData.colors[key as keyof typeof typedThemeData.colors]);
+      });
+      
+      // Update typography
+      Object.keys(typedThemeData.typography).forEach(key => {
+        updateSettings('typography', key, typedThemeData.typography[key as keyof typeof typedThemeData.typography]);
+      });
+      
+      // Update components
+      Object.keys(typedThemeData.components).forEach(key => {
+        updateSettings('components', key, typedThemeData.components[key as keyof typeof typedThemeData.components]);
+      });
+      
+      // Update layout
+      Object.keys(typedThemeData.layout).forEach(key => {
+        updateSettings('layout', key, typedThemeData.layout[key as keyof typeof typedThemeData.layout]);
+      });
+      
+      // Update icons
+      Object.keys(typedThemeData.icons).forEach(key => {
+        updateSettings('icons', key, typedThemeData.icons[key as keyof typeof typedThemeData.icons]);
       });
     }
   };
