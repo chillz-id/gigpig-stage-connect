@@ -7,6 +7,7 @@ import { Calendar, Clock, DollarSign, Users, Star, Heart, Navigation } from 'luc
 import { useAuth } from '@/contexts/AuthContext';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import { useToast } from '@/hooks/use-toast';
+import { WaitlistDialog } from './WaitlistDialog';
 
 interface ShowCardProps {
   show: any;
@@ -37,6 +38,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   const eventDate = new Date(show.event_date);
   const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
   const isInterested = interestedEvents.has(show.id);
+  const isShowFull = availableSpots <= 0;
 
   const handleApplyClick = () => {
     if (show.is_recurring && onRecurringApply) {
@@ -83,7 +85,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
                 Comedian Pro
               </Badge>
             )}
-            {!isMemberView && availableSpots <= 0 && (
+            {!isMemberView && isShowFull && (
               <Badge variant="destructive">Full</Badge>
             )}
             {recurringBadgeText && (
@@ -137,7 +139,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
                       Comedian Pro
                     </Badge>
                   )}
-                  {availableSpots <= 0 && (
+                  {isShowFull && (
                     <Badge variant="destructive">Full</Badge>
                   )}
                   {recurringBadgeText && (
@@ -200,13 +202,27 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 
         <div className="flex gap-2 flex-wrap">
           {isIndustryUser && !isMemberView && (
-            <Button 
-              className="flex-1 bg-primary hover:bg-primary/90"
-              onClick={handleApplyClick}
-              disabled={availableSpots <= 0}
-            >
-              {availableSpots <= 0 ? 'Show Full' : 'Apply Now'}
-            </Button>
+            <>
+              {!isShowFull ? (
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                  onClick={handleApplyClick}
+                >
+                  Apply Now
+                </Button>
+              ) : (
+                <WaitlistDialog
+                  eventId={show.id}
+                  eventTitle={show.title}
+                  trigger={
+                    <Button variant="outline" className="flex-1">
+                      <Users className="w-4 h-4 mr-2" />
+                      Join Waitlist
+                    </Button>
+                  }
+                />
+              )}
+            </>
           )}
           
           {(isConsumerUser || isMemberView) && (

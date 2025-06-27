@@ -376,6 +376,53 @@ export type Database = {
         }
         Relationships: []
       }
+      event_waitlists: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string
+          first_name: string
+          id: string
+          is_notified: boolean
+          last_name: string
+          mobile: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id: string
+          first_name: string
+          id?: string
+          is_notified?: boolean
+          last_name: string
+          mobile: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string
+          first_name?: string
+          id?: string
+          is_notified?: boolean
+          last_name?: string
+          mobile?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_waitlists_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string

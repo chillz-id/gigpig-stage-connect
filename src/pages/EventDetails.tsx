@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
 import { useEventSpots } from '@/hooks/useEventSpots';
+import { useWaitlist } from '@/hooks/useWaitlist';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
+import { WaitlistDialog } from '@/components/WaitlistDialog';
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ const EventDetails = () => {
   const { toast } = useToast();
   const { events, isLoading } = useEvents();
   const { spots, isLoading: spotsLoading } = useEventSpots(id || '');
+  const { waitlistCount } = useWaitlist(id || '');
 
   const event = events.find(e => e.id === id);
 
@@ -65,6 +68,7 @@ const EventDetails = () => {
   
   const filledSpots = spots?.filter(spot => spot.is_filled) || [];
   const availableSpots = spots?.filter(spot => !spot.is_filled) || [];
+  const isShowFull = availableSpots.length === 0;
 
   const handleApply = () => {
     if (!user) {
@@ -294,7 +298,7 @@ const EventDetails = () => {
                         </div>
                         <p className="text-gray-300">out of {spots?.length || 0} total spots</p>
                         
-                        {availableSpots.length > 0 ? (
+                        {!isShowFull ? (
                           <Button 
                             onClick={handleApply}
                             className="w-full mt-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
@@ -302,9 +306,21 @@ const EventDetails = () => {
                             Apply Now
                           </Button>
                         ) : (
-                          <Badge variant="destructive" className="mt-4">
-                            Show Full
-                          </Badge>
+                          <div className="mt-4 space-y-2">
+                            <Badge variant="destructive" className="block">
+                              Show Full
+                            </Badge>
+                            <WaitlistDialog
+                              eventId={event.id}
+                              eventTitle={event.title}
+                              trigger={
+                                <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                                  <Users className="w-4 h-4 mr-2" />
+                                  Join Waitlist
+                                </Button>
+                              }
+                            />
+                          </div>
                         )}
                       </>
                     ) : (
@@ -321,6 +337,28 @@ const EventDetails = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Waitlist Info */}
+              {waitlistCount > 0 && (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Waitlist
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-400 mb-1">
+                        {waitlistCount}
+                      </div>
+                      <p className="text-gray-300 text-sm">
+                        {waitlistCount === 1 ? 'person waiting' : 'people waiting'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Available Spots Details - only show for upcoming events */}
               {isUpcoming && availableSpots.length > 0 && (
