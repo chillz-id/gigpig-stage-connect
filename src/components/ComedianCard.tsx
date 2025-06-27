@@ -2,9 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Music, Twitter, Youtube } from 'lucide-react';
+import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Youtube } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import VouchButton from './VouchButton';
 
@@ -75,16 +74,6 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
             {comedian.bio}
           </p>
         )}
-        
-        {comedian.specialties && comedian.specialties.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {comedian.specialties.slice(0, 3).map((specialty, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {specialty}
-              </Badge>
-            ))}
-          </div>
-        )}
 
         {/* Social Media Icons */}
         {socialMedia && (
@@ -96,7 +85,11 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
             )}
             {socialMedia.tiktok && (
               <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
-                <Music className="w-4 h-4 text-black dark:text-white" />
+                <img 
+                  src="/lovable-uploads/86aec391-a232-4edd-857e-c3656212c77c.png" 
+                  alt="TikTok" 
+                  className="w-4 h-4"
+                />
               </Button>
             )}
             {socialMedia.twitter && (
