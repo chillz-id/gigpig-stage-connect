@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageCircle, Send, Search, MoreVertical, Phone, Video, Star, Paperclip, UserPlus, Shield, AlertTriangle, SlidersHorizontal } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ConnectionRequest from '@/components/ConnectionRequest';
 import PendingRequests from '@/components/PendingRequests';
 
@@ -172,7 +173,7 @@ const mockPendingRequests: ConnectionRequestData[] = [
 ];
 
 const Messages = () => {
-  const { user } = useUser();
+  const { user, profile } = useAuth();
   const [conversations, setConversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0]);
   const [newMessage, setNewMessage] = useState('');
@@ -197,7 +198,7 @@ const Messages = () => {
       id: Date.now().toString(),
       senderId: user.id,
       senderName: 'You',
-      senderAvatar: user.avatar,
+      senderAvatar: profile?.avatar_url || '',
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isRead: true,
@@ -482,7 +483,7 @@ const Messages = () => {
                           <div className={`flex space-x-2 max-w-[80%] ${message.senderId === user.id ? 'flex-row-reverse space-x-reverse' : ''}`}>
                             <Avatar className="w-8 h-8">
                               <AvatarImage 
-                                src={message.senderId === user.id ? user.avatar : message.senderAvatar} 
+                                src={message.senderId === user.id ? (profile?.avatar_url || '') : message.senderAvatar} 
                                 alt={message.senderName} 
                               />
                               <AvatarFallback className="text-xs">
