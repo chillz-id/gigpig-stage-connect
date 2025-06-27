@@ -16,7 +16,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
 }) => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
 
   return (
     <>
@@ -28,11 +28,9 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
       {isMobileMenuOpen && (
         <div className="md:hidden pb-6 space-y-4 text-foreground animate-fade-in bg-background/95 backdrop-blur-lg border-t border-border">
           <div className="px-4 py-2">
-            <MobileUserInfo user={user} />
+            <MobileUserInfo />
             
             <MobileNavigationLinks
-              user={user}
-              hasRole={hasRole}
               setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
 
