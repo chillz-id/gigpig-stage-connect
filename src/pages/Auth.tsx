@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +37,14 @@ const Auth = () => {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  const handleRememberMeChange = (checked: boolean | "indeterminate") => {
+    setRememberMe(checked === true);
+  };
+
+  const handleIsComedianChange = (checked: boolean | "indeterminate") => {
+    setIsComedian(checked === true);
+  };
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
@@ -193,7 +200,7 @@ const Auth = () => {
                   <Checkbox
                     id="remember-me"
                     checked={rememberMe}
-                    onCheckedChange={setRememberMe}
+                    onCheckedChange={handleRememberMeChange}
                     className="h-4 w-4 accent-indigo-500"
                   />
                   <Label htmlFor="remember-me" className="text-sm cursor-pointer">
@@ -308,7 +315,7 @@ const Auth = () => {
                 <Checkbox
                   id="is-comedian"
                   checked={isComedian}
-                  onCheckedChange={setIsComedian}
+                  onCheckedChange={handleIsComedianChange}
                   className="h-4 w-4 accent-indigo-500"
                 />
                 <Label htmlFor="is-comedian" className="text-sm cursor-pointer flex items-center gap-2">
