@@ -103,7 +103,7 @@ export const useTicketSalesManagement = (eventId?: string) => {
     },
   });
 
-  // Calculate sales metrics
+  // Calculate sales metrics with AUD formatting
   const salesMetrics = {
     totalSales: ticketSales.length,
     totalRevenue: ticketSales.reduce((sum, sale) => sum + Number(sale.total_amount), 0),
