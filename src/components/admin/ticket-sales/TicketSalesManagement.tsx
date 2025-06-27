@@ -4,10 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useTicketSalesManagement } from '@/hooks/useTicketSalesManagement';
 import { useEventData } from '@/hooks/useEventData';
 import { NewSaleState } from '@/types/ticketSales';
-import SalesFilterSection from './ticket-sales/SalesFilterSection';
-import SalesMetricsCards from './ticket-sales/SalesMetricsCards';
-import AddSaleDialog from './ticket-sales/AddSaleDialog';
-import SalesTable from './ticket-sales/SalesTable';
+import SalesFilterSection from './SalesFilterSection';
+import SalesMetricsCards from './SalesMetricsCards';
+import AddSaleDialog from './AddSaleDialog';
+import SalesTable from './SalesTable';
 
 const TicketSalesManagement = () => {
   const [selectedEventId, setSelectedEventId] = useState<string>('all');

@@ -10,7 +10,7 @@ import EventManagement from '@/components/admin/EventManagement';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import MetaPixelSettings from '@/components/admin/MetaPixelSettings';
 import SystemSettings from '@/components/admin/SystemSettings';
-import TicketSalesManagement from '@/components/admin/TicketSalesManagement';
+import TicketSalesManagement from '@/components/admin/ticket-sales/TicketSalesManagement';
 
 const AdminDashboard = () => {
   const { user, hasRole } = useAuth();
