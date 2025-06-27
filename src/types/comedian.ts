@@ -7,6 +7,7 @@ export interface Comedian {
   avatar_url: string | null;
   is_verified: boolean;
   email: string | null;
+  created_at?: string | null;
   years_experience?: number;
   show_count?: number;
   specialties?: string[];

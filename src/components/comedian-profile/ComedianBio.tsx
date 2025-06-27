@@ -10,14 +10,14 @@ interface ComedianBioProps {
     name: string | null;
     bio: string | null;
     location: string | null;
-    created_at: string | null;
+    created_at?: string | null;
   };
 }
 
 const ComedianBio: React.FC<ComedianBioProps> = ({ comedian }) => {
   // Calculate years active (placeholder logic)
   const getYearsActive = () => {
-    if (!comedian.created_at) return 'New';
+    if (!comedian.created_at) return 'New to the scene';
     const createdYear = new Date(comedian.created_at).getFullYear();
     const currentYear = new Date().getFullYear();
     const years = currentYear - createdYear;
