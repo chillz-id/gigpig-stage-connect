@@ -83,52 +83,52 @@ const Browse = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
+          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Shows</h1>
-            <p className="text-muted-foreground">
-              Find gigs near you
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Discover Shows</h1>
+            <p className="text-gray-600 text-lg">
+              Find amazing comedy events near you
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-6">
+          {/* Search & Filters */}
+          <div className="mb-8 space-y-4">
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Search for events"
+                placeholder="Search events, venues, or locations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
+                className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white rounded-xl"
               />
             </div>
+
+            <MonthFilter
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={handleMonthChange}
+            />
           </div>
 
-          {/* Month Filter */}
-          <MonthFilter
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthChange={handleMonthChange}
-          />
-
-          {/* Event Cards */}
-          <div className="mt-6">
+          {/* Event Cards Grid */}
+          <div className="mb-8">
             {isLoading ? (
-              <div className="text-center py-8">
-                <div className="text-xl text-muted-foreground">Loading events...</div>
+              <div className="text-center py-16">
+                <div className="text-xl text-gray-500">Finding amazing shows...</div>
               </div>
             ) : filteredEvents.length === 0 ? (
-              <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-                  <p className="text-muted-foreground">
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <h3 className="text-2xl font-semibold mb-3 text-gray-900">No shows found</h3>
+                  <p className="text-gray-600 text-lg">
                     Try selecting a different month or adjusting your search
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredEvents.map((show) => (
                   <ModernEventCard
                     key={show.id}
