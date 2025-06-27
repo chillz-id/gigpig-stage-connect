@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,25 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MapPin, Mail, Calendar, Users, Instagram, Twitter, Youtube } from 'lucide-react';
 import { useViewMode } from '@/contexts/ViewModeContext';
 import VouchButton from './VouchButton';
-
-interface Comedian {
-  id: string;
-  name: string | null;
-  bio: string | null;
-  location: string | null;
-  avatar_url: string | null;
-  is_verified: boolean;
-  email: string | null;
-  years_experience?: number;
-  show_count?: number;
-  specialties?: string[];
-  social_media?: {
-    instagram?: string;
-    tiktok?: string;
-    twitter?: string;
-    youtube?: string;
-  };
-}
+import { Comedian } from '@/types/comedian';
 
 interface ComedianCardProps {
   comedian: Comedian;

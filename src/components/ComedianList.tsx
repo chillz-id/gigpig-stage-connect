@@ -1,21 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import ComedianCard from './ComedianCard';
-
-interface Comedian {
-  id: string;
-  name: string | null;
-  bio: string | null;
-  location: string | null;
-  avatar_url: string | null;
-  is_verified: boolean;
-  email: string | null;
-  years_experience?: number;
-  show_count?: number;
-  specialties?: string[];
-}
+import { Comedian } from '@/types/comedian';
 
 interface ComedianListProps {
   comedians: Comedian[];
