@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Notification {
   id: string;
@@ -21,7 +21,7 @@ interface Notification {
 }
 
 export const NotificationDropdown: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({

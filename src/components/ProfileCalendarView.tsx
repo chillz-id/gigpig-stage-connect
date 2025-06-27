@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2, Plus } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
-import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,8 +20,7 @@ interface CalendarEvent {
 }
 
 export const ProfileCalendarView: React.FC = () => {
-  const { user } = useUser();
-  const { hasRole } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
