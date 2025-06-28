@@ -30,10 +30,8 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
         isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="bg-background/95 backdrop-blur-lg border-b border-border/20">
-          {/* Main content area - removed max-width constraint and centering */}
+          {/* Main content area - removed the logo and hamburger menu from here */}
           <div className="px-6 py-6 space-y-2">
-            <MobileUserInfo />
-            
             <MobileNavigationLinks
               setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
