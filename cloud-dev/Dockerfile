@@ -26,9 +26,9 @@ RUN npm install -g typescript ts-node nodemon
 RUN mkdir -p /home/developer/workspace /home/developer/.mcp
 RUN chown -R developer:developer /home/developer
 
-# Copy configuration files
-COPY mcp-config.json /home/developer/.mcp/config.json
-COPY start.sh /home/developer/start.sh
+# Copy configuration files from cloud-dev folder
+COPY cloud-dev/mcp-config.json /home/developer/.mcp/config.json
+COPY cloud-dev/start.sh /home/developer/start.sh
 
 # Make start script executable
 RUN chmod +x /home/developer/start.sh
