@@ -7,7 +7,17 @@ echo "🚀 Starting Stand Up Sydney Development Environment with Claude Code..."
 if [ ! -d "/home/developer/workspace/gigpig-stage-connect" ]; then
     echo "📦 Cloning Stand Up Sydney repository..."
     cd /home/developer/workspace
-    git clone https://github.com/chillz-id/gigpig-stage-connect.git
+    
+    # Use GitHub token for private repository access
+    if [ ! -z "${GITHUB_TOKEN}" ]; then
+        echo "🔑 Using GitHub token for private repository access"
+        git clone https://${GITHUB_TOKEN}@github.com/chillz-id/gigpig-stage-connect.git
+    else
+        echo "❌ GITHUB_TOKEN not found! Cannot clone private repository."
+        echo "   Add GITHUB_TOKEN to Railway environment variables"
+        exit 1
+    fi
+    
     cd gigpig-stage-connect
     npm install
     echo "✅ Repository cloned and dependencies installed"
