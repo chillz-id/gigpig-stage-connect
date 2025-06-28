@@ -1,14 +1,17 @@
 # Railway Nixpacks Configuration
-# This tells Railway exactly how to build and run the dev server
+# Explicit configuration for Stand Up Sydney dev preview
 
 [phases.setup]
 nixPkgs = ["nodejs", "npm"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --only=production=false"]
 
 [phases.build]
-cmds = ["echo 'Skip build for dev server'"]
+cmds = [
+  "chmod +x start-dev.sh",
+  "echo 'Build phase complete - ready for dev server'"
+]
 
 [start]
-cmd = "npm run dev -- --host 0.0.0.0 --port $PORT"
+cmd = "./start-dev.sh"
