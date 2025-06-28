@@ -43,16 +43,23 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
-  // Handle tab change - pass directly to parent
+  // Handle tab change - validate and pass to parent
   const handleTabChange = (newTab: string) => {
-    console.log('ProfileTabs: Tab change requested:', newTab);
-    setActiveTab(newTab);
+    console.log('ProfileTabs: Tab change requested:', newTab, 'Available tabs:', availableTabs);
+    
+    // Only pass valid tabs to parent
+    if (availableTabs.includes(newTab)) {
+      console.log('ProfileTabs: Valid tab, passing to parent:', newTab);
+      setActiveTab(newTab);
+    } else {
+      console.log('ProfileTabs: Invalid tab ignored:', newTab);
+    }
   };
 
-  // Ensure we have a valid active tab
+  // Ensure we have a valid active tab - fallback to first available tab
   const currentTab = availableTabs.includes(activeTab) ? activeTab : availableTabs[0];
   
-  console.log('ProfileTabs: Rendering with activeTab:', activeTab, 'currentTab:', currentTab, 'availableTabs:', availableTabs);
+  console.log('ProfileTabs: Rendering with activeTab:', activeTab, 'currentTab:', currentTab, 'availableTabs:', availableTabs, 'isMemberView:', isMemberView, 'isIndustryUser:', isIndustryUser);
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">

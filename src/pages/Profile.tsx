@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -40,17 +39,22 @@ const Profile = () => {
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
-  // Only sync from URL on initial load, not on every change
+  // Only sync from URL on initial load
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab') || 'profile';
+    
+    console.log('Profile: URL tab param:', tabParam, 'Available tabs:', availableTabs);
     
     // Only update if it's different from current state and is a valid tab
     if (tabParam !== activeTab && availableTabs.includes(tabParam)) {
       console.log('Profile: Syncing tab from URL:', tabParam);
       setActiveTab(tabParam);
+    } else if (!availableTabs.includes(tabParam)) {
+      console.log('Profile: Invalid tab in URL, using default profile tab');
+      setActiveTab('profile');
     }
-  }, [location.search]); // Remove activeTab from dependencies to prevent loop
+  }, [location.search, availableTabs]); // Include availableTabs to handle role changes
 
   if (!user) {
     return (
