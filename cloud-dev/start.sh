@@ -1,22 +1,7 @@
 #!/bin/bash
-# Railway start script for Claude Code + MCP environment
+# Railway start script for Cloud Development Environment
 
 echo "🚀 Starting Stand Up Sydney Development Environment..."
-
-# Start MCP servers in background
-echo "📡 Starting MCP servers..."
-
-# GitHub MCP Server
-mcp-server-github --port 3001 &
-
-# Filesystem MCP Server  
-mcp-server-filesystem --port 3002 &
-
-# Notion MCP Server (if available)
-# mcp-server-notion --port 3003 &
-
-# Wait for MCP servers to start
-sleep 5
 
 # Clone the Stand Up Sydney repository if not exists
 if [ ! -d "/home/developer/workspace/gigpig-stage-connect" ]; then
@@ -25,6 +10,7 @@ if [ ! -d "/home/developer/workspace/gigpig-stage-connect" ]; then
     git clone https://github.com/chillz-id/gigpig-stage-connect.git
     cd gigpig-stage-connect
     npm install
+    echo "✅ Repository cloned and dependencies installed"
 fi
 
 # Set up environment variables from Railway secrets
@@ -35,6 +21,8 @@ VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 VITE_GTM_ID=${VITE_GTM_ID}
 EOF
 
+echo "✅ Environment variables configured"
+
 # Start code-server (VSCode in browser)
 echo "💻 Starting code-server on port 8080..."
 code-server \
@@ -44,14 +32,18 @@ code-server \
     --disable-telemetry \
     /home/developer/workspace &
 
+# Wait a moment for code-server to start
+sleep 3
+
 # Start the development server
 cd /home/developer/workspace/gigpig-stage-connect
 echo "🎭 Starting Stand Up Sydney dev server on port 3000..."
 npm run dev -- --host 0.0.0.0 --port 3000 &
 
 echo "✅ All services started!"
-echo "🌐 VSCode: https://your-app.railway.app:8080"
-echo "🎪 Stand Up Sydney: https://your-app.railway.app:3000"
+echo "🌐 VSCode: Access via Railway URL"
+echo "🎪 Stand Up Sydney: Access via Railway URL:3000"
+echo "🔐 VSCode Password: ${PASSWORD:-standupdev2025}"
 
 # Keep container running
 wait
