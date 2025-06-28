@@ -16,8 +16,8 @@ const Navigation: React.FC = () => {
     <nav className="bg-background/95 backdrop-blur-lg border-b border-border sticky top-0 z-50 transition-all duration-300 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-3 sm:py-4">
-          {/* Logo - Hide on mobile when menu is open */}
-          <div className={`flex items-center ${isMobileMenuOpen ? 'md:flex hidden' : 'flex'}`}>
+          {/* Logo - Always visible */}
+          <div className="flex items-center">
             <Link to="/" className="flex items-center group">
               <img 
                 alt="Stand Up Sydney Logo" 

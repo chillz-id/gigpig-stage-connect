@@ -30,33 +30,30 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
         isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="bg-background/95 backdrop-blur-lg border-b border-border/20">
-          {/* Centered content container */}
-          <div className="max-w-sm mx-auto">
-            {/* Main content area */}
-            <div className="px-6 py-6 space-y-2">
-              <MobileUserInfo />
-              
-              <MobileNavigationLinks
-                setIsMobileMenuOpen={setIsMobileMenuOpen}
-              />
+          {/* Main content area - removed max-width constraint and centering */}
+          <div className="px-6 py-6 space-y-2">
+            <MobileUserInfo />
+            
+            <MobileNavigationLinks
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+            />
 
-              <MobileThemeControls />
+            <MobileThemeControls />
 
-              {!user && (
-                <MobileAuthButtons setIsMobileMenuOpen={setIsMobileMenuOpen} />
-              )}
-            </div>
+            {!user && (
+              <MobileAuthButtons setIsMobileMenuOpen={setIsMobileMenuOpen} />
+            )}
+          </div>
 
-            {/* Close menu section */}
-            <div className="border-t border-border/20 px-6 py-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full flex flex-col items-center gap-2 py-3 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full"></div>
-                <span className="text-sm font-medium">Close Menu</span>
-              </button>
-            </div>
+          {/* Close menu section */}
+          <div className="border-t border-border/20 px-6 py-4">
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex flex-col items-center gap-2 py-3 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className="w-12 h-1 bg-muted-foreground/30 rounded-full"></div>
+              <span className="text-sm font-medium">Close Menu</span>
+            </button>
           </div>
         </div>
       </div>
