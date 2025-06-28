@@ -71,27 +71,37 @@ cat > .env.local << EOF
 VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
 VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 VITE_GTM_ID=${VITE_GTM_ID}
-PORT=3000
 EOF
 
 echo "✅ Environment variables configured"
 
-# Set password for code-server via environment variable
-export PASSWORD="${PASSWORD:-StandUpSydney2025}"
+# CRITICAL FIX: Preserve PORT for code-server, use separate variables for Vite
+# Store the original PORT value for code-server
+CODE_SERVER_PORT="${PORT:-8080}"
+export CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
 
-# Start VS Code on port 8080 (separate from main app)
-echo "🖥️ Starting code-server on port 8080..."
+echo "🔧 PORT ISOLATION:"
+echo "  - Code-server will use: $CODE_SERVER_PORT"
+echo "  - Vite will use: 3000"
+
+# Start VS Code on the preserved port (8080) - BEFORE changing PORT variable
+echo "🖥️ Starting code-server on port $CODE_SERVER_PORT..."
 code-server \
-    --bind-addr 0.0.0.0:8080 \
+    --bind-addr 0.0.0.0:${CODE_SERVER_PORT} \
     --auth password \
     --disable-telemetry \
     /home/developer/workspace &
 
 VSCODE_PID=$!
-echo "VS Code started with PID: $VSCODE_PID"
+echo "VS Code started with PID: $VSCODE_PID on port: $CODE_SERVER_PORT"
 
-# Give VS Code time to start
+# Give VS Code time to start and bind to its port
 sleep 5
+
+# NOW set environment variables for Vite (after code-server is running)
+echo "🎯 Setting Vite-specific environment variables..."
+export PORT=3000
+export VITE_PORT=3000
 
 # Final port 3000 check before starting Vite
 if netstat -tln 2>/dev/null | grep -q ":3000 "; then
@@ -102,10 +112,6 @@ fi
 # Start Vite with FORCED port 3000
 echo "🎭 FORCING Stand Up Sydney dev server to start on port 3000..."
 cd /home/developer/workspace/gigpig-stage-connect
-
-# Set environment variables for Vite
-export PORT=3000
-export VITE_PORT=3000
 
 # Use strictPort to make Vite fail if port 3000 is not available
 echo "Running: npm run dev -- --host 0.0.0.0 --port 3000 --strictPort"
@@ -139,7 +145,7 @@ fi
 
 # Check VS Code
 if kill -0 $VSCODE_PID 2>/dev/null; then
-    echo "✅ VS Code is running on port 8080 (PID: $VSCODE_PID)"
+    echo "✅ VS Code is running on port $CODE_SERVER_PORT (PID: $VSCODE_PID)"
 else
     echo "⚠️ VS Code may not have started properly"
 fi
@@ -147,8 +153,8 @@ fi
 echo ""
 echo "🎉 ALL SERVICES SUCCESSFULLY STARTED!"
 echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
-echo "🌐 VS Code: https://your-railway-url.app:8080"  
-echo "🔒 VS Code Password: ${PASSWORD}"
+echo "🌐 VS Code: https://your-railway-url.app:$CODE_SERVER_PORT"  
+echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
 
 # Configure Claude Code if API key is provided
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
