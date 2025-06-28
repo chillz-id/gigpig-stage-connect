@@ -1,19 +1,22 @@
 # Railway Dockerfile for Claude Code + Cloud Development Environment
-FROM node:20-bullseye
+# Using Alpine for smaller size and better reliability
+FROM node:20-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies (Alpine packages)
+RUN apk add --no-cache \
     git \
     curl \
     wget \
     vim \
     python3 \
-    python3-pip \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    py3-pip \
+    build-base \
+    bash \
+    shadow \
+    gcompat
 
 # Create development user
-RUN useradd -m -s /bin/bash developer
+RUN adduser -D -s /bin/bash developer
 WORKDIR /home/developer
 
 # Install code-server (VSCode in browser)
