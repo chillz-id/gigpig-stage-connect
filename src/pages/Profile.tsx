@@ -35,6 +35,11 @@ const Profile = () => {
   // Get profile data using custom hook
   const { userInterests, mockTickets } = useProfileData(user?.id, isMemberView);
 
+  // Tab configuration based on view mode
+  const memberTabs = ['profile', 'tickets', 'notifications', 'book-comedian', 'settings'];
+  const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
+  const availableTabs = isMemberView ? memberTabs : industryTabs;
+
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
@@ -89,16 +94,24 @@ const Profile = () => {
     });
   };
 
-  // Handle tab changes and update URL
+  // Handle tab changes with validation and URL update
   const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    const newUrl = new URL(window.location.href);
-    if (newTab === 'profile') {
-      newUrl.searchParams.delete('tab');
+    console.log('Profile: Tab change requested:', newTab, 'Available tabs:', availableTabs);
+    
+    // Validate the tab is available for current view
+    if (availableTabs.includes(newTab)) {
+      setActiveTab(newTab);
+      const newUrl = new URL(window.location.href);
+      if (newTab === 'profile') {
+        newUrl.searchParams.delete('tab');
+      } else {
+        newUrl.searchParams.set('tab', newTab);
+      }
+      window.history.replaceState({}, '', newUrl.toString());
+      console.log('Profile: Tab changed to:', newTab, 'URL updated');
     } else {
-      newUrl.searchParams.set('tab', newTab);
+      console.log('Profile: Invalid tab requested:', newTab, 'Available:', availableTabs);
     }
-    window.history.replaceState({}, '', newUrl.toString());
   };
 
   // Create a user object that matches the expected interface for ProfileHeader and ProfileTabs
