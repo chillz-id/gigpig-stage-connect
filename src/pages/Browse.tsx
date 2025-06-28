@@ -10,6 +10,7 @@ import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelec
 import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
 import { TicketPage } from '@/components/TicketPage';
 import { MonthFilter } from '@/components/MonthFilter';
+import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { mockEvents } from '@/data/mockEvents';
 
@@ -91,6 +92,9 @@ const Browse = () => {
               Find gigs near you
             </p>
           </div>
+
+          {/* Featured Events Carousel */}
+          <FeaturedEventsCarousel />
 
           {/* Search Bar */}
           <div className="mb-6">

@@ -530,6 +530,7 @@ export type Database = {
           end_time: string | null
           event_date: string
           eventbrite_event_id: string | null
+          featured: boolean | null
           filled_slots: number | null
           humanitix_event_id: string | null
           id: string
@@ -579,6 +580,7 @@ export type Database = {
           end_time?: string | null
           event_date: string
           eventbrite_event_id?: string | null
+          featured?: boolean | null
           filled_slots?: number | null
           humanitix_event_id?: string | null
           id?: string
@@ -628,6 +630,7 @@ export type Database = {
           end_time?: string | null
           event_date?: string
           eventbrite_event_id?: string | null
+          featured?: boolean | null
           filled_slots?: number | null
           humanitix_event_id?: string | null
           id?: string
