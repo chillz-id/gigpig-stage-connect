@@ -40,13 +40,17 @@ const Profile = () => {
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
+  // Only sync from URL on initial load, not on every change
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const tabParam = urlParams.get('tab');
-    if (tabParam && tabParam !== activeTab) {
+    const tabParam = urlParams.get('tab') || 'profile';
+    
+    // Only update if it's different from current state and is a valid tab
+    if (tabParam !== activeTab && availableTabs.includes(tabParam)) {
+      console.log('Profile: Syncing tab from URL:', tabParam);
       setActiveTab(tabParam);
     }
-  }, [location.search, activeTab]);
+  }, [location.search]); // Remove activeTab from dependencies to prevent loop
 
   if (!user) {
     return (
@@ -100,7 +104,10 @@ const Profile = () => {
     
     // Validate the tab is available for current view
     if (availableTabs.includes(newTab)) {
+      console.log('Profile: Updating tab to:', newTab);
       setActiveTab(newTab);
+      
+      // Update URL without triggering useEffect
       const newUrl = new URL(window.location.href);
       if (newTab === 'profile') {
         newUrl.searchParams.delete('tab');
@@ -108,7 +115,7 @@ const Profile = () => {
         newUrl.searchParams.set('tab', newTab);
       }
       window.history.replaceState({}, '', newUrl.toString());
-      console.log('Profile: Tab changed to:', newTab, 'URL updated');
+      console.log('Profile: URL updated for tab:', newTab);
     } else {
       console.log('Profile: Invalid tab requested:', newTab, 'Available:', availableTabs);
     }
