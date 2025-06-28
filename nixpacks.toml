@@ -1,0 +1,14 @@
+# Railway Nixpacks Configuration
+# This tells Railway exactly how to build and run the dev server
+
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["echo 'Skip build for dev server'"]
+
+[start]
+cmd = "npm run dev -- --host 0.0.0.0 --port $PORT"
