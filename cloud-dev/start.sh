@@ -3,27 +3,23 @@
 
 echo "🚀 Starting Stand Up Sydney Development Environment with Claude Code..."
 
-# Function to kill processes on specific ports
+# Function to kill processes on specific ports (Alpine-compatible)
 cleanup_ports() {
     echo "🧹 Cleaning up existing processes..."
     
-    # Kill any process using port 3000 (Vite)
-    if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo "  Killing process on port 3000..."
-        lsof -Pi :3000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
-    fi
+    # Kill any existing node processes (likely Vite)
+    pkill -f "vite" 2>/dev/null || true
+    pkill -f "npm run dev" 2>/dev/null || true
     
-    # Kill any process using port 8080 (VS Code)
-    if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo "  Killing process on port 8080..."
-        lsof -Pi :8080 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
-    fi
+    # Kill any existing code-server processes  
+    pkill -f "code-server" 2>/dev/null || true
     
-    # Kill any process using port 8000 (MCP Gateway)
-    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo "  Killing process on port 8000..."
-        lsof -Pi :8000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
-    fi
+    # Kill processes by port using netstat (if available)
+    # Port 3000 (Vite)
+    netstat -tlnp 2>/dev/null | grep :3000 | awk '{print $7}' | cut -d'/' -f1 | xargs -r kill -9 2>/dev/null || true
+    
+    # Port 8080 (VS Code)  
+    netstat -tlnp 2>/dev/null | grep :8080 | awk '{print $7}' | cut -d'/' -f1 | xargs -r kill -9 2>/dev/null || true
     
     sleep 2
     echo "✅ Port cleanup complete"
@@ -71,7 +67,6 @@ if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
     # Create Claude Code config directory
     mkdir -p /home/developer/.config/claude-code
     
-    # Initialize Claude Code (if initialization command exists)
     echo "✅ Claude Code configured and ready!"
     echo "💡 Usage: 'claude \"your coding request\"' from terminal"
 else
@@ -82,65 +77,36 @@ fi
 # Set password for code-server via environment variable
 export PASSWORD="${PASSWORD:-standupdev2025}"
 
-# Function to start VS Code with retry logic
-start_vscode() {
-    echo "🖥️ Starting code-server on port 8080..."
-    
-    # Try to start code-server with retries
-    for i in {1..3}; do
-        if code-server \
-            --bind-addr 0.0.0.0:8080 \
-            --auth password \
-            --disable-telemetry \
-            /home/developer/workspace &
-        then
-            echo "✅ VS Code started successfully (attempt $i)"
-            return 0
-        else
-            echo "❌ VS Code failed to start (attempt $i)"
-            sleep 2
-        fi
-    done
-    
-    echo "⚠️  VS Code failed to start after 3 attempts"
-    return 1
-}
+# Start VS Code in background
+echo "🖥️ Starting code-server on port 8080..."
+code-server \
+    --bind-addr 0.0.0.0:8080 \
+    --auth password \
+    --disable-telemetry \
+    /home/developer/workspace &
 
-# Function to start Vite with retry logic  
-start_vite() {
-    echo "🎭 Starting Stand Up Sydney dev server on port 3000..."
-    cd /home/developer/workspace/gigpig-stage-connect
-    
-    # Try to start Vite with retries
-    for i in {1..3}; do
-        if npm run dev -- --host 0.0.0.0 --port 3000 &
-        then
-            echo "✅ Vite started successfully (attempt $i)"
-            return 0
-        else
-            echo "❌ Vite failed to start (attempt $i)"
-            # Clean port 3000 again if needed
-            lsof -Pi :3000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
-            sleep 3
-        fi
-    done
-    
-    echo "❌ Vite failed to start after 3 attempts"
-    return 1
-}
+# Give VS Code time to start
+sleep 5
 
-# Start services
-start_vscode
-sleep 5  # Wait for VS Code to fully start
+# Start the Vite development server
+echo "🎭 Starting Stand Up Sydney dev server on port 3000..."
+cd /home/developer/workspace/gigpig-stage-connect
 
-start_vite
+# Use a different port if 3000 is still occupied, with fallback logic
+PORT_TO_USE=3000
+if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+    echo "⚠️  Port 3000 is busy, trying port 3001..."
+    PORT_TO_USE=3001
+fi
 
-# Wait a moment for services to stabilize
+npm run dev -- --host 0.0.0.0 --port $PORT_TO_USE &
+
+# Wait for services to stabilize
 sleep 3
 
 echo "✅ All services started!"
 echo "🌐 VS Code: Access via Railway URL"
-echo "🎪 Stand Up Sydney: Access via Railway URL:3000"
+echo "🎪 Stand Up Sydney: Access via Railway URL:$PORT_TO_USE"
 echo "🔒 VS Code Password: ${PASSWORD}"
 
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
