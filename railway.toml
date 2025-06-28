@@ -1,11 +1,21 @@
-# Railway Configuration
+# Railway Multi-Service Configuration
+# Two separate services with different build methods
 
-# CDE Service (uses Dockerfile.railway)
+# Default configuration for dev-preview service (Node.js/Vite)
 [deploy]
-buildCommand = "echo 'CDE service - using Dockerfile'"
+buildCommand = "npm install"
+startCommand = "npm run dev -- --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/"
 
-# Override for dev-preview service specifically
+# Service-specific configurations
 [environments.production.services.dev-preview]
 buildCommand = "npm install"
 startCommand = "npm run dev -- --host 0.0.0.0 --port $PORT"
+rootDirectory = "."
+
+# CDE service configuration (uses Docker in cloud-dev directory)
+[environments.production.services.claude-cde]
+buildCommand = "echo 'Building CDE with Docker from cloud-dev directory'"
+dockerfilePath = "cloud-dev/Dockerfile"
+rootDirectory = "cloud-dev"
+healthcheckPath = "/"
