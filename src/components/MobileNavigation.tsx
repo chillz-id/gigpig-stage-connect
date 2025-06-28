@@ -25,12 +25,15 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
 
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 z-50 bg-background/95 backdrop-blur-lg animate-fade-in">
+      {/* Mobile menu that pushes content down */}
+      <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${
+        isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="bg-background/95 backdrop-blur-lg border-b border-border/20">
           {/* Centered content container */}
-          <div className="flex flex-col h-full max-w-sm mx-auto">
+          <div className="max-w-sm mx-auto">
             {/* Main content area */}
-            <div className="flex-1 px-6 py-8 overflow-y-auto">
+            <div className="px-6 py-6 space-y-2">
               <MobileUserInfo />
               
               <MobileNavigationLinks
@@ -44,11 +47,11 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               )}
             </div>
 
-            {/* Close menu section at bottom */}
-            <div className="border-t border-border/20 p-6">
+            {/* Close menu section */}
+            <div className="border-t border-border/20 px-6 py-4">
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full flex flex-col items-center gap-2 py-4 text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full flex flex-col items-center gap-2 py-3 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <div className="w-12 h-1 bg-muted-foreground/30 rounded-full"></div>
                 <span className="text-sm font-medium">Close Menu</span>
@@ -56,7 +59,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 };
