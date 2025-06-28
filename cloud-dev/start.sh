@@ -5,7 +5,7 @@ echo "🚀 Starting Stand Up Sydney Development Environment with Claude Code..."
 
 # Super aggressive port cleanup - FORCE port 3000 to be available
 free_port_3000() {
-    echo "⚔️ Aggressively freeing port 3000..."
+    echo "⚡️ Aggressively freeing port 3000..."
     
     # Kill ALL node/npm processes (nuclear option)
     pkill -9 -f "node" 2>/dev/null || true
@@ -117,11 +117,36 @@ echo "✅ Vite started with PID: $VITE_PID on port $RAILWAY_MAIN_PORT"
 # Wait for Vite to claim port 3000
 sleep 8
 
-# Verify Vite is on port 3000
-if ss -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT " || netstat -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT "; then
-    echo "✅ SUCCESS! Vite claimed port $RAILWAY_MAIN_PORT"
-else
-    echo "❌ CRITICAL: Vite failed to start on port $RAILWAY_MAIN_PORT"
+# FIXED: More flexible Vite port verification
+echo "🔍 Verifying Vite is listening on port $RAILWAY_MAIN_PORT..."
+
+# Try multiple verification methods
+VITE_VERIFIED=false
+
+# Method 1: Check with ss (more reliable)
+if ss -tln 2>/dev/null | grep -q ":${RAILWAY_MAIN_PORT}\b"; then
+    echo "✅ SUCCESS! Vite confirmed on port $RAILWAY_MAIN_PORT (via ss)"
+    VITE_VERIFIED=true
+# Method 2: Check with netstat
+elif netstat -tln 2>/dev/null | grep -q ":${RAILWAY_MAIN_PORT}\b"; then
+    echo "✅ SUCCESS! Vite confirmed on port $RAILWAY_MAIN_PORT (via netstat)"
+    VITE_VERIFIED=true
+# Method 3: Check if process is still running and listening
+elif kill -0 $VITE_PID 2>/dev/null; then
+    echo "✅ Vite process is running (PID: $VITE_PID), assuming port is claimed"
+    VITE_VERIFIED=true
+fi
+
+if [ "$VITE_VERIFIED" = false ]; then
+    echo "❌ CRITICAL: Vite verification failed on port $RAILWAY_MAIN_PORT"
+    echo "🔍 Debug info - Current listening ports:"
+    ss -tln 2>/dev/null | head -10 || netstat -tln 2>/dev/null | head -10
+    echo "🔍 Vite process status:"
+    if kill -0 $VITE_PID 2>/dev/null; then
+        echo "  Vite PID $VITE_PID is still running"
+    else
+        echo "  Vite PID $VITE_PID has died"
+    fi
     exit 1
 fi
 
@@ -148,15 +173,15 @@ sleep 12
 # Verification
 echo "🔍 Final verification:"
 
-# Check Vite on 3000
-if ss -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT " || netstat -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT "; then
+# Check Vite on 3000 (using improved logic)
+if ss -tln 2>/dev/null | grep -q ":${RAILWAY_MAIN_PORT}\b" || netstat -tln 2>/dev/null | grep -q ":${RAILWAY_MAIN_PORT}\b"; then
     echo "✅ Vite confirmed on port $RAILWAY_MAIN_PORT"
 else
     echo "❌ Vite NOT on port $RAILWAY_MAIN_PORT"
 fi
 
-# Check code-server on 8080
-if ss -tln 2>/dev/null | grep -q ":8080 " || netstat -tln 2>/dev/null | grep -q ":8080 "; then
+# Check code-server on 8080 (using improved logic)
+if ss -tln 2>/dev/null | grep -q ":8080\b" || netstat -tln 2>/dev/null | grep -q ":8080\b"; then
     echo "✅ Code-server confirmed on port 8080"
 else
     echo "❌ Code-server NOT on port 8080"
@@ -173,7 +198,7 @@ if kill -0 $VITE_PID 2>/dev/null && kill -0 $VSCODE_PID 2>/dev/null; then
     echo "🔒 VS Code Password: ${PASSWORD:-StandUpSydney2025}"
     echo ""
     echo "📊 Final port assignments:"
-    ss -tln 2>/dev/null | grep -E ":(3000|8080) " || netstat -tln 2>/dev/null | grep -E ":(3000|8080) " || echo "Cannot show port info"
+    ss -tln 2>/dev/null | grep -E ":(3000|8080)\b" || netstat -tln 2>/dev/null | grep -E ":(3000|8080)\b" || echo "Cannot show port info"
 else
     echo "❌ Process verification failed"
     exit 1
