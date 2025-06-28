@@ -1,4 +1,4 @@
-# Railway Dockerfile for Claude Code + MCP Development Environment
+# Railway Dockerfile for Claude Code + Cloud Development Environment
 FROM node:20-bullseye
 
 # Install system dependencies
@@ -9,22 +9,18 @@ RUN apt-get update && apt-get install -y \
     vim \
     python3 \
     python3-pip \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Create development user
 RUN useradd -m -s /bin/bash developer
 WORKDIR /home/developer
 
-# Install Claude Code (when available)
-# RUN npm install -g @anthropic-ai/claude-code
-
-# Install MCP servers
-RUN npm install -g @mcp/server-github
-RUN npm install -g @mcp/server-filesystem
-# Add other MCP servers as needed
-
 # Install code-server (VSCode in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Install useful development tools
+RUN npm install -g typescript ts-node nodemon
 
 # Create workspace directory and MCP config directory
 RUN mkdir -p /home/developer/workspace /home/developer/.mcp
