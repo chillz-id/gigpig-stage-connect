@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
@@ -39,22 +40,22 @@ const Profile = () => {
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
-  // Only sync from URL on initial load
+  // Only sync from URL on component mount, not on every URL change
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab') || 'profile';
     
-    console.log('Profile: URL tab param:', tabParam, 'Available tabs:', availableTabs);
+    console.log('Profile: Initial URL tab param:', tabParam, 'Available tabs:', availableTabs);
     
-    // Only update if it's different from current state and is a valid tab
-    if (tabParam !== activeTab && availableTabs.includes(tabParam)) {
-      console.log('Profile: Syncing tab from URL:', tabParam);
+    // Set initial tab if it's valid, otherwise use 'profile'
+    if (availableTabs.includes(tabParam)) {
+      console.log('Profile: Setting initial tab from URL:', tabParam);
       setActiveTab(tabParam);
-    } else if (!availableTabs.includes(tabParam)) {
+    } else {
       console.log('Profile: Invalid tab in URL, using default profile tab');
       setActiveTab('profile');
     }
-  }, [location.search, availableTabs]); // Include availableTabs to handle role changes
+  }, []); // Empty dependency array - only run on mount
 
   if (!user) {
     return (
