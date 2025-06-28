@@ -72,35 +72,23 @@ EOF
 
 echo "✅ Environment variables configured"
 
-# AGGRESSIVE DEBUGGING AND CODE-SERVER CONFIG FIX
-echo "🔧 AGGRESSIVE CODE-SERVER CONFIGURATION"
-echo "  - Original Railway PORT: ${PORT}"
+# CRITICAL FIX: Remove all code-server configs and force clean start
+echo "🔧 CRITICAL FIX: Complete code-server reset"
+echo "  - Railway PORT: ${PORT}"
 
 # Store critical variables
 RAILWAY_PORT="$PORT"
 CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
 
-# Remove any existing code-server config that might interfere
+# Remove ALL existing code-server data that might interfere
 rm -rf /home/developer/.config/code-server/ 2>/dev/null || true
 rm -rf /home/developer/.local/share/code-server/ 2>/dev/null || true
+rm -rf /home/developer/.cache/code-server/ 2>/dev/null || true
 
-# Create code-server config directory and force config
-mkdir -p /home/developer/.config/code-server/
-
-# Create explicit code-server configuration file
-cat > /home/developer/.config/code-server/config.yaml << EOF
-bind-addr: 0.0.0.0:8080
-auth: password
-password: ${CODE_SERVER_PASSWORD}
-cert: false
-disable-telemetry: true
-EOF
-
-echo "📝 Created code-server config file:"
-cat /home/developer/.config/code-server/config.yaml
+echo "🧹 Removed all existing code-server configurations"
 
 # Check available network debugging tools
-echo "🔍 Network debugging tools available:"
+echo "🔍 Network tools available:"
 which ss && echo "✅ ss available" || echo "❌ ss not available"
 which netstat && echo "✅ netstat available" || echo "❌ netstat not available" 
 which lsof && echo "✅ lsof available" || echo "❌ lsof not available"
@@ -112,92 +100,117 @@ ss -tln 2>/dev/null || netstat -tln 2>/dev/null || echo "No network tools availa
 # COMPLETELY UNSET PORT for code-server startup
 unset PORT
 
-echo "🖥️ Starting code-server with CONFIG FILE and UNSET PORT..."
-echo "Command: code-server /home/developer/workspace"
+echo "🖥️ CRITICAL FIX: Starting code-server with ABSOLUTE network binding"
+echo "Command: code-server --bind-addr=0.0.0.0:8080 --auth=password --password=$CODE_SERVER_PASSWORD --disable-telemetry --disable-update-check /home/developer/workspace"
 
-# Start code-server using config file (should override any environment)
-env -u PORT code-server /home/developer/workspace &
+# Start code-server with MAXIMUM explicit arguments and clean environment
+env -u PORT code-server \
+    --bind-addr=0.0.0.0:8080 \
+    --auth=password \
+    --password="$CODE_SERVER_PASSWORD" \
+    --disable-telemetry \
+    --disable-update-check \
+    --disable-workspace-trust \
+    /home/developer/workspace &
 
 VSCODE_PID=$!
 echo "VS Code started with PID: $VSCODE_PID"
 
-# Give VS Code time to start
-sleep 10
+# Give code-server substantial time to bind to network interface
+echo "⏳ Waiting 15 seconds for code-server to bind to network interface..."
+sleep 15
 
-# Multiple methods to check if code-server is listening on 8080
-echo "🔍 Checking if code-server bound to port 8080..."
+# Comprehensive port 8080 verification using multiple methods
+echo "🔍 Comprehensive port 8080 verification:"
 
 # Method 1: ss
 if command -v ss >/dev/null 2>&1; then
     echo "Method 1 (ss):"
-    ss -tln | grep ":8080" || echo "  Port 8080 not found with ss"
+    SS_CHECK=$(ss -tln | grep ":8080" || echo "")
+    if [ ! -z "$SS_CHECK" ]; then
+        echo "  ✅ Port 8080 found with ss: $SS_CHECK"
+        PORT_8080_FOUND=true
+    else
+        echo "  ❌ Port 8080 NOT found with ss"
+    fi
 fi
 
 # Method 2: netstat  
 if command -v netstat >/dev/null 2>&1; then
     echo "Method 2 (netstat):"
-    netstat -tln | grep ":8080" || echo "  Port 8080 not found with netstat"
+    NETSTAT_CHECK=$(netstat -tln | grep ":8080" || echo "")
+    if [ ! -z "$NETSTAT_CHECK" ]; then
+        echo "  ✅ Port 8080 found with netstat: $NETSTAT_CHECK"
+        PORT_8080_FOUND=true
+    else
+        echo "  ❌ Port 8080 NOT found with netstat"
+    fi
 fi
 
 # Method 3: lsof
 if command -v lsof >/dev/null 2>&1; then
     echo "Method 3 (lsof):"
-    lsof -i :8080 || echo "  Port 8080 not found with lsof"
+    LSOF_CHECK=$(lsof -i :8080 2>/dev/null || echo "")
+    if [ ! -z "$LSOF_CHECK" ]; then
+        echo "  ✅ Port 8080 found with lsof: $LSOF_CHECK"
+        PORT_8080_FOUND=true
+    else
+        echo "  ❌ Port 8080 NOT found with lsof"
+    fi
 fi
 
-# Method 4: Check process
+# Method 4: Process check
 echo "Method 4 (process check):"
 if kill -0 $VSCODE_PID 2>/dev/null; then
     echo "  ✅ Code-server process is running (PID: $VSCODE_PID)"
+    
+    # Show what ports the process is actually using
+    if command -v lsof >/dev/null 2>&1; then
+        echo "  Ports used by code-server process:"
+        lsof -p $VSCODE_PID 2>/dev/null | grep LISTEN || echo "  No listening ports found for process"
+    fi
 else
     echo "  ❌ Code-server process died!"
+    PORT_8080_FOUND=false
 fi
 
 # Show ALL listening ports for debugging
 echo "📊 ALL current listening ports:"
 ss -tln 2>/dev/null | head -20 || netstat -tln 2>/dev/null | head -20 || echo "No network info available"
 
-# Check if port 8080 is actually listening
-PORT_8080_CHECK=$(ss -tln 2>/dev/null | grep ":8080" || netstat -tln 2>/dev/null | grep ":8080" || echo "")
-
-if [ ! -z "$PORT_8080_CHECK" ]; then
+# ULTIMATE DECISION
+if [ "$PORT_8080_FOUND" = "true" ]; then
     echo "✅ SUCCESS! Code-server is listening on port 8080"
-    echo "Details: $PORT_8080_CHECK"
 else
-    echo "❌ Code-server is NOT listening on port 8080"
-    echo "🔍 Let's see what code-server is actually doing..."
-    
-    # Show code-server logs if available
-    echo "Code-server process info:"
-    ps aux | grep code-server | grep -v grep || echo "No code-server process found"
-    
-    # Try to find what ports code-server IS using
-    if command -v lsof >/dev/null 2>&1; then
-        echo "Ports used by code-server process:"
-        lsof -p $VSCODE_PID 2>/dev/null | grep LISTEN || echo "No listening ports found for code-server"
-    fi
-    
-    echo "❌ CRITICAL: Code-server startup failed - trying alternative approach..."
+    echo "❌ CRITICAL: Code-server failed to bind to port 8080"
+    echo "🔧 Attempting alternative code-server startup..."
     
     # Kill the failed code-server
     kill -9 $VSCODE_PID 2>/dev/null || true
     sleep 2
     
-    # Try starting code-server with different arguments
-    echo "🔄 Trying alternative code-server startup..."
+    # Try with different approach - force IPv4 binding
+    echo "Trying alternative method with IPv4 binding..."
     unset PORT
-    code-server --bind-addr=0.0.0.0:8080 --auth=password --disable-telemetry /home/developer/workspace &
+    code-server \
+        --bind-addr=0.0.0.0:8080 \
+        --auth=password \
+        --password="$CODE_SERVER_PASSWORD" \
+        --disable-telemetry \
+        --host=0.0.0.0 \
+        --port=8080 \
+        /home/developer/workspace &
+    
     VSCODE_PID=$!
-    sleep 8
+    sleep 10
     
     # Check again
-    PORT_8080_CHECK=$(ss -tln 2>/dev/null | grep ":8080" || netstat -tln 2>/dev/null | grep ":8080" || echo "")
-    if [ -z "$PORT_8080_CHECK" ]; then
+    if ss -tln 2>/dev/null | grep -q ":8080" || netstat -tln 2>/dev/null | grep -q ":8080"; then
+        echo "✅ Alternative method worked! Code-server on port 8080"
+    else
         echo "💀 FATAL: Cannot get code-server to bind to port 8080"
         echo "Exiting to prevent further issues..."
         exit 1
-    else
-        echo "✅ Alternative method worked! Code-server on port 8080"
     fi
 fi
 
@@ -256,9 +269,9 @@ else
 fi
 
 echo ""
-echo "🎉 NUCLEAR SUCCESS! ALL SERVICES RUNNING!"
+echo "🎉 ULTIMATE SUCCESS! ALL SERVICES RUNNING!"
 echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
-echo "🌐 VS Code: https://your-railway-url.app:8080"  
+echo "🖥️ VS Code: https://your-railway-url.app:8080"  
 echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
 
 # Configure Claude Code if API key is provided
