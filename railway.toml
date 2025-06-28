@@ -1,8 +1,11 @@
-[build]
-command = "npm install"
+# Railway Configuration
 
-[start]
-command = "npm run dev -- --host 0.0.0.0 --port $PORT"
+# CDE Service (uses Dockerfile.railway)
+[deploy]
+buildCommand = "echo 'CDE service - using Dockerfile'"
+healthcheckPath = "/"
 
-[env]
-# Use shared workspace variables
+# Override for dev-preview service specifically
+[environments.production.services.dev-preview]
+buildCommand = "npm install"
+startCommand = "npm run dev -- --host 0.0.0.0 --port $PORT"
