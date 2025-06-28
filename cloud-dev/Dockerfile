@@ -22,6 +22,9 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 # Install useful development tools
 RUN npm install -g typescript ts-node nodemon
 
+# Install Claude Code (Anthropic's agentic CLI tool)
+RUN npm install -g @anthropic-ai/claude-code
+
 # Create workspace directory and MCP config directory
 RUN mkdir -p /home/developer/workspace /home/developer/.mcp
 RUN chown -R developer:developer /home/developer
