@@ -78,7 +78,6 @@ echo "  - Railway PORT: ${PORT}"
 
 # Store critical variables
 RAILWAY_PORT="$PORT"
-CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
 
 # Remove ALL existing code-server data that might interfere
 rm -rf /home/developer/.config/code-server/ 2>/dev/null || true
@@ -97,17 +96,20 @@ which lsof && echo "✅ lsof available" || echo "❌ lsof not available"
 echo "📊 Current listening ports (before code-server):"
 ss -tln 2>/dev/null || netstat -tln 2>/dev/null || echo "No network tools available"
 
+# CRITICAL FIX: Set PASSWORD environment variable (not command line argument)
+export PASSWORD="${PASSWORD:-StandUpSydney2025}"
+echo "🔐 Code-server password set via environment: ${PASSWORD}"
+
 # COMPLETELY UNSET PORT for code-server startup
 unset PORT
 
-echo "🖥️ CRITICAL FIX: Starting code-server with ABSOLUTE network binding"
-echo "Command: code-server --bind-addr=0.0.0.0:8080 --auth=password --password=$CODE_SERVER_PASSWORD --disable-telemetry --disable-update-check /home/developer/workspace"
+echo "🖥️ FIXED: Starting code-server with PASSWORD environment variable"
+echo "Command: code-server --bind-addr=0.0.0.0:8080 --auth=password --disable-telemetry --disable-update-check /home/developer/workspace"
 
-# Start code-server with MAXIMUM explicit arguments and clean environment
-env -u PORT code-server \
+# Start code-server with PASSWORD environment variable (NOT --password flag)
+env -u PORT PASSWORD="$PASSWORD" code-server \
     --bind-addr=0.0.0.0:8080 \
     --auth=password \
-    --password="$CODE_SERVER_PASSWORD" \
     --disable-telemetry \
     --disable-update-check \
     --disable-workspace-trust \
@@ -183,30 +185,32 @@ if [ "$PORT_8080_FOUND" = "true" ]; then
     echo "✅ SUCCESS! Code-server is listening on port 8080"
 else
     echo "❌ CRITICAL: Code-server failed to bind to port 8080"
-    echo "🔧 Attempting alternative code-server startup..."
+    echo "🔧 Attempting alternative with config file method..."
     
     # Kill the failed code-server
     kill -9 $VSCODE_PID 2>/dev/null || true
     sleep 2
     
-    # Try with different approach - force IPv4 binding
-    echo "Trying alternative method with IPv4 binding..."
+    # Create config file approach
+    mkdir -p /home/developer/.config/code-server
+    cat > /home/developer/.config/code-server/config.yaml << EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: ${PASSWORD}
+cert: false
+disable-telemetry: true
+EOF
+    
+    echo "Created config file, trying config-based startup..."
     unset PORT
-    code-server \
-        --bind-addr=0.0.0.0:8080 \
-        --auth=password \
-        --password="$CODE_SERVER_PASSWORD" \
-        --disable-telemetry \
-        --host=0.0.0.0 \
-        --port=8080 \
-        /home/developer/workspace &
+    code-server /home/developer/workspace &
     
     VSCODE_PID=$!
     sleep 10
     
     # Check again
     if ss -tln 2>/dev/null | grep -q ":8080" || netstat -tln 2>/dev/null | grep -q ":8080"; then
-        echo "✅ Alternative method worked! Code-server on port 8080"
+        echo "✅ Config file method worked! Code-server on port 8080"
     else
         echo "💀 FATAL: Cannot get code-server to bind to port 8080"
         echo "Exiting to prevent further issues..."
@@ -272,7 +276,7 @@ echo ""
 echo "🎉 ULTIMATE SUCCESS! ALL SERVICES RUNNING!"
 echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
 echo "🖥️ VS Code: https://your-railway-url.app:8080"  
-echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
+echo "🔒 VS Code Password: ${PASSWORD}"
 
 # Configure Claude Code if API key is provided
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
