@@ -40,8 +40,8 @@ RUN chmod +x /home/developer/start.sh
 # Switch to developer user
 USER developer
 
-# Setup environment
-ENV PORT=8080
+# Setup environment - LET RAILWAY MANAGE THE PORT!
+# ENV PORT=8080  ← REMOVED THIS BUG!
 ENV PASSWORD=standupdev2025
 
 # Expose ports
