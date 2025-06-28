@@ -72,12 +72,11 @@ EOF
 
 echo "✅ Environment variables configured"
 
-# CRITICAL FIX: Remove all code-server configs and force clean start
-echo "🔧 CRITICAL FIX: Complete code-server reset"
-echo "  - Railway PORT: ${PORT}"
-
-# Store critical variables
-RAILWAY_PORT="$PORT"
+# Store Railway port and create isolated environment for code-server
+RAILWAY_MAIN_PORT="$PORT"
+echo "🎯 RAILWAY PORT MANAGEMENT:"
+echo "  - Railway assigned PORT: $RAILWAY_MAIN_PORT (for Vite main app)"
+echo "  - Code-server will be FORCED to port 8080"
 
 # Remove ALL existing code-server data that might interfere
 rm -rf /home/developer/.config/code-server/ 2>/dev/null || true
@@ -86,197 +85,99 @@ rm -rf /home/developer/.cache/code-server/ 2>/dev/null || true
 
 echo "🧹 Removed all existing code-server configurations"
 
-# Check available network debugging tools
-echo "🔍 Network tools available:"
-which ss && echo "✅ ss available" || echo "❌ ss not available"
-which netstat && echo "✅ netstat available" || echo "❌ netstat not available" 
-which lsof && echo "✅ lsof available" || echo "❌ lsof not available"
+# Create explicit code-server config that FORCES port 8080
+mkdir -p /home/developer/.config/code-server
+cat > /home/developer/.config/code-server/config.yaml << EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: ${PASSWORD:-StandUpSydney2025}
+cert: false
+disable-telemetry: true
+disable-update-check: true
+disable-workspace-trust: true
+EOF
 
-# Show current listening ports before starting anything
-echo "📊 Current listening ports (before code-server):"
-ss -tln 2>/dev/null || netstat -tln 2>/dev/null || echo "No network tools available"
+echo "📝 Created explicit code-server config forcing port 8080:"
+cat /home/developer/.config/code-server/config.yaml
 
-# CRITICAL FIX: Set PASSWORD environment variable (not command line argument)
-export PASSWORD="${PASSWORD:-StandUpSydney2025}"
-echo "🔐 Code-server password set via environment: ${PASSWORD}"
+# FIRST: Start Vite on Railway's main port (3000) BEFORE code-server
+echo "🎭 PRIORITY: Starting Vite on Railway's main port $RAILWAY_MAIN_PORT FIRST..."
+cd /home/developer/workspace/gigpig-stage-connect
 
-# COMPLETELY UNSET PORT for code-server startup
-unset PORT
+# Ensure PORT is set for Vite
+export PORT="$RAILWAY_MAIN_PORT"
+export VITE_PORT="$RAILWAY_MAIN_PORT"
 
-echo "🖥️ FIXED: Starting code-server with PASSWORD environment variable"
-echo "Command: code-server --bind-addr=0.0.0.0:8080 --auth=password --disable-telemetry --disable-update-check /home/developer/workspace"
+echo "Running: npm run dev -- --host 0.0.0.0 --port $RAILWAY_MAIN_PORT --strictPort"
+npm run dev -- --host 0.0.0.0 --port $RAILWAY_MAIN_PORT --strictPort &
 
-# Start code-server with PASSWORD environment variable (NOT --password flag)
-env -u PORT PASSWORD="$PASSWORD" code-server \
-    --bind-addr=0.0.0.0:8080 \
-    --auth=password \
-    --disable-telemetry \
-    --disable-update-check \
-    --disable-workspace-trust \
+VITE_PID=$!
+echo "✅ Vite started with PID: $VITE_PID on port $RAILWAY_MAIN_PORT"
+
+# Wait for Vite to claim port 3000
+sleep 8
+
+# Verify Vite is on port 3000
+if ss -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT " || netstat -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT "; then
+    echo "✅ SUCCESS! Vite claimed port $RAILWAY_MAIN_PORT"
+else
+    echo "❌ CRITICAL: Vite failed to start on port $RAILWAY_MAIN_PORT"
+    exit 1
+fi
+
+# NOW start code-server with COMPLETELY isolated environment
+echo "🖥️ NOW starting code-server on isolated port 8080..."
+
+# Create completely isolated environment for code-server
+# Remove ALL environment variables that might affect port selection
+env -i \
+    HOME=/home/developer \
+    USER=developer \
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    PASSWORD="${PASSWORD:-StandUpSydney2025}" \
+    code-server \
+    --config /home/developer/.config/code-server/config.yaml \
     /home/developer/workspace &
 
 VSCODE_PID=$!
-echo "VS Code started with PID: $VSCODE_PID"
+echo "✅ Code-server started with PID: $VSCODE_PID (using config file for port 8080)"
 
-# Give code-server substantial time to bind to network interface
-echo "⏳ Waiting 15 seconds for code-server to bind to network interface..."
-sleep 15
+# Wait for code-server to start with config
+sleep 12
 
-# Comprehensive port 8080 verification using multiple methods
-echo "🔍 Comprehensive port 8080 verification:"
+# Verification
+echo "🔍 Final verification:"
 
-# Method 1: ss
-if command -v ss >/dev/null 2>&1; then
-    echo "Method 1 (ss):"
-    SS_CHECK=$(ss -tln | grep ":8080" || echo "")
-    if [ ! -z "$SS_CHECK" ]; then
-        echo "  ✅ Port 8080 found with ss: $SS_CHECK"
-        PORT_8080_FOUND=true
-    else
-        echo "  ❌ Port 8080 NOT found with ss"
-    fi
-fi
-
-# Method 2: netstat  
-if command -v netstat >/dev/null 2>&1; then
-    echo "Method 2 (netstat):"
-    NETSTAT_CHECK=$(netstat -tln | grep ":8080" || echo "")
-    if [ ! -z "$NETSTAT_CHECK" ]; then
-        echo "  ✅ Port 8080 found with netstat: $NETSTAT_CHECK"
-        PORT_8080_FOUND=true
-    else
-        echo "  ❌ Port 8080 NOT found with netstat"
-    fi
-fi
-
-# Method 3: lsof
-if command -v lsof >/dev/null 2>&1; then
-    echo "Method 3 (lsof):"
-    LSOF_CHECK=$(lsof -i :8080 2>/dev/null || echo "")
-    if [ ! -z "$LSOF_CHECK" ]; then
-        echo "  ✅ Port 8080 found with lsof: $LSOF_CHECK"
-        PORT_8080_FOUND=true
-    else
-        echo "  ❌ Port 8080 NOT found with lsof"
-    fi
-fi
-
-# Method 4: Process check
-echo "Method 4 (process check):"
-if kill -0 $VSCODE_PID 2>/dev/null; then
-    echo "  ✅ Code-server process is running (PID: $VSCODE_PID)"
-    
-    # Show what ports the process is actually using
-    if command -v lsof >/dev/null 2>&1; then
-        echo "  Ports used by code-server process:"
-        lsof -p $VSCODE_PID 2>/dev/null | grep LISTEN || echo "  No listening ports found for process"
-    fi
+# Check Vite on 3000
+if ss -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT " || netstat -tln 2>/dev/null | grep -q ":$RAILWAY_MAIN_PORT "; then
+    echo "✅ Vite confirmed on port $RAILWAY_MAIN_PORT"
 else
-    echo "  ❌ Code-server process died!"
-    PORT_8080_FOUND=false
+    echo "❌ Vite NOT on port $RAILWAY_MAIN_PORT"
 fi
 
-# Show ALL listening ports for debugging
-echo "📊 ALL current listening ports:"
-ss -tln 2>/dev/null | head -20 || netstat -tln 2>/dev/null | head -20 || echo "No network info available"
-
-# ULTIMATE DECISION
-if [ "$PORT_8080_FOUND" = "true" ]; then
-    echo "✅ SUCCESS! Code-server is listening on port 8080"
+# Check code-server on 8080
+if ss -tln 2>/dev/null | grep -q ":8080 " || netstat -tln 2>/dev/null | grep -q ":8080 "; then
+    echo "✅ Code-server confirmed on port 8080"
 else
-    echo "❌ CRITICAL: Code-server failed to bind to port 8080"
-    echo "🔧 Attempting alternative with config file method..."
-    
-    # Kill the failed code-server
-    kill -9 $VSCODE_PID 2>/dev/null || true
-    sleep 2
-    
-    # Create config file approach
-    mkdir -p /home/developer/.config/code-server
-    cat > /home/developer/.config/code-server/config.yaml << EOF
-bind-addr: 0.0.0.0:8080
-auth: password
-password: ${PASSWORD}
-cert: false
-disable-telemetry: true
-EOF
-    
-    echo "Created config file, trying config-based startup..."
-    unset PORT
-    code-server /home/developer/workspace &
-    
-    VSCODE_PID=$!
-    sleep 10
-    
-    # Check again
-    if ss -tln 2>/dev/null | grep -q ":8080" || netstat -tln 2>/dev/null | grep -q ":8080"; then
-        echo "✅ Config file method worked! Code-server on port 8080"
-    else
-        echo "💀 FATAL: Cannot get code-server to bind to port 8080"
-        echo "Exiting to prevent further issues..."
-        exit 1
-    fi
+    echo "❌ Code-server NOT on port 8080"
+    echo "📊 Current listening ports:"
+    ss -tln 2>/dev/null | head -10 || netstat -tln 2>/dev/null | head -10
 fi
 
-# NOW restore PORT for Vite and verify 3000 is free
-export PORT="$RAILWAY_PORT"
-echo "🎯 Restored PORT=$PORT for Vite"
-
-# Final verification that port 3000 is absolutely free
-if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
-    echo "🚨 EMERGENCY: Port 3000 is STILL occupied!"
-    echo "Processes using port 3000:"
-    ss -tlnp 2>/dev/null | grep ":3000" || netstat -tlnp 2>/dev/null | grep ":3000" || echo "Cannot determine what's using port 3000"
-    free_port_3000
-    
-    # Check again
-    if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
-        echo "💀 FATAL: Cannot free port 3000. Exiting."
-        exit 1
-    fi
-fi
-
-# Start Vite on port 3000
-echo "🎭 Starting Vite on port 3000..."
-cd /home/developer/workspace/gigpig-stage-connect
-
-export VITE_PORT=3000
-
-echo "Running: npm run dev -- --host 0.0.0.0 --port 3000 --strictPort"
-npm run dev -- --host 0.0.0.0 --port 3000 --strictPort &
-
-VITE_PID=$!
-echo "Vite started with PID: $VITE_PID"
-
-# Wait and verify both services
-sleep 10
-
-# Check if Vite actually started
-if kill -0 $VITE_PID 2>/dev/null; then
-    if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
-        echo "✅ SUCCESS! Vite is running on port 3000 (PID: $VITE_PID)"
-    else
-        echo "❌ Vite PID exists but port 3000 is not listening!"
-        exit 1
-    fi
+# Final process verification
+if kill -0 $VITE_PID 2>/dev/null && kill -0 $VSCODE_PID 2>/dev/null; then
+    echo ""
+    echo "🎉 SUCCESS! BOTH SERVICES RUNNING ON CORRECT PORTS!"
+    echo "🎪 Stand Up Sydney (Main App): https://gigpig-stage-connect-production.up.railway.app (port $RAILWAY_MAIN_PORT)"
+    echo "🖥️ VS Code (Development): https://gigpig-stage-connect-production.up.railway.app:8080"  
+    echo "🔒 VS Code Password: ${PASSWORD:-StandUpSydney2025}"
+    echo ""
+    echo "📊 Final port assignments:"
+    ss -tln 2>/dev/null | grep -E ":(3000|8080) " || netstat -tln 2>/dev/null | grep -E ":(3000|8080) " || echo "Cannot show port info"
 else
-    echo "❌ CRITICAL ERROR: Vite process died!"
+    echo "❌ Process verification failed"
     exit 1
 fi
-
-# Final verification
-if kill -0 $VSCODE_PID 2>/dev/null; then
-    echo "✅ VS Code is running (PID: $VSCODE_PID)"
-else
-    echo "❌ VS Code process died!"
-    exit 1
-fi
-
-echo ""
-echo "🎉 ULTIMATE SUCCESS! ALL SERVICES RUNNING!"
-echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
-echo "🖥️ VS Code: https://your-railway-url.app:8080"  
-echo "🔒 VS Code Password: ${PASSWORD}"
 
 # Configure Claude Code if API key is provided
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
@@ -288,8 +189,12 @@ fi
 # Monitor processes and keep container alive
 echo "👀 Monitoring services..."
 while true; do
-    if ! kill -0 $VITE_PID 2>/dev/null || ! kill -0 $VSCODE_PID 2>/dev/null; then
-        echo "💀 A service died! Container will exit..."
+    if ! kill -0 $VITE_PID 2>/dev/null; then
+        echo "💀 Vite process died! Container will exit..."
+        exit 1
+    fi
+    if ! kill -0 $VSCODE_PID 2>/dev/null; then
+        echo "💀 Code-server process died! Container will exit..."
         exit 1
     fi
     sleep 30
