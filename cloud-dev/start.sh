@@ -75,16 +75,19 @@ EOF
 
 echo "✅ Environment variables configured"
 
-# CRITICAL FIX: Preserve PORT for code-server, use separate variables for Vite
-# Store the original PORT value for code-server
-CODE_SERVER_PORT="${PORT:-8080}"
+# CRITICAL FIX: Hardcode ports to avoid Railway's PORT override
+# Railway sets PORT=3000, but we need different ports for each service
+CODE_SERVER_PORT=8080  # Hardcoded for code-server
+VITE_PORT=3000         # Use Railway's default PORT for the main app
+
 export CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
 
-echo "🔧 PORT ISOLATION:"
-echo "  - Code-server will use: $CODE_SERVER_PORT"
-echo "  - Vite will use: 3000"
+echo "🔧 FIXED PORT ASSIGNMENT:"
+echo "  - Code-server will use: $CODE_SERVER_PORT (hardcoded)"
+echo "  - Vite will use: $VITE_PORT (Railway default)"
+echo "  - Railway PORT env var: ${PORT}"
 
-# Start VS Code on the preserved port (8080) - BEFORE changing PORT variable
+# Start VS Code on hardcoded port 8080 (ignore Railway's PORT variable)
 echo "🖥️ Starting code-server on port $CODE_SERVER_PORT..."
 code-server \
     --bind-addr 0.0.0.0:${CODE_SERVER_PORT} \
@@ -95,27 +98,35 @@ code-server \
 VSCODE_PID=$!
 echo "VS Code started with PID: $VSCODE_PID on port: $CODE_SERVER_PORT"
 
-# Give VS Code time to start and bind to its port
+# Give VS Code time to start and bind to port 8080
 sleep 5
 
-# NOW set environment variables for Vite (after code-server is running)
-echo "🎯 Setting Vite-specific environment variables..."
-export PORT=3000
-export VITE_PORT=3000
+# Verify code-server is not on port 3000
+if netstat -tln 2>/dev/null | grep -q ":8080 "; then
+    echo "✅ Code-server successfully bound to port 8080"
+else
+    echo "⚠️ Warning: Code-server may not have bound to port 8080"
+fi
 
 # Final port 3000 check before starting Vite
 if netstat -tln 2>/dev/null | grep -q ":3000 "; then
-    echo "⚠️ Port 3000 is STILL busy! Trying emergency cleanup..."
-    free_port_3000
+    echo "⚠️ Port 3000 is STILL busy! Something else is using it."
+    echo "Processes using port 3000:"
+    netstat -tlnp 2>/dev/null | grep ":3000" || echo "No processes found"
+    exit 1
 fi
 
-# Start Vite with FORCED port 3000
-echo "🎭 FORCING Stand Up Sydney dev server to start on port 3000..."
+# Start Vite on port 3000 (Railway's expected port)
+echo "🎭 Starting Stand Up Sydney dev server on port $VITE_PORT..."
 cd /home/developer/workspace/gigpig-stage-connect
 
+# Make sure Vite uses port 3000
+export PORT=$VITE_PORT
+export VITE_PORT=$VITE_PORT
+
 # Use strictPort to make Vite fail if port 3000 is not available
-echo "Running: npm run dev -- --host 0.0.0.0 --port 3000 --strictPort"
-npm run dev -- --host 0.0.0.0 --port 3000 --strictPort &
+echo "Running: npm run dev -- --host 0.0.0.0 --port $VITE_PORT --strictPort"
+npm run dev -- --host 0.0.0.0 --port $VITE_PORT --strictPort &
 
 VITE_PID=$!
 echo "Vite started with PID: $VITE_PID"
@@ -127,18 +138,18 @@ sleep 8
 if kill -0 $VITE_PID 2>/dev/null; then
     # Double-check that something is actually listening on port 3000
     if netstat -tln 2>/dev/null | grep -q ":3000 "; then
-        echo "✅ SUCCESS! Vite is running on port 3000 (PID: $VITE_PID)"
+        echo "✅ SUCCESS! Vite is running on port $VITE_PORT (PID: $VITE_PID)"
     else
-        echo "❌ Vite PID exists but port 3000 is not listening!"
+        echo "❌ Vite PID exists but port $VITE_PORT is not listening!"
         exit 1
     fi
 else
-    echo "❌ CRITICAL ERROR: Vite failed to start on port 3000!"
-    echo "This means something else is stubbornly holding port 3000."
+    echo "❌ CRITICAL ERROR: Vite failed to start on port $VITE_PORT!"
+    echo "This means something else is stubbornly holding port $VITE_PORT."
     
     # Show what's using port 3000
-    echo "Processes using port 3000:"
-    netstat -tlnp 2>/dev/null | grep ":3000" || echo "No processes found using port 3000"
+    echo "Processes using port $VITE_PORT:"
+    netstat -tlnp 2>/dev/null | grep ":$VITE_PORT" || echo "No processes found using port $VITE_PORT"
     
     exit 1
 fi
@@ -152,7 +163,7 @@ fi
 
 echo ""
 echo "🎉 ALL SERVICES SUCCESSFULLY STARTED!"
-echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
+echo "🎪 Stand Up Sydney: https://your-railway-url.app (port $VITE_PORT)"
 echo "🌐 VS Code: https://your-railway-url.app:$CODE_SERVER_PORT"  
 echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
 
