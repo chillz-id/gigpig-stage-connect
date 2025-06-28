@@ -5,6 +5,6 @@ restartPolicyMaxRetries = 10
 
 [[deploy.healthcheck]]
 path = "/"
-port = 3000
+port = 8080
 initialDelaySeconds = 60
 periodSeconds = 15
