@@ -18,10 +18,13 @@ free_port_3000() {
     
     # Try to find what's using port 3000 and kill it
     for i in {1..5}; do
-        if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+        if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
             echo "  Attempt $i: Port 3000 still busy, killing processes..."
-            # Try to find the PID using port 3000
-            PORT_PID=$(netstat -tlnp 2>/dev/null | grep ":3000 " | awk '{print $7}' | cut -d'/' -f1 | head -1)
+            # Try multiple methods to find the PID
+            PORT_PID=$(ss -tlnp 2>/dev/null | grep ":3000 " | grep -o 'pid=[0-9]*' | cut -d'=' -f2 | head -1)
+            if [ -z "$PORT_PID" ]; then
+                PORT_PID=$(netstat -tlnp 2>/dev/null | grep ":3000 " | awk '{print $7}' | cut -d'/' -f1 | head -1)
+            fi
             if [ ! -z "$PORT_PID" ] && [ "$PORT_PID" != "-" ]; then
                 echo "  Killing PID $PORT_PID using port 3000"
                 kill -9 "$PORT_PID" 2>/dev/null || true
@@ -32,13 +35,6 @@ free_port_3000() {
             return 0
         fi
     done
-    
-    # If still busy, try fuser (if available)
-    if command -v fuser >/dev/null 2>&1; then
-        echo "  Using fuser to kill port 3000..."
-        fuser -k 3000/tcp 2>/dev/null || true
-        sleep 2
-    fi
     
     echo "⚠️ Port 3000 cleanup completed"
 }
@@ -76,43 +72,133 @@ EOF
 
 echo "✅ Environment variables configured"
 
-# NUCLEAR OPTION: Start code-server with completely isolated environment
-echo "🔧 NUCLEAR FIX: Complete environment isolation"
+# AGGRESSIVE DEBUGGING AND CODE-SERVER CONFIG FIX
+echo "🔧 AGGRESSIVE CODE-SERVER CONFIGURATION"
 echo "  - Original Railway PORT: ${PORT}"
-echo "  - Code-server will use: 8080 (forced)"
-echo "  - Vite will use: 3000 (after code-server starts)"
 
-# Store critical variables but unset PORT for code-server
+# Store critical variables
 RAILWAY_PORT="$PORT"
 CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
+
+# Remove any existing code-server config that might interfere
+rm -rf /home/developer/.config/code-server/ 2>/dev/null || true
+rm -rf /home/developer/.local/share/code-server/ 2>/dev/null || true
+
+# Create code-server config directory and force config
+mkdir -p /home/developer/.config/code-server/
+
+# Create explicit code-server configuration file
+cat > /home/developer/.config/code-server/config.yaml << EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: ${CODE_SERVER_PASSWORD}
+cert: false
+disable-telemetry: true
+EOF
+
+echo "📝 Created code-server config file:"
+cat /home/developer/.config/code-server/config.yaml
+
+# Check available network debugging tools
+echo "🔍 Network debugging tools available:"
+which ss && echo "✅ ss available" || echo "❌ ss not available"
+which netstat && echo "✅ netstat available" || echo "❌ netstat not available" 
+which lsof && echo "✅ lsof available" || echo "❌ lsof not available"
+
+# Show current listening ports before starting anything
+echo "📊 Current listening ports (before code-server):"
+ss -tln 2>/dev/null || netstat -tln 2>/dev/null || echo "No network tools available"
 
 # COMPLETELY UNSET PORT for code-server startup
 unset PORT
 
-echo "🖥️ Starting code-server with UNSET PORT environment..."
-echo "Command: code-server --bind-addr 0.0.0.0:8080 --auth password --disable-telemetry /home/developer/workspace"
+echo "🖥️ Starting code-server with CONFIG FILE and UNSET PORT..."
+echo "Command: code-server /home/developer/workspace"
 
-# Start code-server with explicit port in clean environment
-env -u PORT code-server \
-    --bind-addr 0.0.0.0:8080 \
-    --auth password \
-    --disable-telemetry \
-    /home/developer/workspace &
+# Start code-server using config file (should override any environment)
+env -u PORT code-server /home/developer/workspace &
 
 VSCODE_PID=$!
 echo "VS Code started with PID: $VSCODE_PID"
 
-# Give VS Code more time to start and bind to port 8080
-sleep 8
+# Give VS Code time to start
+sleep 10
 
-# Verify code-server is on port 8080
-if netstat -tln 2>/dev/null | grep -q ":8080 "; then
-    echo "✅ SUCCESS! Code-server is on port 8080"
+# Multiple methods to check if code-server is listening on 8080
+echo "🔍 Checking if code-server bound to port 8080..."
+
+# Method 1: ss
+if command -v ss >/dev/null 2>&1; then
+    echo "Method 1 (ss):"
+    ss -tln | grep ":8080" || echo "  Port 8080 not found with ss"
+fi
+
+# Method 2: netstat  
+if command -v netstat >/dev/null 2>&1; then
+    echo "Method 2 (netstat):"
+    netstat -tln | grep ":8080" || echo "  Port 8080 not found with netstat"
+fi
+
+# Method 3: lsof
+if command -v lsof >/dev/null 2>&1; then
+    echo "Method 3 (lsof):"
+    lsof -i :8080 || echo "  Port 8080 not found with lsof"
+fi
+
+# Method 4: Check process
+echo "Method 4 (process check):"
+if kill -0 $VSCODE_PID 2>/dev/null; then
+    echo "  ✅ Code-server process is running (PID: $VSCODE_PID)"
 else
-    echo "❌ FAILED! Code-server did not bind to port 8080"
-    echo "All listening ports:"
-    netstat -tln 2>/dev/null || echo "netstat failed"
-    exit 1
+    echo "  ❌ Code-server process died!"
+fi
+
+# Show ALL listening ports for debugging
+echo "📊 ALL current listening ports:"
+ss -tln 2>/dev/null | head -20 || netstat -tln 2>/dev/null | head -20 || echo "No network info available"
+
+# Check if port 8080 is actually listening
+PORT_8080_CHECK=$(ss -tln 2>/dev/null | grep ":8080" || netstat -tln 2>/dev/null | grep ":8080" || echo "")
+
+if [ ! -z "$PORT_8080_CHECK" ]; then
+    echo "✅ SUCCESS! Code-server is listening on port 8080"
+    echo "Details: $PORT_8080_CHECK"
+else
+    echo "❌ Code-server is NOT listening on port 8080"
+    echo "🔍 Let's see what code-server is actually doing..."
+    
+    # Show code-server logs if available
+    echo "Code-server process info:"
+    ps aux | grep code-server | grep -v grep || echo "No code-server process found"
+    
+    # Try to find what ports code-server IS using
+    if command -v lsof >/dev/null 2>&1; then
+        echo "Ports used by code-server process:"
+        lsof -p $VSCODE_PID 2>/dev/null | grep LISTEN || echo "No listening ports found for code-server"
+    fi
+    
+    echo "❌ CRITICAL: Code-server startup failed - trying alternative approach..."
+    
+    # Kill the failed code-server
+    kill -9 $VSCODE_PID 2>/dev/null || true
+    sleep 2
+    
+    # Try starting code-server with different arguments
+    echo "🔄 Trying alternative code-server startup..."
+    unset PORT
+    code-server --bind-addr=0.0.0.0:8080 --auth=password --disable-telemetry /home/developer/workspace &
+    VSCODE_PID=$!
+    sleep 8
+    
+    # Check again
+    PORT_8080_CHECK=$(ss -tln 2>/dev/null | grep ":8080" || netstat -tln 2>/dev/null | grep ":8080" || echo "")
+    if [ -z "$PORT_8080_CHECK" ]; then
+        echo "💀 FATAL: Cannot get code-server to bind to port 8080"
+        echo "Exiting to prevent further issues..."
+        exit 1
+    else
+        echo "✅ Alternative method worked! Code-server on port 8080"
+    fi
 fi
 
 # NOW restore PORT for Vite and verify 3000 is free
@@ -120,15 +206,14 @@ export PORT="$RAILWAY_PORT"
 echo "🎯 Restored PORT=$PORT for Vite"
 
 # Final verification that port 3000 is absolutely free
-if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
     echo "🚨 EMERGENCY: Port 3000 is STILL occupied!"
     echo "Processes using port 3000:"
-    netstat -tlnp 2>/dev/null | grep ":3000"
-    echo "Attempting emergency cleanup..."
+    ss -tlnp 2>/dev/null | grep ":3000" || netstat -tlnp 2>/dev/null | grep ":3000" || echo "Cannot determine what's using port 3000"
     free_port_3000
     
     # Check again
-    if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+    if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
         echo "💀 FATAL: Cannot free port 3000. Exiting."
         exit 1
     fi
@@ -138,7 +223,6 @@ fi
 echo "🎭 Starting Vite on port 3000..."
 cd /home/developer/workspace/gigpig-stage-connect
 
-# Export Vite-specific variables
 export VITE_PORT=3000
 
 echo "Running: npm run dev -- --host 0.0.0.0 --port 3000 --strictPort"
@@ -152,12 +236,10 @@ sleep 10
 
 # Check if Vite actually started
 if kill -0 $VITE_PID 2>/dev/null; then
-    if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+    if ss -tln 2>/dev/null | grep -q ":3000 " || netstat -tln 2>/dev/null | grep -q ":3000 "; then
         echo "✅ SUCCESS! Vite is running on port 3000 (PID: $VITE_PID)"
     else
         echo "❌ Vite PID exists but port 3000 is not listening!"
-        echo "Current listening ports:"
-        netstat -tln 2>/dev/null
         exit 1
     fi
 else
@@ -165,23 +247,23 @@ else
     exit 1
 fi
 
-# Check VS Code
+# Final verification
 if kill -0 $VSCODE_PID 2>/dev/null; then
-    echo "✅ VS Code is running on port 8080 (PID: $VSCODE_PID)"
+    echo "✅ VS Code is running (PID: $VSCODE_PID)"
 else
     echo "❌ VS Code process died!"
     exit 1
 fi
 
 echo ""
-echo "🎉 FIXED! ALL SERVICES SUCCESSFULLY STARTED!"
+echo "🎉 NUCLEAR SUCCESS! ALL SERVICES RUNNING!"
 echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
 echo "🌐 VS Code: https://your-railway-url.app:8080"  
 echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
 
 # Configure Claude Code if API key is provided
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
-    echo "🤖 Claude Code: Ready for AI-powered development!"
+    echo "🤖 Claude Code: Ready!"
     export ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     mkdir -p /home/developer/.config/claude-code
 fi
@@ -189,16 +271,9 @@ fi
 # Monitor processes and keep container alive
 echo "👀 Monitoring services..."
 while true; do
-    if ! kill -0 $VITE_PID 2>/dev/null; then
-        echo "💀 Vite process died! Container will exit..."
+    if ! kill -0 $VITE_PID 2>/dev/null || ! kill -0 $VSCODE_PID 2>/dev/null; then
+        echo "💀 A service died! Container will exit..."
         exit 1
     fi
-    
-    if ! kill -0 $VSCODE_PID 2>/dev/null; then
-        echo "💀 VS Code process died! Container will exit..."
-        exit 1
-    fi
-    
-    # Check every 30 seconds
     sleep 30
 done
