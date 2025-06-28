@@ -16,7 +16,7 @@ const MobileMenuButton: React.FC<MobileMenuButtonProps> = ({
     <Button
       variant="ghost"
       size="sm"
-      className="md:hidden text-foreground hover:bg-accent transition-all duration-200 rounded-lg"
+      className="md:hidden text-foreground hover:bg-accent transition-all duration-200 rounded-lg p-2"
       onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
     >
       <Menu className="w-6 h-6" />
