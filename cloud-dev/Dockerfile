@@ -26,19 +26,26 @@ RUN npm install -g @mcp/server-filesystem
 # Install code-server (VSCode in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Create workspace directory
-RUN mkdir -p /home/developer/workspace
+# Create workspace directory and MCP config directory
+RUN mkdir -p /home/developer/workspace /home/developer/.mcp
 RUN chown -R developer:developer /home/developer
+
+# Copy configuration files
+COPY mcp-config.json /home/developer/.mcp/config.json
+COPY start.sh /home/developer/start.sh
+
+# Make start script executable
+RUN chmod +x /home/developer/start.sh
 
 # Switch to developer user
 USER developer
 
 # Setup environment
 ENV PORT=8080
-ENV PASSWORD=your-secure-password
+ENV PASSWORD=standupdev2025
 
 # Expose ports
 EXPOSE 8080 3000 8000
 
-# Start script will be added separately
-CMD ["bash"]
+# Use the start script
+CMD ["/home/developer/start.sh"]
