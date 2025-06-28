@@ -11,9 +11,10 @@ free_port_3000() {
     pkill -9 -f "node" 2>/dev/null || true
     pkill -9 -f "npm" 2>/dev/null || true
     pkill -9 -f "vite" 2>/dev/null || true
+    pkill -9 -f "code-server" 2>/dev/null || true
     
     # Wait for processes to die
-    sleep 2
+    sleep 3
     
     # Try to find what's using port 3000 and kill it
     for i in {1..5}; do
@@ -39,7 +40,7 @@ free_port_3000() {
         sleep 2
     fi
     
-    echo "⚠️ Port 3000 cleanup completed (may still be busy)"
+    echo "⚠️ Port 3000 cleanup completed"
 }
 
 # Run aggressive cleanup
@@ -75,102 +76,112 @@ EOF
 
 echo "✅ Environment variables configured"
 
-# CRITICAL FIX: Hardcode ports to avoid Railway's PORT override
-# Railway sets PORT=3000, but we need different ports for each service
-CODE_SERVER_PORT=8080  # Hardcoded for code-server
-VITE_PORT=3000         # Use Railway's default PORT for the main app
+# NUCLEAR OPTION: Start code-server with completely isolated environment
+echo "🔧 NUCLEAR FIX: Complete environment isolation"
+echo "  - Original Railway PORT: ${PORT}"
+echo "  - Code-server will use: 8080 (forced)"
+echo "  - Vite will use: 3000 (after code-server starts)"
 
-export CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
+# Store critical variables but unset PORT for code-server
+RAILWAY_PORT="$PORT"
+CODE_SERVER_PASSWORD="${PASSWORD:-StandUpSydney2025}"
 
-echo "🔧 FIXED PORT ASSIGNMENT:"
-echo "  - Code-server will use: $CODE_SERVER_PORT (hardcoded)"
-echo "  - Vite will use: $VITE_PORT (Railway default)"
-echo "  - Railway PORT env var: ${PORT}"
+# COMPLETELY UNSET PORT for code-server startup
+unset PORT
 
-# Start VS Code on hardcoded port 8080 (ignore Railway's PORT variable)
-echo "🖥️ Starting code-server on port $CODE_SERVER_PORT..."
-code-server \
-    --bind-addr 0.0.0.0:${CODE_SERVER_PORT} \
+echo "🖥️ Starting code-server with UNSET PORT environment..."
+echo "Command: code-server --bind-addr 0.0.0.0:8080 --auth password --disable-telemetry /home/developer/workspace"
+
+# Start code-server with explicit port in clean environment
+env -u PORT code-server \
+    --bind-addr 0.0.0.0:8080 \
     --auth password \
     --disable-telemetry \
     /home/developer/workspace &
 
 VSCODE_PID=$!
-echo "VS Code started with PID: $VSCODE_PID on port: $CODE_SERVER_PORT"
+echo "VS Code started with PID: $VSCODE_PID"
 
-# Give VS Code time to start and bind to port 8080
-sleep 5
+# Give VS Code more time to start and bind to port 8080
+sleep 8
 
-# Verify code-server is not on port 3000
+# Verify code-server is on port 8080
 if netstat -tln 2>/dev/null | grep -q ":8080 "; then
-    echo "✅ Code-server successfully bound to port 8080"
+    echo "✅ SUCCESS! Code-server is on port 8080"
 else
-    echo "⚠️ Warning: Code-server may not have bound to port 8080"
-fi
-
-# Final port 3000 check before starting Vite
-if netstat -tln 2>/dev/null | grep -q ":3000 "; then
-    echo "⚠️ Port 3000 is STILL busy! Something else is using it."
-    echo "Processes using port 3000:"
-    netstat -tlnp 2>/dev/null | grep ":3000" || echo "No processes found"
+    echo "❌ FAILED! Code-server did not bind to port 8080"
+    echo "All listening ports:"
+    netstat -tln 2>/dev/null || echo "netstat failed"
     exit 1
 fi
 
-# Start Vite on port 3000 (Railway's expected port)
-echo "🎭 Starting Stand Up Sydney dev server on port $VITE_PORT..."
+# NOW restore PORT for Vite and verify 3000 is free
+export PORT="$RAILWAY_PORT"
+echo "🎯 Restored PORT=$PORT for Vite"
+
+# Final verification that port 3000 is absolutely free
+if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+    echo "🚨 EMERGENCY: Port 3000 is STILL occupied!"
+    echo "Processes using port 3000:"
+    netstat -tlnp 2>/dev/null | grep ":3000"
+    echo "Attempting emergency cleanup..."
+    free_port_3000
+    
+    # Check again
+    if netstat -tln 2>/dev/null | grep -q ":3000 "; then
+        echo "💀 FATAL: Cannot free port 3000. Exiting."
+        exit 1
+    fi
+fi
+
+# Start Vite on port 3000
+echo "🎭 Starting Vite on port 3000..."
 cd /home/developer/workspace/gigpig-stage-connect
 
-# Make sure Vite uses port 3000
-export PORT=$VITE_PORT
-export VITE_PORT=$VITE_PORT
+# Export Vite-specific variables
+export VITE_PORT=3000
 
-# Use strictPort to make Vite fail if port 3000 is not available
-echo "Running: npm run dev -- --host 0.0.0.0 --port $VITE_PORT --strictPort"
-npm run dev -- --host 0.0.0.0 --port $VITE_PORT --strictPort &
+echo "Running: npm run dev -- --host 0.0.0.0 --port 3000 --strictPort"
+npm run dev -- --host 0.0.0.0 --port 3000 --strictPort &
 
 VITE_PID=$!
 echo "Vite started with PID: $VITE_PID"
 
 # Wait and verify both services
-sleep 8
+sleep 10
 
 # Check if Vite actually started
 if kill -0 $VITE_PID 2>/dev/null; then
-    # Double-check that something is actually listening on port 3000
     if netstat -tln 2>/dev/null | grep -q ":3000 "; then
-        echo "✅ SUCCESS! Vite is running on port $VITE_PORT (PID: $VITE_PID)"
+        echo "✅ SUCCESS! Vite is running on port 3000 (PID: $VITE_PID)"
     else
-        echo "❌ Vite PID exists but port $VITE_PORT is not listening!"
+        echo "❌ Vite PID exists but port 3000 is not listening!"
+        echo "Current listening ports:"
+        netstat -tln 2>/dev/null
         exit 1
     fi
 else
-    echo "❌ CRITICAL ERROR: Vite failed to start on port $VITE_PORT!"
-    echo "This means something else is stubbornly holding port $VITE_PORT."
-    
-    # Show what's using port 3000
-    echo "Processes using port $VITE_PORT:"
-    netstat -tlnp 2>/dev/null | grep ":$VITE_PORT" || echo "No processes found using port $VITE_PORT"
-    
+    echo "❌ CRITICAL ERROR: Vite process died!"
     exit 1
 fi
 
 # Check VS Code
 if kill -0 $VSCODE_PID 2>/dev/null; then
-    echo "✅ VS Code is running on port $CODE_SERVER_PORT (PID: $VSCODE_PID)"
+    echo "✅ VS Code is running on port 8080 (PID: $VSCODE_PID)"
 else
-    echo "⚠️ VS Code may not have started properly"
+    echo "❌ VS Code process died!"
+    exit 1
 fi
 
 echo ""
-echo "🎉 ALL SERVICES SUCCESSFULLY STARTED!"
-echo "🎪 Stand Up Sydney: https://your-railway-url.app (port $VITE_PORT)"
-echo "🌐 VS Code: https://your-railway-url.app:$CODE_SERVER_PORT"  
+echo "🎉 FIXED! ALL SERVICES SUCCESSFULLY STARTED!"
+echo "🎪 Stand Up Sydney: https://your-railway-url.app (port 3000)"
+echo "🌐 VS Code: https://your-railway-url.app:8080"  
 echo "🔒 VS Code Password: ${CODE_SERVER_PASSWORD}"
 
 # Configure Claude Code if API key is provided
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
     echo "🤖 Claude Code: Ready for AI-powered development!"
-    echo "   Example: claude 'Add comedian search functionality'"
     export ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     mkdir -p /home/developer/.config/claude-code
 fi
@@ -180,6 +191,11 @@ echo "👀 Monitoring services..."
 while true; do
     if ! kill -0 $VITE_PID 2>/dev/null; then
         echo "💀 Vite process died! Container will exit..."
+        exit 1
+    fi
+    
+    if ! kill -0 $VSCODE_PID 2>/dev/null; then
+        echo "💀 VS Code process died! Container will exit..."
         exit 1
     fi
     
