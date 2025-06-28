@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "cloud-dev/Dockerfile"
+dockerfilePath = "Dockerfile.railway"
 
 [deploy]
 numReplicas = 1
