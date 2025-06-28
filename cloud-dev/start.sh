@@ -3,6 +3,35 @@
 
 echo "🚀 Starting Stand Up Sydney Development Environment with Claude Code..."
 
+# Function to kill processes on specific ports
+cleanup_ports() {
+    echo "🧹 Cleaning up existing processes..."
+    
+    # Kill any process using port 3000 (Vite)
+    if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo "  Killing process on port 3000..."
+        lsof -Pi :3000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
+    fi
+    
+    # Kill any process using port 8080 (VS Code)
+    if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo "  Killing process on port 8080..."
+        lsof -Pi :8080 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
+    fi
+    
+    # Kill any process using port 8000 (MCP Gateway)
+    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo "  Killing process on port 8000..."
+        lsof -Pi :8000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
+    fi
+    
+    sleep 2
+    echo "✅ Port cleanup complete"
+}
+
+# Run cleanup first
+cleanup_ports
+
 # Clone the Stand Up Sydney repository if not exists
 if [ ! -d "/home/developer/workspace/gigpig-stage-connect" ]; then
     echo "📦 Cloning Stand Up Sydney repository..."
@@ -53,26 +82,66 @@ fi
 # Set password for code-server via environment variable
 export PASSWORD="${PASSWORD:-standupdev2025}"
 
-# Start code-server (VSCode in browser)
-echo "💻 Starting code-server on port 8080..."
-code-server \
-    --bind-addr 0.0.0.0:8080 \
-    --auth password \
-    --disable-telemetry \
-    /home/developer/workspace &
+# Function to start VS Code with retry logic
+start_vscode() {
+    echo "🖥️ Starting code-server on port 8080..."
+    
+    # Try to start code-server with retries
+    for i in {1..3}; do
+        if code-server \
+            --bind-addr 0.0.0.0:8080 \
+            --auth password \
+            --disable-telemetry \
+            /home/developer/workspace &
+        then
+            echo "✅ VS Code started successfully (attempt $i)"
+            return 0
+        else
+            echo "❌ VS Code failed to start (attempt $i)"
+            sleep 2
+        fi
+    done
+    
+    echo "⚠️  VS Code failed to start after 3 attempts"
+    return 1
+}
 
-# Wait a moment for code-server to start
-sleep 5
+# Function to start Vite with retry logic  
+start_vite() {
+    echo "🎭 Starting Stand Up Sydney dev server on port 3000..."
+    cd /home/developer/workspace/gigpig-stage-connect
+    
+    # Try to start Vite with retries
+    for i in {1..3}; do
+        if npm run dev -- --host 0.0.0.0 --port 3000 &
+        then
+            echo "✅ Vite started successfully (attempt $i)"
+            return 0
+        else
+            echo "❌ Vite failed to start (attempt $i)"
+            # Clean port 3000 again if needed
+            lsof -Pi :3000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
+            sleep 3
+        fi
+    done
+    
+    echo "❌ Vite failed to start after 3 attempts"
+    return 1
+}
 
-# Start the development server
-cd /home/developer/workspace/gigpig-stage-connect
-echo "🎭 Starting Stand Up Sydney dev server on port 3000..."
-npm run dev -- --host 0.0.0.0 --port 3000 &
+# Start services
+start_vscode
+sleep 5  # Wait for VS Code to fully start
+
+start_vite
+
+# Wait a moment for services to stabilize
+sleep 3
 
 echo "✅ All services started!"
-echo "🌐 VSCode: Access via Railway URL"
+echo "🌐 VS Code: Access via Railway URL"
 echo "🎪 Stand Up Sydney: Access via Railway URL:3000"
-echo "🔒 VSCode Password: ${PASSWORD}"
+echo "🔒 VS Code Password: ${PASSWORD}"
 
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
     echo "🤖 Claude Code: Ready for AI-powered development!"
