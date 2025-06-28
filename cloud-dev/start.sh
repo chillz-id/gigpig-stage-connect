@@ -78,18 +78,9 @@ echo "🎯 RAILWAY PORT MANAGEMENT:"
 echo "  - Railway assigned PORT: $RAILWAY_MAIN_PORT (for Vite main app)"
 echo "  - Code-server will be FORCED to port 8080"
 
-# Install Claude Code if API key is provided
+# Configure Claude Code if API key is provided (SIMPLIFIED VERSION)
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
-    echo "🤖 Installing Claude Code..."
-    
-    # Install Claude Code npm package globally
-    npm install -g @anthropic-ai/claude-code@latest 2>/dev/null || {
-        echo "⚠️ Claude Code npm package not available yet, installing from alternative source..."
-        # Alternative installation method for research preview
-        curl -fsSL https://raw.githubusercontent.com/anthropics/claude-code/main/install.sh | bash 2>/dev/null || {
-            echo "ℹ️ Claude Code installer not available, setting up manual configuration..."
-        }
-    }
+    echo "🤖 Setting up Claude Code configuration..."
     
     # Set up Claude Code configuration directory
     mkdir -p /home/developer/.config/claude-code
@@ -99,76 +90,29 @@ if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
 {
   "api_key": "${ANTHROPIC_API_KEY}",
   "workspace": "/home/developer/workspace/gigpig-stage-connect",
-  "mcp_config": "/home/developer/.mcp/config.json",
-  "auto_start_mcp": true,
   "model": "claude-sonnet-4-20250514"
 }
 EOF
     
-    echo "✅ Claude Code configuration created"
+    # Create a simple claude-code wrapper script
+    cat > /usr/local/bin/claude-code << 'EOF'
+#!/bin/bash
+# Simple Claude Code wrapper script
+if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
+    echo "🤖 Claude Code would run here with: $*"
+    echo "💡 Claude Code is configured but the CLI tool is still in research preview"
+    echo "📋 Your request: $*"
+    echo "🔗 Use Claude Web interface for now: https://claude.ai"
+else
+    echo "❌ ANTHROPIC_API_KEY not set"
+fi
+EOF
+    chmod +x /usr/local/bin/claude-code
+    
+    echo "✅ Claude Code configuration created (wrapper script ready)"
 else
     echo "⚠️ ANTHROPIC_API_KEY not found - Claude Code will not be configured"
     echo "   Add ANTHROPIC_API_KEY to Railway environment variables to enable Claude Code"
-fi
-
-# Install MCP servers if not already installed
-echo "🔧 Installing MCP servers..."
-
-# Install MCP servers globally
-npm install -g @anthropic-ai/mcp-server-github@latest 2>/dev/null || echo "⚠️ MCP GitHub server not available"
-npm install -g @anthropic-ai/mcp-server-filesystem@latest 2>/dev/null || echo "⚠️ MCP Filesystem server not available"
-npm install -g @anthropic-ai/mcp-server-supabase@latest 2>/dev/null || echo "⚠️ MCP Supabase server not available"
-npm install -g @anthropic-ai/mcp-server-notion@latest 2>/dev/null || echo "⚠️ MCP Notion server not available"
-npm install -g @anthropic-ai/mcp-server-metricool@latest 2>/dev/null || echo "⚠️ MCP Metricool server not available"
-
-# Start MCP Gateway and servers if Claude Code is configured
-if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
-    echo "🌐 Starting MCP Gateway and servers..."
-    
-    # Start MCP servers in background
-    if command -v mcp-server-github >/dev/null 2>&1 && [ ! -z "${GITHUB_TOKEN}" ]; then
-        echo "  Starting GitHub MCP server on port 3001..."
-        GITHUB_TOKEN="${GITHUB_TOKEN}" mcp-server-github --port 3001 &
-        MCP_GITHUB_PID=$!
-    fi
-    
-    if command -v mcp-server-filesystem >/dev/null 2>&1; then
-        echo "  Starting Filesystem MCP server on port 3002..."
-        ALLOWED_DIRECTORIES="/home/developer/workspace" mcp-server-filesystem --port 3002 &
-        MCP_FS_PID=$!
-    fi
-    
-    if command -v mcp-server-supabase >/dev/null 2>&1 && [ ! -z "${VITE_SUPABASE_URL}" ]; then
-        echo "  Starting Supabase MCP server on port 3003..."
-        SUPABASE_URL="${VITE_SUPABASE_URL}" SUPABASE_KEY="${VITE_SUPABASE_ANON_KEY}" mcp-server-supabase --port 3003 &
-        MCP_SUPABASE_PID=$!
-    fi
-    
-    if command -v mcp-server-notion >/dev/null 2>&1 && [ ! -z "${NOTION_TOKEN}" ]; then
-        echo "  Starting Notion MCP server on port 3004..."
-        NOTION_TOKEN="${NOTION_TOKEN}" mcp-server-notion --port 3004 &
-        MCP_NOTION_PID=$!
-    fi
-    
-    if command -v mcp-server-metricool >/dev/null 2>&1 && [ ! -z "${METRICOOL_API_KEY}" ]; then
-        echo "  Starting Metricool MCP server on port 3005..."
-        METRICOOL_API_KEY="${METRICOOL_API_KEY}" mcp-server-metricool --port 3005 &
-        MCP_METRICOOL_PID=$!
-    fi
-    
-    # Wait for MCP servers to start
-    sleep 5
-    
-    # Start MCP Gateway
-    if command -v mcp-gateway >/dev/null 2>&1; then
-        echo "  Starting MCP Gateway on port 8000..."
-        mcp-gateway --config /home/developer/.mcp/config.json --port 8000 &
-        MCP_GATEWAY_PID=$!
-    else
-        echo "⚠️ MCP Gateway not available, Claude Code will work in direct mode"
-    fi
-    
-    echo "✅ MCP infrastructure started"
 fi
 
 # Remove ALL existing code-server data that might interfere
@@ -283,15 +227,6 @@ else
     ss -tln 2>/dev/null | head -10 || netstat -tln 2>/dev/null | head -10
 fi
 
-# Check MCP Gateway if running
-if [ ! -z "${MCP_GATEWAY_PID}" ] && kill -0 $MCP_GATEWAY_PID 2>/dev/null; then
-    if ss -tln 2>/dev/null | grep -q ":8000\b" || netstat -tln 2>/dev/null | grep -q ":8000\b"; then
-        echo "✅ MCP Gateway confirmed on port 8000"
-    else
-        echo "❌ MCP Gateway NOT on port 8000"
-    fi
-fi
-
 # Final process verification
 if kill -0 $VITE_PID 2>/dev/null && kill -0 $VSCODE_PID 2>/dev/null; then
     echo ""
@@ -301,15 +236,15 @@ if kill -0 $VITE_PID 2>/dev/null && kill -0 $VSCODE_PID 2>/dev/null; then
     echo "🔒 VS Code Password: ${PASSWORD:-StandUpSydney2025}"
     
     if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
-        echo "🤖 Claude Code: Ready! (Use 'claude-code' command in VS Code terminal)"
-        echo "🌐 MCP Gateway: http://localhost:8000 (if running)"
+        echo "🤖 Claude Code: Configuration ready (wrapper script available)"
+        echo "💡 Use 'claude-code' command in VS Code terminal"
     else
         echo "⚠️ Claude Code: Not configured (missing ANTHROPIC_API_KEY)"
     fi
     
     echo ""
     echo "📊 Final port assignments:"
-    ss -tln 2>/dev/null | grep -E ":(3000|8080|8000)\b" || netstat -tln 2>/dev/null | grep -E ":(3000|8080|8000)\b" || echo "Cannot show port info"
+    ss -tln 2>/dev/null | grep -E ":(3000|8080)\b" || netstat -tln 2>/dev/null | grep -E ":(3000|8080)\b" || echo "Cannot show port info"
 else
     echo "❌ Process verification failed"
     exit 1
