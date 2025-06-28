@@ -26,7 +26,7 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     <div className="space-y-2 py-4">
       {/* Main Navigation */}
       <Link
-        to="/browse"
+        to="/shows"
         className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >

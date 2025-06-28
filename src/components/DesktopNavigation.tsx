@@ -18,7 +18,7 @@ const DesktopNavigation: React.FC = () => {
       {/* Main Navigation Links */}
       <div className="flex items-center space-x-6">
         <Link 
-          to="/browse" 
+          to="/shows" 
           className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
         >
           Shows

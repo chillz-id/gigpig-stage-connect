@@ -49,8 +49,8 @@ function App() {
                   <div className="min-h-screen bg-background font-sans antialiased">
                     <Navigation />
                     <Routes>
-                      <Route path="/" element={<Navigate to="/browse" replace />} />
-                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/" element={<Navigate to="/shows" replace />} />
+                      <Route path="/shows" element={<Browse />} />
                       <Route path="/comedians" element={<Comedians />} />
                       <Route path="/comedian/:slug" element={<ComedianProfile />} />
                       <Route path="/auth" element={<Auth />} />
