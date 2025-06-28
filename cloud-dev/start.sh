@@ -50,17 +50,19 @@ else
     echo "   Add ANTHROPIC_API_KEY to Railway environment variables to enable Claude Code"
 fi
 
+# Set password for code-server via environment variable
+export PASSWORD="${PASSWORD:-standupdev2025}"
+
 # Start code-server (VSCode in browser)
 echo "💻 Starting code-server on port 8080..."
 code-server \
     --bind-addr 0.0.0.0:8080 \
     --auth password \
-    --password ${PASSWORD:-standupdev2025} \
     --disable-telemetry \
     /home/developer/workspace &
 
 # Wait a moment for code-server to start
-sleep 3
+sleep 5
 
 # Start the development server
 cd /home/developer/workspace/gigpig-stage-connect
@@ -70,7 +72,7 @@ npm run dev -- --host 0.0.0.0 --port 3000 &
 echo "✅ All services started!"
 echo "🌐 VSCode: Access via Railway URL"
 echo "🎪 Stand Up Sydney: Access via Railway URL:3000"
-echo "🔒 VSCode Password: ${PASSWORD:-standupdev2025}"
+echo "🔒 VSCode Password: ${PASSWORD}"
 
 if [ ! -z "${ANTHROPIC_API_KEY}" ]; then
     echo "🤖 Claude Code: Ready for AI-powered development!"
