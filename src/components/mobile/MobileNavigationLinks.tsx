@@ -23,24 +23,24 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
   };
 
   return (
-    <div className="space-y-2 py-4">
+    <div className="space-y-1 py-6">
       {/* Main Navigation */}
       <Link
         to="/shows"
-        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+        className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Home className="w-5 h-5" />
-        <span>Shows</span>
+        <span className="font-medium">Shows</span>
       </Link>
 
       <Link
         to="/comedians"
-        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+        className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Users className="w-5 h-5" />
-        <span>Comedians</span>
+        <span className="font-medium">Comedians</span>
       </Link>
 
       {/* Authenticated User Links */}
@@ -48,49 +48,49 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
         <>
           <Link
             to="/dashboard"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <BarChart3 className="w-5 h-5" />
-            <span>Dashboard</span>
+            <span className="font-medium">Dashboard</span>
           </Link>
 
           <Link
             to="/profile?tab=calendar"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <Calendar className="w-5 h-5" />
-            <span>Calendar</span>
+            <span className="font-medium">Calendar</span>
           </Link>
 
           <Link
             to="/notifications"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <Bell className="w-5 h-5" />
-            <span>Notifications</span>
+            <span className="font-medium">Notifications</span>
           </Link>
 
           <Link
             to="/messages"
-            className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
             <MessageCircle className="w-5 h-5" />
-            <span>Messages</span>
+            <span className="font-medium">Messages</span>
           </Link>
 
           {/* Admin Dashboard - Always visible for admins */}
           {isAdmin && (
             <Link
               to="/admin"
-              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
               onClick={handleLinkClick}
             >
               <Crown className="w-5 h-5 text-yellow-400" />
-              <span>Admin Dashboard</span>
+              <span className="font-medium">Admin Dashboard</span>
             </Link>
           )}
 
@@ -98,11 +98,11 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
           {isPromoter && (
             <Link
               to="/create-event"
-              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
               onClick={handleLinkClick}
             >
               <Plus className="w-5 h-5" />
-              <span>Create Event</span>
+              <span className="font-medium">Create Event</span>
             </Link>
           )}
         </>
@@ -112,11 +112,11 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
       {!user && (
         <Link
           to="/auth"
-          className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
           onClick={handleLinkClick}
         >
           <User className="w-5 h-5" />
-          <span>Book Comedian</span>
+          <span className="font-medium">Book Comedian</span>
         </Link>
       )}
     </div>

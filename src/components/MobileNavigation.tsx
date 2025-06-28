@@ -26,19 +26,34 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
       />
 
       {isMobileMenuOpen && (
-        <div className="md:hidden pb-6 space-y-4 text-foreground animate-fade-in bg-background/95 backdrop-blur-lg border-t border-border">
-          <div className="px-4 py-2">
-            <MobileUserInfo />
-            
-            <MobileNavigationLinks
-              setIsMobileMenuOpen={setIsMobileMenuOpen}
-            />
+        <div className="md:hidden fixed inset-0 top-16 z-50 bg-background/95 backdrop-blur-lg animate-fade-in">
+          {/* Centered content container */}
+          <div className="flex flex-col h-full max-w-sm mx-auto">
+            {/* Main content area */}
+            <div className="flex-1 px-6 py-8 overflow-y-auto">
+              <MobileUserInfo />
+              
+              <MobileNavigationLinks
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+              />
 
-            <MobileThemeControls />
+              <MobileThemeControls />
 
-            {!user && (
-              <MobileAuthButtons setIsMobileMenuOpen={setIsMobileMenuOpen} />
-            )}
+              {!user && (
+                <MobileAuthButtons setIsMobileMenuOpen={setIsMobileMenuOpen} />
+              )}
+            </div>
+
+            {/* Close menu section at bottom */}
+            <div className="border-t border-border/20 p-6">
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full flex flex-col items-center gap-2 py-4 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full"></div>
+                <span className="text-sm font-medium">Close Menu</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
