@@ -21,8 +21,8 @@ const Navigation: React.FC = () => {
             <Link to="/" className="flex items-center group">
               <img 
                 alt="Stand Up Sydney Logo" 
-                src="/lovable-uploads/01533f67-2f0b-4cfd-8335-1bb360f481ef.png" 
-                className="h-8 sm:h-10 w-auto group-hover:opacity-80 transition-all duration-300 object-contain" 
+                src="/lovable-uploads/a9e0c15c-d6e1-430b-9849-b4953d9fb4b7.png" 
+                className="h-12 sm:h-14 w-auto group-hover:opacity-80 transition-all duration-300 object-contain" 
               />
             </Link>
           </div>
