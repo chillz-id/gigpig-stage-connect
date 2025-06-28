@@ -36,8 +36,7 @@ RUN chmod +x /home/developer/start.sh
 # Switch to developer user
 USER developer
 
-# Setup environment
-ENV PORT=8080
+# Setup environment - Let Railway set PORT, we'll manage it in start.sh
 ENV PASSWORD=standupdev2025
 
 # Expose ports
