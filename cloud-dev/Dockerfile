@@ -21,8 +21,8 @@ RUN npm install -g typescript ts-node
 RUN mkdir -p /home/developer/workspace
 RUN chown -R developer:developer /home/developer
 
-# Copy simple start script (from cloud-dev directory)
-COPY cloud-dev/start-clean.sh /home/developer/start.sh
+# Copy simple start script
+COPY start-clean.sh /home/developer/start.sh
 RUN chmod +x /home/developer/start.sh
 
 # Switch to developer user
