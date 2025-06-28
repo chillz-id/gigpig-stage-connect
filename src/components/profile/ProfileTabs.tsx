@@ -37,20 +37,25 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   mockTickets,
   onSave
 }) => {
-  // Tab configuration based on view mode - removed 'requests' tab
+  // Tab configuration based on view mode
   const memberTabs = ['profile', 'tickets', 'notifications', 'book-comedian', 'settings'];
   const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
   
   const availableTabs = isMemberView ? memberTabs : industryTabs;
 
-  // Handle tab change with logging for debugging
+  // Ensure the activeTab is valid for the current view
+  const validActiveTab = availableTabs.includes(activeTab) ? activeTab : availableTabs[0];
+
+  // Handle tab change with proper validation
   const handleTabChange = (newTab: string) => {
     console.log('Tab change requested:', newTab);
-    setActiveTab(newTab);
+    if (availableTabs.includes(newTab)) {
+      setActiveTab(newTab);
+    }
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+    <Tabs value={validActiveTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className={`grid w-full mb-8 ${isMemberView ? 'grid-cols-5' : 'grid-cols-5'}`}>
         <TabsTrigger value="profile" className="flex items-center gap-2">
           <User className="w-4 h-4" />
