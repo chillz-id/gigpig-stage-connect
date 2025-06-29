@@ -73,7 +73,6 @@ const EventManagementContent = () => {
           
           <EventsTable 
             events={filteredEvents}
-            onViewDetails={handleViewEventDetails}
             onDeleteEvent={handleDeleteEvent}
           />
         </CardContent>
