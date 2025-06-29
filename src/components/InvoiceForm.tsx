@@ -75,7 +75,6 @@ const InvoiceForm = () => {
 
   const handleSave = (status: 'draft' | 'sent') => {
     // Here you would typically save to your backend
-    console.log('Saving invoice:', { ...invoiceData, items, subtotal, taxAmount, total, status });
     
     toast({
       title: status === 'draft' ? "Invoice Saved" : "Invoice Sent",

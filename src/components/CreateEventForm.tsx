@@ -105,8 +105,6 @@ export const CreateEventForm: React.FC = () => {
     }
 
     const eventData = prepareEventData(formData, recurringSettings, eventSpots, user.id);
-    console.log('Creating event:', eventData);
-    console.log('Event costs:', eventCosts); // Log costs for now - will be saved to database later
     createEvent(eventData);
   };
 

@@ -9,8 +9,6 @@ export const useProfileOperations = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('=== FETCHING PROFILE ===');
-      console.log('User ID:', userId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -26,8 +24,6 @@ export const useProfileOperations = () => {
         return null;
       }
       
-      console.log('=== PROFILE FETCH SUCCESS ===');
-      console.log('Profile data:', data);
       return data;
     } catch (error) {
       console.error('=== PROFILE FETCH EXCEPTION ===');
@@ -38,8 +34,6 @@ export const useProfileOperations = () => {
 
   const fetchRoles = async (userId: string) => {
     try {
-      console.log('=== FETCHING ROLES ===');
-      console.log('User ID:', userId);
       
       const { data, error } = await supabase
         .from('user_roles')
@@ -54,8 +48,6 @@ export const useProfileOperations = () => {
         return [];
       }
       
-      console.log('=== ROLES FETCH SUCCESS ===');
-      console.log('Roles data:', data);
       return data || [];
     } catch (error) {
       console.error('=== ROLES FETCH EXCEPTION ===');
@@ -68,9 +60,6 @@ export const useProfileOperations = () => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      console.log('=== UPDATING PROFILE ===');
-      console.log('User ID:', user.id);
-      console.log('Updates:', updates);
       
       const { error } = await supabase
         .from('profiles')
@@ -83,7 +72,6 @@ export const useProfileOperations = () => {
         throw error;
       }
 
-      console.log('=== PROFILE UPDATE SUCCESS ===');
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",

@@ -24,7 +24,6 @@ interface EventBasicInfoProps {
 
 export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onFormDataChange }) => {
   const handleAddressSelect = (address: string, placeDetails?: any) => {
-    console.log('Address selected:', address, placeDetails);
     
     // Update address
     onFormDataChange({ address });

@@ -41,7 +41,6 @@ export const CreateEventButton: React.FC = () => {
     }
 
     // Here you would typically send the data to your backend
-    console.log('Creating event:', { ...formData, eventDate });
     
     toast({
       title: "Event Created",

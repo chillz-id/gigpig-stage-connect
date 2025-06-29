@@ -37,7 +37,6 @@ export const useEventSubscriptions = (
       .channel(`events_changes_${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, 
         () => {
-          console.log('Events table changed, refreshing data...');
           fetchEvents();
         }
       )
@@ -47,7 +46,6 @@ export const useEventSubscriptions = (
       .channel(`ticket_sales_changes_${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_sales' }, 
         () => {
-          console.log('Ticket sales changed, refreshing data...');
           fetchEvents();
         }
       )
@@ -57,7 +55,6 @@ export const useEventSubscriptions = (
       .channel(`comedian_bookings_changes_${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comedian_bookings' }, 
         () => {
-          console.log('Comedian bookings changed, refreshing data...');
           fetchEvents();
           if (selectedEvent) fetchComedianBookings(selectedEvent);
         }

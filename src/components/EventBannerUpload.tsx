@@ -31,13 +31,10 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
   });
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('File upload started');
     const file = event.target.files?.[0];
     if (file) {
-      console.log('File selected:', file.name, file.size, file.type);
       const url = await uploadFile(file);
       if (url) {
-        console.log('File uploaded successfully, URL:', url);
         setUploadedImageUrl(url);
         setIsCropDialogOpen(true);
         setIsUploadDialogOpen(false);
@@ -48,7 +45,6 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
   };
 
   const handleLinkSubmit = () => {
-    console.log('Link URL submitted:', linkUrl);
     if (linkUrl.trim()) {
       setUploadedImageUrl(linkUrl.trim());
       setIsCropDialogOpen(true);
@@ -58,15 +54,12 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
   };
 
   const handleCropComplete = (croppedImageUrl: string) => {
-    console.log('Crop completed, applying banner URL:', croppedImageUrl.substring(0, 50) + '...');
     onBannerChange(croppedImageUrl);
     setIsCropDialogOpen(false);
     setUploadedImageUrl('');
-    console.log('Banner URL updated successfully');
   };
 
   const handleCropClose = () => {
-    console.log('Crop dialog closed');
     setIsCropDialogOpen(false);
     setUploadedImageUrl('');
   };
@@ -133,7 +126,6 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
               type="button"
               variant="outline" 
               onClick={() => {
-                console.log('Re-crop button clicked for existing banner');
                 setUploadedImageUrl(bannerUrl);
                 setIsCropDialogOpen(true);
               }}

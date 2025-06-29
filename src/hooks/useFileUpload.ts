@@ -23,7 +23,6 @@ export const useFileUpload = ({
   const uploadFile = async (file: File): Promise<string | null> => {
     if (!file) return null;
 
-    console.log('Starting file upload:', file.name, 'to bucket:', bucket);
 
     // Validate file size
     if (file.size > maxSize) {
@@ -62,7 +61,6 @@ export const useFileUpload = ({
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
-      console.log('Uploading file to path:', filePath);
 
       // Upload file
       const { data, error } = await supabase.storage
@@ -77,14 +75,12 @@ export const useFileUpload = ({
         throw error;
       }
 
-      console.log('File uploaded successfully:', data.path);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(data.path);
 
-      console.log('Public URL generated:', publicUrl);
 
       setUploadProgress(100);
       
@@ -110,7 +106,6 @@ export const useFileUpload = ({
 
   const deleteFile = async (filePath: string): Promise<boolean> => {
     try {
-      console.log('Deleting file:', filePath, 'from bucket:', bucket);
       
       const { error } = await supabase.storage
         .from(bucket)
@@ -121,7 +116,6 @@ export const useFileUpload = ({
         throw error;
       }
 
-      console.log('File deleted successfully');
 
       toast({
         title: "File deleted",

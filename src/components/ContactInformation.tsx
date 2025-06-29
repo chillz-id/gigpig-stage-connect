@@ -65,8 +65,6 @@ export const ContactInformation: React.FC = () => {
   };
 
   const handleSaveContactSettings = () => {
-    console.log('Saving contact settings:', contactSettings);
-    console.log('Saving additional contacts:', additionalContacts);
     toast({
       title: "Contact Settings Saved",
       description: "Your contact visibility preferences have been updated.",

@@ -160,7 +160,6 @@ const Applications = () => {
   };
 
   const handleViewProfile = (comedianId: string) => {
-    console.log('Viewing profile for comedian:', comedianId);
     // Implementation for viewing comedian profile
   };
 

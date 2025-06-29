@@ -17,7 +17,6 @@ export const useTicketSalesSubscription = () => {
           table: 'ticket_sales'
         },
         (payload) => {
-          console.log('Ticket sales change detected:', payload);
           
           // Invalidate relevant queries to trigger refetch
           queryClient.invalidateQueries({ queryKey: ['ticket-sales'] });

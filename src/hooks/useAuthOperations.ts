@@ -9,7 +9,6 @@ export const useAuthOperations = () => {
 
   const signUp = async (email: string, password: string, userData: any = {}) => {
     try {
-      console.log('Attempting sign up for:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -31,7 +30,6 @@ export const useAuthOperations = () => {
         return { error };
       }
 
-      console.log('Sign up successful');
       toast({
         title: "Check your email",
         description: "We've sent you a confirmation link to complete your registration.",
@@ -51,22 +49,12 @@ export const useAuthOperations = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('=== ADMIN SIGN IN ATTEMPT ===');
-      console.log('Email:', email);
-      console.log('Password length:', password.length);
-      console.log('Attempting to sign in admin user...');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('=== SIGN IN RESPONSE ===');
-      console.log('Data:', data);
-      console.log('Error:', error);
-      console.log('User ID:', data?.user?.id);
-      console.log('Email confirmed at:', data?.user?.email_confirmed_at);
-      console.log('Session exists:', !!data?.session);
 
       if (error) {
         console.error('=== SIGN IN ERROR ===');
@@ -77,7 +65,6 @@ export const useAuthOperations = () => {
         let errorMessage = error.message;
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-          console.log('Suggestion: Try using email: info@standupsydney.com with password: Ztxreb890-');
         } else if (error.message.includes('Email not confirmed')) {
           errorMessage = 'Please confirm your email address before signing in.';
         } else if (error.message.includes('Too many requests')) {
@@ -93,9 +80,6 @@ export const useAuthOperations = () => {
       }
 
       if (data?.user) {
-        console.log('=== SIGN IN SUCCESS ===');
-        console.log('User authenticated:', data.user.email);
-        console.log('Session token exists:', !!data.session?.access_token);
         
         // Check if user has admin role
         const { data: roles } = await supabase
@@ -103,7 +87,6 @@ export const useAuthOperations = () => {
           .select('role')
           .eq('user_id', data.user.id);
         
-        console.log('User roles:', roles);
         
         toast({
           title: "Welcome back!",
@@ -127,11 +110,9 @@ export const useAuthOperations = () => {
 
   const signOut = async () => {
     try {
-      console.log('Attempting sign out...');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      console.log('Sign out successful');
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",

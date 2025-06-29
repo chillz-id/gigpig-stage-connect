@@ -25,7 +25,6 @@ export const FinancialInformation: React.FC = () => {
   };
 
   const handleSaveFinancialInfo = () => {
-    console.log('Saving financial info:', financialInfo);
     toast({
       title: "Financial Information Saved",
       description: "Your financial details have been updated.",

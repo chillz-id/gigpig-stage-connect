@@ -110,7 +110,6 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
   };
 
   const handleViewProfile = (comedianId: string) => {
-    console.log('Viewing profile for comedian:', comedianId);
     // Implementation for viewing comedian profile
   };
 

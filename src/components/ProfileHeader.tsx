@@ -39,10 +39,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log('Avatar upload started:', file.name);
       const url = await uploadFile(file);
       if (url) {
-        console.log('Avatar uploaded successfully:', url);
         // Pass the original event to maintain compatibility
         onImageSelect(event);
       }

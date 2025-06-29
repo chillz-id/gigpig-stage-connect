@@ -29,7 +29,6 @@ export const useEventData = () => {
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching events...');
       
       const { data, error } = await supabase
         .from('events')
@@ -57,7 +56,6 @@ export const useEventData = () => {
         throw error;
       }
       
-      console.log('Events fetched:', data?.length || 0);
       
       // Process events and calculate real-time metrics safely
       const processedEvents = await Promise.all(
@@ -117,7 +115,6 @@ export const useEventData = () => {
         })
       );
       
-      console.log('Events processed successfully:', processedEvents.length);
       setEvents(processedEvents);
     } catch (error: any) {
       console.error('Error fetching events:', error);

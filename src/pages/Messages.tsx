@@ -240,7 +240,6 @@ const Messages = () => {
   };
 
   const handleSendConnectionRequest = (introMessage: string) => {
-    console.log('Sending connection request:', introMessage);
     setShowConnectionRequest(false);
     // In a real app, this would send the request to the backend
   };
@@ -288,7 +287,6 @@ const Messages = () => {
   };
 
   const handleReportUser = (userId: string) => {
-    console.log('Reporting user:', userId);
     // In a real app, this would send a report to moderation
   };
 

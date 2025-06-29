@@ -76,7 +76,6 @@ const PromoterSettings = () => {
 
   const handleSaveBranding = (branding: typeof brandingSettings) => {
     setBrandingSettings(branding);
-    console.log('Saving branding settings:', branding);
     // In a real app, this would save to the backend
   };
 
@@ -87,23 +86,19 @@ const PromoterSettings = () => {
       members: []
     };
     setGroups(prev => [...prev, newGroup]);
-    console.log('Creating group:', newGroup);
   };
 
   const handleUpdateGroup = (groupId: string, updates: Partial<typeof groups[0]>) => {
     setGroups(prev => prev.map(group => 
       group.id === groupId ? { ...group, ...updates } : group
     ));
-    console.log('Updating group:', groupId, updates);
   };
 
   const handleDeleteGroup = (groupId: string) => {
     setGroups(prev => prev.filter(group => group.id !== groupId));
-    console.log('Deleting group:', groupId);
   };
 
   const handleAddMember = (groupId: string, memberId: string) => {
-    console.log('Adding member to group:', groupId, memberId);
     // In a real app, this would add the member to the group
   };
 
@@ -113,7 +108,6 @@ const PromoterSettings = () => {
         ? { ...group, members: group.members.filter(member => member.id !== memberId) }
         : group
     ));
-    console.log('Removing member from group:', groupId, memberId);
   };
 
   return (

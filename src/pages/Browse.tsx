@@ -72,7 +72,6 @@ const Browse = () => {
 
   const handleRecurringApplicationSubmit = (event: any, selectedDates: Date[]) => {
     // Handle the application for multiple dates
-    console.log('Applying for event:', event.title, 'on dates:', selectedDates);
     // This would normally make API calls for each selected date
     handleApply(event); // For now, just use the regular apply logic
   };

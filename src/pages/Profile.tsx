@@ -45,14 +45,11 @@ const Profile = () => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab') || 'profile';
     
-    console.log('Profile: Initial URL tab param:', tabParam, 'Available tabs:', availableTabs);
     
     // Set initial tab if it's valid, otherwise use 'profile'
     if (availableTabs.includes(tabParam)) {
-      console.log('Profile: Setting initial tab from URL:', tabParam);
       setActiveTab(tabParam);
     } else {
-      console.log('Profile: Invalid tab in URL, using default profile tab');
       setActiveTab('profile');
     }
   }, []); // Empty dependency array - only run on mount
@@ -105,11 +102,9 @@ const Profile = () => {
 
   // Handle tab changes with validation and URL update
   const handleTabChange = (newTab: string) => {
-    console.log('Profile: Tab change requested:', newTab, 'Available tabs:', availableTabs);
     
     // Validate the tab is available for current view
     if (availableTabs.includes(newTab)) {
-      console.log('Profile: Updating tab to:', newTab);
       setActiveTab(newTab);
       
       // Update URL without triggering useEffect
@@ -120,9 +115,7 @@ const Profile = () => {
         newUrl.searchParams.set('tab', newTab);
       }
       window.history.replaceState({}, '', newUrl.toString());
-      console.log('Profile: URL updated for tab:', newTab);
     } else {
-      console.log('Profile: Invalid tab requested:', newTab, 'Available:', availableTabs);
     }
   };
 

@@ -116,7 +116,6 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
   };
 
   const handleCrop = () => {
-    console.log('Apply button clicked - starting crop process');
     const canvas = canvasRef.current;
     const image = imageRef.current;
     
@@ -126,7 +125,6 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
     }
 
     try {
-      console.log('Creating crop canvas...');
       const cropCanvas = document.createElement('canvas');
       const cropCtx = cropCanvas.getContext('2d');
       if (!cropCtx) {
@@ -189,11 +187,6 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
       const destWidth = intersectionWidth * (FINAL_WIDTH / CROP_WIDTH);
       const destHeight = intersectionHeight * (FINAL_HEIGHT / CROP_HEIGHT);
 
-      console.log('Final crop parameters:', {
-        source: { x: sourceX, y: sourceY, width: sourceWidth, height: sourceHeight },
-        dest: { x: destX, y: destY, width: destWidth, height: destHeight },
-        canvas: { width: FINAL_WIDTH, height: FINAL_HEIGHT }
-      });
 
       // Fill with black background first (in case image doesn't cover full area)
       cropCtx.fillStyle = '#000000';
@@ -209,7 +202,6 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
       // Export as high quality JPEG
       try {
         const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.95);
-        console.log('Crop completed successfully');
         onCrop(croppedDataUrl);
       } catch (corsError) {
         console.error('CORS error, trying blob approach:', corsError);
@@ -231,11 +223,9 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
   const resetCrop = () => {
     setCrop({ x: 0, y: 0 });
     setScale([1]);
-    console.log('Crop reset to default values');
   };
 
   const handleImageLoad = () => {
-    console.log('Image loaded successfully for cropping');
     setImageLoaded(true);
   };
 

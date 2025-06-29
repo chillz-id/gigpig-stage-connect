@@ -29,7 +29,6 @@ export const useEventDetailsManager = () => {
 
   const fetchComedianBookings = useCallback(async (eventId: string) => {
     try {
-      console.log('Fetching comedian bookings for event:', eventId);
       const { data, error } = await supabase
         .from('comedian_bookings')
         .select('*')
@@ -40,7 +39,6 @@ export const useEventDetailsManager = () => {
         return;
       }
 
-      console.log('Comedian bookings fetched:', data?.length || 0);
       setComedianBookings(data || []);
     } catch (error) {
       console.error('Error fetching comedian bookings:', error);
@@ -50,7 +48,6 @@ export const useEventDetailsManager = () => {
 
   const fetchTicketSales = useCallback(async (eventId: string) => {
     try {
-      console.log('Fetching ticket sales for event:', eventId);
       const { data, error } = await supabase
         .from('ticket_sales')
         .select('*')
@@ -61,7 +58,6 @@ export const useEventDetailsManager = () => {
         return;
       }
 
-      console.log('Ticket sales fetched:', data?.length || 0);
       setTicketSales(data || []);
     } catch (error) {
       console.error('Error fetching ticket sales:', error);
@@ -70,7 +66,6 @@ export const useEventDetailsManager = () => {
   }, []);
 
   const handleViewEventDetails = useCallback(async (eventId: string) => {
-    console.log('Viewing event details for:', eventId);
     setSelectedEvent(eventId);
     
     // Fetch related data
@@ -81,7 +76,6 @@ export const useEventDetailsManager = () => {
   }, [fetchTicketSales, fetchComedianBookings]);
 
   const handleCloseEventDetails = useCallback(() => {
-    console.log('Closing event details');
     setSelectedEvent(null);
     setTicketSales([]);
     setComedianBookings([]);

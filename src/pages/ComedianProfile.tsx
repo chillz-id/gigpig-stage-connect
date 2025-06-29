@@ -27,14 +27,12 @@ const ComedianProfile = () => {
     queryFn: async () => {
       if (!slug) throw new Error('No comedian slug provided');
       
-      console.log('Looking for comedian with slug:', slug);
       
       // Convert slug back to name for database query
       const name = slug.split('-').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ');
       
-      console.log('Converted name:', name);
       
       // First try to find in database
       const { data: dbData, error: dbError } = await supabase
@@ -43,7 +41,6 @@ const ComedianProfile = () => {
         .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
         .maybeSingle();
       
-      console.log('Database result:', dbData, 'Error:', dbError);
       
       if (dbData) {
         return dbData;
@@ -56,7 +53,6 @@ const ComedianProfile = () => {
         return comedianSlug === slug;
       });
       
-      console.log('Mock comedian found:', mockComedian);
       
       if (mockComedian) {
         return mockComedian;
