@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -8,18 +7,15 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center font-sans text-neutral-200 relative overflow-hidden">
-      {/* Reactive Glow */}
-      <div 
-        className="pointer-events-none absolute inset-0 opacity-60 blur-3xl transition-opacity duration-700"
-        style={{
-          background: 'radial-gradient(600px circle at 50% 50%, rgba(168,85,247,0.35), transparent 60%)'
-        }}
-      />
-      
-      {/* Card */}
-      <div className="w-full max-w-md px-8 py-10 bg-neutral-900/80 backdrop-blur rounded-xl shadow-2xl ring-1 ring-neutral-800 space-y-8 animate-fade-in">
-        {children}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-neutral-900/95 backdrop-blur-sm border border-neutral-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Stand Up Sydney</h1>
+            <p className="text-neutral-400 text-sm sm:text-base">Comedy community platform</p>
+          </div>
+          {children}
+        </div>
       </div>
     </div>
   );
