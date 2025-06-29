@@ -17,6 +17,7 @@ import CreateEvent from '@/pages/CreateEvent';
 import Applications from '@/pages/Applications';
 import Invoices from '@/pages/Invoices';
 import AdminDashboard from '@/pages/AdminDashboard';
+import EventDetail from '@/pages/EventDetail';
 import { Suspense } from 'react';
 
 const queryClient = new QueryClient({
@@ -60,6 +61,7 @@ function App() {
                       <Route path="/applications" element={<Applications />} />
                       <Route path="/invoices/*" element={<Invoices />} />
                       <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/admin/events/:eventId" element={<EventDetail />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>
