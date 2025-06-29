@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import Navigation from '@/components/Navigation';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Index from '@/pages/Index';
@@ -41,29 +43,32 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserProvider>
-            <Router>
-              <div className="min-h-screen bg-background text-foreground">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/browse" element={<Browse />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/create-event" element={<CreateEvent />} />
-                    <Route path="/applications" element={<Applications />} />
-                    <Route path="/invoices/*" element={<Invoices />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
-                <Toaster />
-              </div>
-            </Router>
-          </UserProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <UserProvider>
+              <Router>
+                <div className="min-h-screen bg-background text-foreground">
+                  <Navigation />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/create-event" element={<CreateEvent />} />
+                      <Route path="/applications" element={<Applications />} />
+                      <Route path="/invoices/*" element={<Invoices />} />
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
+                  <Toaster />
+                </div>
+              </Router>
+            </UserProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

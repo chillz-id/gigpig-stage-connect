@@ -23,8 +23,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('light', 'pig');
+    root.classList.remove('light');
     root.classList.add('dark');
+    
+    // Also ensure the body has the correct background
+    document.body.style.backgroundColor = 'hsl(222.2 84% 4.9%)';
+    document.body.style.color = 'hsl(210 40% 98%)';
   }, []);
 
   const setTheme = () => {
