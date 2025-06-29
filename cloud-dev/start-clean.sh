@@ -48,6 +48,26 @@ EOF
     echo "✅ Claude Code configured"
 fi
 
+# Setup MCP servers
+echo "🔌 Setting up MCP servers..."
+mkdir -p /home/developer/.config/claude-desktop
+
+cat > /home/developer/.config/claude-desktop/claude_desktop_config.json << EOF
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/developer/workspace"]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase", "--access-token", "${SUPABASE_TOKEN:-}"]
+    }
+  }
+}
+EOF
+echo "✅ MCP servers configured"
+
 # Start code-server
 echo "🖥️ Starting VS Code on port ${PORT:-8080}..."
 exec code-server --config /home/developer/.config/code-server/config.yaml /home/developer/workspace

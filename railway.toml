@@ -1,5 +1,5 @@
 # Railway Multi-Service Configuration
-# Two separate services with different build methods
+# Three separate services: website, development environment, and MCP hosting
 
 # Default configuration for dev-preview service (Node.js/Vite)
 [deploy]
@@ -19,3 +19,9 @@ buildCommand = "echo 'Building CDE with Docker from cloud-dev directory'"
 dockerfilePath = "cloud-dev/Dockerfile"
 rootDirectory = "cloud-dev"
 healthcheckPath = "/"
+
+# MCP hosting service (separate Docker service for MCPs)
+[environments.production.services.mcp-host]
+dockerfilePath = "cloud-dev/Dockerfile.mcp"
+rootDirectory = "cloud-dev"
+healthcheckPath = "/health"

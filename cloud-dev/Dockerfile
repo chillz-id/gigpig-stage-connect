@@ -15,7 +15,7 @@ WORKDIR /home/developer
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Install essential dev tools
-RUN npm install -g typescript ts-node
+RUN npm install -g typescript ts-node @modelcontextprotocol/server-filesystem @supabase/mcp-server-supabase
 
 # Create workspace directory
 RUN mkdir -p /home/developer/workspace
