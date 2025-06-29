@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
 import EventFilters from './EventFilters';
 import EventsTable from './EventsTable';
-import EventDetails from './EventDetails';
 import { useEventManagement } from '@/hooks/useEventManagement';
 import { useEventSubscriptions } from '@/hooks/useEventSubscriptions';
 import { useTicketSalesSubscription } from '@/hooks/useTicketSalesSubscription';
@@ -16,21 +15,16 @@ const EventManagementContent = () => {
   const {
     events,
     loading,
-    selectedEvent,
-    ticketSales,
-    comedianBookings,
     fetchEvents,
     fetchComedianBookings,
     handleDeleteEvent,
-    handleViewEventDetails,
-    handleCloseEventDetails,
   } = useEventManagement();
 
   // Set up real-time subscriptions
   useEventSubscriptions(
     fetchEvents,
     fetchComedianBookings,
-    selectedEvent
+    null // No selected event in this context
   );
 
   // Add ticket sales real-time subscription
@@ -77,15 +71,6 @@ const EventManagementContent = () => {
           />
         </CardContent>
       </Card>
-
-      {selectedEvent && (
-        <EventDetails 
-          selectedEvent={selectedEvent}
-          ticketSales={ticketSales}
-          comedianBookings={comedianBookings}
-          onClose={handleCloseEventDetails}
-        />
-      )}
     </div>
   );
 };
