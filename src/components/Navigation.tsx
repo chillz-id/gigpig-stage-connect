@@ -55,8 +55,7 @@ const Navigation = () => {
   const isPromoter = hasRole('promoter') || isAdmin;
 
   const navItems = [
-    { path: '/', label: 'Home', icon: Home, public: true },
-    { path: '/browse', label: 'Browse', icon: Calendar, public: true },
+    { path: '/browse', label: 'Shows', icon: Calendar, public: true },
     { path: '/dashboard', label: 'Dashboard', icon: User, protected: true },
     { path: '/profile', label: 'Profile', icon: User, protected: true },
     { path: '/create-event', label: 'Create Event', icon: PlusCircle, roles: ['promoter', 'admin'] },
@@ -103,7 +102,7 @@ const Navigation = () => {
       <nav className="hidden md:flex bg-gradient-to-r from-purple-900 to-pink-900 shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 text-white font-bold text-lg">
+            <Link to="/browse" className="flex items-center gap-2 text-white font-bold text-lg">
               <Drama className="w-6 h-6" />
               <span className="hidden sm:block">Stand Up Sydney</span>
             </Link>
@@ -150,7 +149,7 @@ const Navigation = () => {
       {/* Mobile Navigation */}
       <nav className="md:hidden bg-gradient-to-r from-purple-900 to-pink-900 shadow-lg">
         <div className="flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center gap-2 text-white font-bold">
+          <Link to="/browse" className="flex items-center gap-2 text-white font-bold">
             <Drama className="w-6 h-6" />
             <span>Stand Up Sydney</span>
           </Link>
