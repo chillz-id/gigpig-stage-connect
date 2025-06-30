@@ -44,17 +44,28 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       });
       return;
     }
+
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
     
+    // Prepare user data with proper structure
     const userData = {
-      name: `${firstName} ${lastName}`,
-      first_name: firstName,
-      last_name: lastName,
-      mobile: mobile,
+      name: `${firstName.trim()} ${lastName.trim()}`,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      mobile: mobile.trim(),
       role: isComedian ? 'comedian' : 'member',
-      roles: isComedian ? ['comedian'] : ['member']
+      roles: isComedian ? ['comedian', 'member'] : ['member']
     };
     
-    await onSignUp(email, password, userData);
+    console.log('=== FORM SUBMIT DATA ===', userData);
+    await onSignUp(email.trim(), password, userData);
   };
 
   return (
@@ -79,7 +90,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="signup-first-name" className="block text-sm mb-2">First Name</Label>
+            <Label htmlFor="signup-first-name" className="block text-sm mb-2">First Name *</Label>
             <Input
               id="signup-first-name"
               type="text"
@@ -91,7 +102,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             />
           </div>
           <div>
-            <Label htmlFor="signup-last-name" className="block text-sm mb-2">Last Name</Label>
+            <Label htmlFor="signup-last-name" className="block text-sm mb-2">Last Name *</Label>
             <Input
               id="signup-last-name"
               type="text"
@@ -105,7 +116,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="signup-mobile" className="block text-sm mb-2">Mobile</Label>
+          <Label htmlFor="signup-mobile" className="block text-sm mb-2">Mobile *</Label>
           <Input
             id="signup-mobile"
             type="tel"
@@ -118,7 +129,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="signup-email" className="block text-sm mb-2">Email</Label>
+          <Label htmlFor="signup-email" className="block text-sm mb-2">Email *</Label>
           <Input
             id="signup-email"
             type="email"
@@ -131,7 +142,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="signup-password" className="block text-sm mb-2">Password</Label>
+          <Label htmlFor="signup-password" className="block text-sm mb-2">Password *</Label>
           <Input
             id="signup-password"
             type="password"
@@ -139,8 +150,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength={6}
             className="w-full h-11 rounded-md bg-neutral-800/70 placeholder-neutral-500 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm border-0 text-white"
           />
+          <p className="text-xs text-neutral-400 mt-1">Minimum 6 characters</p>
         </div>
 
         <div className="flex items-center space-x-2">

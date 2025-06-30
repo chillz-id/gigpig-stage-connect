@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthOperations } from '@/hooks/useAuthOperations';
 import { useProfileOperations } from '@/hooks/useProfileOperations';
 import { Profile, UserRole } from '@/types/auth';
 
@@ -36,24 +37,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { signIn: authSignIn, signUp: authSignUp, signOut: authSignOut } = useAuthOperations();
   const { fetchProfile, fetchRoles, updateProfile: updateUserProfile } = useProfileOperations();
 
-
   useEffect(() => {
+    console.log('=== SETTING UP AUTH LISTENER ===');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('=== AUTH STATE CHANGE ===', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Fetch profile and roles when user is authenticated
           setTimeout(async () => {
-            const userProfile = await fetchProfile(session.user.id);
-            const userRoles = await fetchRoles(session.user.id);
-            setProfile(userProfile);
-            setRoles(userRoles);
+            try {
+              console.log('=== FETCHING USER DATA ===');
+              const userProfile = await fetchProfile(session.user.id);
+              const userRoles = await fetchRoles(session.user.id);
+              console.log('=== USER DATA FETCHED ===', { profile: userProfile, roles: userRoles });
+              setProfile(userProfile);
+              setRoles(userRoles);
+            } catch (error) {
+              console.error('=== ERROR FETCHING USER DATA ===', error);
+            }
           }, 0);
         } else {
           setProfile(null);
@@ -69,14 +79,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error getting session:', error);
       }
+      
+      console.log('=== INITIAL SESSION ===', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        const userProfile = await fetchProfile(session.user.id);
-        const userRoles = await fetchRoles(session.user.id);
-        setProfile(userProfile);
-        setRoles(userRoles);
+        try {
+          const userProfile = await fetchProfile(session.user.id);
+          const userRoles = await fetchRoles(session.user.id);
+          setProfile(userProfile);
+          setRoles(userRoles);
+        } catch (error) {
+          console.error('=== ERROR FETCHING INITIAL USER DATA ===', error);
+        }
       }
       
       setIsLoading(false);
@@ -88,38 +104,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      console.error('AuthContext signIn error:', error);
-    }
-    setIsLoading(false);
-    return { error };
+    console.log('=== CONTEXT SIGN IN ===', email);
+    return await authSignIn(email, password);
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
-    setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: userData
-      }
-    });
-    setIsLoading(false);
-    return { error };
+    console.log('=== CONTEXT SIGN UP ===', email, userData);
+    return await authSignUp(email, password, userData);
   };
 
   const signOut = async () => {
-    setIsLoading(true);
-    await supabase.auth.signOut();
+    console.log('=== CONTEXT SIGN OUT ===');
+    await authSignOut();
     setProfile(null);
     setRoles([]);
-    setIsLoading(false);
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -135,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const hasRole = (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);
+    console.log('=== CHECKING ROLE ===', role, hasTheRole, roles);
     return hasTheRole;
   };
 

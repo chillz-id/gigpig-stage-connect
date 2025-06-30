@@ -22,6 +22,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('=== USER ALREADY LOGGED IN, REDIRECTING ===', user.email);
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
@@ -29,6 +30,8 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
+      console.log('=== GOOGLE SIGN IN ATTEMPT ===');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -37,6 +40,7 @@ const Auth = () => {
       });
       
       if (error) {
+        console.error('=== GOOGLE SIGN IN ERROR ===', error);
         toast({
           title: "Google Sign In Error",
           description: error.message,
@@ -44,6 +48,7 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      console.error('=== GOOGLE SIGN IN EXCEPTION ===', error);
       toast({
         title: "Google Sign In Error",
         description: error.message,
@@ -56,10 +61,14 @@ const Auth = () => {
   const handleSignIn = async (email: string, password: string) => {
     setIsLoading(true);
     
+    console.log('=== HANDLING SIGN IN ===', email);
     const { error } = await signIn(email, password);
     
     if (!error) {
+      console.log('=== SIGN IN SUCCESS, REDIRECTING ===');
       navigate(from, { replace: true });
+    } else {
+      console.log('=== SIGN IN FAILED ===', error);
     }
     
     setIsLoading(false);
@@ -68,10 +77,18 @@ const Auth = () => {
   const handleSignUp = async (email: string, password: string, userData: any) => {
     setIsLoading(true);
     
+    console.log('=== HANDLING SIGN UP ===', email, userData);
     const { error } = await signUp(email, password, userData);
     
     if (!error) {
-      navigate('/profile', { replace: true });
+      console.log('=== SIGN UP SUCCESS ===');
+      // Don't redirect immediately, wait for email confirmation or auto-login
+      toast({
+        title: "Account Created",
+        description: "Your account has been created successfully. Please check your email if confirmation is required.",
+      });
+    } else {
+      console.log('=== SIGN UP FAILED ===', error);
     }
     
     setIsLoading(false);

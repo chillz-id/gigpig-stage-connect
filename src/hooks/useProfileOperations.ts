@@ -9,6 +9,7 @@ export const useProfileOperations = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('=== FETCHING PROFILE ===', userId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -17,23 +18,28 @@ export const useProfileOperations = () => {
         .single();
       
       if (error) {
-        console.error('=== PROFILE FETCH ERROR ===');
-        console.error('Error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
+        console.error('=== PROFILE FETCH ERROR ===', error);
+        
+        // If no profile found, this might be expected for new users
+        if (error.code === 'PGRST116') {
+          console.log('=== NO PROFILE FOUND ===', userId);
+          return null;
+        }
+        
         return null;
       }
       
+      console.log('=== PROFILE FETCHED ===', data);
       return data;
     } catch (error) {
-      console.error('=== PROFILE FETCH EXCEPTION ===');
-      console.error('Exception:', error);
+      console.error('=== PROFILE FETCH EXCEPTION ===', error);
       return null;
     }
   };
 
   const fetchRoles = async (userId: string) => {
     try {
+      console.log('=== FETCHING ROLES ===', userId);
       
       const { data, error } = await supabase
         .from('user_roles')
@@ -41,17 +47,14 @@ export const useProfileOperations = () => {
         .eq('user_id', userId);
       
       if (error) {
-        console.error('=== ROLES FETCH ERROR ===');
-        console.error('Error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
+        console.error('=== ROLES FETCH ERROR ===', error);
         return [];
       }
       
+      console.log('=== ROLES FETCHED ===', data);
       return data || [];
     } catch (error) {
-      console.error('=== ROLES FETCH EXCEPTION ===');
-      console.error('Exception:', error);
+      console.error('=== ROLES FETCH EXCEPTION ===', error);
       return [];
     }
   };
@@ -60,6 +63,7 @@ export const useProfileOperations = () => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
+      console.log('=== UPDATING PROFILE ===', user.id, updates);
       
       const { error } = await supabase
         .from('profiles')
@@ -67,11 +71,11 @@ export const useProfileOperations = () => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('=== PROFILE UPDATE ERROR ===');
-        console.error('Error:', error);
+        console.error('=== PROFILE UPDATE ERROR ===', error);
         throw error;
       }
 
+      console.log('=== PROFILE UPDATED ===');
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -79,8 +83,7 @@ export const useProfileOperations = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('=== PROFILE UPDATE EXCEPTION ===');
-      console.error('Exception:', error);
+      console.error('=== PROFILE UPDATE EXCEPTION ===', error);
       toast({
         title: "Update Error",
         description: error.message,

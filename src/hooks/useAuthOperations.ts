@@ -9,9 +9,11 @@ export const useAuthOperations = () => {
 
   const signUp = async (email: string, password: string, userData: any = {}) => {
     try {
+      console.log('=== STARTING SIGN UP ===', email, userData);
+      
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -21,7 +23,7 @@ export const useAuthOperations = () => {
       });
 
       if (error) {
-        console.error('Sign up error:', error);
+        console.error('=== SIGN UP ERROR ===', error);
         toast({
           title: "Sign Up Error",
           description: error.message,
@@ -30,17 +32,73 @@ export const useAuthOperations = () => {
         return { error };
       }
 
-      toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link to complete your registration.",
-      });
+      console.log('=== SIGN UP SUCCESS ===', data);
+
+      // If user is created but not confirmed, show confirmation message
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link to complete your registration.",
+        });
+      } else if (data.user) {
+        // If user is immediately confirmed, wait a moment for the trigger to create profile
+        console.log('=== USER CONFIRMED IMMEDIATELY ===');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if profile was created by trigger
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError || !profile) {
+          console.log('=== PROFILE NOT CREATED BY TRIGGER, CREATING MANUALLY ===');
+          
+          // Create profile manually if trigger didn't work
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email!,
+              name: userData.name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || data.user.email!.split('@')[0]
+            });
+          
+          if (createProfileError) {
+            console.error('=== MANUAL PROFILE CREATION ERROR ===', createProfileError);
+          }
+        }
+        
+        // Ensure user roles are created
+        if (userData.role || userData.roles) {
+          const rolesToCreate = userData.roles || [userData.role || 'member'];
+          
+          for (const role of rolesToCreate) {
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .insert({
+                user_id: data.user.id,
+                role: role
+              });
+            
+            if (roleError && !roleError.message.includes('duplicate key')) {
+              console.error('=== ROLE CREATION ERROR ===', roleError);
+            }
+          }
+        }
+        
+        toast({
+          title: "Account created successfully",
+          description: "Welcome! Your account has been created.",
+        });
+      }
 
       return { error: null };
     } catch (error: any) {
-      console.error('Sign up exception:', error);
+      console.error('=== SIGN UP EXCEPTION ===', error);
       toast({
         title: "Sign Up Error",
-        description: error.message,
+        description: error.message || 'An unexpected error occurred during sign up.',
         variant: "destructive",
       });
       return { error };
@@ -49,17 +107,15 @@ export const useAuthOperations = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('=== STARTING SIGN IN ===', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-
       if (error) {
-        console.error('=== SIGN IN ERROR ===');
-        console.error('Error code:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
+        console.error('=== SIGN IN ERROR ===', error);
         
         // Provide more specific error messages
         let errorMessage = error.message;
@@ -80,13 +136,7 @@ export const useAuthOperations = () => {
       }
 
       if (data?.user) {
-        
-        // Check if user has admin role
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id);
-        
+        console.log('=== SIGN IN SUCCESS ===', data.user.email);
         
         toast({
           title: "Welcome back!",
@@ -96,9 +146,7 @@ export const useAuthOperations = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('=== SIGN IN EXCEPTION ===');
-      console.error('Exception:', error);
-      console.error('Exception message:', error.message);
+      console.error('=== SIGN IN EXCEPTION ===', error);
       toast({
         title: "Sign In Error",
         description: error.message || 'An unexpected error occurred during sign in.',
@@ -110,6 +158,8 @@ export const useAuthOperations = () => {
 
   const signOut = async () => {
     try {
+      console.log('=== STARTING SIGN OUT ===');
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -118,7 +168,7 @@ export const useAuthOperations = () => {
         description: "You have been successfully signed out.",
       });
     } catch (error: any) {
-      console.error('Sign out error:', error);
+      console.error('=== SIGN OUT ERROR ===', error);
       toast({
         title: "Sign Out Error",
         description: error.message,
@@ -127,5 +177,5 @@ export const useAuthOperations = () => {
     }
   };
 
-  return { signUp, signIn, signOut };
+  return { signIn, signUp, signOut };
 };
