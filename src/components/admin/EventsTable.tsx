@@ -74,6 +74,10 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onDeleteEvent }) => {
     navigate(`/admin/events/${eventId}`);
   };
 
+  const handleEditEvent = (eventId: string) => {
+    navigate(`/admin/events/${eventId}`);
+  };
+
   if (events.length === 0) {
     return (
       <Card className="bg-white/10 backdrop-blur-sm border-white/20">
@@ -111,7 +115,13 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onDeleteEvent }) => {
                 <tr key={event.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
                   <td className="p-4">
                     <div>
-                      <h3 className="font-medium text-white mb-1">{event.title}</h3>
+                      <h3 
+                        className="font-medium text-white mb-1 cursor-pointer hover:text-blue-300 transition-colors"
+                        onClick={() => handleViewEvent(event.id)}
+                        title="Click to view event details"
+                      >
+                        {event.title}
+                      </h3>
                       <div className="text-sm text-white/60">
                         {event.ticket_price ? formatCurrency(event.ticket_price) : 'Free'} tickets
                       </div>
@@ -188,6 +198,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onDeleteEvent }) => {
                         <Eye className="w-4 h-4" />
                       </Button>
                       <Button
+                        onClick={() => handleEditEvent(event.id)}
                         variant="ghost"
                         size="sm"
                         className="text-white hover:bg-white/10 p-2 h-auto"
