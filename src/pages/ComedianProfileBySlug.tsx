@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { mockApplications } from '@/services/applicationService';
 import ComedianProfileLoader from '@/components/comedian-profile/ComedianProfileLoader';
 import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
 import ComedianProfileLayout from '@/components/comedian-profile/ComedianProfileLayout';
@@ -83,6 +84,37 @@ const ComedianProfileBySlug = () => {
       
       if (fallbackData) {
         return fallbackData;
+      }
+      
+      // Final fallback: check if this matches a comedian from mock applications
+      const mockApplication = mockApplications.find(app => {
+        const appSlug = app.comedian_name.toLowerCase().replace(/\s+/g, '-');
+        return appSlug === slug;
+      });
+      
+      if (mockApplication) {
+        // Create a mock comedian profile from the application data
+        return {
+          id: mockApplication.comedian_id,
+          name: mockApplication.comedian_name,
+          stage_name: null,
+          bio: `Comedian with ${mockApplication.comedian_experience} of experience`,
+          location: null,
+          avatar_url: mockApplication.comedian_avatar,
+          is_verified: false,
+          email: null,
+          created_at: new Date().toISOString(),
+          phone: null,
+          website_url: null,
+          instagram_url: null,
+          twitter_url: null,
+          youtube_url: null,
+          facebook_url: null,
+          tiktok_url: null,
+          show_contact_in_epk: false,
+          custom_show_types: null,
+          profile_slug: slug
+        };
       }
       
       throw new Error(`Comedian not found: ${slug}`);

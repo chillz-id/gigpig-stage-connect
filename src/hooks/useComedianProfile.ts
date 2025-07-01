@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { mockComedians } from '@/data/mockComedians';
+import { mockApplications } from '@/services/applicationService';
 
 export const useComedianProfile = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -80,7 +81,38 @@ export const useComedianProfile = () => {
           return fallbackData;
         }
         
-        // If not found in database, check mock data and add missing fields
+        // Check if this matches a comedian from mock applications
+        const mockApplication = mockApplications.find(app => {
+          const appSlug = app.comedian_name.toLowerCase().replace(/\s+/g, '-');
+          return appSlug === slug;
+        });
+        
+        if (mockApplication) {
+          // Create a mock comedian profile from the application data
+          return {
+            id: mockApplication.comedian_id,
+            name: mockApplication.comedian_name,
+            stage_name: null,
+            bio: `Comedian with ${mockApplication.comedian_experience} of experience`,
+            location: null,
+            avatar_url: mockApplication.comedian_avatar,
+            is_verified: false,
+            email: null,
+            created_at: new Date().toISOString(),
+            phone: null,
+            website_url: null,
+            instagram_url: null,
+            twitter_url: null,
+            youtube_url: null,
+            facebook_url: null,
+            tiktok_url: null,
+            show_contact_in_epk: false,
+            custom_show_types: null,
+            profile_slug: slug
+          };
+        }
+        
+        // If not found in applications, check mock comedians data and add missing fields
         const mockComedian = mockComedians.find(comedian => {
           if (!comedian.name) return false;
           const comedianSlug = comedian.name.toLowerCase().replace(/\s+/g, '-');
