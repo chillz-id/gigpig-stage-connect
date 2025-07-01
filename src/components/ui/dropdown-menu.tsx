@@ -26,9 +26,9 @@ const DropdownMenuSubTrigger = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "focus:bg-purple-700/60 data-[state=open]:bg-purple-700/60";
+      return "focus:bg-purple-700/70 data-[state=open]:bg-purple-700/70";
     }
-    return "focus:bg-gray-700/60 data-[state=open]:bg-gray-700/60";
+    return "focus:bg-gray-700/70 data-[state=open]:bg-gray-700/70";
   };
 
   return (
@@ -58,9 +58,9 @@ const DropdownMenuSubContent = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-purple-800/95 border-purple-600/40 text-white shadow-2xl shadow-purple-900/30";
+      return "bg-purple-900/98 border-purple-600/50 text-white shadow-2xl shadow-purple-900/40 backdrop-blur-md";
     }
-    return "bg-gray-800/98 border-gray-600/50 text-gray-100 shadow-2xl shadow-black/40";
+    return "bg-gray-900/98 border-gray-600/60 text-gray-100 shadow-2xl shadow-black/50 backdrop-blur-md";
   };
 
   return (
@@ -86,9 +86,9 @@ const DropdownMenuContent = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-purple-800/95 border-purple-600/40 text-white shadow-2xl shadow-purple-900/30";
+      return "bg-purple-900/98 border-purple-600/50 text-white shadow-2xl shadow-purple-900/40 backdrop-blur-md";
     }
-    return "bg-gray-800/98 border-gray-600/50 text-gray-100 shadow-2xl shadow-black/40";
+    return "bg-gray-900/98 border-gray-600/60 text-gray-100 shadow-2xl shadow-black/50 backdrop-blur-md";
   };
 
   return (
@@ -118,9 +118,9 @@ const DropdownMenuItem = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "focus:bg-purple-700/60 focus:text-white data-[disabled]:text-purple-300";
+      return "focus:bg-purple-700/70 focus:text-white data-[disabled]:text-purple-300";
     }
-    return "focus:bg-gray-700/60 focus:text-white data-[disabled]:text-gray-400";
+    return "focus:bg-gray-700/70 focus:text-white data-[disabled]:text-gray-400";
   };
 
   return (

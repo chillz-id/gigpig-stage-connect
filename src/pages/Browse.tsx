@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
@@ -120,15 +121,6 @@ const Browse = () => {
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-6 sm:py-8">
-        {/* Page Header */}
-        <div className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Comedy Shows</h1>
-          <p className={cn("text-sm sm:text-base", 
-            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
-          )}>
-            Discover amazing comedy shows happening around Sydney
-          </p>
-        </div>
 
         {/* Featured Events Carousel */}
         <div className="mb-6 sm:mb-8">

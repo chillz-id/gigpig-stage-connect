@@ -1,252 +1,181 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Home, 
-  Calendar, 
-  User, 
-  PlusCircle, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  Drama,
-  Crown
-} from 'lucide-react';
-import MobileMenuButton from './MobileMenuButton';
-import ThemeToggle from './ThemeToggle';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { 
+  Calendar, 
+  Home, 
+  Search, 
+  User, 
+  LogOut, 
+  Bell,
+  Settings,
+  Palette,
+  Menu,
+  X
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useNotifications } from '@/hooks/useNotifications';
+import MobileNavigation from './MobileNavigation';
+import ThemeControls from './ThemeControls';
 
 const Navigation = () => {
   const { user, signOut, hasRole } = useAuth();
   const { theme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { unreadCount } = useNotifications();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      setIsMobileMenuOpen(false);
-      navigate('/');
-      toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account.",
-      });
+      navigate('/auth');
     } catch (error) {
-      toast({
-        title: "Sign out error", 
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error signing out:', error);
     }
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const isActive = (path: string) => location.pathname === path;
+
+  const getNavLinkClass = (path: string) => {
+    const baseClass = "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium";
+    const activeClass = theme === 'pleasure' 
+      ? 'bg-purple-600/80 text-white shadow-lg' 
+      : 'bg-gray-700/80 text-white shadow-lg';
+    const inactiveClass = theme === 'pleasure'
+      ? 'text-purple-100 hover:bg-purple-700/50 hover:text-white'
+      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white';
+    
+    return cn(baseClass, isActive(path) ? activeClass : inactiveClass);
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
+  const getButtonClass = () => {
+    return theme === 'pleasure'
+      ? 'bg-purple-600/80 hover:bg-purple-700/80 text-white border-purple-500/50'
+      : 'bg-gray-700/80 hover:bg-gray-600/80 text-white border-gray-600/50';
   };
 
-  const isAdmin = hasRole('admin');
-  const isPromoter = hasRole('promoter') || isAdmin;
-
-  const navItems = [
-    { path: '/shows', label: 'Shows', icon: Calendar, public: true },
-    { path: '/dashboard', label: 'Dashboard', icon: User, protected: true },
-    { path: '/profile', label: 'Profile', icon: User, protected: true },
-    { path: '/create-event', label: 'Create Event', icon: PlusCircle, roles: ['promoter', 'admin'] },
-    { path: '/applications', label: 'Applications', icon: FileText, roles: ['promoter', 'admin'] },
-    { path: '/invoices', label: 'Invoices', icon: FileText, roles: ['promoter', 'admin'] },
-    { path: '/admin', label: 'Admin', icon: Crown, roles: ['admin'] },
-  ];
-
-  const filteredNavItems = navItems.filter(item => {
-    if (item.public) return true;
-    if (item.protected && !user) return false;
-    if (item.roles) {
-      return item.roles.some(role => hasRole(role as any));
-    }
-    return user ? true : false;
-  });
-
-  const getNavStyles = () => {
-    if (theme === 'pleasure') {
-      return 'bg-gradient-to-r from-purple-700/90 via-purple-800/90 to-purple-900/90 backdrop-blur-md';
-    }
-    return 'bg-gradient-to-r from-gray-800 via-gray-900 to-red-900/30 border-b border-gray-700';
-  };
-
-  const NavLink: React.FC<{ item: typeof navItems[0], mobile?: boolean }> = ({ item, mobile = false }) => {
-    const Icon = item.icon;
-    const isActive = location.pathname === item.path || 
-                    (item.path !== '/' && location.pathname.startsWith(item.path));
-
-    const getLinkStyles = () => {
-      const baseStyles = "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 min-h-[44px]";
-      const mobileStyles = mobile ? "text-base w-full justify-start" : "text-sm";
-      
-      if (theme === 'pleasure') {
-        return cn(
-          baseStyles,
-          mobileStyles,
-          isActive 
-            ? "bg-white/[0.15] text-white font-medium backdrop-blur-md border border-white/[0.20]" 
-            : "text-white/80 hover:bg-white/[0.08] hover:text-white hover:backdrop-blur-md"
-        );
-      } else {
-        return cn(
-          baseStyles,
-          mobileStyles,
-          isActive 
-            ? "bg-gray-700 text-red-400 font-medium border border-red-500/30" 
-            : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
-        );
-      }
-    };
-
-    return (
-      <Link
-        to={item.path}
-        onClick={mobile ? closeMobileMenu : undefined}
-        className={getLinkStyles()}
-      >
-        <Icon className="w-4 h-4 flex-shrink-0" />
-        <span className={mobile ? "block" : "hidden sm:block"}>{item.label}</span>
-      </Link>
-    );
-  };
-
-  const getButtonStyles = (variant: 'primary' | 'ghost' = 'ghost') => {
-    if (theme === 'pleasure') {
-      return variant === 'primary' 
-        ? "bg-white/[0.15] hover:bg-white/[0.25] text-white backdrop-blur-md border border-white/[0.20] min-h-[44px]"
-        : "text-white hover:bg-white/[0.08] hover:backdrop-blur-md min-h-[44px]";
-    } else {
-      return variant === 'primary'
-        ? "bg-red-600 hover:bg-red-700 text-white min-h-[44px]"
-        : "text-gray-300 hover:bg-gray-700/50 hover:text-white min-h-[44px]";
-    }
-  };
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className={cn("hidden md:flex", getNavStyles())}>
+      <nav className={cn(
+        "fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md shadow-lg",
+        theme === 'pleasure' 
+          ? 'bg-purple-800/90 border-purple-600/30' 
+          : 'bg-gray-800/95 border-gray-600/40'
+      )}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/shows" className="flex items-center gap-2 text-white font-bold text-lg">
-              <Drama className="w-6 h-6" />
-              <span className="hidden sm:block">Stand Up Sydney</span>
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2">
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm",
+                theme === 'pleasure' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-white'
+              )}>
+                SUS
+              </div>
+              <span className="font-bold text-lg text-white hidden sm:block">
+                Stand Up Sydney
+              </span>
             </Link>
 
-            <div className="flex items-center gap-1">
-              {filteredNavItems.slice(0, -2).map((item, index) => (
-                <NavLink key={index} item={item} />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center gap-2">
+              <Link to="/" className={getNavLinkClass('/')}>
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
               
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <NavLink item={navItems.find(item => item.path === '/admin')!} />
-                  )}
-                  <Button
-                    onClick={handleSignOut}
-                    variant="ghost"
-                    size="sm"
-                    className={getButtonStyles('ghost')}
-                    aria-label="Sign out"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:block">Sign Out</span>
-                  </Button>
-                </>
-              ) : (
-                <Link to="/auth">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className={getButtonStyles('primary')}
-                  >
-                    Sign In
-                  </Button>
+              <Link to="/browse" className={getNavLinkClass('/browse')}>
+                <Search className="w-4 h-4" />
+                Browse
+              </Link>
+
+              {hasRole('comedian') && (
+                <Link to="/applications" className={getNavLinkClass('/applications')}>
+                  <Calendar className="w-4 h-4" />
+                  Applications
                 </Link>
               )}
+
+              {(hasRole('promoter') || hasRole('admin')) && (
+                <Link to="/organizer" className={getNavLinkClass('/organizer')}>
+                  <Calendar className="w-4 h-4" />
+                  Events
+                </Link>
+              )}
+
+              {hasRole('admin') && (
+                <Link to="/admin" className={getNavLinkClass('/admin')}>
+                  <Settings className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
+
+              {hasRole('admin') && (
+                <Link to="/design-system" className={getNavLinkClass('/design-system')}>
+                  <Palette className="w-4 h-4" />
+                  Design
+                </Link>
+              )}
+
+              <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")}>
+                <Bell className="w-4 h-4" />
+                Notifications
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Link>
+
+              <Link to="/profile" className={getNavLinkClass('/profile')}>
+                <User className="w-4 h-4" />
+                Profile
+              </Link>
+
+              <ThemeControls />
+
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                size="sm"
+                className={cn("ml-2", getButtonClass())}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn("md:hidden", getButtonClass())}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
           </div>
         </div>
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className={cn("md:hidden", getNavStyles())}>
-        <div className="flex items-center justify-between h-16 px-4">
-          <Link to="/shows" className="flex items-center gap-2 text-white font-bold">
-            <Drama className="w-6 h-6" />
-            <span>Stand Up Sydney</span>
-          </Link>
+      <MobileNavigation 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <MobileMenuButton 
-              isOpen={isMobileMenuOpen} 
-              onToggle={toggleMobileMenu}
-            />
-          </div>
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className={theme === 'pleasure' 
-            ? "bg-purple-900/95 backdrop-blur-sm" 
-            : "bg-gray-900/95 backdrop-blur-sm border-t border-gray-700"
-          }>
-            <div className="px-4 py-4 space-y-2">
-              {filteredNavItems.map((item, index) => (
-                <NavLink key={index} item={item} mobile />
-              ))}
-              
-              {user ? (
-                <Button
-                  onClick={handleSignOut}
-                  variant="ghost"
-                  className={cn("w-full justify-start", getButtonStyles('ghost'))}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              ) : (
-                <Link to="/auth" onClick={closeMobileMenu}>
-                  <Button 
-                    variant="ghost" 
-                    className={cn("w-full justify-start", getButtonStyles('primary'))}
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={closeMobileMenu}
-          aria-hidden="true"
-        />
-      )}
+      {/* Spacer for fixed navigation */}
+      <div className="h-16" />
     </>
   );
 };

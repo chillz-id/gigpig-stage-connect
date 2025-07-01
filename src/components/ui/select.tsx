@@ -19,16 +19,16 @@ const SelectTrigger = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-purple-700/90 border-purple-500/50 text-white hover:bg-purple-600/90 focus:bg-purple-600/90 focus:border-purple-400";
+      return "bg-purple-800/95 border-purple-500/60 text-white hover:bg-purple-700/95 focus:bg-purple-700/95 focus:border-purple-400 shadow-lg";
     }
-    return "bg-gray-700/95 border-gray-500/60 text-gray-100 hover:bg-gray-600/95 focus:bg-gray-600/95 focus:border-gray-400";
+    return "bg-gray-800/98 border-gray-500/70 text-gray-100 hover:bg-gray-700/98 focus:bg-gray-700/98 focus:border-gray-400 shadow-lg";
   };
 
   return (
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-xl border px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 shadow-md transition-all duration-200",
+        "flex h-10 w-full items-center justify-between rounded-xl border px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-200 backdrop-blur-sm",
         getThemeStyles(),
         className
       )}
@@ -86,9 +86,9 @@ const SelectContent = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-purple-800/95 border-purple-600/40 text-white shadow-2xl shadow-purple-900/30";
+      return "bg-purple-900/98 border-purple-600/50 text-white shadow-2xl shadow-purple-900/40 backdrop-blur-md";
     }
-    return "bg-gray-800/98 border-gray-600/50 text-gray-100 shadow-2xl shadow-black/40";
+    return "bg-gray-900/98 border-gray-600/60 text-gray-100 shadow-2xl shadow-black/50 backdrop-blur-md";
   };
 
   return (
@@ -142,9 +142,9 @@ const SelectItem = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "focus:bg-purple-700/60 focus:text-white data-[disabled]:text-purple-300";
+      return "focus:bg-purple-700/70 focus:text-white data-[disabled]:text-purple-300";
     }
-    return "focus:bg-gray-700/60 focus:text-white data-[disabled]:text-gray-400";
+    return "focus:bg-gray-700/70 focus:text-white data-[disabled]:text-gray-400";
   };
 
   return (
