@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import ComedianAvatar from './ComedianAvatar';
 import ComedianBasicInfo from './ComedianBasicInfo';
 import ComedianActions from './ComedianActions';
 import ComedianSocialLinks from './ComedianSocialLinks';
-import ComedianShowCategories from './ComedianShowCategories';
 
 interface ComedianHeaderProps {
   comedian: {
@@ -55,20 +54,18 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare }) =>
               is_verified={comedian.is_verified}
             />
             
-            {/* Show Categories Filter */}
-            <ComedianShowCategories comedianId={comedian.id} />
-            
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
+            <div className="mt-8">
               <ComedianActions 
                 email={comedian.email}
                 name={comedian.name}
                 onShare={onShare}
               />
-              
-              <ComedianSocialLinks />
             </div>
           </div>
         </div>
+        
+        {/* Social Links positioned at bottom right */}
+        <ComedianSocialLinks />
       </CardContent>
     </div>
   );

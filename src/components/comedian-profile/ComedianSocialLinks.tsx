@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Instagram, Youtube, Twitter, Facebook } from 'lucide-react';
 
 const ComedianSocialLinks: React.FC = () => {
@@ -12,19 +11,19 @@ const ComedianSocialLinks: React.FC = () => {
   ];
 
   return (
-    <div className="flex gap-3">
-      {socialLinks.map(({ icon: Icon, href, label, color }) => (
-        <Button
+    <div className="absolute bottom-4 right-4 flex flex-col gap-3">
+      {socialLinks.map(({ icon: Icon, href, label, color }, index) => (
+        <a
           key={label}
-          variant="ghost"
-          size="icon"
-          asChild
-          className={`text-gray-300 ${color} transition-colors duration-200 hover:bg-white/10`}
+          href={href}
+          aria-label={label}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-gray-300 ${color} transition-all duration-200 hover:transform hover:-translate-y-0.5`}
+          style={{ animationDelay: `${index * 100}ms` }}
         >
-          <a href={href} aria-label={label} target="_blank" rel="noopener noreferrer">
-            <Icon className="w-6 h-6" />
-          </a>
-        </Button>
+          <Icon className="w-5 h-5" />
+        </a>
       ))}
     </div>
   );

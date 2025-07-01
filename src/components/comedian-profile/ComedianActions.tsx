@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
 import { Mail, Share2, Calendar } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ComedianActionsProps {
   email: string | null;
@@ -10,6 +10,17 @@ interface ComedianActionsProps {
 }
 
 const ComedianActions: React.FC<ComedianActionsProps> = ({ email, name, onShare }) => {
+  const { hasRole } = useAuth();
+  const [hoveredAction, setHoveredAction] = useState<string | null>(null);
+  const [clickedAction, setClickedAction] = useState<string | null>(null);
+  const [showTexts, setShowTexts] = useState(false);
+
+  useEffect(() => {
+    // Trigger text slide-in animation on component mount
+    const timer = setTimeout(() => setShowTexts(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleContact = () => {
     if (email) {
       const subject = `Booking Inquiry for ${name}`;
@@ -18,33 +29,74 @@ const ComedianActions: React.FC<ComedianActionsProps> = ({ email, name, onShare 
     }
   };
 
+  const handleClick = (action: string) => {
+    setClickedAction(action);
+    setTimeout(() => setClickedAction(null), 150);
+    
+    if (action === 'book') handleContact();
+    if (action === 'share') onShare();
+  };
+
+  const ActionButton = ({ action, icon: Icon, text, onClick, show = true }: {
+    action: string;
+    icon: any;
+    text: string;
+    onClick: () => void;
+    show?: boolean;
+  }) => {
+    if (!show) return null;
+
+    const isHovered = hoveredAction === action;
+    const isClicked = clickedAction === action;
+
+    return (
+      <div className="flex items-center group">
+        <div
+          className={`relative cursor-pointer transition-all duration-200 ${
+            isHovered ? 'transform -translate-y-1' : ''
+          } ${isClicked ? 'transform translate-y-0.5' : ''}`}
+          onMouseEnter={() => setHoveredAction(action)}
+          onMouseLeave={() => setHoveredAction(null)}
+          onClick={() => handleClick(action)}
+        >
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        
+        {/* Animated Text */}
+        <div className={`overflow-hidden transition-all duration-500 ${showTexts ? 'w-auto ml-3' : 'w-0'}`}>
+          <span className={`text-white text-lg font-medium whitespace-nowrap transition-transform duration-500 ${
+            showTexts ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            {text}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-wrap gap-4">
-      <Button 
-        onClick={handleContact}
-        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-        disabled={!email}
-      >
-        <Mail className="w-5 h-5 mr-2" />
-        Book Now
-      </Button>
+    <div className="flex flex-col gap-6">
+      <ActionButton
+        action="book"
+        icon={Mail}
+        text="Book Now"
+        onClick={() => {}}
+      />
       
-      <Button 
-        variant="outline"
-        onClick={onShare}
-        className="border-2 border-white/30 text-white hover:bg-white/10 px-6 py-3 text-lg backdrop-blur-sm"
-      >
-        <Share2 className="w-5 h-5 mr-2" />
-        Share Profile
-      </Button>
+      <ActionButton
+        action="share"
+        icon={Share2}
+        text="Share Profile"
+        onClick={() => {}}
+      />
       
-      <Button 
-        variant="outline"
-        className="border-2 border-white/30 text-white hover:bg-white/10 px-6 py-3 text-lg backdrop-blur-sm"
-      >
-        <Calendar className="w-5 h-5 mr-2" />
-        Check Availability
-      </Button>
+      <ActionButton
+        action="availability"
+        icon={Calendar}
+        text="Check Availability"
+        onClick={() => {}}
+        show={hasRole('admin')}
+      />
     </div>
   );
 };
