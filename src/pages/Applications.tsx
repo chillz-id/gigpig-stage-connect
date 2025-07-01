@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, CheckCircle, EyeOff, Clock } from 'lucide-react';
+import { Users, Calendar, CheckCircle, EyeOff, Clock, Mic } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ApplicationCard from '@/components/admin/ApplicationCard';
 import ApplicationFilters from '@/components/admin/ApplicationFilters';
@@ -24,6 +24,7 @@ const mockApplications = [
     applied_at: '2024-12-18T10:00:00Z',
     status: 'pending' as const,
     message: 'Hi! I\'d love to perform at your show. I have great crowd work skills and clean material.',
+    show_type: 'MC',
   },
   {
     id: '2',
@@ -39,6 +40,7 @@ const mockApplications = [
     applied_at: '2024-12-17T15:30:00Z',
     status: 'accepted' as const,
     message: 'Looking forward to a great show! I have solid 5-minute set ready.',
+    show_type: 'Headliner',
   },
   {
     id: '3',
@@ -54,6 +56,7 @@ const mockApplications = [
     applied_at: '2024-12-15T09:15:00Z',
     status: 'declined' as const,
     message: 'Hi, I\'m relatively new but very passionate. Would love the opportunity!',
+    show_type: 'MC',
   },
 ];
 
@@ -69,19 +72,35 @@ const Applications = () => {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState('all');
   const [sortBy, setSortBy] = useState('applied_at_desc');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+
+  // Helper function to parse experience years
+  const getExperienceYears = (experience: string) => {
+    const match = experience.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
 
   // Filter and sort applications
   const filteredApplications = applications
     .filter(app => {
       const matchesSearch = app.comedian_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            app.event_title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       const matchesEvent = eventFilter === 'all' || app.event_id === eventFilter;
       
-      return matchesSearch && matchesStatus && matchesEvent;
+      // Date range filter
+      let matchesDateRange = true;
+      if (dateRange.from || dateRange.to) {
+        const appliedDate = new Date(app.applied_at);
+        if (dateRange.from && appliedDate < dateRange.from) matchesDateRange = false;
+        if (dateRange.to && appliedDate > dateRange.to) matchesDateRange = false;
+      }
+      
+      return matchesSearch && matchesEvent && matchesDateRange;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -93,16 +112,18 @@ const Applications = () => {
           return a.comedian_name.localeCompare(b.comedian_name);
         case 'event_date':
           return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+        case 'most_experienced':
+          return getExperienceYears(b.comedian_experience || '0') - getExperienceYears(a.comedian_experience || '0');
         default:
           return 0;
       }
     });
 
+  // Calculate new stats
   const stats = {
-    total: applications.length,
-    pending: applications.filter(app => app.status === 'pending').length,
-    approved: applications.filter(app => app.status === 'accepted').length,
-    hidden: applications.filter(app => app.status === 'declined').length,
+    mc: applications.filter(app => app.show_type === 'MC').length,
+    headliner: applications.filter(app => app.show_type === 'Headliner').length,
+    unread: applications.filter(app => app.status === 'pending').length,
   };
 
   const handleSelectApplication = (applicationId: string, selected: boolean) => {
@@ -165,9 +186,9 @@ const Applications = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('all');
     setEventFilter('all');
     setSortBy('applied_at_desc');
+    setDateRange({ from: undefined, to: undefined });
   };
 
   return (
@@ -179,14 +200,24 @@ const Applications = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <Users className="w-6 h-6 text-purple-300" />
+                <Mic className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-sm text-purple-200">Total Applications</div>
+              <div className="text-2xl font-bold text-blue-400">{stats.mc}</div>
+              <div className="text-sm text-purple-200">MC</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Users className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="text-2xl font-bold text-purple-400">{stats.headliner}</div>
+              <div className="text-sm text-purple-200">Headliner</div>
             </CardContent>
           </Card>
           
@@ -195,28 +226,8 @@ const Applications = () => {
               <div className="flex items-center justify-center mb-2">
                 <Clock className="w-6 h-6 text-yellow-400" />
               </div>
-              <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
-              <div className="text-sm text-purple-200">Pending Review</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <CheckCircle className="w-6 h-6 text-green-400" />
-              </div>
-              <div className="text-2xl font-bold text-green-400">{stats.approved}</div>
-              <div className="text-sm text-purple-200">Approved</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <EyeOff className="w-6 h-6 text-gray-400" />
-              </div>
-              <div className="text-2xl font-bold text-gray-400">{stats.hidden}</div>
-              <div className="text-sm text-purple-200">Hidden</div>
+              <div className="text-2xl font-bold text-yellow-400">{stats.unread}</div>
+              <div className="text-sm text-purple-200">Unread</div>
             </CardContent>
           </Card>
         </div>
@@ -225,12 +236,12 @@ const Applications = () => {
         <ApplicationFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
           eventFilter={eventFilter}
           setEventFilter={setEventFilter}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
           events={mockEvents}
           onClearFilters={handleClearFilters}
         />

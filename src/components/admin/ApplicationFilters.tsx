@@ -3,17 +3,21 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Calendar } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Search, Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ApplicationFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
   eventFilter: string;
   setEventFilter: (eventId: string) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
+  dateRange: { from: Date | undefined; to: Date | undefined };
+  setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void;
   events: Array<{ id: string; title: string }>;
   onClearFilters: () => void;
 }
@@ -21,12 +25,12 @@ interface ApplicationFiltersProps {
 const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
   searchTerm,
   setSearchTerm,
-  statusFilter,
-  setStatusFilter,
   eventFilter,
   setEventFilter,
   sortBy,
   setSortBy,
+  dateRange,
+  setDateRange,
   events,
   onClearFilters,
 }) => {
@@ -44,18 +48,43 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
           />
         </div>
 
-        {/* Status Filter */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="bg-white/10 border-white/20 text-white">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="accepted">Approved</SelectItem>
-            <SelectItem value="declined">Hidden</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Date Range Filter */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "justify-start text-left font-normal bg-white/10 border-white/20 text-white hover:bg-white/20",
+                !dateRange.from && "text-gray-300"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateRange.from ? (
+                dateRange.to ? (
+                  <>
+                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                    {format(dateRange.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(dateRange.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Filter by date range</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={dateRange.from}
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+              numberOfMonths={2}
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
 
         {/* Event Filter */}
         <Select value={eventFilter} onValueChange={setEventFilter}>
@@ -82,6 +111,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
             <SelectItem value="applied_at_asc">Oldest First</SelectItem>
             <SelectItem value="comedian_name">Comedian Name</SelectItem>
             <SelectItem value="event_date">Event Date</SelectItem>
+            <SelectItem value="most_experienced">Most Experienced</SelectItem>
           </SelectContent>
         </Select>
 
