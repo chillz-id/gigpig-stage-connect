@@ -17,8 +17,11 @@ interface ComedianProfileLayoutProps {
 }
 
 const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian }) => {
-  const { hasRole } = useAuth();
+  const { user, hasRole } = useAuth();
   const { theme } = useTheme();
+  
+  // Check if this is the user's own profile
+  const isOwnProfile = user?.id === comedian.id;
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -81,7 +84,7 @@ const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian 
           <ComedianContact comedian={comedian} />
           
           {/* Media Showcase */}
-          <ComedianMedia comedianId={comedian.id} />
+          <ComedianMedia comedianId={comedian.id} isOwnProfile={isOwnProfile} />
           
           {/* Upcoming Shows */}
           <ComedianUpcomingShows comedianId={comedian.id} />

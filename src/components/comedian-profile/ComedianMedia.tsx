@@ -1,189 +1,366 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, Image as ImageIcon, Play, Download } from 'lucide-react';
+import { Video, Image as ImageIcon, Play, Download, Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { useComedianMedia } from '@/hooks/useComedianMedia';
+import { MediaUpload } from '@/components/profile/MediaUpload';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface ComedianMediaProps {
   comedianId: string;
+  isOwnProfile?: boolean;
 }
 
-const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId }) => {
+const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile = false }) => {
+  const { user } = useAuth();
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
   const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
-  const [downloadHovered, setDownloadHovered] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadingType, setUploadingType] = useState<'photo' | 'video'>('photo');
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
-  // Mock media data
-  const mediaContent = {
-    videos: [
-      {
-        id: '1',
-        title: '5-Minute Set at Comedy Central',
-        thumbnail: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=300&fit=crop',
-        duration: '5:23',
-        views: '12.5K',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Demo video
-      },
-      {
-        id: '2',
-        title: 'Best of Stand-up Compilation',
-        thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop',
-        duration: '8:45',
-        views: '25.1K',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Demo video
-      }
-    ],
-    photos: [
-      {
-        id: '1',
-        url: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=600&h=600&fit=crop&crop=face',
-        title: 'Professional Headshot'
-      },
-      {
-        id: '2',
-        url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=600&h=600&fit=crop',
-        title: 'On Stage Performance'
-      },
-      {
-        id: '3',
-        url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&h=600&fit=crop',
-        title: 'Behind the Scenes'
-      },
-      {
-        id: '4',
-        url: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=600&h=600&fit=crop',
-        title: 'Event Photography'
-      }
-    ]
+  const { 
+    photos, 
+    videos, 
+    loading, 
+    error, 
+    deleteMedia, 
+    fetchMedia, 
+    getThumbnailUrl, 
+    getEmbedUrl, 
+    getMediaUrl 
+  } = useComedianMedia({ userId: comedianId });
+
+  const handleUploadClick = (type: 'photo' | 'video') => {
+    setUploadingType(type);
+    setShowUploadDialog(true);
   };
 
-  const VideoDialog = ({ video }: { video: any }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="group relative bg-slate-700/50 rounded-xl overflow-hidden border border-slate-600/50 hover:border-purple-500/50 transition-all duration-200 cursor-pointer">
-          <div className="relative">
-            <img 
-              src={video.thumbnail} 
-              alt={video.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-200" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Button className="bg-white/20 hover:bg-white/30 border-2 border-white/50 backdrop-blur-sm rounded-full w-16 h-16">
-                <Play className="w-6 h-6 text-white" />
-              </Button>
-            </div>
-            <div className="absolute bottom-2 right-2">
-              <span className="bg-black/80 text-white px-2 py-1 rounded text-sm font-medium">
-                {video.duration}
-              </span>
-            </div>
-          </div>
-          <div className="p-4">
-            <h3 className="text-white font-semibold mb-1">{video.title}</h3>
-            <p className="text-gray-400 text-sm">{video.views} views</p>
-          </div>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl">
-        <div className="aspect-video">
-          <iframe
-            src={video.videoUrl}
-            className="w-full h-full"
-            allowFullScreen
-            title={video.title}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  const handleMediaAdded = () => {
+    setShowUploadDialog(false);
+    fetchMedia(); // Refresh the media list
+  };
 
-  const PhotoDialog = ({ photo }: { photo: any }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div 
-          className="group relative aspect-square rounded-xl overflow-hidden border border-slate-600/50 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
-          onMouseEnter={() => setHoveredPhoto(photo.id)}
-          onMouseLeave={() => setHoveredPhoto(null)}
-        >
-          <img 
-            src={photo.url} 
-            alt={photo.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200" />
-          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${hoveredPhoto === photo.id ? 'opacity-100' : 'opacity-0'}`}>
-            <Button className="bg-white/20 hover:bg-white/30 border-2 border-white/50 backdrop-blur-sm">
-              View Full
-            </Button>
-          </div>
+  const handleDelete = async (mediaId: string) => {
+    if (confirm('Are you sure you want to delete this media item?')) {
+      await deleteMedia(mediaId);
+    }
+  };
+
+  const openExternalLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-200 rounded-lg h-48 animate-pulse" />
+          ))}
         </div>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl">
-        <img 
-          src={photo.url} 
-          alt={photo.title}
-          className="w-full h-auto max-h-[80vh] object-contain"
-        />
-      </DialogContent>
-    </Dialog>
-  );
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-gray-500">Error loading media: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-      <CardHeader className="relative">
-        <CardTitle className="flex items-center gap-2 text-white text-2xl">
-          <Video className="w-6 h-6 text-purple-400" />
-          Media Portfolio
-        </CardTitle>
-        
-        {/* Download Icon with Animated Text */}
-        <div 
-          className="absolute top-4 right-4 flex items-center cursor-pointer group"
-          onMouseEnter={() => setDownloadHovered(true)}
-          onMouseLeave={() => setDownloadHovered(false)}
-        >
-          <div className={`overflow-hidden transition-all duration-300 ${downloadHovered ? 'w-24 mr-2' : 'w-0'}`}>
-            <span className={`text-white text-sm whitespace-nowrap transition-transform duration-300 ${downloadHovered ? 'translate-x-0' : 'translate-x-full'}`}>
-              Hi-Res Photos
-            </span>
+    <div className="space-y-6">
+      <Card className="professional-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Video className="w-5 h-5" />
+              Media Portfolio
+            </CardTitle>
+            {isOwnProfile && (
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => handleUploadClick('photo')} 
+                  size="sm" 
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Photo
+                </Button>
+                <Button 
+                  onClick={() => handleUploadClick('video')} 
+                  size="sm" 
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Video
+                </Button>
+              </div>
+            )}
           </div>
-          <Download className="w-5 h-5 text-gray-400 hover:text-white transition-colors duration-200" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="videos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 border border-slate-600">
-            <TabsTrigger value="videos" className="flex items-center gap-2 text-white data-[state=active]:bg-purple-600">
-              <Video className="w-4 h-4" />
-              Videos
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="flex items-center gap-2 text-white data-[state=active]:bg-purple-600">
-              <ImageIcon className="w-4 h-4" />
-              Photos
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="videos" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mediaContent.videos.map((video) => (
-                <VideoDialog key={video.id} video={video} />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="photos" className="space-y-4">
-            <div className="grid grid-cols-2 gap-6">
-              {mediaContent.photos.map((photo) => (
-                <PhotoDialog key={photo.id} photo={photo} />
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="videos" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="videos" className="flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Videos ({videos.length})
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Photos ({photos.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="videos" className="mt-6">
+              {videos.length === 0 ? (
+                <div className="text-center py-12">
+                  <Video className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500 mb-4">No videos uploaded yet</p>
+                  {isOwnProfile && (
+                    <Button onClick={() => handleUploadClick('video')} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Upload Your First Video
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {videos.map((video) => {
+                    const embedUrl = getEmbedUrl(video);
+                    const thumbnailUrl = getThumbnailUrl(video);
+                    const mediaUrl = getMediaUrl(video);
+                    
+                    return (
+                      <div
+                        key={video.id}
+                        className={cn(
+                          "relative bg-gray-900 rounded-lg overflow-hidden transition-all duration-300",
+                          "hover:scale-[1.02] hover:shadow-xl"
+                        )}
+                        onMouseEnter={() => setHoveredVideo(video.id)}
+                        onMouseLeave={() => setHoveredVideo(null)}
+                      >
+                        <div className="relative aspect-video">
+                          <img
+                            src={thumbnailUrl}
+                            alt={video.title || 'Video thumbnail'}
+                            className="w-full h-full object-cover"
+                          />
+                          
+                          {/* Overlay */}
+                          <div className={cn(
+                            "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
+                            hoveredVideo === video.id ? "opacity-100" : "opacity-0"
+                          )}>
+                            <div className="flex gap-2">
+                              {embedUrl ? (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button size="sm" className="bg-white/20 backdrop-blur-sm">
+                                      <Play className="w-4 h-4 mr-2" />
+                                      Play
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl">
+                                    <DialogHeader>
+                                      <DialogTitle>{video.title}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="aspect-video">
+                                      <iframe
+                                        src={embedUrl}
+                                        className="w-full h-full rounded-lg"
+                                        allowFullScreen
+                                        title={video.title || 'Video'}
+                                      />
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-white/20 backdrop-blur-sm"
+                                  onClick={() => openExternalLink(mediaUrl)}
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  View
+                                </Button>
+                              )}
+                              
+                              {isOwnProfile && (
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => handleDelete(video.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Featured badge */}
+                          {video.is_featured && (
+                            <Badge className="absolute top-2 left-2 bg-yellow-500">
+                              Featured
+                            </Badge>
+                          )}
+
+                          {/* Video type indicator */}
+                          {video.external_type && (
+                            <Badge className="absolute top-2 right-2" variant="secondary">
+                              {video.external_type === 'youtube' ? 'YouTube' : 
+                               video.external_type === 'google_drive' ? 'Google Drive' : 
+                               video.external_type}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          <h3 className="font-semibold text-white mb-1">
+                            {video.title || 'Untitled Video'}
+                          </h3>
+                          {video.description && (
+                            <p className="text-gray-300 text-sm mb-2 line-clamp-2">
+                              {video.description}
+                            </p>
+                          )}
+                          {video.tags && video.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {video.tags.map((tag) => (
+                                <Badge key={tag} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="photos" className="mt-6">
+              {photos.length === 0 ? (
+                <div className="text-center py-12">
+                  <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500 mb-4">No photos uploaded yet</p>
+                  {isOwnProfile && (
+                    <Button onClick={() => handleUploadClick('photo')} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Upload Your First Photo
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photos.map((photo) => {
+                    const photoUrl = getMediaUrl(photo);
+                    
+                    return (
+                      <Dialog key={photo.id}>
+                        <DialogTrigger asChild>
+                          <div
+                            className={cn(
+                              "relative cursor-pointer rounded-lg overflow-hidden transition-all duration-300",
+                              "hover:scale-[1.02] hover:shadow-lg"
+                            )}
+                            onMouseEnter={() => setHoveredPhoto(photo.id)}
+                            onMouseLeave={() => setHoveredPhoto(null)}
+                          >
+                            <div className="aspect-square">
+                              <img
+                                src={photoUrl}
+                                alt={photo.title || 'Photo'}
+                                className="w-full h-full object-cover"
+                              />
+                              
+                              {/* Overlay */}
+                              <div className={cn(
+                                "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
+                                hoveredPhoto === photo.id ? "opacity-100" : "opacity-0"
+                              )}>
+                                <div className="flex gap-2">
+                                  {isOwnProfile && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(photo.id);
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Featured badge */}
+                              {photo.is_featured && (
+                                <Badge className="absolute top-2 left-2 bg-yellow-500">
+                                  Featured
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                            <DialogTitle>{photo.title}</DialogTitle>
+                          </DialogHeader>
+                          <div className="max-h-[80vh] overflow-auto">
+                            <img
+                              src={photoUrl}
+                              alt={photo.title || 'Photo'}
+                              className="w-full h-auto rounded-lg"
+                            />
+                            {photo.description && (
+                              <p className="mt-4 text-gray-600">{photo.description}</p>
+                            )}
+                            {photo.tags && photo.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-4">
+                                {photo.tags.map((tag) => (
+                                  <Badge key={tag} variant="outline">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="max-w-2xl">
+          <MediaUpload 
+            mediaType={uploadingType} 
+            onMediaAdded={handleMediaAdded}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

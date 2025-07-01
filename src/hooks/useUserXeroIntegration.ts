@@ -62,9 +62,10 @@ export const useUserXeroIntegration = () => {
     mutationFn: async () => {
       if (!user?.id || !integration?.id) throw new Error('No integration found');
 
+      // Completely remove the integration record when disconnecting
       const { error } = await supabase
         .from('xero_integrations')
-        .update({ connection_status: 'disconnected' })
+        .delete()
         .eq('id', integration.id);
 
       if (error) throw error;
@@ -72,6 +73,8 @@ export const useUserXeroIntegration = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-xero-integration', user?.id] });
+      // Also clear the local cache to immediately update UI
+      queryClient.setQueryData(['user-xero-integration', user?.id], null);
     },
   });
 
