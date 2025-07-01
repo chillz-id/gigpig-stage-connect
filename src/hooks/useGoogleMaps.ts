@@ -44,12 +44,17 @@ export const useGoogleMaps = (): GoogleMapsConfig => {
         script.defer = true;
         
         script.onerror = () => {
-          reject(new Error('Failed to load Google Maps script'));
+          console.error('Google Maps script failed to load');
+          // Don't reject immediately - allow manual address entry
+          setIsLoaded(false);
+          resolve(); // Resolve instead of reject to allow graceful fallback
         };
 
         document.head.appendChild(script);
       } catch (error) {
-        reject(error);
+        console.error('Error loading Google Maps script:', error);
+        setIsLoaded(false);
+        resolve(); // Resolve to allow fallback behavior
       }
     });
   };

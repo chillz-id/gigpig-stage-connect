@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ const initialFormData: EventFormData = {
   showLevel: '',
   showType: '',
   customShowType: '',
-  ticketingType: 'gigpigs',
+  ticketingType: 'external', // Changed default to external
   externalTicketUrl: '',
   tickets: [],
   feeHandling: 'absorb',
@@ -86,11 +87,16 @@ export const CreateEventForm: React.FC = () => {
     e.preventDefault();
     
     if (!user) {
-      toast({
+      // Auto-dismiss notification after 3 seconds
+      const { dismiss } = toast({
         title: "Authentication required",
         description: "Please log in to create an event.",
         variant: "destructive",
       });
+      
+      setTimeout(() => {
+        dismiss();
+      }, 3000);
       return;
     }
 

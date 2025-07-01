@@ -7,25 +7,22 @@ import { useNavigate } from 'react-router-dom';
 import { CreateEventForm } from '@/components/CreateEventForm';
 
 const CreateEvent = () => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Admin should have access to everything, including creating events
-  const isAdmin = hasRole('admin');
-  const isPromoter = hasRole('promoter') || isAdmin;
-
-  if (!user || !isPromoter) {
+  // Only require authentication - no role restrictions
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center p-4">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white max-w-md w-full">
           <CardContent className="p-6 sm:p-8 text-center">
-            <h1 className="text-xl sm:text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-purple-100 mb-4 text-sm sm:text-base">You need promoter access to create events.</p>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4">Authentication Required</h1>
+            <p className="text-purple-100 mb-4 text-sm sm:text-base">Please log in to create events.</p>
             <Button 
-              onClick={() => navigate('/pricing')} 
+              onClick={() => navigate('/auth')} 
               className="bg-gradient-to-r from-pink-500 to-purple-500 w-full"
             >
-              Upgrade to Premium
+              Log In
             </Button>
           </CardContent>
         </Card>

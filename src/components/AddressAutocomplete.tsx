@@ -40,9 +40,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         })
         .catch((error) => {
           console.error('Failed to load Google Places:', error);
+          // Show a more user-friendly message for Google Maps issues
           toast({
-            title: "Maps loading failed",
-            description: "Unable to load address autocomplete. Please check your API key configuration.",
+            title: "Maps service unavailable",
+            description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
             variant: "destructive",
           });
         })
@@ -90,11 +91,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       setAutocomplete(autocompleteInstance);
     } catch (error) {
       console.error('Error initializing Google Places Autocomplete:', error);
-      toast({
-        title: "Autocomplete initialization failed",
-        description: "Please verify your Google Maps API key is valid and has Places API enabled.",
-        variant: "destructive",
-      });
+      // Don't show error toast here as it would be too intrusive
+      // The component will still work as a regular input field
     }
   };
 
@@ -105,11 +103,16 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         placeholder={placeholder}
         defaultValue={defaultValue}
         className={`${className} ${(!isLoaded || isInitializing) ? 'bg-muted/50' : 'bg-background/50'}`}
-        disabled={!isLoaded || isInitializing}
+        disabled={isInitializing}
       />
-      {(!isLoaded || isInitializing) && (
+      {isInitializing && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+      {!isLoaded && !isInitializing && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground bg-muted/20 rounded">
+          Manual entry only
         </div>
       )}
     </div>
