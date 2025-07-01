@@ -6,6 +6,22 @@ import { InvoiceDetails } from './InvoiceDetails';
 import { useNavigate } from 'react-router-dom';
 import { Invoice } from '@/types/invoice';
 
+// Transform database invoice to match InvoiceDetails component expectations
+const transformInvoiceForDetails = (invoice: Invoice) => {
+  return {
+    id: invoice.id,
+    number: invoice.invoice_number,
+    clientName: invoice.invoice_recipients.length > 0 ? invoice.invoice_recipients[0].recipient_name : 'No recipient',
+    amount: invoice.total_amount,
+    dueDate: invoice.due_date,
+    createdDate: invoice.issue_date,
+    status: invoice.status,
+    currency: invoice.currency,
+    // Include original invoice data for any additional properties needed
+    ...invoice
+  };
+};
+
 export const InvoiceManagement: React.FC = () => {
   const { invoices, loading } = useInvoices();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -38,7 +54,7 @@ export const InvoiceManagement: React.FC = () => {
       />
 
       <InvoiceDetails
-        invoice={selectedInvoice}
+        invoice={selectedInvoice ? transformInvoiceForDetails(selectedInvoice) : null}
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
       />
