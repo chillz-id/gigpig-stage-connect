@@ -17,9 +17,10 @@ interface ComedianHeaderProps {
     email: string | null;
   };
   onShare: () => void;
+  onContact: () => void;
 }
 
-const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare }) => {
+const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare, onContact }) => {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 rounded-2xl">
       {/* Background pattern */}
@@ -60,6 +61,7 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare }) =>
                 email={comedian.email}
                 name={comedian.name}
                 onShare={onShare}
+                onContact={onContact}
               />
             </div>
           </div>
