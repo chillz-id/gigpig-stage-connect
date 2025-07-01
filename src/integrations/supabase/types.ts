@@ -295,6 +295,59 @@ export type Database = {
           },
         ]
       }
+      comedian_reviews: {
+        Row: {
+          comedian_id: string
+          created_at: string
+          event_date: string | null
+          event_name: string | null
+          id: string
+          is_featured: boolean | null
+          is_public: boolean | null
+          rating: number | null
+          review_text: string
+          reviewer_name: string
+          reviewer_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          comedian_id: string
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          rating?: number | null
+          review_text: string
+          reviewer_name: string
+          reviewer_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comedian_id?: string
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          rating?: number | null
+          review_text?: string
+          reviewer_name?: string
+          reviewer_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comedian_reviews_comedian_id_fkey"
+            columns: ["comedian_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_requests: {
         Row: {
           comedian_id: string
@@ -1191,12 +1244,20 @@ export type Database = {
           created_at: string | null
           custom_show_types: string[] | null
           email: string
+          facebook_url: string | null
           id: string
+          instagram_url: string | null
           is_verified: boolean | null
           location: string | null
           name: string | null
+          phone: string | null
+          show_contact_in_epk: boolean | null
           stage_name: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string | null
+          website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1204,12 +1265,20 @@ export type Database = {
           created_at?: string | null
           custom_show_types?: string[] | null
           email: string
+          facebook_url?: string | null
           id: string
+          instagram_url?: string | null
           is_verified?: boolean | null
           location?: string | null
           name?: string | null
+          phone?: string | null
+          show_contact_in_epk?: boolean | null
           stage_name?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1217,12 +1286,20 @@ export type Database = {
           created_at?: string | null
           custom_show_types?: string[] | null
           email?: string
+          facebook_url?: string | null
           id?: string
+          instagram_url?: string | null
           is_verified?: boolean | null
           location?: string | null
           name?: string | null
+          phone?: string | null
+          show_contact_in_epk?: boolean | null
           stage_name?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -1595,6 +1672,15 @@ export type Database = {
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_comedian_stats: {
+        Args: { comedian_id_param: string }
+        Returns: {
+          total_shows: number
+          confirmed_shows: number
+          total_vouches: number
+          average_rating: number
+        }[]
       }
       has_role: {
         Args: {

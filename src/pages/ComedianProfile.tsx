@@ -4,11 +4,8 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Mail, MapPin, Calendar, Trophy, Video, Image as ImageIcon, Music, Share2 } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { mockComedians } from '@/data/mockComedians';
 import ComedianHeader from '@/components/comedian-profile/ComedianHeader';
@@ -17,6 +14,9 @@ import ComedianMedia from '@/components/comedian-profile/ComedianMedia';
 import ComedianAccomplishments from '@/components/comedian-profile/ComedianAccomplishments';
 import ComedianUpcomingShows from '@/components/comedian-profile/ComedianUpcomingShows';
 import ComedianProducingEvents from '@/components/comedian-profile/ComedianProducingEvents';
+import ComedianReviews from '@/components/comedian-profile/ComedianReviews';
+import ComedianStats from '@/components/comedian-profile/ComedianStats';
+import ComedianContact from '@/components/comedian-profile/ComedianContact';
 
 const ComedianProfile = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -27,12 +27,10 @@ const ComedianProfile = () => {
     queryFn: async () => {
       if (!slug) throw new Error('No comedian slug provided');
       
-      
       // Convert slug back to name for database query
       const name = slug.split('-').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ');
-      
       
       // First try to find in database
       const { data: dbData, error: dbError } = await supabase
@@ -40,7 +38,6 @@ const ComedianProfile = () => {
         .select('*')
         .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
         .maybeSingle();
-      
       
       if (dbData) {
         return dbData;
@@ -52,7 +49,6 @@ const ComedianProfile = () => {
         const comedianSlug = comedian.name.toLowerCase().replace(/\s+/g, '-');
         return comedianSlug === slug;
       });
-      
       
       if (mockComedian) {
         return mockComedian;
@@ -160,8 +156,17 @@ const ComedianProfile = () => {
           {/* Header Section */}
           <ComedianHeader comedian={comedian} onShare={handleShare} />
           
+          {/* Performance Statistics */}
+          <ComedianStats comedianId={comedian.id} />
+          
           {/* Bio Section */}
           <ComedianBio comedian={comedian} />
+          
+          {/* Reviews & Testimonials */}
+          <ComedianReviews comedianId={comedian.id} />
+          
+          {/* Contact Information */}
+          <ComedianContact comedian={comedian} />
           
           {/* Media Showcase */}
           <ComedianMedia comedianId={comedian.id} />
