@@ -163,17 +163,17 @@
     @apply hover:shadow-2xl hover:scale-[1.02] transition-all duration-300;
   }
 
-  /* Professional styling (theme-aware) without glass effects */
+  /* Professional styling (theme-aware) without glass effects - removed circular reference */
   .professional-card {
-    @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.01];
+    @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] rounded-2xl shadow-xl border;
   }
   
   .theme-pleasure .professional-card {
-    @apply solid-card;
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
   }
   
   .theme-business .professional-card {
-    @apply bg-gray-800/95 border-gray-600/40 rounded-2xl shadow-xl shadow-black/25;
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
   }
 }
 
