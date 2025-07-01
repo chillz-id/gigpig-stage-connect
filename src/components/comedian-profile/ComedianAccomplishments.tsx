@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Star, ExternalLink } from 'lucide-react';
 import { Marquee } from '@/components/ui/marquee';
+import { cn } from '@/lib/utils';
 
 interface ComedianAccomplishmentsProps {
   comedianId: string;
