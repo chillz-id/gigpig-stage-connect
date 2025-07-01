@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
 });
 
 const LoadingFallback = () => (
-  <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
     <LoadingSpinner size="lg" />
   </div>
 );
@@ -50,7 +50,7 @@ function App() {
           <AuthProvider>
             <UserProvider>
               <Router>
-                <div className="min-h-screen bg-background text-foreground">
+                <div className="min-h-screen transition-all duration-200">
                   <Navigation />
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>

@@ -1,20 +1,33 @@
-import * as React from "react"
 
+import * as React from "react"
+import { useTheme } from "@/contexts/ThemeContext"
 import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { theme } = useTheme();
+  
+  const getThemeStyles = () => {
+    if (theme === 'pleasure') {
+      return "backdrop-blur-md bg-white/10 border-white/20 shadow-xl";
+    }
+    return "bg-gray-700 border-gray-600 shadow-lg";
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-lg border text-card-foreground shadow-sm transition-all duration-200",
+        getThemeStyles(),
+        className
+      )}
+      {...props}
+    />
+  );
+});
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<

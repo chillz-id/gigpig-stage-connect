@@ -2,7 +2,7 @@
 import React from 'react';
 
 const MobileThemeControls: React.FC = () => {
-  // Theme controls removed - website is now dark mode only
+  // Theme controls have been replaced with Business/Pleasure theme toggle in Navigation
   return null;
 };
 

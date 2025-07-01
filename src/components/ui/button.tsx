@@ -1,7 +1,8 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-
+import { useTheme } from "@/contexts/ThemeContext"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -41,10 +42,47 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const { theme } = useTheme();
     const Comp = asChild ? Slot : "button"
+    
+    const getThemeStyles = (currentVariant: string | null | undefined) => {
+      if (theme === 'pleasure') {
+        switch (currentVariant) {
+          case 'default':
+            return "bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30";
+          case 'outline':
+            return "border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm";
+          case 'ghost':
+            return "hover:bg-white/10 text-white hover:backdrop-blur-sm";
+          case 'secondary':
+            return "bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm";
+          default:
+            return "";
+        }
+      } else {
+        switch (currentVariant) {
+          case 'default':
+            return "bg-red-600 hover:bg-red-700 text-white";
+          case 'outline':
+            return "border-gray-600 bg-gray-700 hover:bg-gray-600 text-gray-100";
+          case 'ghost':
+            return "hover:bg-gray-700 text-gray-100";
+          case 'secondary':
+            return "bg-gray-700 text-gray-100 hover:bg-gray-600";
+          default:
+            return "";
+        }
+      }
+    };
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size }),
+          getThemeStyles(variant),
+          "transition-all duration-200",
+          className
+        )}
         ref={ref}
         {...props}
       />
