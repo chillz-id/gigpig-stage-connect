@@ -1251,6 +1251,7 @@ export type Database = {
           location: string | null
           name: string | null
           phone: string | null
+          profile_slug: string | null
           show_contact_in_epk: boolean | null
           stage_name: string | null
           tiktok_url: string | null
@@ -1272,6 +1273,7 @@ export type Database = {
           location?: string | null
           name?: string | null
           phone?: string | null
+          profile_slug?: string | null
           show_contact_in_epk?: boolean | null
           stage_name?: string | null
           tiktok_url?: string | null
@@ -1293,6 +1295,7 @@ export type Database = {
           location?: string | null
           name?: string | null
           phone?: string | null
+          profile_slug?: string | null
           show_contact_in_epk?: boolean | null
           stage_name?: string | null
           tiktok_url?: string | null
