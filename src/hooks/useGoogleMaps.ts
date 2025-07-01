@@ -59,8 +59,19 @@ export const useGoogleMaps = (): GoogleMapsConfig => {
         };
 
         const script = document.createElement('script');
-        // Note: Using a placeholder URL - in production, you'll need a real API key
-        script.src = `https://maps.googleapis.com/maps/api/js?libraries=places&callback=${callbackName}`;
+        
+        // Check for environment variable first, use demo key if none provided
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'DEMO_KEY_PLEASE_CONFIGURE';
+        
+        if (apiKey === 'DEMO_KEY_PLEASE_CONFIGURE') {
+          console.warn('⚠️ Google Maps API key not configured. Please set VITE_GOOGLE_MAPS_API_KEY environment variable.');
+          // Don't load script without proper API key
+          setIsLoaded(false);
+          resolve();
+          return;
+        }
+        
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
         script.async = true;
         script.defer = true;
         

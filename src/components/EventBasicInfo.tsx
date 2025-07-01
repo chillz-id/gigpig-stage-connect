@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { GoogleMapsSetupCard } from './GoogleMapsSetupCard';
+import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 
 interface EventBasicInfoProps {
   formData: {
@@ -23,6 +25,24 @@ interface EventBasicInfoProps {
 }
 
 export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onFormDataChange }) => {
+  const { isLoaded, loadScript } = useGoogleMaps();
+  const [showMapsSetup, setShowMapsSetup] = useState(false);
+  const [hasTriedLoading, setHasTriedLoading] = useState(false);
+
+  useEffect(() => {
+    if (!hasTriedLoading) {
+      setHasTriedLoading(true);
+      loadScript().then(() => {
+        // Check if it failed to load (no API key)
+        setTimeout(() => {
+          if (!isLoaded) {
+            setShowMapsSetup(true);
+          }
+        }, 2000);
+      });
+    }
+  }, [isLoaded, loadScript, hasTriedLoading]);
+
   const handleAddressSelect = (address: string, placeDetails?: any) => {
     
     // Update address
@@ -52,14 +72,19 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
   };
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Star className="w-5 h-5" />
-          Event Title & Venue Information
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      {showMapsSetup && (
+        <GoogleMapsSetupCard onDismiss={() => setShowMapsSetup(false)} />
+      )}
+      
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="w-5 h-5" />
+            Event Title & Venue Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="title">Event Title *</Label>
@@ -167,7 +192,8 @@ export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onForm
             </Select>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

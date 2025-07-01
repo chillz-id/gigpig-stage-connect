@@ -119,14 +119,41 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
+  // Handle manual address input when Google Maps is not available
+  const [manualInputTimeout, setManualInputTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  const handleManualInput = (value: string) => {
+    if (!isLoaded && value.trim()) {
+      // Clear previous timeout
+      if (manualInputTimeout) {
+        clearTimeout(manualInputTimeout);
+      }
+      
+      // Set new timeout for manual entry
+      const timeoutId = setTimeout(() => {
+        onAddressSelect(value.trim());
+      }, 1000); // Increased delay to 1 second
+      
+      setManualInputTimeout(timeoutId);
+    }
+  };
+
   return (
     <div className="relative">
       <Input
         ref={inputRef}
-        placeholder={placeholder}
+        placeholder={!isLoaded && !isInitializing ? 
+          "Enter full address manually..." : 
+          placeholder
+        }
         defaultValue={defaultValue}
         className={`${className} ${(!isLoaded || isInitializing) ? 'bg-muted/50' : 'bg-background/50'}`}
         disabled={isInitializing}
+        onChange={(e) => {
+          if (!isLoaded) {
+            handleManualInput(e.target.value);
+          }
+        }}
       />
       {isInitializing && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -134,8 +161,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         </div>
       )}
       {!isLoaded && !isInitializing && (
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground bg-muted/20 rounded">
-          Manual entry only
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground">
+          📍 Manual entry
         </div>
       )}
       {/* Debug info - remove this in production */}
