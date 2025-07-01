@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { XeroSyncButton } from './XeroSyncButton';
 
 export const FinancialInformation: React.FC = () => {
   const { toast } = useToast();
@@ -96,6 +97,9 @@ export const FinancialInformation: React.FC = () => {
         <Button onClick={handleSaveFinancialInfo} className="professional-button">
           Save Financial Information
         </Button>
+
+        {/* XERO Integration Section */}
+        <XeroSyncButton />
       </CardContent>
     </Card>
   );
