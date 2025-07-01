@@ -60,10 +60,6 @@ const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian 
               <Calendar className="w-6 h-6 text-white" />
             </div>
           )}
-          
-          <div className="absolute top-0 right-0 z-10 opacity-60 hover:opacity-100 transition-opacity cursor-pointer" onClick={handleShare}>
-            <Share2 className="w-6 h-6 text-white" />
-          </div>
 
           {/* Header Section */}
           <ComedianHeader comedian={comedian} onShare={handleShare} onContact={handleContact} />

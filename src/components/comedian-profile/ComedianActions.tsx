@@ -34,22 +34,22 @@ const ComedianActions: React.FC<ComedianActionsProps> = ({ email, name, onShare,
     <div className="relative">
       {/* Main Actions Container */}
       <div className="flex flex-col gap-6 mt-4">
-        {/* Book Now */}
-        <div className="flex items-center group">
-          <div
-            className={`relative cursor-pointer transition-all duration-200 ${
-              isHovered('book') ? 'transform -translate-y-1' : ''
-            } ${isClicked('book') ? 'transform translate-y-0.5' : ''}`}
-            onMouseEnter={() => setHoveredAction('book')}
-            onMouseLeave={() => setHoveredAction(null)}
-            onClick={() => handleClick('book')}
-          >
+        {/* Book Now - Make entire container clickable */}
+        <div 
+          className={`flex items-center group cursor-pointer transition-all duration-200 ${
+            isHovered('book') ? 'transform -translate-y-1' : ''
+          } ${isClicked('book') ? 'transform translate-y-0.5' : ''}`}
+          onMouseEnter={() => setHoveredAction('book')}
+          onMouseLeave={() => setHoveredAction(null)}
+          onClick={() => handleClick('book')}
+        >
+          <div className="relative">
             <Mail className="w-6 h-6 text-white" />
           </div>
           
-          {/* Animated Text */}
+          {/* Animated Text - Now clickable */}
           <div className={`overflow-hidden transition-all duration-500 ${showBookText ? 'w-auto ml-3' : 'w-0'}`}>
-            <span className={`text-white text-lg font-medium whitespace-nowrap transition-transform duration-500 ${
+            <span className={`text-white text-lg font-medium whitespace-nowrap transition-transform duration-500 hover:text-purple-300 ${
               showBookText ? 'translate-x-0' : 'translate-x-full'
             }`}>
               Book Now
