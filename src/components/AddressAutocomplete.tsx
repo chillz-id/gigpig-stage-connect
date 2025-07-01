@@ -33,24 +33,16 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const { isLoaded, loadScript } = useGoogleMaps();
 
   useEffect(() => {
-    console.log('=== ADDRESS AUTOCOMPLETE DEBUG ===');
-    console.log('isLoaded:', isLoaded);
-    console.log('isInitializing:', isInitializing);
-    console.log('window.google exists:', !!window.google);
-    
     if (!isLoaded && !isInitializing) {
       setIsInitializing(true);
       setDebugInfo('Loading Google Maps script...');
-      console.log('Starting Google Maps script load...');
       
       loadScript()
         .then(() => {
-          console.log('Google Maps script loaded successfully');
           setDebugInfo('Google Maps loaded, initializing autocomplete...');
           initializeAutocomplete();
         })
         .catch((error) => {
-          console.error('Failed to load Google Places:', error);
           setDebugInfo(`Error loading Google Maps: ${error.message || 'Unknown error'}`);
           toast({
             title: "Maps service unavailable",
@@ -62,7 +54,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           setIsInitializing(false);
         });
     } else if (isLoaded) {
-      console.log('Google Maps already loaded, initializing autocomplete...');
       setDebugInfo('Initializing autocomplete...');
       initializeAutocomplete();
     }
@@ -70,31 +61,26 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const initializeAutocomplete = () => {
     if (!inputRef.current) {
-      console.error('Input ref not available');
       setDebugInfo('Error: Input element not found');
       return;
     }
     
     if (!window.google) {
-      console.error('Google Maps not available');
       setDebugInfo('Error: Google Maps not available');
       return;
     }
 
     if (!window.google.maps) {
-      console.error('Google Maps API not loaded');
       setDebugInfo('Error: Google Maps API not loaded');
       return;
     }
 
     if (!window.google.maps.places) {
-      console.error('Google Places API not loaded');
       setDebugInfo('Error: Google Places API not loaded');
       return;
     }
 
     try {
-      console.log('Creating Google Places Autocomplete instance...');
       const autocompleteInstance = new window.google.maps.places.Autocomplete(
         inputRef.current,
         {
@@ -106,7 +92,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       autocompleteInstance.addListener('place_changed', () => {
         const place = autocompleteInstance.getPlace();
-        console.log('Place selected:', place);
         
         if (!place.formatted_address) {
           toast({
@@ -127,9 +112,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       setAutocomplete(autocompleteInstance);
       setDebugInfo('Autocomplete initialized successfully!');
-      console.log('Google Places Autocomplete initialized successfully');
     } catch (error) {
-      console.error('Error initializing Google Places Autocomplete:', error);
       setDebugInfo(`Error initializing autocomplete: ${error.message || 'Unknown error'}`);
       // Don't show error toast here as it would be too intrusive
       // The component will still work as a regular input field
