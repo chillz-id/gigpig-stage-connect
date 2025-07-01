@@ -64,13 +64,13 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 
   return (
     <MagicCard 
-      className="relative overflow-hidden aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+      className="relative aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
       gradientColor={magicColors.gradientColor}
       gradientFrom={magicColors.gradientFrom}
       gradientTo={magicColors.gradientTo}
     >
       <div 
-        className="relative w-full h-full"
+        className="relative w-full h-full overflow-hidden rounded-2xl"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

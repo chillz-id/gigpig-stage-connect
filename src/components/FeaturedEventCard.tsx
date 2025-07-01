@@ -49,13 +49,13 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
 
   return (
     <MagicCard 
-      className="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+      className="w-full aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
       gradientColor={magicColors.gradientColor}
       gradientFrom={magicColors.gradientFrom}
       gradientTo={magicColors.gradientTo}
     >
       <div 
-        className="relative w-full h-full"
+        className="relative w-full h-full overflow-hidden rounded-2xl"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -75,7 +75,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/30" />
         
-        {/* Heart Icon - Top Right - No background */}
+        {/* Heart Icon - Top Right */}
         <button
           onClick={handleLikeToggle}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-200 hover:scale-110 z-10"
