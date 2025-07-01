@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { MagicCard } from '@/components/ui/magic-card';
 import { useTheme } from '@/contexts/ThemeContext';
+import { MapPin } from 'lucide-react';
 
 interface ShowCardProps {
   show: any;
@@ -98,20 +99,23 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 
         {/* Content - Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
-          <div className="space-y-2 mb-4">
+          <div className="space-y-3">
             {/* Show Title */}
-            <h3 className="text-xl font-bold leading-tight">
+            <h3 className="text-lg font-bold leading-tight">
               {show.title}
             </h3>
             
-            {/* Venue */}
-            <p className="text-sm opacity-90">
-              {show.venue}
-            </p>
+            {/* Location with Icon - Bottom Left */}
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 opacity-80 flex-shrink-0" />
+              <p className="text-sm opacity-90 truncate">
+                {show.venue}
+              </p>
+            </div>
           </div>
 
           {/* Apply Button - Bottom Right - Fade in on hover */}
-          <div className="flex justify-end">
+          <div className="absolute bottom-4 right-4">
             {isIndustryUser && (
               <div
                 className={`transition-opacity duration-300 ${
