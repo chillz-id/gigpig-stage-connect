@@ -7,9 +7,20 @@ export interface Invoice {
   status: string;
   total_amount: number;
   currency: string;
+  promoter_id?: string;
+  comedian_id?: string;
+  sender_name?: string;
+  sender_email?: string;
+  sender_address?: string;
+  sender_phone?: string;
+  sender_abn?: string;
+  client_address?: string;
+  client_mobile?: string;
+  gst_treatment?: 'inclusive' | 'exclusive' | 'none';
   invoice_recipients: Array<{
     recipient_name: string;
     recipient_email: string;
+    recipient_mobile?: string;
   }>;
 }
 

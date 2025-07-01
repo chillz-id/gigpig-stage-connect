@@ -29,8 +29,8 @@ const InvoiceList: React.FC = () => {
     setAmountRange(DEFAULT_AMOUNT_RANGE);
   };
 
-  // Show access denied for non-promoters/admins
-  if (!user || (!hasRole('promoter') && !hasRole('admin'))) {
+  // Show access denied for users without invoice access
+  if (!user || (!hasRole('promoter') && !hasRole('comedian') && !hasRole('admin'))) {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl sm:text-3xl font-bold">Invoices</h2>
@@ -39,7 +39,7 @@ const InvoiceList: React.FC = () => {
             <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-amber-600" />
             <h3 className="text-xl font-semibold text-amber-800 mb-2">Access Required</h3>
             <p className="text-amber-700">
-              You need promoter or admin access to manage invoices.
+              You need promoter, comedian, or admin access to manage invoices.
             </p>
           </CardContent>
         </Card>

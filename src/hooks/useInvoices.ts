@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,22 +6,22 @@ import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, is
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user && (hasRole('promoter') || hasRole('comedian') || hasRole('admin'))) {
       console.log('=== FETCHING INVOICES ===', user.id);
       fetchInvoices();
     } else {
-      console.log('=== NO USER, CLEARING INVOICES ===');
+      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===');
       setInvoices([]);
       setLoading(false);
       setError(null);
     }
-  }, [user]);
+  }, [user, hasRole]);
 
   const fetchInvoices = async () => {
     if (!user) {
@@ -47,12 +46,23 @@ export const useInvoices = () => {
           status,
           total_amount,
           currency,
+          promoter_id,
+          comedian_id,
+          sender_name,
+          sender_email,
+          sender_address,
+          sender_phone,
+          sender_abn,
+          client_address,
+          client_mobile,
+          gst_treatment,
           invoice_recipients (
             recipient_name,
-            recipient_email
+            recipient_email,
+            recipient_mobile
           )
         `)
-        .eq('promoter_id', user.id)
+        .or(`promoter_id.eq.${user.id},comedian_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       console.log('=== INVOICE FETCH RESPONSE ===', { data, error });

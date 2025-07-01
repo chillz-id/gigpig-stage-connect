@@ -933,6 +933,7 @@ export type Database = {
           is_primary: boolean
           recipient_address: string | null
           recipient_email: string
+          recipient_mobile: string | null
           recipient_name: string
         }
         Insert: {
@@ -942,6 +943,7 @@ export type Database = {
           is_primary?: boolean
           recipient_address?: string | null
           recipient_email: string
+          recipient_mobile?: string | null
           recipient_name: string
         }
         Update: {
@@ -951,6 +953,7 @@ export type Database = {
           is_primary?: boolean
           recipient_address?: string | null
           recipient_email?: string
+          recipient_mobile?: string | null
           recipient_name?: string
         }
         Relationships: [
@@ -965,16 +968,25 @@ export type Database = {
       }
       invoices: {
         Row: {
+          client_address: string | null
+          client_mobile: string | null
+          comedian_id: string | null
           created_at: string
           currency: string
           due_date: string
           event_id: string | null
+          gst_treatment: string | null
           id: string
           invoice_number: string
           issue_date: string
           notes: string | null
           payment_terms: string | null
           promoter_id: string
+          sender_abn: string | null
+          sender_address: string | null
+          sender_email: string | null
+          sender_name: string | null
+          sender_phone: string | null
           status: string
           subtotal: number
           tax_amount: number
@@ -983,16 +995,25 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_address?: string | null
+          client_mobile?: string | null
+          comedian_id?: string | null
           created_at?: string
           currency?: string
           due_date: string
           event_id?: string | null
+          gst_treatment?: string | null
           id?: string
           invoice_number: string
           issue_date?: string
           notes?: string | null
           payment_terms?: string | null
           promoter_id: string
+          sender_abn?: string | null
+          sender_address?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -1001,16 +1022,25 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_address?: string | null
+          client_mobile?: string | null
+          comedian_id?: string | null
           created_at?: string
           currency?: string
           due_date?: string
           event_id?: string | null
+          gst_treatment?: string | null
           id?: string
           invoice_number?: string
           issue_date?: string
           notes?: string | null
           payment_terms?: string | null
           promoter_id?: string
+          sender_abn?: string | null
+          sender_address?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number

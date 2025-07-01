@@ -35,6 +35,7 @@ export const InvoiceManagement: React.FC = () => {
   console.log('=== INVOICE MANAGEMENT RENDER ===', {
     user: user?.id,
     hasPromoterRole: hasRole('promoter'),
+    hasComedianRole: hasRole('comedian'),
     hasAdminRole: hasRole('admin'),
     loading,
     error,
@@ -51,14 +52,14 @@ export const InvoiceManagement: React.FC = () => {
   };
 
   // Show authentication error if user doesn't have the right role
-  if (!user || (!hasRole('promoter') && !hasRole('admin'))) {
+  if (!user || (!hasRole('promoter') && !hasRole('comedian') && !hasRole('admin'))) {
     return (
       <Card className="border-amber-200 bg-amber-50">
         <CardContent className="p-6 text-center">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-amber-600" />
           <h3 className="text-lg font-semibold text-amber-800 mb-2">Access Required</h3>
           <p className="text-amber-700">
-            You need promoter or admin access to view invoices.
+            You need promoter, comedian, or admin access to view invoices.
           </p>
         </CardContent>
       </Card>
