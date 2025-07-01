@@ -81,9 +81,12 @@ const Navigation = () => {
             <Link to="/" className="flex items-center gap-3">
               <img 
                 src="/id-logo.png" 
-                alt="iD Comedy" 
+                alt="Stand Up Sydney" 
                 className="h-8 w-auto"
               />
+              <span className="font-bold text-lg text-white hidden sm:block">
+                Stand Up Sydney
+              </span>
             </Link>
 
             {/* Desktop Menu */}
