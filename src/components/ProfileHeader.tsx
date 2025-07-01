@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useToast } from '@/hooks/use-toast';
+import { ProfileUrlEditor } from '@/components/profile/ProfileUrlEditor';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProfileHeaderProps {
   user: any;
@@ -19,6 +22,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onLogout
 }) => {
   const { toast } = useToast();
+  const { profile } = useAuth();
   const { uploadFile, uploading } = useFileUpload({
     bucket: 'profile-images',
     maxSize: 5 * 1024 * 1024, // 5MB
@@ -89,6 +93,17 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </Badge>
             </div>
             <p className="text-muted-foreground mb-4">{userBio}</p>
+            
+            {/* Profile URL Editor */}
+            <div className="mb-4">
+              <ProfileUrlEditor
+                userId={user.id}
+                currentSlug={profile?.profile_slug}
+                userName={userName}
+                isOwner={true}
+              />
+            </div>
+            
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />

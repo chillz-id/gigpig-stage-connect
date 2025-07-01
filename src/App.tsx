@@ -18,6 +18,8 @@ import Applications from '@/pages/Applications';
 import Invoices from '@/pages/Invoices';
 import AdminDashboard from '@/pages/AdminDashboard';
 import EventDetail from '@/pages/EventDetail';
+import ComedianProfile from '@/pages/ComedianProfile';
+import ComedianProfileBySlug from '@/pages/ComedianProfileBySlug';
 import { Suspense } from 'react';
 
 const queryClient = new QueryClient({
@@ -62,6 +64,7 @@ function App() {
                       <Route path="/invoices/*" element={<Invoices />} />
                       <Route path="/admin" element={<AdminDashboard />} />
                       <Route path="/admin/events/:eventId" element={<EventDetail />} />
+                      <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>
