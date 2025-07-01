@@ -33,7 +33,8 @@ export const useProfileOperations = () => {
           tiktok_url,
           show_contact_in_epk,
           custom_show_types,
-          profile_slug
+          profile_slug,
+          years_experience
         `)
         .eq('id', userId)
         .single();

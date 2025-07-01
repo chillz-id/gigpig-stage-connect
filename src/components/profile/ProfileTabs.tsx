@@ -24,7 +24,7 @@ interface ProfileTabsProps {
   user: any;
   userInterests: any[];
   mockTickets: any[];
-  onSave: () => void;
+  onSave: (data: any) => Promise<void>;
 }
 
 export const ProfileTabs: React.FC<ProfileTabsProps> = ({

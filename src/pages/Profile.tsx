@@ -75,11 +75,32 @@ const Profile = () => {
     );
   }
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+  const handleSaveProfile = async (formData: any) => {
+    try {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Map form data to profile update format
+      const profileUpdate = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone || null,
+        bio: formData.bio || null,
+        location: formData.location || null,
+        years_experience: formData.yearsExperience ? parseInt(formData.yearsExperience) : null,
+        custom_show_types: formData.customShowTypes || [],
+        instagram_url: formData.instagramUrl || null,
+        twitter_url: formData.twitterUrl || null,
+        website_url: formData.websiteUrl || null,
+        youtube_url: formData.youtubeUrl || null,
+      };
+
+      await updateProfile(profileUpdate);
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      throw error; // Re-throw so the component can handle the error
+    }
   };
 
   const handleLogout = () => {
