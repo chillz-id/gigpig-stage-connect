@@ -17,7 +17,8 @@ import {
   Users,
   MessageCircle,
   BarChart3,
-  Plus
+  Plus,
+  Palette
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -77,16 +78,12 @@ const Navigation = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              <div className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm",
-                theme === 'pleasure' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-white'
-              )}>
-                SUS
-              </div>
-              <span className="font-bold text-lg text-white hidden sm:block">
-                Stand Up Sydney
-              </span>
+            <Link to="/" className="flex items-center gap-3">
+              <img 
+                src="/id-logo.png" 
+                alt="iD Comedy" 
+                className="h-8 w-auto"
+              />
             </Link>
 
             {/* Desktop Menu */}
@@ -125,6 +122,12 @@ const Navigation = () => {
               {hasRole('admin') && (
                 <Link to="/admin" className={getNavLinkClass('/admin')} title="Admin">
                   <Settings className="w-4 h-4" />
+                </Link>
+              )}
+
+              {hasRole('admin') && (
+                <Link to="/design-system" className={getNavLinkClass('/design-system')} title="Design System">
+                  <Palette className="w-4 h-4" />
                 </Link>
               )}
 
