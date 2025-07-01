@@ -95,6 +95,7 @@ const Applications = () => {
 
   const handleViewProfile = (comedianId: string) => {
     // Implementation for viewing comedian profile
+    console.log('View profile for comedian:', comedianId);
   };
 
   const handleClearFilters = () => {
@@ -112,10 +113,8 @@ const Applications = () => {
           <p className="text-purple-100">Review and manage comedian applications for your events</p>
         </div>
 
-        {/* Stats Cards */}
         <ApplicationStats stats={stats} />
-
-        {/* Filters */}
+        
         <ApplicationFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -129,7 +128,6 @@ const Applications = () => {
           onClearFilters={handleClearFilters}
         />
 
-        {/* Bulk Actions */}
         <BulkApplicationActions
           selectedApplications={selectedApplications}
           onBulkApprove={handleBulkApprove}
@@ -137,7 +135,6 @@ const Applications = () => {
           onClearSelection={() => setSelectedApplications([])}
         />
 
-        {/* Applications List */}
         <ApplicationList
           applications={filteredApplications}
           selectedApplications={selectedApplications}

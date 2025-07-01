@@ -5,24 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, EyeOff, Eye, Calendar, Clock, MapPin, Star } from 'lucide-react';
+import { Check, EyeOff, Eye, Calendar, MapPin, Star } from 'lucide-react';
+import { ApplicationData } from '@/services/applicationService';
 
 interface ApplicationCardProps {
-  application: {
-    id: string;
-    comedian_id: string;
-    comedian_name: string;
-    comedian_avatar?: string;
-    comedian_experience?: string;
-    comedian_rating?: number;
-    event_id: string;
-    event_title: string;
-    event_venue: string;
-    event_date: string;
-    applied_at: string;
-    status: 'pending' | 'accepted' | 'declined';
-    message?: string;
-  };
+  application: ApplicationData;
   isSelected?: boolean;
   onSelect?: (applicationId: string, selected: boolean) => void;
   onApprove: (applicationId: string) => void;
