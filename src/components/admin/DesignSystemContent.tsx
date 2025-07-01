@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Palette, Sliders, Type, Layout, Sparkles } from 'lucide-react';
 import ColorSystemControls from './design-system/ColorSystemControls';
 import ButtonDesignControls from './design-system/ButtonDesignControls';
+import TypographyControls from './design-system/TypographyControls';
+import LayoutControls from './design-system/LayoutControls';
+import EffectsControls from './design-system/EffectsControls';
 import LivePreviewPanel from './design-system/LivePreviewPanel';
 import PresetManagement from './design-system/PresetManagement';
 import { useDesignSystem } from '@/hooks/useDesignSystem';
@@ -61,36 +64,15 @@ const DesignSystemContent = () => {
           </TabsContent>
 
           <TabsContent value="typography">
-            <Card>
-              <CardHeader>
-                <CardTitle>Typography Controls</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Typography controls coming in Phase 2...</p>
-              </CardContent>
-            </Card>
+            <TypographyControls settings={settings} updateSetting={updateSetting} />
           </TabsContent>
 
           <TabsContent value="layout">
-            <Card>
-              <CardHeader>
-                <CardTitle>Layout & Spacing</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Layout controls coming in Phase 3...</p>
-              </CardContent>
-            </Card>
+            <LayoutControls settings={settings} updateSetting={updateSetting} />
           </TabsContent>
 
           <TabsContent value="effects">
-            <Card>
-              <CardHeader>
-                <CardTitle>Visual Effects</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Visual effects coming in Phase 3...</p>
-              </CardContent>
-            </Card>
+            <EffectsControls settings={settings} updateSetting={updateSetting} />
           </TabsContent>
         </Tabs>
       </div>
