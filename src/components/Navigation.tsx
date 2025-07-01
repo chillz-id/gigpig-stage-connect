@@ -12,11 +12,12 @@ import {
   LogOut, 
   Bell,
   Settings,
-  Palette,
   Menu,
   X,
   Users,
-  MessageCircle
+  MessageCircle,
+  BarChart3,
+  Plus
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -43,7 +44,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const getNavLinkClass = (path: string) => {
-    const baseClass = "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium";
+    const baseClass = "flex items-center justify-center p-2 rounded-lg transition-all duration-200 text-sm font-medium w-10 h-10";
     const activeClass = theme === 'pleasure' 
       ? 'bg-purple-600/80 text-white shadow-lg' 
       : 'bg-gray-700/80 text-white shadow-lg';
@@ -90,38 +91,30 @@ const Navigation = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-2">
-              <Link to="/browse" className={getNavLinkClass('/browse')}>
+              <Link to="/shows" className={getNavLinkClass('/shows')} title="Shows">
                 <Search className="w-4 h-4" />
-                Browse
               </Link>
 
-              <Link to="/comedians" className={getNavLinkClass('/comedians')}>
+              <Link to="/comedians" className={getNavLinkClass('/comedians')} title="Comedians">
                 <Users className="w-4 h-4" />
-                Comedians
+              </Link>
+
+              <Link to="/dashboard" className={getNavLinkClass('/dashboard')} title="Dashboard">
+                <BarChart3 className="w-4 h-4" />
               </Link>
 
               {hasRole('comedian') && (
-                <Link to="/applications" className={getNavLinkClass('/applications')}>
+                <Link to="/applications" className={getNavLinkClass('/applications')} title="Applications">
                   <Calendar className="w-4 h-4" />
-                  Applications
                 </Link>
               )}
 
-              {(hasRole('promoter') || hasRole('admin')) && (
-                <Link to="/organizer" className={getNavLinkClass('/organizer')}>
-                  <Calendar className="w-4 h-4" />
-                  Events
-                </Link>
-              )}
-
-              <Link to="/messages" className={getNavLinkClass('/messages')}>
+              <Link to="/messages" className={getNavLinkClass('/messages')} title="Messages">
                 <MessageCircle className="w-4 h-4" />
-                Messages
               </Link>
 
-              <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")}>
+              <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")} title="Notifications">
                 <Bell className="w-4 h-4" />
-                Notifications
                 {unreadCount > 0 && (
                   <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
                     {unreadCount}
@@ -130,22 +123,19 @@ const Navigation = () => {
               </Link>
 
               {hasRole('admin') && (
-                <Link to="/admin" className={getNavLinkClass('/admin')}>
+                <Link to="/admin" className={getNavLinkClass('/admin')} title="Admin">
                   <Settings className="w-4 h-4" />
-                  Admin
                 </Link>
               )}
 
-              {hasRole('admin') && (
-                <Link to="/design-system" className={getNavLinkClass('/design-system')}>
-                  <Palette className="w-4 h-4" />
-                  Design
+              {(hasRole('promoter') || hasRole('admin')) && (
+                <Link to="/create-event" className={getNavLinkClass('/create-event')} title="Create Event">
+                  <Plus className="w-4 h-4" />
                 </Link>
               )}
 
-              <Link to="/profile" className={getNavLinkClass('/profile')}>
+              <Link to="/profile" className={getNavLinkClass('/profile')} title="Profile">
                 <User className="w-4 h-4" />
-                Profile
               </Link>
 
               <ThemeControls />

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings, Palette } from 'lucide-react';
+import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavigationLinksProps {
@@ -26,12 +26,12 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     <div className="space-y-1 py-6">
       {/* Main Navigation */}
       <Link
-        to="/browse"
+        to="/shows"
         className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Search className="w-5 h-5" />
-        <span className="font-medium">Browse Shows</span>
+        <span className="font-medium">Shows</span>
       </Link>
 
       <Link
@@ -67,18 +67,6 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             </Link>
           )}
 
-          {/* Promoter Events */}
-          {isPromoter && (
-            <Link
-              to="/organizer"
-              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
-              onClick={handleLinkClick}
-            >
-              <Calendar className="w-5 h-5" />
-              <span className="font-medium">Events</span>
-            </Link>
-          )}
-
           <Link
             to="/messages"
             className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
@@ -106,18 +94,6 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             >
               <Settings className="w-5 h-5" />
               <span className="font-medium">Admin Dashboard</span>
-            </Link>
-          )}
-
-          {/* Design System - Admin only */}
-          {isAdmin && (
-            <Link
-              to="/design-system"
-              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
-              onClick={handleLinkClick}
-            >
-              <Palette className="w-5 h-5" />
-              <span className="font-medium">Design System</span>
             </Link>
           )}
 

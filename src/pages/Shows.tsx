@@ -11,7 +11,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 
-const Browse = () => {
+const Shows = () => {
   const { theme } = useTheme();
   const location = useLocation();
   
@@ -192,4 +192,4 @@ const Browse = () => {
   );
 };
 
-export default Browse;
+export default Shows;

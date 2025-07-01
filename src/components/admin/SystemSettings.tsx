@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Database, Mail, Shield, Globe, Bell } from 'lucide-react';
+import { Settings, Database, Mail, Shield, Globe, Bell, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -42,6 +42,30 @@ const SystemSettings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Design System Access */}
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Design System
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-white">Design System Control Panel</Label>
+              <p className="text-gray-300 text-sm">Customize the visual appearance and branding</p>
+            </div>
+            <Link to="/design-system">
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <Palette className="w-4 h-4 mr-2" />
+                Open Design System
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* General Settings */}
       <Card className="bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader>

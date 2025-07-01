@@ -12,7 +12,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
-import Browse from '@/pages/Browse';
+import Shows from '@/pages/Shows';
 import Profile from '@/pages/Profile';
 import CreateEvent from '@/pages/CreateEvent';
 import Applications from '@/pages/Applications';
@@ -22,7 +22,6 @@ import EventDetail from '@/pages/EventDetail';
 import ComedianProfile from '@/pages/ComedianProfile';
 import ComedianProfileBySlug from '@/pages/ComedianProfileBySlug';
 import DesignSystem from '@/pages/DesignSystem';
-import Organizer from '@/pages/Organizer';
 import Comedians from '@/pages/Comedians';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
@@ -63,10 +62,9 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/browse" element={<Browse />} />
-                      <Route path="/shows" element={<Navigate to="/browse" replace />} />
+                      <Route path="/shows" element={<Shows />} />
+                      <Route path="/browse" element={<Navigate to="/shows" replace />} />
                       <Route path="/comedians" element={<Comedians />} />
-                      <Route path="/organizer" element={<Organizer />} />
                       <Route path="/messages" element={<Messages />} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/profile" element={<Profile />} />
@@ -74,14 +72,7 @@ function App() {
                       <Route path="/applications" element={<Applications />} />
                       <Route path="/invoices/*" element={<Invoices />} />
                       <Route path="/admin" element={<AdminDashboard />} />
-                      <Route 
-                        path="/design-system" 
-                        element={
-                          <ProtectedRoute roles={['admin']}>
-                            <DesignSystem />
-                          </ProtectedRoute>
-                        } 
-                      />
+                      <Route path="/design-system" element={<DesignSystem />} />
                       <Route path="/admin/events/:eventId" element={<EventDetail />} />
                       <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
