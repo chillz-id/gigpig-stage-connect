@@ -129,7 +129,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
               e.stopPropagation();
               onToggleInterested(show);
             }}
-            className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm transition-all ${
+            className={`absolute top-3 left-3 p-2 rounded-full dynamic-blur transition-all ${
               isInterested 
                 ? 'bg-red-500 text-white shadow-lg' 
                 : 'bg-white/80 text-gray-600 hover:bg-white hover:shadow-md'

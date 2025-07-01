@@ -163,6 +163,30 @@ const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({ settings }) => {
           </div>
         </div>
 
+        {/* Glass Effect Demo */}
+        <div className="relative p-6 rounded-lg overflow-hidden mt-4">
+          {/* Background pattern to show blur effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 opacity-30"></div>
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width="20" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"%3E%3Cpath d="M 20 0 L 0 0 0 20" fill="none" stroke="%23ffffff" stroke-width="1" opacity="0.1"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%25" height="100%25" fill="url(%23grid)" /%3E%3C/svg%3E")'
+          }}></div>
+          
+          {/* Glass card with dynamic blur */}
+          <div 
+            className="relative glass-card p-4"
+            style={{
+              borderColor: settings.colors.border,
+            }}
+          >
+            <h4 className="font-semibold text-white mb-2">
+              Glass Effect Demo (Blur: {settings.effects.blurIntensity}px)
+            </h4>
+            <p className="text-white/80 text-sm">
+              This card demonstrates the dynamic blur effect. Adjust the blur intensity slider to see it change in real-time.
+            </p>
+          </div>
+        </div>
+
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground">
             Changes apply in real-time

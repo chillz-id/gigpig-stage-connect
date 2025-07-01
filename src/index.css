@@ -119,6 +119,24 @@
 }
 
 @layer components {
+  /* Dynamic blur utilities using design system variable */
+  .dynamic-blur {
+    backdrop-filter: blur(var(--blur-intensity, 8px));
+    -webkit-backdrop-filter: blur(var(--blur-intensity, 8px));
+  }
+  
+  .glass-card {
+    @apply rounded-2xl shadow-xl border dynamic-blur;
+  }
+  
+  .theme-pleasure .glass-card {
+    @apply bg-purple-800/70 border-purple-600/30 shadow-black/20;
+  }
+  
+  .theme-business .glass-card {
+    @apply bg-gray-800/75 border-gray-600/40 shadow-black/25;
+  }
+  
   /* Solid card utilities - no blur effects */
   .solid-card {
     @apply rounded-2xl shadow-xl border;

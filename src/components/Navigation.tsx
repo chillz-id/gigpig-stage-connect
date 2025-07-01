@@ -70,7 +70,7 @@ const Navigation = () => {
     <>
       {/* Desktop Navigation */}
       <nav className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md shadow-lg",
+        "fixed top-0 left-0 right-0 z-50 border-b dynamic-blur shadow-lg",
         theme === 'pleasure' 
           ? 'bg-purple-800/90 border-purple-600/30' 
           : 'bg-gray-800/95 border-gray-600/40'

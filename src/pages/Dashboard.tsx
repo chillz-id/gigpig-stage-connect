@@ -55,12 +55,12 @@ const Dashboard = () => {
   const getStatCardStyles = (isHighlight = false) => {
     if (theme === 'pleasure') {
       return isHighlight 
-        ? 'bg-white/[0.12] backdrop-blur-md border-white/[0.20] text-white' 
-        : 'bg-white/[0.06] backdrop-blur-sm border-white/[0.10] text-white';
+        ? 'bg-white/[0.12] dynamic-blur border-white/[0.20] text-white' 
+        : 'bg-white/[0.06] dynamic-blur border-white/[0.10] text-white';
     }
     return isHighlight 
-      ? 'bg-gray-700/80 border-gray-500 text-gray-100' 
-      : 'bg-gray-800/60 border-gray-600 text-gray-100';
+      ? 'bg-gray-700/80 dynamic-blur border-gray-500 text-gray-100' 
+      : 'bg-gray-800/60 dynamic-blur border-gray-600 text-gray-100';
   };
 
   return (
