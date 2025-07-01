@@ -61,26 +61,26 @@
     --chart-5: 340 75% 55%;
   }
 
-  /* Pleasure Theme - Updated with softer glass morphic effects */
+  /* Pleasure Theme - Pure glass morphism */
   .theme-pleasure {
     --background: 190 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: rgba(255, 255, 255, 0.08);
+    --card: rgba(255, 255, 255, 0.06);
     --card-foreground: 0 0% 98%;
-    --popover: rgba(255, 255, 255, 0.08);
+    --popover: rgba(255, 255, 255, 0.06);
     --popover-foreground: 0 0% 98%;
     --primary: 280 100% 70%;
     --primary-foreground: 0 0% 98%;
-    --secondary: rgba(255, 255, 255, 0.08);
+    --secondary: rgba(255, 255, 255, 0.06);
     --secondary-foreground: 0 0% 98%;
-    --muted: rgba(255, 255, 255, 0.04);
+    --muted: rgba(255, 255, 255, 0.03);
     --muted-foreground: 240 5% 84.9%;
-    --accent: rgba(255, 255, 255, 0.08);
+    --accent: rgba(255, 255, 255, 0.06);
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: rgba(255, 255, 255, 0.15);
-    --input: rgba(255, 255, 255, 0.08);
+    --border: transparent;
+    --input: rgba(255, 255, 255, 0.06);
     --ring: 280 100% 70%;
   }
 
@@ -88,22 +88,22 @@
   .theme-business {
     --background: 215 28% 17%;
     --foreground: 210 20% 98%;
-    --card: 217 19% 27%;
+    --card: rgba(55, 65, 81, 0.8);
     --card-foreground: 210 20% 98%;
-    --popover: 217 19% 27%;
+    --popover: rgba(55, 65, 81, 0.8);
     --popover-foreground: 210 20% 98%;
     --primary: 0 84% 60%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 215 25% 27%;
+    --secondary: rgba(55, 65, 81, 0.6);
     --secondary-foreground: 210 20% 98%;
-    --muted: 215 20% 20%;
+    --muted: rgba(31, 41, 55, 0.8);
     --muted-foreground: 215 10% 71%;
-    --accent: 215 25% 27%;
+    --accent: rgba(55, 65, 81, 0.6);
     --accent-foreground: 210 20% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 20% 35%;
-    --input: 215 25% 27%;
+    --border: transparent;
+    --input: rgba(55, 65, 81, 0.6);
     --ring: 0 84% 60%;
   }
 }
@@ -119,56 +119,35 @@
 }
 
 @layer components {
-  /* Pleasure Theme Components - Updated glass morphic effects */
-  .pleasure-card {
-    @apply backdrop-blur-md bg-white/[0.08] border border-white/[0.15] rounded-xl shadow-xl;
+  /* Glass morphism utilities */
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/[0.06] border-0 rounded-2xl shadow-2xl shadow-black/20;
   }
   
-  .pleasure-button {
-    @apply bg-white/[0.12] hover:bg-white/[0.20] text-white backdrop-blur-md border border-white/[0.20] transition-all duration-200;
+  .glass-button {
+    @apply bg-white/[0.12] hover:bg-white/[0.18] text-white backdrop-blur-md border-0 rounded-xl shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/20 transition-all duration-300 hover:scale-105;
   }
   
-  .pleasure-input {
-    @apply bg-white/[0.08] border border-white/[0.15] backdrop-blur-sm text-white placeholder:text-white/60 focus:border-purple-400 focus:ring-purple-400/20;
+  .glass-input {
+    @apply bg-white/[0.08] border-0 backdrop-blur-md text-white placeholder:text-white/50 rounded-xl shadow-lg shadow-black/10 focus:bg-white/[0.12] focus:ring-2 focus:ring-white/20;
   }
 
-  /* Business Theme Components */
-  .business-card {
-    @apply bg-gray-700 border border-gray-600 rounded-lg shadow-lg;
-  }
-  
-  .business-button {
-    @apply bg-gray-700 hover:bg-gray-600 text-gray-100 border border-gray-600 hover:border-red-500/30 transition-all duration-200;
-  }
-  
-  .business-input {
-    @apply bg-gray-700 border border-gray-600 text-gray-100 placeholder:text-gray-400 focus:border-red-500 focus:ring-red-500/20;
+  /* Floating effect */
+  .floating {
+    @apply hover:shadow-3xl hover:scale-[1.02] transition-all duration-300;
   }
 
-  /* Professional button styling (theme-aware) */
-  .professional-button {
-    @apply transition-all duration-200 font-medium;
-  }
-  
-  .theme-pleasure .professional-button {
-    @apply pleasure-button;
-  }
-  
-  .theme-business .professional-button {
-    @apply business-button;
-  }
-
-  /* Professional card styling (theme-aware) */
+  /* Professional styling (theme-aware) */
   .professional-card {
-    @apply transition-all duration-200;
+    @apply transition-all duration-300 hover:shadow-3xl hover:scale-[1.02];
   }
   
   .theme-pleasure .professional-card {
-    @apply pleasure-card;
+    @apply glass-card;
   }
   
   .theme-business .professional-card {
-    @apply business-card;
+    @apply bg-gray-800/80 border-0 rounded-2xl shadow-2xl shadow-black/40;
   }
 }
 
@@ -177,10 +156,15 @@
     text-wrap: balance;
   }
   
-  /* Glass morphism utility */
+  /* Enhanced glass morphism */
   .glass {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  /* Custom shadow levels */
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
   }
   
   /* Theme-aware backgrounds */

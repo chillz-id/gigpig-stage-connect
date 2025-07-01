@@ -11,16 +11,16 @@ const Card = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "backdrop-blur-md bg-white/10 border-white/20 shadow-xl";
+      return "backdrop-blur-xl bg-white/[0.06] border-0 shadow-2xl shadow-black/20";
     }
-    return "bg-gray-700 border-gray-600 shadow-lg";
+    return "bg-gray-800/80 border-0 shadow-2xl shadow-black/40";
   };
 
   return (
     <div
       ref={ref}
       className={cn(
-        "rounded-lg border text-card-foreground shadow-sm transition-all duration-200",
+        "rounded-2xl text-card-foreground transition-all duration-300 hover:shadow-3xl hover:scale-[1.02]",
         getThemeStyles(),
         className
       )}

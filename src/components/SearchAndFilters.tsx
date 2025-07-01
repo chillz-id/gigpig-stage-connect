@@ -3,6 +3,8 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 
 interface SearchAndFiltersProps {
   searchTerm: string;
@@ -21,23 +23,32 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   typeFilter,
   setTypeFilter,
 }) => {
+  const { theme } = useTheme();
+
+  const getSelectStyles = () => {
+    if (theme === 'pleasure') {
+      return "bg-white/[0.08] border-0 backdrop-blur-md text-white shadow-lg shadow-black/10";
+    }
+    return "bg-gray-800/60 border-0 backdrop-blur-md text-gray-100 shadow-lg shadow-black/20";
+  };
+
   return (
     <div className="mb-6 space-y-4">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
           <Input
             placeholder="Search shows, venues, or locations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
+            className="pl-10"
           />
         </div>
         <Select onValueChange={setLocationFilter}>
-          <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+          <SelectTrigger className={cn("w-full md:w-48 rounded-xl", getSelectStyles())}>
             <SelectValue placeholder="Location" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={cn("rounded-xl border-0", getSelectStyles())}>
             <SelectItem value="all">All Locations</SelectItem>
             <SelectItem value="Sydney">Sydney, NSW</SelectItem>
             <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
@@ -62,10 +73,10 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
           </SelectContent>
         </Select>
         <Select onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-full md:w-48 bg-card/50 border-border text-foreground">
+          <SelectTrigger className={cn("w-full md:w-48 rounded-xl", getSelectStyles())}>
             <SelectValue placeholder="Show Type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={cn("rounded-xl border-0", getSelectStyles())}>
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="open mic">Open Mic</SelectItem>
             <SelectItem value="semi-pro">Semi-Pro</SelectItem>

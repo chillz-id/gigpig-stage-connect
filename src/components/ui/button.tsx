@@ -6,24 +6,21 @@ import { useTheme } from "@/contexts/ThemeContext"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        default: "",
+        destructive: "",
+        outline: "",
+        secondary: "",
+        ghost: "",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        sm: "h-8 rounded-lg px-3 text-xs",
+        lg: "h-12 rounded-2xl px-8 text-base",
         icon: "h-10 w-10",
       },
     },
@@ -49,26 +46,26 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       if (theme === 'pleasure') {
         switch (currentVariant) {
           case 'default':
-            return "bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30";
+            return "bg-white/[0.12] hover:bg-white/[0.18] text-white backdrop-blur-md border-0 shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/20 hover:scale-105";
           case 'outline':
-            return "border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm";
+            return "bg-white/[0.06] hover:bg-white/[0.12] text-white backdrop-blur-md border-0 shadow-md shadow-black/10 hover:shadow-lg hover:shadow-black/15";
           case 'ghost':
-            return "hover:bg-white/10 text-white hover:backdrop-blur-sm";
+            return "hover:bg-white/[0.08] text-white backdrop-blur-sm border-0 hover:shadow-md hover:shadow-black/10";
           case 'secondary':
-            return "bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm";
+            return "bg-white/[0.08] text-white hover:bg-white/[0.14] backdrop-blur-md border-0 shadow-md shadow-black/10";
           default:
             return "";
         }
       } else {
         switch (currentVariant) {
           case 'default':
-            return "bg-red-600 hover:bg-red-700 text-white";
+            return "bg-gray-700/80 hover:bg-gray-600/80 text-white backdrop-blur-md border-0 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105";
           case 'outline':
-            return "border-gray-600 bg-gray-700 hover:bg-gray-600 text-gray-100";
+            return "bg-gray-800/60 hover:bg-gray-700/60 text-gray-100 backdrop-blur-md border-0 shadow-md shadow-black/20";
           case 'ghost':
-            return "hover:bg-gray-700 text-gray-100";
+            return "hover:bg-gray-700/40 text-gray-100 backdrop-blur-sm border-0 hover:shadow-md hover:shadow-black/15";
           case 'secondary':
-            return "bg-gray-700 text-gray-100 hover:bg-gray-600";
+            return "bg-gray-800/60 text-gray-100 hover:bg-gray-700/60 backdrop-blur-md border-0 shadow-md shadow-black/20";
           default:
             return "";
         }
@@ -80,7 +77,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           buttonVariants({ variant, size }),
           getThemeStyles(variant),
-          "transition-all duration-200",
           className
         )}
         ref={ref}
