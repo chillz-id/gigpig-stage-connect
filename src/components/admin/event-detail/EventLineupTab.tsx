@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,13 +64,13 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
 
       if (bookingsError) throw bookingsError;
 
-      // Transform data to include comedian info
+      // Transform data to include comedian info with proper type casting
       const transformedBookings = bookingsData?.map(booking => ({
         ...booking,
         comedian_name: booking.profiles?.stage_name || booking.profiles?.name || 'Unknown Comedian',
         comedian_email: booking.profiles?.email || '',
         is_selected: booking.is_selected || false,
-        payment_type: booking.payment_type || 'fixed',
+        payment_type: (booking.payment_type || 'fixed') as 'fixed' | 'percentage_revenue' | 'percentage_door',
         percentage_amount: booking.percentage_amount || 0,
         is_editable: booking.is_editable !== false
       })) || [];
