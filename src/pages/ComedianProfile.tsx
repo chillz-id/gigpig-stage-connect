@@ -32,10 +32,29 @@ const ComedianProfile = () => {
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ');
       
-      // First try to find in database
+      // First try to find in database - query all fields including contact info
       const { data: dbData, error: dbError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          name,
+          stage_name,
+          bio,
+          location,
+          avatar_url,
+          is_verified,
+          email,
+          created_at,
+          phone,
+          website_url,
+          instagram_url,
+          twitter_url,
+          youtube_url,
+          facebook_url,
+          tiktok_url,
+          show_contact_in_epk,
+          custom_show_types
+        `)
         .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
         .maybeSingle();
       
@@ -43,7 +62,7 @@ const ComedianProfile = () => {
         return dbData;
       }
       
-      // If not found in database, check mock data
+      // If not found in database, check mock data and add missing fields
       const mockComedian = mockComedians.find(comedian => {
         if (!comedian.name) return false;
         const comedianSlug = comedian.name.toLowerCase().replace(/\s+/g, '-');
@@ -51,7 +70,18 @@ const ComedianProfile = () => {
       });
       
       if (mockComedian) {
-        return mockComedian;
+        // Add missing contact fields to mock data
+        return {
+          ...mockComedian,
+          phone: null,
+          website_url: null,
+          instagram_url: null,
+          twitter_url: null,
+          youtube_url: null,
+          facebook_url: null,
+          tiktok_url: null,
+          show_contact_in_epk: false
+        };
       }
       
       throw new Error(`Comedian not found: ${name}`);

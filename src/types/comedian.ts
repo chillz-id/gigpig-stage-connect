@@ -17,4 +17,13 @@ export interface Comedian {
     twitter?: string;
     youtube?: string;
   };
+  // Contact fields added from database migration
+  phone: string | null;
+  website_url: string | null;
+  instagram_url: string | null;
+  twitter_url: string | null;
+  youtube_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  show_contact_in_epk: boolean | null;
 }
