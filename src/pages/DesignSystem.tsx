@@ -16,7 +16,7 @@ const DesignSystem = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">Design System Control Panel</h1>
-                <p className="text-muted-foreground">Customize the visual appearance of Stand Up Sydney in real-time</p>
+                <p className="text-muted-foreground">Customize the visual appearance of iD Comedy in real-time</p>
               </div>
             </div>
           </div>
