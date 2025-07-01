@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,7 @@ import { Users, Clock, Check, EyeOff } from 'lucide-react';
 import ApplicationCard from './ApplicationCard';
 import BulkApplicationActions from './BulkApplicationActions';
 import { useEventApplications } from '@/hooks/useEventApplications';
+import { ApplicationData } from '@/services/applicationService';
 
 interface EventApplicationsPanelProps {
   eventId: string;
@@ -25,7 +25,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
   } = useEventApplications(eventId);
 
   // Mock data - replace with real data from useEventApplications
-  const mockApplications = [
+  const mockApplications: ApplicationData[] = [
     {
       id: '1',
       comedian_id: '1',
@@ -40,6 +40,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
       applied_at: '2024-12-18T10:00:00Z',
       status: 'pending' as const,
       message: 'I would love to perform my new 5-minute set about modern dating.',
+      show_type: 'MC',
     },
     {
       id: '2',
@@ -55,6 +56,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
       applied_at: '2024-12-17T15:30:00Z',
       status: 'accepted' as const,
       message: 'Excited to bring my tech humor to your show!',
+      show_type: 'Headliner',
     },
     {
       id: '3',
@@ -70,6 +72,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
       applied_at: '2024-12-16T14:20:00Z',
       status: 'declined' as const,
       message: 'Looking forward to sharing my observational comedy style.',
+      show_type: 'MC',
     },
   ];
 
