@@ -64,7 +64,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 
   return (
     <MagicCard 
-      className="relative aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+      className="relative aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px] bg-gray-900 border border-gray-700"
       gradientColor={magicColors.gradientColor}
       gradientFrom={magicColors.gradientFrom}
       gradientTo={magicColors.gradientTo}
@@ -75,7 +75,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Background Image */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           {show.banner_url ? (
             <img 
               src={show.banner_url} 
@@ -88,16 +88,16 @@ export const ShowCard: React.FC<ShowCardProps> = ({
         </div>
         
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/40 z-1" />
 
         {/* Date - Top Left Corner */}
-        <div className="absolute top-4 left-4 text-white">
+        <div className="absolute top-4 left-4 text-white z-20">
           <div className="text-2xl font-bold leading-none">{day}</div>
           <div className="text-sm font-medium opacity-90">{month}</div>
         </div>
 
         {/* Content - Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
           <div className="space-y-2 mb-4">
             {/* Show Title */}
             <h3 className="text-xl font-bold leading-tight">

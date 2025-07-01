@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
   Calendar, 
-  Home, 
   Search, 
   User, 
   LogOut, 
@@ -89,11 +88,6 @@ const Navigation = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-2">
-              <Link to="/" className={getNavLinkClass('/')}>
-                <Home className="w-4 h-4" />
-                Home
-              </Link>
-              
               <Link to="/browse" className={getNavLinkClass('/browse')}>
                 <Search className="w-4 h-4" />
                 Browse

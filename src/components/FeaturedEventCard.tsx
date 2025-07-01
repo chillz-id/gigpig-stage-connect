@@ -49,7 +49,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
 
   return (
     <MagicCard 
-      className="w-full aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+      className="w-full aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px] bg-gray-900 border border-gray-700"
       gradientColor={magicColors.gradientColor}
       gradientFrom={magicColors.gradientFrom}
       gradientTo={magicColors.gradientTo}
@@ -60,7 +60,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Background Image */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           {event.banner_url ? (
             <img 
               src={event.banner_url} 
@@ -73,12 +73,12 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
         </div>
         
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-black/30 z-1" />
         
         {/* Heart Icon - Top Right */}
         <button
           onClick={handleLikeToggle}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-200 hover:scale-110 z-10"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-200 hover:scale-110 z-20"
         >
           <Heart 
             className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white/80 hover:text-white'} transition-colors duration-200`} 
@@ -88,7 +88,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
         {/* Apply/Applied Text - Top Left (Fade in on hover) */}
         {isIndustryUser && (
           <div 
-            className={`absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-medium transition-opacity duration-300 ${
+            className={`absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-medium transition-opacity duration-300 z-20 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
           >
@@ -97,7 +97,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
         )}
 
         {/* Bottom Section - Event Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
           <div className="space-y-1">
             <h3 className="font-bold text-lg leading-tight">
               {event.title}
