@@ -54,7 +54,8 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare }) =>
               is_verified={comedian.is_verified}
             />
             
-            <div className="mt-8">
+            {/* More space for text above actions */}
+            <div className="mt-12">
               <ComedianActions 
                 email={comedian.email}
                 name={comedian.name}

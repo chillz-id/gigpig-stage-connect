@@ -23,12 +23,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove any light theme classes
     root.classList.remove('light');
     root.classList.add('dark');
     
-    // Also ensure the body has the correct background
-    document.body.style.backgroundColor = 'hsl(222.2 84% 4.9%)';
-    document.body.style.color = 'hsl(210 40% 98%)';
+    // Set proper dark theme background and text colors
+    body.style.backgroundColor = 'hsl(240 10% 3.9%)'; // --background from dark theme
+    body.style.color = 'hsl(0 0% 98%)'; // --foreground from dark theme
+    body.className = 'dark bg-background text-foreground';
+    
+    // Ensure proper theme variables are applied
+    root.style.colorScheme = 'dark';
   }, []);
 
   const setTheme = () => {
