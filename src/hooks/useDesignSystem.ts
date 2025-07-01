@@ -77,7 +77,7 @@ export const useDesignSystem = () => {
       }
 
       if (data && data.settings_data) {
-        setSettings(data.settings_data as DesignSystemSettings);
+        setSettings(data.settings_data as unknown as DesignSystemSettings);
       } else {
         setSettings(DEFAULT_SETTINGS);
       }
@@ -111,7 +111,7 @@ export const useDesignSystem = () => {
           .from('customization_settings')
           .insert({
             name: presetName,
-            settings_data: settings as any,
+            settings_data: settings as unknown as any,
             is_active: false,
           });
 
@@ -127,7 +127,7 @@ export const useDesignSystem = () => {
           .from('customization_settings')
           .insert({
             name: 'Active Settings',
-            settings_data: settings as any,
+            settings_data: settings as unknown as any,
             is_active: true,
           });
 
