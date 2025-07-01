@@ -88,12 +88,17 @@ export const useComedianProfile = () => {
         });
         
         if (mockApplication) {
-          // Create a mock comedian profile from the application data
+          // Create a mock comedian profile from the application data with better bio
+          const experienceYears = parseInt(mockApplication.comedian_experience.split(' ')[0]) || 1;
+          const bioText = experienceYears >= 3 
+            ? `Stand-up comedian with ${mockApplication.comedian_experience} performing across Australia. Known for engaging storytelling and crowd work that keeps audiences laughing throughout the night.`
+            : `Rising comedian with ${mockApplication.comedian_experience} in the comedy scene. Bringing fresh perspectives and energetic performances to stages across the country.`;
+          
           return {
             id: mockApplication.comedian_id,
             name: mockApplication.comedian_name,
             stage_name: null,
-            bio: `Comedian with ${mockApplication.comedian_experience} of experience`,
+            bio: bioText,
             location: null,
             avatar_url: mockApplication.comedian_avatar,
             is_verified: false,
