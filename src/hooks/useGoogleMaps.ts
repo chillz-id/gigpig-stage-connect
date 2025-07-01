@@ -23,36 +23,76 @@ export const useGoogleMaps = (): GoogleMapsConfig => {
   const { toast } = useToast();
 
   const loadScript = async (): Promise<void> => {
-    if (window.google && window.google.maps) {
+    console.log('=== GOOGLE MAPS HOOK DEBUG ===');
+    console.log('Checking if Google Maps is already loaded...');
+    
+    if (window.google && window.google.maps && window.google.maps.places) {
+      console.log('Google Maps already loaded and ready');
       setIsLoaded(true);
       return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
       try {
+        console.log('Loading Google Maps script...');
+        
+        // Check if script is already in the document
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) {
+          console.log('Google Maps script already exists in document');
+          // Wait a bit and check again
+          setTimeout(() => {
+            if (window.google && window.google.maps && window.google.maps.places) {
+              console.log('Google Maps loaded via existing script');
+              setIsLoaded(true);
+              resolve();
+            } else {
+              console.error('Google Maps script exists but API not available');
+              resolve(); // Still resolve to allow manual input
+            }
+          }, 1000);
+          return;
+        }
+        
         // Create a unique callback name
         const callbackName = 'initGoogleMaps';
         
         window[callbackName] = () => {
-          setIsLoaded(true);
-          resolve();
+          console.log('Google Maps callback triggered');
+          if (window.google && window.google.maps && window.google.maps.places) {
+            console.log('Google Maps fully loaded with Places API');
+            setIsLoaded(true);
+            resolve();
+          } else {
+            console.error('Google Maps callback triggered but API incomplete');
+            setIsLoaded(false);
+            resolve(); // Resolve to allow fallback
+          }
         };
 
         const script = document.createElement('script');
+        // Note: Using a placeholder URL - in production, you'll need a real API key
         script.src = `https://maps.googleapis.com/maps/api/js?libraries=places&callback=${callbackName}`;
         script.async = true;
         script.defer = true;
         
-        script.onerror = () => {
-          console.error('Google Maps script failed to load');
-          // Don't reject immediately - allow manual address entry
+        script.onerror = (error) => {
+          console.error('Google Maps script failed to load:', error);
+          console.error('This is likely because:');
+          console.error('1. No Google Maps API key is configured');
+          console.error('2. API key is invalid or has restrictions');
+          console.error('3. Billing is not set up for the Google Cloud project');
+          console.error('4. The Places API is not enabled');
+          
+          // Don't reject - allow manual address entry
           setIsLoaded(false);
-          resolve(); // Resolve instead of reject to allow graceful fallback
+          resolve();
         };
 
+        console.log('Adding Google Maps script to document...');
         document.head.appendChild(script);
       } catch (error) {
-        console.error('Error loading Google Maps script:', error);
+        console.error('Error setting up Google Maps script:', error);
         setIsLoaded(false);
         resolve(); // Resolve to allow fallback behavior
       }

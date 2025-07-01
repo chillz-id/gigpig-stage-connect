@@ -33,7 +33,7 @@ const initialFormData: EventFormData = {
   spots: 5,
   description: '',
   requirements: [],
-  isVerifiedOnly: false,
+  isVerifiedOnly: false, // Keep for backward compatibility but won't be shown in UI
   isPaid: false,
   allowRecording: false,
   ageRestriction: '18+',
