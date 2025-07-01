@@ -2,13 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Check, EyeOff, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface BulkApplicationActionsProps {
   selectedApplications: string[];
   onBulkApprove: (applicationIds: string[]) => Promise<void>;
-  onBulkReject: (applicationIds: string[]) => Promise<void>;
+  onBulkHide: (applicationIds: string[]) => Promise<void>;
   onClearSelection: () => void;
   isProcessing?: boolean;
 }
@@ -16,7 +16,7 @@ interface BulkApplicationActionsProps {
 const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
   selectedApplications,
   onBulkApprove,
-  onBulkReject,
+  onBulkHide,
   onClearSelection,
   isProcessing = false,
 }) => {
@@ -46,24 +46,24 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
     }
   };
 
-  const handleBulkReject = async () => {
+  const handleBulkHide = async () => {
     if (selectedApplications.length === 0) return;
     
     const confirmed = window.confirm(
-      `Are you sure you want to reject ${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''}?`
+      `Are you sure you want to hide ${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''}?`
     );
     
     if (confirmed) {
       try {
-        await onBulkReject(selectedApplications);
+        await onBulkHide(selectedApplications);
         toast({
-          title: "Applications Rejected",
-          description: `${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''} rejected successfully.`,
+          title: "Applications Hidden",
+          description: `${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''} hidden successfully.`,
         });
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to reject applications.",
+          description: "Failed to hide applications.",
           variant: "destructive",
         });
       }
@@ -99,12 +99,13 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
           
           <Button
             size="sm"
-            variant="destructive"
-            onClick={handleBulkReject}
+            variant="outline"
+            onClick={handleBulkHide}
             disabled={isProcessing}
+            className="text-white border-white/30 hover:bg-white/10"
           >
-            <X className="w-4 h-4 mr-1" />
-            Reject All
+            <EyeOff className="w-4 h-4 mr-1" />
+            Hide All
           </Button>
           
           <Button

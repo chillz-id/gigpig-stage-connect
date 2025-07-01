@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, X, Eye, Calendar, Clock, MapPin, Star } from 'lucide-react';
+import { Check, EyeOff, Eye, Calendar, Clock, MapPin, Star } from 'lucide-react';
 
 interface ApplicationCardProps {
   application: {
@@ -26,7 +26,7 @@ interface ApplicationCardProps {
   isSelected?: boolean;
   onSelect?: (applicationId: string, selected: boolean) => void;
   onApprove: (applicationId: string) => void;
-  onReject: (applicationId: string) => void;
+  onHide: (applicationId: string) => void;
   onViewProfile: (comedianId: string) => void;
   showEventDetails?: boolean;
 }
@@ -36,14 +36,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   isSelected = false,
   onSelect,
   onApprove,
-  onReject,
+  onHide,
   onViewProfile,
   showEventDetails = true,
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted': return 'bg-green-500 hover:bg-green-600';
-      case 'declined': return 'bg-red-500 hover:bg-red-600';
+      case 'declined': return 'bg-gray-500 hover:bg-gray-600';
       default: return 'bg-yellow-500 hover:bg-yellow-600';
     }
   };
@@ -51,7 +51,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'accepted': return 'Approved';
-      case 'declined': return 'Rejected';
+      case 'declined': return 'Hidden';
       default: return 'Pending';
     }
   };
@@ -155,11 +155,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     </Button>
                     <Button
                       size="sm"
-                      variant="destructive"
-                      onClick={() => onReject(application.id)}
+                      variant="outline"
+                      onClick={() => onHide(application.id)}
+                      className="text-white border-white/30 hover:bg-white/10"
                     >
-                      <X className="w-4 h-4 mr-1" />
-                      Reject
+                      <EyeOff className="w-4 h-4 mr-1" />
+                      Hide
                     </Button>
                   </>
                 )}

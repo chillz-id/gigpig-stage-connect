@@ -53,7 +53,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="accepted">Approved</SelectItem>
-            <SelectItem value="declined">Rejected</SelectItem>
+            <SelectItem value="declined">Hidden</SelectItem>
           </SelectContent>
         </Select>
 

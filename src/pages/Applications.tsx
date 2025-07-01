@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Users, Calendar, CheckCircle, EyeOff, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ApplicationCard from '@/components/admin/ApplicationCard';
 import ApplicationFilters from '@/components/admin/ApplicationFilters';
@@ -102,7 +102,7 @@ const Applications = () => {
     total: applications.length,
     pending: applications.filter(app => app.status === 'pending').length,
     approved: applications.filter(app => app.status === 'accepted').length,
-    rejected: applications.filter(app => app.status === 'declined').length,
+    hidden: applications.filter(app => app.status === 'declined').length,
   };
 
   const handleSelectApplication = (applicationId: string, selected: boolean) => {
@@ -122,7 +122,7 @@ const Applications = () => {
     setSelectedApplications([]);
   };
 
-  const handleBulkReject = async (applicationIds: string[]) => {
+  const handleBulkHide = async (applicationIds: string[]) => {
     setApplications(prev => prev.map(app => 
       applicationIds.includes(app.id) 
         ? { ...app, status: 'declined' as const }
@@ -145,7 +145,7 @@ const Applications = () => {
     });
   };
 
-  const handleReject = (applicationId: string) => {
+  const handleHide = (applicationId: string) => {
     setApplications(prev => prev.map(app => 
       app.id === applicationId 
         ? { ...app, status: 'declined' as const }
@@ -154,8 +154,8 @@ const Applications = () => {
 
     const application = applications.find(app => app.id === applicationId);
     toast({
-      title: "Application Rejected",
-      description: `${application?.comedian_name}'s application has been rejected.`,
+      title: "Application Hidden",
+      description: `${application?.comedian_name}'s application has been hidden.`,
     });
   };
 
@@ -213,10 +213,10 @@ const Applications = () => {
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <XCircle className="w-6 h-6 text-red-400" />
+                <EyeOff className="w-6 h-6 text-gray-400" />
               </div>
-              <div className="text-2xl font-bold text-red-400">{stats.rejected}</div>
-              <div className="text-sm text-purple-200">Rejected</div>
+              <div className="text-2xl font-bold text-gray-400">{stats.hidden}</div>
+              <div className="text-sm text-purple-200">Hidden</div>
             </CardContent>
           </Card>
         </div>
@@ -239,7 +239,7 @@ const Applications = () => {
         <BulkApplicationActions
           selectedApplications={selectedApplications}
           onBulkApprove={handleBulkApprove}
-          onBulkReject={handleBulkReject}
+          onBulkHide={handleBulkHide}
           onClearSelection={() => setSelectedApplications([])}
         />
 
@@ -263,7 +263,7 @@ const Applications = () => {
                 isSelected={selectedApplications.includes(application.id)}
                 onSelect={handleSelectApplication}
                 onApprove={handleApprove}
-                onReject={handleReject}
+                onHide={handleHide}
                 onViewProfile={handleViewProfile}
               />
             ))

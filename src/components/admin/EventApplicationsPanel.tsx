@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Clock, Check, X } from 'lucide-react';
+import { Users, Clock, Check, EyeOff } from 'lucide-react';
 import ApplicationCard from './ApplicationCard';
 import BulkApplicationActions from './BulkApplicationActions';
 import { useEventApplications } from '@/hooks/useEventApplications';
@@ -76,7 +77,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
     total: mockApplications.length,
     pending: mockApplications.filter(app => app.status === 'pending').length,
     approved: mockApplications.filter(app => app.status === 'accepted').length,
-    rejected: mockApplications.filter(app => app.status === 'declined').length,
+    hidden: mockApplications.filter(app => app.status === 'declined').length,
   };
 
   const handleSelectApplication = (applicationId: string, selected: boolean) => {
@@ -94,7 +95,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
     setSelectedApplications([]);
   };
 
-  const handleBulkReject = async (applicationIds: string[]) => {
+  const handleBulkHide = async (applicationIds: string[]) => {
     for (const id of applicationIds) {
       await updateApplication({ id, status: 'declined' });
     }
@@ -105,7 +106,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
     await updateApplication({ id: applicationId, status: 'accepted' });
   };
 
-  const handleReject = async (applicationId: string) => {
+  const handleHide = async (applicationId: string) => {
     await updateApplication({ id: applicationId, status: 'declined' });
   };
 
@@ -149,8 +150,8 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
               <div className="text-sm text-purple-200">Approved</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{stats.rejected}</div>
-              <div className="text-sm text-purple-200">Rejected</div>
+              <div className="text-2xl font-bold text-gray-400">{stats.hidden}</div>
+              <div className="text-sm text-purple-200">Hidden</div>
             </div>
           </div>
         </CardContent>
@@ -160,7 +161,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
       <BulkApplicationActions
         selectedApplications={selectedApplications}
         onBulkApprove={handleBulkApprove}
-        onBulkReject={handleBulkReject}
+        onBulkHide={handleBulkHide}
         onClearSelection={() => setSelectedApplications([])}
         isProcessing={isUpdating}
       />
@@ -185,7 +186,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
               isSelected={selectedApplications.includes(application.id)}
               onSelect={handleSelectApplication}
               onApprove={handleApprove}
-              onReject={handleReject}
+              onHide={handleHide}
               onViewProfile={handleViewProfile}
               showEventDetails={false}
             />
