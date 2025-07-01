@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Users, Plus, Search, Edit, Trash2, FileText, DollarSign } from 'lucide-react';
+
+import React, { useState } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import EditBookingDialog from './EditBookingDialog';
+import LineupSummaryCards from './LineupSummaryCards';
+import LineupControls from './LineupControls';
+import LineupTable from './LineupTable';
+import { useLineupData } from '@/hooks/useLineupData';
+import { useLineupActions } from '@/hooks/useLineupActions';
 
 interface ComedianBooking {
   id: string;
@@ -24,7 +21,6 @@ interface ComedianBooking {
   payment_type: 'fixed' | 'percentage_revenue' | 'percentage_door';
   percentage_amount: number;
   is_editable: boolean;
-  // Join with profiles for comedian info
   comedian_name?: string;
   comedian_email?: string;
 }
@@ -34,308 +30,43 @@ interface EventLineupTabProps {
 }
 
 const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [bookings, setBookings] = useState<ComedianBooking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [totalFees, setTotalFees] = useState(0);
-  const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
-  const [eventRevenue, setEventRevenue] = useState(0);
   const [editingBooking, setEditingBooking] = useState<ComedianBooking | null>(null);
   const [isProcessingInvoices, setIsProcessingInvoices] = useState(false);
 
-  const fetchLineupData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch comedian bookings with profile information
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('comedian_bookings')
-        .select(`
-          *,
-          profiles!comedian_bookings_comedian_id_fkey (
-            name,
-            email,
-            stage_name
-          )
-        `)
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false });
+  const {
+    loading,
+    bookings,
+    setBookings,
+    totalFees,
+    selectedBookings,
+    setSelectedBookings,
+    eventRevenue,
+    fetchLineupData,
+  } = useLineupData(eventId);
 
-      if (bookingsError) throw bookingsError;
-
-      // Transform data to include comedian info with proper type casting
-      const transformedBookings = bookingsData?.map(booking => ({
-        ...booking,
-        comedian_name: booking.profiles?.stage_name || booking.profiles?.name || 'Unknown Comedian',
-        comedian_email: booking.profiles?.email || '',
-        is_selected: booking.is_selected || false,
-        payment_type: (booking.payment_type || 'fixed') as 'fixed' | 'percentage_revenue' | 'percentage_door',
-        percentage_amount: booking.percentage_amount || 0,
-        is_editable: booking.is_editable !== false
-      })) || [];
-
-      setBookings(transformedBookings);
-      
-      // Get selected bookings
-      const selected = transformedBookings
-        .filter(booking => booking.is_selected)
-        .map(booking => booking.id);
-      setSelectedBookings(selected);
-
-      // Fetch event revenue for percentage calculations
-      const { data: revenueData } = await supabase
-        .from('ticket_sales')
-        .select('total_amount')
-        .eq('event_id', eventId);
-      
-      const totalRevenue = revenueData?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
-      setEventRevenue(totalRevenue);
-      
-      // Calculate total fees including percentage-based payments
-      await calculateTotalFees(transformedBookings, totalRevenue);
-
-    } catch (error: any) {
-      console.error('Error fetching lineup data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load lineup data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateTotalFees = async (bookingsList: ComedianBooking[], revenue: number) => {
-    let total = 0;
-    
-    for (const booking of bookingsList) {
-      if (booking.payment_type === 'fixed') {
-        total += Number(booking.performance_fee);
-      } else if (booking.payment_type === 'percentage_revenue') {
-        total += (revenue * booking.percentage_amount / 100);
-      } else if (booking.payment_type === 'percentage_door') {
-        // For door sales, we'll use the same revenue for now
-        // In a real scenario, you might have separate door sales tracking
-        total += (revenue * booking.percentage_amount / 100);
-      }
-    }
-    
-    setTotalFees(total);
-  };
-
-  useEffect(() => {
-    fetchLineupData();
-  }, [eventId]);
-
-  const handleSelectBooking = async (bookingId: string, isSelected: boolean) => {
-    try {
-      // Update selection in database
-      const { error } = await supabase
-        .from('comedian_bookings')
-        .update({ is_selected: isSelected })
-        .eq('id', bookingId);
-
-      if (error) throw error;
-
-      // Update local state
-      setBookings(prev => prev.map(booking => 
-        booking.id === bookingId 
-          ? { ...booking, is_selected: isSelected }
-          : booking
-      ));
-
-      setSelectedBookings(prev => 
-        isSelected 
-          ? [...prev, bookingId]
-          : prev.filter(id => id !== bookingId)
-      );
-    } catch (error: any) {
-      console.error('Error updating selection:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update selection",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSelectAll = async () => {
-    const allSelected = selectedBookings.length === bookings.length;
-    const newSelection = !allSelected;
-    
-    try {
-      // Update all bookings in database
-      const { error } = await supabase
-        .from('comedian_bookings')
-        .update({ is_selected: newSelection })
-        .eq('event_id', eventId);
-
-      if (error) throw error;
-
-      // Update local state
-      setBookings(prev => prev.map(booking => ({ ...booking, is_selected: newSelection })));
-      setSelectedBookings(newSelection ? bookings.map(b => b.id) : []);
-
-      toast({
-        title: newSelection ? "All Selected" : "All Deselected",
-        description: `${newSelection ? 'Selected' : 'Deselected'} ${bookings.length} comedians`,
-      });
-    } catch (error: any) {
-      console.error('Error updating all selections:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update selections",
-        variant: "destructive",
-      });
-    }
-  };
+  const {
+    handleSelectBooking,
+    handleSelectAll,
+    handleCreateInvoices: originalHandleCreateInvoices,
+    handleDeleteBooking,
+    updatePaymentStatus,
+  } = useLineupActions(
+    eventId,
+    bookings,
+    setBookings,
+    selectedBookings,
+    setSelectedBookings,
+    eventRevenue,
+    fetchLineupData
+  );
 
   const handleCreateInvoices = async () => {
-    if (selectedBookings.length === 0) {
-      toast({
-        title: "No Selection",
-        description: "Please select comedians to create invoices for",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsProcessingInvoices(true);
-    
     try {
-      // Calculate total amount for selected bookings
-      const selectedBookingData = bookings.filter(b => selectedBookings.includes(b.id));
-      let totalAmount = 0;
-      
-      for (const booking of selectedBookingData) {
-        if (booking.payment_type === 'fixed') {
-          totalAmount += Number(booking.performance_fee);
-        } else if (booking.payment_type === 'percentage_revenue') {
-          totalAmount += (eventRevenue * booking.percentage_amount / 100);
-        } else if (booking.payment_type === 'percentage_door') {
-          totalAmount += (eventRevenue * booking.percentage_amount / 100);
-        }
-      }
-
-      // Create batch payment record
-      const { data: batchPayment, error: batchError } = await supabase
-        .from('batch_payments')
-        .insert({
-          event_id: eventId,
-          total_amount: totalAmount,
-          selected_bookings: selectedBookings,
-          processing_status: 'pending',
-          notes: `Batch payment for ${selectedBookings.length} comedian(s)`
-        })
-        .select()
-        .single();
-
-      if (batchError) throw batchError;
-
-      // Update payment status for selected bookings
-      const { error: updateError } = await supabase
-        .from('comedian_bookings')
-        .update({ payment_status: 'processing' })
-        .in('id', selectedBookings);
-
-      if (updateError) throw updateError;
-
-      // Refresh data
-      await fetchLineupData();
-
-      toast({
-        title: "Invoices Created",
-        description: `Created batch payment for ${selectedBookings.length} comedian(s) totaling $${totalAmount.toFixed(2)}`,
-      });
-
-      // Clear selections
-      setSelectedBookings([]);
-      
-    } catch (error: any) {
-      console.error('Error creating invoices:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create invoices",
-        variant: "destructive",
-      });
+      await originalHandleCreateInvoices();
     } finally {
       setIsProcessingInvoices(false);
-    }
-  };
-
-  const handleDeleteBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to remove this comedian from the lineup?')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('comedian_bookings')
-        .delete()
-        .eq('id', bookingId);
-
-      if (error) throw error;
-
-      setBookings(prev => prev.filter(booking => booking.id !== bookingId));
-      setSelectedBookings(prev => prev.filter(id => id !== bookingId));
-      
-      toast({
-        title: "Booking Removed",
-        description: "Comedian has been removed from the lineup",
-      });
-    } catch (error: any) {
-      console.error('Error deleting booking:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove booking",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updatePaymentStatus = async (bookingId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('comedian_bookings')
-        .update({ payment_status: newStatus })
-        .eq('id', bookingId);
-
-      if (error) throw error;
-
-      setBookings(prev => prev.map(booking => 
-        booking.id === bookingId 
-          ? { ...booking, payment_status: newStatus }
-          : booking
-      ));
-
-      toast({
-        title: "Payment Status Updated",
-        description: `Payment status changed to ${newStatus}`,
-      });
-    } catch (error: any) {
-      console.error('Error updating payment status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update payment status",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return 'default';
-      case 'pending':
-        return 'secondary';
-      case 'processing':
-        return 'outline';
-      case 'overdue':
-        return 'destructive';
-      default:
-        return 'outline';
     }
   };
 
@@ -348,19 +79,6 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
       return eventRevenue * booking.percentage_amount / 100;
     }
     return booking.performance_fee;
-  };
-
-  const getPaymentDisplayText = (booking: ComedianBooking) => {
-    if (booking.payment_type === 'fixed') {
-      return `$${Number(booking.performance_fee).toFixed(2)} ${booking.currency}`;
-    } else if (booking.payment_type === 'percentage_revenue') {
-      const amount = eventRevenue * booking.percentage_amount / 100;
-      return `${booking.percentage_amount}% of revenue ($${amount.toFixed(2)})`;
-    } else if (booking.payment_type === 'percentage_door') {
-      const amount = eventRevenue * booking.percentage_amount / 100;
-      return `${booking.percentage_amount}% of door ($${amount.toFixed(2)})`;
-    }
-    return `$${Number(booking.performance_fee).toFixed(2)} ${booking.currency}`;
   };
 
   const selectedTotal = selectedBookings.reduce((total, bookingId) => {
@@ -383,191 +101,35 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
-          <CardContent className="p-4">
-            <div className="text-white/60 text-sm">Total Comedians</div>
-            <div className="text-2xl font-bold text-white">{bookings.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
-          <CardContent className="p-4">
-            <div className="text-white/60 text-sm">Total Performance Fees</div>
-            <div className="text-2xl font-bold text-white">${totalFees.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
-          <CardContent className="p-4">
-            <div className="text-white/60 text-sm">Selected ({selectedBookings.length})</div>
-            <div className="text-2xl font-bold text-white">${selectedTotal.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
-          <CardContent className="p-4">
-            <div className="text-white/60 text-sm">Event Revenue</div>
-            <div className="text-2xl font-bold text-white">${eventRevenue.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <LineupSummaryCards
+        totalComedians={bookings.length}
+        totalFees={totalFees}
+        selectedCount={selectedBookings.length}
+        selectedTotal={selectedTotal}
+        eventRevenue={eventRevenue}
+      />
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-          <Input
-            placeholder="Search comedians..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60"
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSelectAll}
-            variant="outline"
-            className="border-white/20 text-white hover:bg-white/10"
-          >
-            {selectedBookings.length === bookings.length ? 'Deselect All' : 'Select All'}
-          </Button>
-          
-          {selectedBookings.length > 0 && (
-            <Button
-              onClick={handleCreateInvoices}
-              disabled={isProcessingInvoices}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {isProcessingInvoices ? 'Processing...' : `Invoice ${selectedBookings.length} Selected`}
-            </Button>
-          )}
-          
-          <Button
-            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Book Comedian
-          </Button>
-        </div>
-      </div>
+      <LineupControls
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedCount={selectedBookings.length}
+        totalCount={bookings.length}
+        onSelectAll={handleSelectAll}
+        onCreateInvoices={handleCreateInvoices}
+        isProcessingInvoices={isProcessingInvoices}
+      />
 
-      {/* Lineup Table */}
-      <Card className="bg-white/5 backdrop-blur-sm border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Event Lineup
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/20">
-                  <th className="text-left text-white/80 font-medium p-3 w-12">
-                    <Checkbox
-                      checked={selectedBookings.length === bookings.length && bookings.length > 0}
-                      onCheckedChange={handleSelectAll}
-                      className="border-white/40"
-                    />
-                  </th>
-                  <th className="text-left text-white/80 font-medium p-3">Comedian</th>
-                  <th className="text-left text-white/80 font-medium p-3">Contact</th>
-                  <th className="text-left text-white/80 font-medium p-3">Set Duration</th>
-                  <th className="text-left text-white/80 font-medium p-3">Performance Fee</th>
-                  <th className="text-left text-white/80 font-medium p-3">Payment Status</th>
-                  <th className="text-left text-white/80 font-medium p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-white/10 hover:bg-white/5">
-                    <td className="text-white p-3">
-                      <Checkbox
-                        checked={selectedBookings.includes(booking.id)}
-                        onCheckedChange={(checked) => handleSelectBooking(booking.id, !!checked)}
-                        className="border-white/40"
-                      />
-                    </td>
-                    <td className="text-white p-3">
-                      <div>
-                        <div className="font-medium">{booking.comedian_name}</div>
-                        {booking.performance_notes && (
-                          <div className="text-sm text-white/60 mt-1">
-                            {booking.performance_notes}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="text-white p-3 text-sm">
-                      {booking.comedian_email}
-                    </td>
-                    <td className="text-white p-3">
-                      {booking.set_duration || 'N/A'} minutes
-                    </td>
-                    <td className="text-white p-3">
-                      <div className="text-sm">
-                        {getPaymentDisplayText(booking)}
-                      </div>
-                    </td>
-                    <td className="text-white p-3">
-                      <select
-                        value={booking.payment_status}
-                        onChange={(e) => updatePaymentStatus(booking.id, e.target.value)}
-                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
-                        disabled={!booking.is_editable}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="paid">Paid</option>
-                        <option value="overdue">Overdue</option>
-                      </select>
-                    </td>
-                    <td className="text-white p-3">
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white hover:bg-white/10 p-2 h-auto"
-                          title="Edit Booking"
-                          onClick={() => setEditingBooking(booking)}
-                          disabled={!booking.is_editable}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteBooking(booking.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-400 hover:bg-red-400/10 hover:text-red-300 p-2 h-auto"
-                          title="Remove from Lineup"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {filteredBookings.length === 0 && (
-              <div className="text-center py-8 text-white/60">
-                {searchTerm 
-                  ? 'No comedians found matching your search'
-                  : 'No comedians booked yet'
-                }
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <LineupTable
+        bookings={filteredBookings}
+        selectedBookings={selectedBookings}
+        eventRevenue={eventRevenue}
+        onSelectBooking={handleSelectBooking}
+        onSelectAll={handleSelectAll}
+        onEditBooking={setEditingBooking}
+        onDeleteBooking={handleDeleteBooking}
+        onUpdatePaymentStatus={updatePaymentStatus}
+      />
 
-      {/* Edit Booking Dialog */}
       {editingBooking && (
         <EditBookingDialog
           booking={editingBooking}
