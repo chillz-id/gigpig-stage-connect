@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ interface ComedianUpcomingShowsProps {
 }
 
 const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianId }) => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
 
   // Mock upcoming shows data
@@ -87,7 +89,7 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
 
   const handleShowClick = (showId: string) => {
     // Navigate to event details page
-    console.log('Navigate to show details:', showId);
+    navigate(`/event/${showId}`);
   };
 
   const handleGetTickets = (e: React.MouseEvent, showId: string) => {

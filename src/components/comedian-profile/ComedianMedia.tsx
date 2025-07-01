@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, Music, Image as ImageIcon, Play, Download } from 'lucide-react';
+import { Video, Image as ImageIcon, Play } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 
@@ -28,39 +28,25 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId }) => {
         views: '25.1K'
       }
     ],
-    audio: [
-      {
-        id: '1',
-        title: 'Podcast Guest Appearance',
-        duration: '12:30',
-        plays: '5.2K'
-      },
-      {
-        id: '2',
-        title: 'Radio Interview Highlights',
-        duration: '6:15',
-        plays: '3.8K'
-      }
-    ],
     photos: [
       {
         id: '1',
-        url: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=400&h=400&fit=crop&crop=face',
+        url: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=600&h=600&fit=crop&crop=face',
         title: 'Professional Headshot'
       },
       {
         id: '2',
-        url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=400&fit=crop',
+        url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=600&h=600&fit=crop',
         title: 'On Stage Performance'
       },
       {
         id: '3',
-        url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=400&fit=crop',
+        url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&h=600&fit=crop',
         title: 'Behind the Scenes'
       },
       {
         id: '4',
-        url: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=400&fit=crop',
+        url: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=600&h=600&fit=crop',
         title: 'Event Photography'
       }
     ]
@@ -76,14 +62,10 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId }) => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="videos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-700/50 border border-slate-600">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 border border-slate-600">
             <TabsTrigger value="videos" className="flex items-center gap-2 text-white data-[state=active]:bg-purple-600">
               <Video className="w-4 h-4" />
               Videos
-            </TabsTrigger>
-            <TabsTrigger value="audio" className="flex items-center gap-2 text-white data-[state=active]:bg-purple-600">
-              <Music className="w-4 h-4" />
-              Audio
             </TabsTrigger>
             <TabsTrigger value="photos" className="flex items-center gap-2 text-white data-[state=active]:bg-purple-600">
               <ImageIcon className="w-4 h-4" />
@@ -122,31 +104,8 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId }) => {
             </div>
           </TabsContent>
           
-          <TabsContent value="audio" className="space-y-4">
-            <div className="space-y-4">
-              {mediaContent.audio.map((audio) => (
-                <div key={audio.id} className="bg-slate-700/50 rounded-xl p-6 border border-slate-600/50 hover:border-purple-500/50 transition-colors duration-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button className="bg-purple-600 hover:bg-purple-700 rounded-full w-12 h-12">
-                        <Play className="w-5 h-5 text-white" />
-                      </Button>
-                      <div>
-                        <h3 className="text-white font-semibold">{audio.title}</h3>
-                        <p className="text-gray-400 text-sm">{audio.duration} • {audio.plays} plays</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" className="text-gray-400 hover:text-white">
-                      <Download className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-          
           <TabsContent value="photos" className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               {mediaContent.photos.map((photo) => (
                 <div key={photo.id} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-600/50 hover:border-purple-500/50 transition-all duration-200">
                   <img 
