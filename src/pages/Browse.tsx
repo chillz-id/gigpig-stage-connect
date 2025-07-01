@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
+import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { SearchAndFilters } from '@/components/SearchAndFilters';
 import { ShowCard } from '@/components/ShowCard';
@@ -29,6 +30,16 @@ const Browse = () => {
   const [sortBy, setSortBy] = useState('date');
 
   const { events, isLoading, error } = useEvents();
+  
+  // Get browse logic handlers
+  const {
+    interestedEvents,
+    handleToggleInterested,
+    handleApply,
+    handleBuyTickets,
+    handleShowDetails,
+    handleGetDirections
+  } = useBrowseLogic();
 
   // Filter events based on selected month/year and other filters
   const filteredEvents = React.useMemo(() => {
@@ -42,7 +53,7 @@ const Browse = () => {
         event.venue.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesLocation = locationFilter === '' || 
         event.city.toLowerCase().includes(locationFilter.toLowerCase());
-      const matchesType = typeFilter === '' || event.show_type === typeFilter;
+      const matchesType = typeFilter === '' || event.event_type === typeFilter;
       
       return matchesMonth && matchesSearch && matchesLocation && matchesType;
     }).sort((a, b) => {
@@ -143,17 +154,22 @@ const Browse = () => {
           setLocationFilter={setLocationFilter}
           typeFilter={typeFilter}
           setTypeFilter={setTypeFilter}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          onClearFilters={clearFilters}
-          totalResults={filteredEvents.length}
         />
 
         {/* Events Grid */}
         {filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredEvents.map((event) => (
-              <ShowCard key={event.id} {...event} />
+              <ShowCard 
+                key={event.id}
+                show={event}
+                interestedEvents={interestedEvents}
+                onToggleInterested={handleToggleInterested}
+                onApply={handleApply}
+                onBuyTickets={handleBuyTickets}
+                onShowDetails={handleShowDetails}
+                onGetDirections={handleGetDirections}
+              />
             ))}
           </div>
         ) : (
