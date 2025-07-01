@@ -57,7 +57,8 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/shows" element={<Browse />} />
+                      <Route path="/browse" element={<Navigate to="/shows" replace />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/create-event" element={<CreateEvent />} />
                       <Route path="/applications" element={<Applications />} />

@@ -1,22 +1,42 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, User, MessageSquare, TrendingUp, Star, Clock, DollarSign, Users } from 'lucide-react';
+import { CalendarDays, DollarSign, Users, TrendingUp, FileText, Calendar, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<'comedian' | 'promoter'>('comedian');
 
-  const isComedian = hasRole('comedian');
-  const isPromoter = hasRole('promoter') || hasRole('admin');
+  if (!user) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", 
+        theme === 'pleasure' 
+          ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
+          : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
+      )}>
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
+            <p className="text-muted-foreground mb-6">You need to be logged in to access your dashboard.</p>
+            <Button onClick={() => navigate('/auth')} className="w-full">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const isAdmin = hasRole('admin');
+  const isPromoter = hasRole('promoter') || isAdmin;
+  const isComedian = hasRole('comedian') || isAdmin;
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
@@ -32,330 +52,224 @@ const Dashboard = () => {
     return 'bg-gray-800/90 border-gray-600 text-gray-100';
   };
 
-  const mockStats = {
-    comedian: {
-      applicationsThisWeek: 3,
-      upcomingGigs: 2,
-      totalEarnings: 3420,
-      totalShows: 50,
-      recentApplications: [
-        { event: 'Comedy Night at The Laugh Track', status: 'pending', date: '2024-12-18' },
-        { event: 'Open Mic Wednesday', status: 'accepted', date: '2024-12-15' }
-      ],
-      upcomingShows: [
-        { event: 'Comedy Club Central - Tonight', time: '8:00 PM', fee: 75 },
-        { event: 'Saturday Showcase', time: 'Dec 23 • 10 min set', fee: 100 }
-      ]
-    },
-    promoter: {
-      activeEvents: 8,
-      totalApplications: 45,
-      revenue: 12500,
-      avgRating: 4.8
+  const getStatCardStyles = (isHighlight = false) => {
+    if (theme === 'pleasure') {
+      return isHighlight 
+        ? 'bg-white/[0.12] backdrop-blur-md border-white/[0.20] text-white' 
+        : 'bg-white/[0.06] backdrop-blur-sm border-white/[0.10] text-white';
     }
+    return isHighlight 
+      ? 'bg-gray-700/80 border-gray-500 text-gray-100' 
+      : 'bg-gray-800/60 border-gray-600 text-gray-100';
   };
-
-  const ComedianView = () => (
-    <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className={getCardStyles()}>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", 
-              theme === 'pleasure' ? 'bg-purple-500/20' : 'bg-blue-500/20'
-            )}>
-              <Users className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{mockStats.comedian.applicationsThisWeek}</p>
-              <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-                Applications Sent
-              </p>
-              <p className="text-xs text-green-400">+2 from last week</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={getCardStyles()}>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", 
-              theme === 'pleasure' ? 'bg-purple-500/20' : 'bg-green-500/20'
-            )}>
-              <Calendar className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{mockStats.comedian.upcomingGigs}</p>
-              <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-                Upcoming Gigs
-              </p>
-              <p className="text-xs text-green-400">Next: Tonight at 8pm</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={getCardStyles()}>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", 
-              theme === 'pleasure' ? 'bg-purple-500/20' : 'bg-yellow-500/20'
-            )}>
-              <DollarSign className="w-5 h-5 text-yellow-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">${mockStats.comedian.totalEarnings}</p>
-              <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-                Total Earnings
-              </p>
-              <p className="text-xs text-green-400">+12% this month</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={getCardStyles()}>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", 
-              theme === 'pleasure' ? 'bg-purple-500/20' : 'bg-purple-500/20'
-            )}>
-              <Star className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{mockStats.comedian.totalShows}</p>
-              <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-                Shows Performed
-              </p>
-              <p className="text-xs text-green-400">Total performances</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className={getCardStyles()}>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription className={theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'}>
-            Get started with your comedy career
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Button
-              onClick={() => navigate('/browse')}
-              className="flex items-center gap-2 justify-start h-auto p-4"
-              variant="outline"
-            >
-              <Calendar className="w-4 h-4" />
-              <span>Browse Shows</span>
-            </Button>
-            <Button
-              onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 justify-start h-auto p-4"
-              variant="outline"
-            >
-              <User className="w-4 h-4" />
-              <span>Update Profile</span>
-            </Button>
-            <Button
-              onClick={() => navigate('/profile?tab=calendar')}
-              className="flex items-center gap-2 justify-start h-auto p-4"
-              variant="outline"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Messages</span>
-            </Button>
-            <Button
-              onClick={() => navigate('/profile?tab=settings')}
-              className="flex items-center gap-2 justify-start h-auto p-4"
-              variant="outline"
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span>Upgrade</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Applications and Upcoming Shows */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className={getCardStyles()}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Applications</CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'}>
-                Your latest gig applications
-              </CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/browse')}
-            >
-              Apply More
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {mockStats.comedian.recentApplications.map((app, index) => (
-              <div key={index} className={cn("flex items-center justify-between p-3 rounded-lg", 
-                theme === 'pleasure' ? 'bg-white/[0.05]' : 'bg-gray-700/50'
-              )}>
-                <div>
-                  <p className="font-medium">{app.event}</p>
-                  <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-                    Applied {app.date}
-                  </p>
-                </div>
-                <Badge variant={app.status === 'accepted' ? 'default' : 'secondary'}>
-                  {app.status}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className={getCardStyles()}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Upcoming Shows</CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'}>
-                Your confirmed performances
-              </CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/profile?tab=calendar')}
-            >
-              Contact Promoters
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {mockStats.comedian.upcomingShows.map((show, index) => (
-              <div key={index} className={cn("flex items-center justify-between p-3 rounded-lg", 
-                theme === 'pleasure' ? 'bg-white/[0.05]' : 'bg-gray-700/50'
-              )}>
-                <div>
-                  <p className="font-medium">{show.event}</p>
-                  <p className={cn("text-sm flex items-center gap-1", 
-                    theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'
-                  )}>
-                    <Clock className="w-3 h-3" />
-                    {show.time}
-                  </p>
-                </div>
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    theme === 'pleasure' 
-                      ? 'text-pink-300 border-pink-300/30' 
-                      : 'text-red-400 border-red-400/30'
-                  )}
-                >
-                  ${show.fee}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-
-  const PromoterView = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-xl font-bold text-white mb-2">Advanced Promoter View</h2>
-        <p className={cn("text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-          Manage your events and applications
-        </p>
-      </div>
-      
-      {/* Promoter stats would go here */}
-      <Card className={getCardStyles()}>
-        <CardContent className="p-8 text-center">
-          <h3 className="text-lg font-semibold mb-2">Promoter Dashboard</h3>
-          <p className={cn("text-sm mb-4", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400')}>
-            Advanced event management and analytics
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={() => navigate('/create-event')}>Create Event</Button>
-            <Button variant="outline" onClick={() => navigate('/applications')}>View Applications</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  if (!user) {
-    return (
-      <div className={cn("min-h-screen flex items-center justify-center p-4", getBackgroundStyles())}>
-        <Card className={cn("max-w-md w-full", getCardStyles())}>
-          <CardContent className="p-6 sm:p-8 text-center">
-            <h1 className="text-xl sm:text-2xl font-bold mb-4">Please sign in to view your dashboard</h1>
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-2">
-                Dashboard <Star className="w-6 h-6 text-yellow-400" />
-              </h1>
-              <p className={cn("text-sm sm:text-base", 
-                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
-              )}>
-                Welcome back, Stand Up Sydney {hasRole('admin') ? 'Admin' : 'User'}! Here's what's happening with your comedy career.
-              </p>
-            </div>
-            
-            {/* View Toggle for users with multiple roles */}
-            {isComedian && isPromoter && (
-              <div className={cn("flex rounded-lg p-1", 
-                theme === 'pleasure' ? 'bg-white/[0.08] border border-white/[0.15]' : 'bg-gray-700 border border-gray-600'
-              )}>
-                <Button
-                  variant={viewMode === 'comedian' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('comedian')}
-                  className={cn(
-                    viewMode === 'comedian' 
-                      ? theme === 'pleasure' 
-                        ? 'bg-purple-500 text-white' 
-                        : 'bg-red-600 text-white'
-                      : 'text-current'
-                  )}
-                >
-                  Comedian View
-                </Button>
-                <Button
-                  variant={viewMode === 'promoter' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('promoter')}
-                  className={cn(
-                    viewMode === 'promoter' 
-                      ? theme === 'pleasure' 
-                        ? 'bg-purple-500 text-white' 
-                        : 'bg-red-600 text-white'
-                      : 'text-current'
-                  )}
-                >
-                  Advanced Promoter View
-                </Button>
-              </div>
-            )}
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Welcome back, {user.email?.split('@')[0]}!
+          </h1>
+          <p className={cn(
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            Here's what's happening with your comedy career
+          </p>
         </div>
 
-        {/* Dashboard Content */}
-        {viewMode === 'comedian' ? <ComedianView /> : <PromoterView />}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className={cn(getStatCardStyles())}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-400">$2,450</div>
+              <p className="text-xs text-muted-foreground">
+                +12% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={cn(getStatCardStyles())}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Shows This Month</CardTitle>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">8</div>
+              <p className="text-xs text-muted-foreground">
+                4 upcoming shows
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={cn(getStatCardStyles())}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Applications</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">15</div>
+              <p className="text-xs text-muted-foreground">
+                3 pending responses
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={cn(getStatCardStyles())}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">73%</div>
+              <p className="text-xs text-muted-foreground">
+                +5% from last month
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className={cn(getCardStyles())}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+                Manage your comedy career efficiently
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button 
+                  onClick={() => navigate('/shows')} 
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Shows
+                </Button>
+                
+                {isPromoter && (
+                  <Button 
+                    onClick={() => navigate('/create-event')} 
+                    className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white border-0"
+                  >
+                    <CalendarDays className="w-4 h-4 mr-2" />
+                    Create Event
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={() => navigate('/profile')} 
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Profile
+                </Button>
+                
+                {(isPromoter || isComedian) && (
+                  <Button 
+                    onClick={() => navigate('/invoices')} 
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Invoices
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={cn(getCardStyles())}>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+                Your latest comedy show activities
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Accepted for Comedy Night</p>
+                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Applied to Open Mic</p>
+                    <p className="text-xs text-muted-foreground">1 day ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Payment received</p>
+                    <p className="text-xs text-muted-foreground">3 days ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Profile updated</p>
+                    <p className="text-xs text-muted-foreground">1 week ago</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upcoming Shows */}
+        <Card className={cn(getCardStyles())}>
+          <CardHeader>
+            <CardTitle>Upcoming Shows</CardTitle>
+            <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              Your confirmed comedy shows for this month
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">Friday Night Comedy</h4>
+                  <p className="text-sm text-muted-foreground">The Comedy Store, Sydney</p>
+                  <p className="text-xs text-muted-foreground">Dec 15, 2024 • 8:00 PM</p>
+                </div>
+                <Badge className="bg-green-100 text-green-800 border-green-200">Confirmed</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">Weekend Laughs</h4>
+                  <p className="text-sm text-muted-foreground">Laugh Track Comedy Club</p>
+                  <p className="text-xs text-muted-foreground">Dec 22, 2024 • 7:30 PM</p>
+                </div>
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200">Pending</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">New Year's Eve Special</h4>
+                  <p className="text-sm text-muted-foreground">Sydney Opera House</p>
+                  <p className="text-xs text-muted-foreground">Dec 31, 2024 • 9:00 PM</p>
+                </div>
+                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Applied</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

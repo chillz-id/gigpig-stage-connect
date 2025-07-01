@@ -78,7 +78,7 @@ const DesktopNavigation: React.FC = () => {
           {/* Create Event for promoters/admins - Admin should always see this */}
           {isPromoter && (
             <Link to="/create-event">
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg rounded-lg">
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200 shadow-md hover:shadow-lg rounded-lg border-0">
                 <Plus className="w-4 h-4 mr-2" />
                 Event
               </Button>

@@ -58,7 +58,7 @@ const Navigation = () => {
   const isPromoter = hasRole('promoter') || isAdmin;
 
   const navItems = [
-    { path: '/browse', label: 'Shows', icon: Calendar, public: true },
+    { path: '/shows', label: 'Shows', icon: Calendar, public: true },
     { path: '/dashboard', label: 'Dashboard', icon: User, protected: true },
     { path: '/profile', label: 'Profile', icon: User, protected: true },
     { path: '/create-event', label: 'Create Event', icon: PlusCircle, roles: ['promoter', 'admin'] },
@@ -141,7 +141,7 @@ const Navigation = () => {
       <nav className={cn("hidden md:flex", getNavStyles())}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/browse" className="flex items-center gap-2 text-white font-bold text-lg">
+            <Link to="/shows" className="flex items-center gap-2 text-white font-bold text-lg">
               <Drama className="w-6 h-6" />
               <span className="hidden sm:block">Stand Up Sydney</span>
             </Link>
@@ -190,7 +190,7 @@ const Navigation = () => {
       {/* Mobile Navigation */}
       <nav className={cn("md:hidden", getNavStyles())}>
         <div className="flex items-center justify-between h-16 px-4">
-          <Link to="/browse" className="flex items-center gap-2 text-white font-bold">
+          <Link to="/shows" className="flex items-center gap-2 text-white font-bold">
             <Drama className="w-6 h-6" />
             <span>Stand Up Sydney</span>
           </Link>

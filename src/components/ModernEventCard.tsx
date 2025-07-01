@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Clock, Calendar, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventApplications } from '@/hooks/useEventApplications';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ModernEventCardProps {
   show: any;
@@ -37,7 +39,6 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
     }
   }, [user, userApplications, show.id]);
 
-  // Admin should have access to all features
   const isAdmin = hasRole('admin');
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || isAdmin);
   const isConsumerUser = !isIndustryUser;
@@ -51,7 +52,6 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
     } else {
       await onApply(show);
     }
-    // Update local state to reflect application
     setHasApplied(true);
   };
 
@@ -67,14 +67,21 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const day = date.getDate();
-    return { month: month.toUpperCase(), day };
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const { month, day } = formatDate(show.event_date);
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
 
-  // Determine action text based on user type and show status
   const getActionText = () => {
     if (isIndustryUser) {
       return hasApplied ? 'Applied' : 'Apply';
@@ -83,68 +90,98 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
     }
   };
 
+  const getStatusBadge = () => {
+    if (isShowFull) {
+      return <Badge variant="destructive" className="text-xs">FULL</Badge>;
+    }
+    if (show.is_paid && show.pay_per_comedian) {
+      return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">${show.pay_per_comedian}</Badge>;
+    }
+    return <Badge variant="secondary" className="text-xs">FREE</Badge>;
+  };
+
   return (
-    <div 
-      className="group relative w-full aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-      onClick={handleCardClick}
-    >
-      {/* Background Image */}
-      {show.banner_url && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-          style={{ backgroundImage: `url(${show.banner_url})` }}
-        />
-      )}
-      
-      {/* Overlay Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      
-      {/* Bottom Text Overlay Rectangle */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-black/60" />
-      
+    <div className="group relative w-full bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden">
+      {/* Event Image */}
+      <div className="relative aspect-video overflow-hidden">
+        {show.banner_url ? (
+          <img 
+            src={show.banner_url} 
+            alt={show.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500" />
+        )}
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+        
+        {/* Top Right - Status Badge */}
+        <div className="absolute top-3 right-3">
+          {getStatusBadge()}
+        </div>
+        
+        {/* Heart Icon for Consumers */}
+        {isConsumerUser && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleInterested(show);
+            }}
+            className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm transition-all ${
+              isInterested 
+                ? 'bg-red-500 text-white shadow-lg' 
+                : 'bg-white/80 text-gray-600 hover:bg-white hover:shadow-md'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isInterested ? 'fill-current' : ''}`} />
+          </button>
+        )}
+      </div>
+
       {/* Content */}
-      <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
-        {/* Top Section - Date and Heart */}
-        <div className="flex justify-between items-start">
-          {/* Clean Date Text */}
-          <div className="text-white">
-            <div className="text-xs font-medium opacity-90">{month}</div>
-            <div className="text-sm font-bold">{day}</div>
+      <div className="p-6 space-y-4">
+        {/* Title */}
+        <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition-colors duration-300">
+          {show.title}
+        </h3>
+
+        {/* Details */}
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 flex-shrink-0 text-gray-400" />
+            <span className="font-medium">{show.venue}</span>
           </div>
           
-          {/* Heart Icon for Consumers - Only visible on hover */}
-          {isConsumerUser && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleInterested(show);
-              }}
-              className={`p-2 rounded-full backdrop-blur-sm border transition-all opacity-0 group-hover:opacity-100 ${
-                isInterested 
-                  ? 'bg-red-500/80 text-white border-red-500/50' 
-                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-              }`}
-            >
-              <Heart className={`w-4 h-4 ${isInterested ? 'fill-current' : ''}`} />
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 flex-shrink-0 text-gray-400" />
+              <span>{formatDate(show.event_date)}</span>
+            </div>
+            
+            {show.start_time && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                <span>{formatTime(show.start_time)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-xs text-gray-500">
+            {show.city}, {show.state}
+          </div>
         </div>
 
-        {/* Bottom Section - Event Info and Action Text */}
-        <div className="flex justify-between items-end">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold leading-tight">{show.title}</h3>
-            <div className="flex items-center gap-1 text-xs opacity-80">
-              <MapPin className="w-3 h-3" />
-              <span>{show.city}, {show.state}</span>
-            </div>
-          </div>
-          
-          {/* Action Text - Bottom Right */}
-          <div className={`text-xs font-medium ${hasApplied ? 'text-green-400' : 'opacity-90'}`}>
-            {getActionText()}
-          </div>
-        </div>
+        {/* Action Button */}
+        <Button 
+          onClick={handleCardClick}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-xl transition-all duration-300 group-hover:shadow-lg"
+          disabled={hasApplied}
+        >
+          {getActionText()}
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
       </div>
     </div>
   );

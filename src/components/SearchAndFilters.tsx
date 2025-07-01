@@ -32,6 +32,13 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
     return "bg-gray-800/60 border-0 backdrop-blur-md text-gray-100 shadow-lg shadow-black/20";
   };
 
+  const getSelectContentStyles = () => {
+    if (theme === 'pleasure') {
+      return "bg-white/[0.12] backdrop-blur-md border-white/[0.20] text-white rounded-xl";
+    }
+    return "bg-gray-800/90 border-gray-600 text-gray-100 rounded-xl";
+  };
+
   return (
     <div className="mb-6 space-y-4">
       <div className="flex flex-col md:flex-row gap-4">
@@ -48,7 +55,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
           <SelectTrigger className={cn("w-full md:w-48 rounded-xl", getSelectStyles())}>
             <SelectValue placeholder="Location" />
           </SelectTrigger>
-          <SelectContent className={cn("rounded-xl border-0", getSelectStyles())}>
+          <SelectContent className={getSelectContentStyles()}>
             <SelectItem value="all">All Locations</SelectItem>
             <SelectItem value="Sydney">Sydney, NSW</SelectItem>
             <SelectItem value="Melbourne">Melbourne, VIC</SelectItem>
@@ -76,7 +83,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
           <SelectTrigger className={cn("w-full md:w-48 rounded-xl", getSelectStyles())}>
             <SelectValue placeholder="Show Type" />
           </SelectTrigger>
-          <SelectContent className={cn("rounded-xl border-0", getSelectStyles())}>
+          <SelectContent className={getSelectContentStyles()}>
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="open mic">Open Mic</SelectItem>
             <SelectItem value="semi-pro">Semi-Pro</SelectItem>
