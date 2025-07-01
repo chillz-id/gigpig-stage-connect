@@ -61,7 +61,7 @@
     --chart-5: 340 75% 55%;
   }
 
-  /* Pleasure Theme - Glass morphism colors */
+  /* Pleasure Theme - Solid colors, no blur */
   .theme-pleasure {
     --background: 271 91% 65%;
     --foreground: 0 0% 98%;
@@ -84,7 +84,7 @@
     --ring: 280 100% 70%;
   }
 
-  /* Business Theme - Glass morphism colors */
+  /* Business Theme - Solid colors */
   .theme-business {
     --background: 215 28% 17%;
     --foreground: 210 20% 98%;
@@ -119,100 +119,61 @@
 }
 
 @layer components {
-  /* Glass morphism card utilities */
-  .glass-card {
-    @apply rounded-2xl shadow-xl border backdrop-blur-md;
+  /* Solid card utilities - no blur effects */
+  .solid-card {
+    @apply rounded-2xl shadow-xl border;
   }
   
-  .theme-pleasure .glass-card {
-    @apply bg-white/[0.08] border-white/[0.15] shadow-black/20;
+  .theme-pleasure .solid-card {
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
   }
   
-  .theme-business .glass-card {
-    @apply bg-white/[0.06] border-white/[0.12] shadow-black/25;
+  .theme-business .solid-card {
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
   }
   
-  /* Glass morphism button utilities */
-  .glass-button {
-    @apply rounded-xl shadow-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm;
+  /* Solid button utilities */
+  .solid-button {
+    @apply rounded-xl shadow-lg transition-all duration-300 hover:scale-105;
   }
   
-  .theme-pleasure .glass-button {
-    @apply bg-white/[0.12] hover:bg-white/[0.18] text-white shadow-purple-900/25 border border-white/[0.15];
+  .theme-pleasure .solid-button {
+    @apply bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/25;
   }
   
-  .theme-business .glass-button {
-    @apply bg-white/[0.08] hover:bg-white/[0.14] text-white shadow-black/25 border border-white/[0.12];
+  .theme-business .solid-button {
+    @apply bg-gray-700 hover:bg-gray-600 text-white shadow-black/25;
   }
 
-  /* Glass morphism input styling */
-  .glass-input {
-    @apply rounded-xl shadow-md border focus:ring-2 transition-all duration-200 backdrop-blur-md;
+  /* Input styling without blur */
+  .solid-input {
+    @apply rounded-xl shadow-md border focus:ring-2 transition-all duration-200;
   }
   
-  .theme-pleasure .glass-input {
-    @apply bg-white/[0.08] border-white/[0.15] text-white placeholder:text-white/50 focus:bg-white/[0.12] focus:ring-white/20;
+  .theme-pleasure .solid-input {
+    @apply bg-purple-700/80 border-purple-500/40 text-white placeholder:text-purple-200 focus:bg-purple-600/80 focus:ring-purple-400/50;
   }
   
-  .theme-business .glass-input {
-    @apply bg-white/[0.06] border-white/[0.12] text-gray-100 placeholder:text-gray-400 focus:bg-white/[0.10] focus:ring-gray-400/30;
+  .theme-business .solid-input {
+    @apply bg-gray-700/90 border-gray-500/50 text-gray-100 placeholder:text-gray-300 focus:bg-gray-600/90 focus:ring-gray-400/50;
   }
 
-  /* Enhanced dropdown styling with increased transparency */
-  .glass-dropdown {
-    @apply backdrop-blur-md shadow-2xl border;
-  }
-  
-  .theme-pleasure .glass-dropdown {
-    @apply bg-white/[0.18] border-white/[0.25] shadow-purple-900/40;
-  }
-  
-  .theme-business .glass-dropdown {
-    @apply bg-white/[0.16] border-white/[0.22] shadow-black/50;
-  }
-
-  /* Date range with decreased transparency */
-  .glass-date-range {
-    @apply backdrop-blur-md shadow-lg border;
-  }
-  
-  .theme-pleasure .glass-date-range {
-    @apply bg-white/[0.03] border-white/[0.10] shadow-purple-900/25;
-  }
-  
-  .theme-business .glass-date-range {
-    @apply bg-white/[0.01] border-white/[0.08] shadow-black/30;
-  }
-
-  /* Floating effect with glass morphism */
+  /* Floating effect without blur */
   .floating {
     @apply hover:shadow-2xl hover:scale-[1.02] transition-all duration-300;
   }
 
-  /* Professional styling with glass morphism */
+  /* Professional styling (theme-aware) without glass effects */
   .professional-card {
-    @apply rounded-2xl shadow-xl border transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] backdrop-blur-md;
+    @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.01];
   }
   
   .theme-pleasure .professional-card {
-    @apply bg-white/[0.08] border-white/[0.15] shadow-black/20;
+    @apply solid-card;
   }
   
   .theme-business .professional-card {
-    @apply bg-white/[0.06] border-white/[0.12] shadow-black/25;
-  }
-
-  /* Special styling for invoice cards */
-  .invoice-card {
-    @apply rounded-2xl shadow-xl border transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] backdrop-blur-md;
-  }
-  
-  .theme-pleasure .invoice-card {
-    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
-  }
-  
-  .theme-business .invoice-card {
-    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
+    @apply bg-gray-800/95 border-gray-600/40 rounded-2xl shadow-xl shadow-black/25;
   }
 }
 

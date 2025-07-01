@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
@@ -18,9 +19,9 @@ const SelectTrigger = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-white/[0.08] border-white/[0.15] text-white hover:bg-white/[0.12] focus:bg-white/[0.12] focus:border-white/[0.20] backdrop-blur-md";
+      return "bg-purple-700/90 border-purple-500/50 text-white hover:bg-purple-600/90 focus:bg-purple-600/90 focus:border-purple-400";
     }
-    return "bg-white/[0.06] border-white/[0.12] text-gray-100 hover:bg-white/[0.10] focus:bg-white/[0.10] focus:border-white/[0.18] backdrop-blur-md";
+    return "bg-gray-700/95 border-gray-500/60 text-gray-100 hover:bg-gray-600/95 focus:bg-gray-600/95 focus:border-gray-400";
   };
 
   return (
@@ -85,9 +86,9 @@ const SelectContent = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-white/[0.18] border-white/[0.25] text-white shadow-2xl shadow-purple-900/40 backdrop-blur-md";
+      return "bg-purple-800/95 border-purple-600/40 text-white shadow-2xl shadow-purple-900/30";
     }
-    return "bg-white/[0.16] border-white/[0.22] text-gray-100 shadow-2xl shadow-black/50 backdrop-blur-md";
+    return "bg-gray-800/98 border-gray-600/50 text-gray-100 shadow-2xl shadow-black/40";
   };
 
   return (
@@ -141,9 +142,9 @@ const SelectItem = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "focus:bg-white/[0.12] focus:text-white data-[disabled]:text-purple-300";
+      return "focus:bg-purple-700/60 focus:text-white data-[disabled]:text-purple-300";
     }
-    return "focus:bg-white/[0.10] focus:text-white data-[disabled]:text-gray-400";
+    return "focus:bg-gray-700/60 focus:text-white data-[disabled]:text-gray-400";
   };
 
   return (

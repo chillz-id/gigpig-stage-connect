@@ -47,6 +47,13 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
     .filter(invoice => invoice.status === 'sent')
     .reduce((sum, invoice) => sum + invoice.total_amount, 0);
 
+  const getCardStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-purple-800/90 border-purple-600/30 text-white shadow-xl shadow-black/20';
+    }
+    return 'bg-gray-800/95 border-gray-600/40 text-gray-100 shadow-xl shadow-black/25';
+  };
+
   const getStatCardStyles = (color: string) => {
     if (theme === 'pleasure') {
       return `bg-purple-700/60 border-purple-500/40 text-white rounded-xl shadow-lg`;
@@ -62,14 +69,14 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
   };
 
   return (
-    <Card className="invoice-card">
+    <Card className={cn("professional-card", getCardStyles())}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
             <CardTitle className={theme === 'pleasure' ? 'text-white' : 'text-gray-100'}>Invoice Management</CardTitle>
           </div>
-          <Button onClick={onCreateNew} size="sm">
+          <Button onClick={onCreateNew} size="sm" className="solid-button">
             <Plus className="w-4 h-4 mr-2" />
             New Invoice
           </Button>

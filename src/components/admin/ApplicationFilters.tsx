@@ -35,7 +35,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
   onClearFilters,
 }) => {
   return (
-    <div className="glass-date-range rounded-lg p-4 mb-6">
+    <div className="bg-white/10 backdrop-blur-sm border-white/20 rounded-lg p-4 mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Search */}
         <div className="relative">
@@ -44,7 +44,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
             placeholder="Search comedians..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-300"
           />
         </div>
 
@@ -54,7 +54,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
             <Button
               variant="outline"
               className={cn(
-                "justify-start text-left font-normal",
+                "justify-start text-left font-normal bg-white/10 border-white/20 text-white hover:bg-white/20",
                 !dateRange.from && "text-gray-300"
               )}
             >
@@ -88,7 +88,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
 
         {/* Event Filter */}
         <Select value={eventFilter} onValueChange={setEventFilter}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-white/10 border-white/20 text-white">
             <SelectValue placeholder="Filter by event" />
           </SelectTrigger>
           <SelectContent>
@@ -103,7 +103,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
 
         {/* Sort By */}
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-white/10 border-white/20 text-white">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -119,6 +119,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
         <Button
           variant="outline"
           onClick={onClearFilters}
+          className="text-white border-white/30 hover:bg-white/10"
         >
           <Filter className="w-4 h-4 mr-2" />
           Clear Filters
