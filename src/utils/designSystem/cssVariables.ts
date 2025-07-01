@@ -40,10 +40,27 @@ export const applyCSSVariables = (settings: DesignSystemSettings): void => {
   // Apply effects variables
   root.style.setProperty('--shadow-intensity', settings.effects.shadowIntensity.toString());
   root.style.setProperty('--blur-intensity', `${settings.effects.blurIntensity}px`);
-  root.style.setProperty('--animation-speed', 
-    settings.effects.animationSpeed === 'slow' ? '0.5s' :
-    settings.effects.animationSpeed === 'normal' ? '0.3s' :
-    settings.effects.animationSpeed === 'fast' ? '0.15s' : '0.1s'
-  );
+  
+  // Handle animation speed - support both enum values and direct string values
+  let animationSpeedValue: string;
+  if (typeof settings.effects.animationSpeed === 'string') {
+    if (settings.effects.animationSpeed.includes('ms') || settings.effects.animationSpeed.includes('s')) {
+      // Direct CSS time value (e.g., "200ms", "0.3s")
+      animationSpeedValue = settings.effects.animationSpeed;
+    } else {
+      // Enum value - convert to time
+      switch (settings.effects.animationSpeed) {
+        case 'slow': animationSpeedValue = '0.5s'; break;
+        case 'normal': animationSpeedValue = '0.3s'; break;
+        case 'fast': animationSpeedValue = '0.15s'; break;
+        case 'instant': animationSpeedValue = '0.1s'; break;
+        default: animationSpeedValue = '0.3s';
+      }
+    }
+  } else {
+    animationSpeedValue = '0.3s';
+  }
+  
+  root.style.setProperty('--animation-speed', animationSpeedValue);
   root.style.setProperty('--hover-scale', settings.effects.hoverScale.toString());
 };

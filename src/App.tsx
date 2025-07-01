@@ -26,6 +26,8 @@ import Comedians from '@/pages/Comedians';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import { Suspense } from 'react';
+import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
+import DesignSystemStatusIndicator from '@/components/DesignSystemStatusIndicator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +49,12 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Component to initialize design system globally
+const DesignSystemInitializer = ({ children }: { children: React.ReactNode }) => {
+  useGlobalDesignSystem();
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -54,33 +62,36 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <UserProvider>
-              <Router>
-                <div className="min-h-screen transition-all duration-200">
-                  <Navigation />
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/shows" element={<Shows />} />
-                      <Route path="/browse" element={<Navigate to="/shows" replace />} />
-                      <Route path="/comedians" element={<Comedians />} />
-                      <Route path="/messages" element={<Messages />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/create-event" element={<CreateEvent />} />
-                      <Route path="/applications" element={<Applications />} />
-                      <Route path="/invoices/*" element={<Invoices />} />
-                      <Route path="/admin" element={<AdminDashboard />} />
-                      <Route path="/design-system" element={<DesignSystem />} />
-                      <Route path="/admin/events/:eventId" element={<EventDetail />} />
-                      <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </Suspense>
-                  <Toaster />
-                </div>
-              </Router>
+              <DesignSystemInitializer>
+                <Router>
+                  <div className="min-h-screen transition-all duration-200">
+                    <Navigation />
+                    <Suspense fallback={<LoadingFallback />}>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/shows" element={<Shows />} />
+                        <Route path="/browse" element={<Navigate to="/shows" replace />} />
+                        <Route path="/comedians" element={<Comedians />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/notifications" element={<Notifications />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/create-event" element={<CreateEvent />} />
+                        <Route path="/applications" element={<Applications />} />
+                        <Route path="/invoices/*" element={<Invoices />} />
+                        <Route path="/admin" element={<AdminDashboard />} />
+                        <Route path="/design-system" element={<DesignSystem />} />
+                        <Route path="/admin/events/:eventId" element={<EventDetail />} />
+                        <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </Suspense>
+                    <Toaster />
+                    <DesignSystemStatusIndicator />
+                  </div>
+                </Router>
+              </DesignSystemInitializer>
             </UserProvider>
           </AuthProvider>
         </ThemeProvider>

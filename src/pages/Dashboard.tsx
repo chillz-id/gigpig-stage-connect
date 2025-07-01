@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, DollarSign, Users, TrendingUp, FileText, Calendar, Eye } from 'lucide-react';
+import { CalendarDays, DollarSign, Users, FileText, Calendar, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
@@ -79,7 +79,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -119,18 +119,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className={cn(getStatCardStyles())}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">73%</div>
-              <p className="text-xs text-muted-foreground">
-                +5% from last month
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Quick Actions */}

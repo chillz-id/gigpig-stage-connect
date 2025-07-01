@@ -1,37 +1,36 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { DesignSystemSettings } from '@/types/designSystem';
 import { DEFAULT_DESIGN_SETTINGS } from '@/utils/designSystem/defaultSettings';
 import { applyCSSVariables } from '@/utils/designSystem/cssVariables';
 
 export const useDesignSystemPersistence = () => {
-  const { toast } = useToast();
 
   const loadSettings = async (): Promise<DesignSystemSettings> => {
     try {
+      console.log('🔍 Loading design settings from database...');
+      
       const { data, error } = await supabase
         .from('customization_settings')
         .select('*')
         .eq('is_active', true)
         .single();
 
+      // PGRST116 means no rows returned, which is expected if no active settings exist
       if (error && error.code !== 'PGRST116') {
+        console.error('Database error:', error);
         throw error;
       }
 
       if (data && data.settings_data) {
+        console.log('✅ Found active design settings:', data.name);
         return data.settings_data as unknown as DesignSystemSettings;
       } else {
+        console.log('⚠️ No active design settings found, using defaults');
         return DEFAULT_DESIGN_SETTINGS;
       }
     } catch (error) {
-      console.error('Error loading design settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load design settings",
-        variant: "destructive"
-      });
+      console.error('❌ Error loading design settings:', error);
       return DEFAULT_DESIGN_SETTINGS;
     }
   };
