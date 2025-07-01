@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { useTheme } from "@/contexts/ThemeContext"
 import { cn } from "@/lib/utils"
@@ -11,16 +10,16 @@ const Card = React.forwardRef<
   
   const getThemeStyles = () => {
     if (theme === 'pleasure') {
-      return "bg-purple-800/90 border border-purple-600/30 shadow-xl shadow-black/20";
+      return "bg-white/[0.08] border-white/[0.15] shadow-black/20";
     }
-    return "bg-gray-800/95 border border-gray-600/40 shadow-xl shadow-black/25";
+    return "bg-white/[0.06] border-white/[0.12] shadow-black/25";
   };
 
   return (
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl text-card-foreground transition-all duration-300 hover:shadow-2xl hover:scale-[1.01]",
+        "rounded-2xl text-card-foreground transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] backdrop-blur-md shadow-xl border",
         getThemeStyles(),
         className
       )}

@@ -6,7 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 backdrop-blur-sm",
   {
     variants: {
       variant: {
@@ -46,30 +46,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       if (theme === 'pleasure') {
         switch (currentVariant) {
           case 'default':
-            return "bg-purple-600 hover:bg-purple-500 text-white border-0 shadow-lg shadow-purple-900/25 hover:shadow-xl hover:shadow-purple-900/30 hover:scale-105";
+            return "bg-white/[0.12] hover:bg-white/[0.18] text-white border border-white/[0.15] shadow-lg shadow-purple-900/25 hover:shadow-xl hover:shadow-purple-900/30 hover:scale-105";
           case 'outline':
-            return "bg-transparent hover:bg-purple-700/80 text-white border-2 border-purple-400 hover:border-purple-300 shadow-md shadow-purple-900/15";
+            return "bg-white/[0.06] hover:bg-white/[0.12] text-white border-2 border-white/[0.25] hover:border-white/[0.35] shadow-md shadow-purple-900/15";
           case 'ghost':
-            return "hover:bg-purple-700/60 text-white border-0 hover:shadow-md hover:shadow-purple-900/15";
+            return "hover:bg-white/[0.08] text-white border-0 hover:shadow-md hover:shadow-purple-900/15";
           case 'secondary':
-            return "bg-purple-700/80 text-white hover:bg-purple-600/80 border-0 shadow-md shadow-purple-900/20";
+            return "bg-white/[0.08] text-white hover:bg-white/[0.14] border border-white/[0.12] shadow-md shadow-purple-900/20";
           case 'destructive':
-            return "bg-red-600 hover:bg-red-500 text-white border-0 shadow-lg shadow-red-900/25";
+            return "bg-red-600/90 hover:bg-red-500/90 text-white border border-red-400/30 shadow-lg shadow-red-900/25 backdrop-blur-sm";
           default:
             return "";
         }
       } else {
         switch (currentVariant) {
           case 'default':
-            return "bg-gray-700 hover:bg-gray-600 text-white border-0 shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-black/30 hover:scale-105";
+            return "bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/[0.12] shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-black/30 hover:scale-105";
           case 'outline':
-            return "bg-transparent hover:bg-gray-700/80 text-gray-100 border-2 border-gray-500 hover:border-gray-400 shadow-md shadow-black/20";
+            return "bg-white/[0.04] hover:bg-white/[0.08] text-gray-100 border-2 border-white/[0.20] hover:border-white/[0.30] shadow-md shadow-black/20";
           case 'ghost':
-            return "hover:bg-gray-700/60 text-gray-100 border-0 hover:shadow-md hover:shadow-black/15";
+            return "hover:bg-white/[0.06] text-gray-100 border-0 hover:shadow-md hover:shadow-black/15";
           case 'secondary':
-            return "bg-gray-800/80 text-gray-100 hover:bg-gray-700/80 border-0 shadow-md shadow-black/20";
+            return "bg-white/[0.06] text-gray-100 hover:bg-white/[0.10] border border-white/[0.10] shadow-md shadow-black/20";
           case 'destructive':
-            return "bg-red-600 hover:bg-red-500 text-white border-0 shadow-lg shadow-red-900/25";
+            return "bg-red-600/90 hover:bg-red-500/90 text-white border border-red-400/30 shadow-lg shadow-red-900/25 backdrop-blur-sm";
           default:
             return "";
         }
