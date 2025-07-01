@@ -13,7 +13,7 @@ interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   
-  return useQuery<Notification[]>({
+  const query = useQuery<Notification[]>({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -31,4 +31,9 @@ export const useNotifications = () => {
     },
     enabled: !!user?.id
   });
+
+  return {
+    ...query,
+    unreadCount: query.data?.length || 0
+  };
 };

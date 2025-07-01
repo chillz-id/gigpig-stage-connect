@@ -170,8 +170,8 @@ const Navigation = () => {
 
       {/* Mobile Navigation */}
       <MobileNavigation 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
+        isMobileMenuOpen={isMobileMenuOpen} 
+        setIsMobileMenuOpen={setIsMobileMenuOpen} 
       />
 
       {/* Spacer for fixed navigation */}
