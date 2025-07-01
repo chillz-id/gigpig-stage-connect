@@ -75,8 +75,19 @@ export const useEvents = () => {
         duration_minutes?: number;
       }>;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      console.log('=== CREATE EVENT MUTATION START ===', eventData);
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('=== AUTH ERROR IN CREATE EVENT ===', authError);
+        throw new Error(`Authentication failed: ${authError.message}`);
+      }
+      if (!user) {
+        console.error('=== NO USER IN CREATE EVENT ===');
+        throw new Error('User not authenticated - please log in and try again');
+      }
+      
+      console.log('=== CREATE EVENT: USER AUTHENTICATED ===', { userId: user.id, email: user.email });
 
       const { spotDetails, isRecurring, recurrencePattern, recurrenceEndDate, customDates, ...baseEventData } = eventData;
       
@@ -144,12 +155,18 @@ export const useEvents = () => {
       }
 
       // Insert events
+      console.log('=== INSERTING EVENTS ===', eventsToCreate);
       const { data: createdEvents, error } = await supabase
         .from('events')
         .insert(eventsToCreate)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('=== EVENT CREATION ERROR ===', error);
+        throw new Error(`Failed to create event: ${error.message}`);
+      }
+      
+      console.log('=== EVENTS CREATED SUCCESSFULLY ===', createdEvents);
 
       // Create spots for each event if provided
       if (spotDetails && spotDetails.length > 0) {
@@ -189,6 +206,7 @@ export const useEvents = () => {
       });
     },
     onError: (error) => {
+      console.error('=== CREATE EVENT MUTATION ERROR ===', error);
       toast({
         title: "Failed to create event",
         description: error instanceof Error ? error.message : "An error occurred",

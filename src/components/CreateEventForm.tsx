@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/hooks/useEvents';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { EventBasicInfo } from './EventBasicInfo';
 import { EventDateTimeSection } from './EventDateTimeSection';
 import { EventRequirementsSection } from './EventRequirementsSection';
@@ -60,7 +60,7 @@ export const CreateEventForm: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { createEvent, isCreating } = useEvents();
-  const { user } = useUser();
+  const { user, session } = useAuth();
   
   const [formData, setFormData] = useState<EventFormData>(initialFormData);
   const [eventSpots, setEventSpots] = useState<EventSpot[]>([]);
@@ -86,7 +86,8 @@ export const CreateEventForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!user || !session) {
+      console.error('=== CREATE EVENT: NO AUTH ===', { user: !!user, session: !!session });
       // Auto-dismiss notification after 3 seconds
       const { dismiss } = toast({
         title: "Authentication required",
@@ -100,6 +101,8 @@ export const CreateEventForm: React.FC = () => {
       return;
     }
 
+    console.log('=== CREATE EVENT: AUTH CHECK PASSED ===', { userId: user.id, email: user.email });
+
     const validation = validateEventForm(formData, recurringSettings);
     if (!validation.isValid) {
       toast({
@@ -110,7 +113,9 @@ export const CreateEventForm: React.FC = () => {
       return;
     }
 
+    console.log('=== CREATE EVENT: VALIDATION PASSED ===');
     const eventData = prepareEventData(formData, recurringSettings, eventSpots, user.id);
+    console.log('=== CREATE EVENT: CALLING CREATE EVENT ===', eventData);
     createEvent(eventData);
   };
 
