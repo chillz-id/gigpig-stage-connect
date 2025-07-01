@@ -46,26 +46,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       if (theme === 'pleasure') {
         switch (currentVariant) {
           case 'default':
-            return "bg-white/[0.12] hover:bg-white/[0.18] text-white backdrop-blur-md border-0 shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/20 hover:scale-105";
+            return "bg-purple-600 hover:bg-purple-500 text-white border-0 shadow-lg shadow-purple-900/25 hover:shadow-xl hover:shadow-purple-900/30 hover:scale-105";
           case 'outline':
-            return "bg-white/[0.06] hover:bg-white/[0.12] text-white backdrop-blur-md border-0 shadow-md shadow-black/10 hover:shadow-lg hover:shadow-black/15";
+            return "bg-transparent hover:bg-purple-700/80 text-white border-2 border-purple-400 hover:border-purple-300 shadow-md shadow-purple-900/15";
           case 'ghost':
-            return "hover:bg-white/[0.08] text-white backdrop-blur-sm border-0 hover:shadow-md hover:shadow-black/10";
+            return "hover:bg-purple-700/60 text-white border-0 hover:shadow-md hover:shadow-purple-900/15";
           case 'secondary':
-            return "bg-white/[0.08] text-white hover:bg-white/[0.14] backdrop-blur-md border-0 shadow-md shadow-black/10";
+            return "bg-purple-700/80 text-white hover:bg-purple-600/80 border-0 shadow-md shadow-purple-900/20";
+          case 'destructive':
+            return "bg-red-600 hover:bg-red-500 text-white border-0 shadow-lg shadow-red-900/25";
           default:
             return "";
         }
       } else {
         switch (currentVariant) {
           case 'default':
-            return "bg-gray-700/80 hover:bg-gray-600/80 text-white backdrop-blur-md border-0 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:scale-105";
+            return "bg-gray-700 hover:bg-gray-600 text-white border-0 shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-black/30 hover:scale-105";
           case 'outline':
-            return "bg-gray-800/60 hover:bg-gray-700/60 text-gray-100 backdrop-blur-md border-0 shadow-md shadow-black/20";
+            return "bg-transparent hover:bg-gray-700/80 text-gray-100 border-2 border-gray-500 hover:border-gray-400 shadow-md shadow-black/20";
           case 'ghost':
-            return "hover:bg-gray-700/40 text-gray-100 backdrop-blur-sm border-0 hover:shadow-md hover:shadow-black/15";
+            return "hover:bg-gray-700/60 text-gray-100 border-0 hover:shadow-md hover:shadow-black/15";
           case 'secondary':
-            return "bg-gray-800/60 text-gray-100 hover:bg-gray-700/60 backdrop-blur-md border-0 shadow-md shadow-black/20";
+            return "bg-gray-800/80 text-gray-100 hover:bg-gray-700/80 border-0 shadow-md shadow-black/20";
+          case 'destructive':
+            return "bg-red-600 hover:bg-red-500 text-white border-0 shadow-lg shadow-red-900/25";
           default:
             return "";
         }

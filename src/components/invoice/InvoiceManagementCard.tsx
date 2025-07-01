@@ -24,11 +24,11 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-green-500 hover:bg-green-600';
-      case 'sent': return 'bg-blue-500 hover:bg-blue-600';
-      case 'overdue': return 'bg-red-500 hover:bg-red-600';
-      case 'draft': return 'bg-gray-500 hover:bg-gray-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
+      case 'paid': return 'bg-green-600 hover:bg-green-700 text-white';
+      case 'sent': return 'bg-blue-600 hover:bg-blue-700 text-white';
+      case 'overdue': return 'bg-red-600 hover:bg-red-700 text-white';
+      case 'draft': return 'bg-gray-600 hover:bg-gray-700 text-white';
+      default: return 'bg-gray-600 hover:bg-gray-700 text-white';
     }
   };
 
@@ -49,16 +49,23 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
 
   const getCardStyles = () => {
     if (theme === 'pleasure') {
-      return 'bg-white/[0.08] backdrop-blur-md border-white/[0.15] text-white';
+      return 'bg-purple-800/90 border-purple-600/30 text-white shadow-xl shadow-black/20';
     }
-    return 'bg-gray-800/90 border-gray-600 text-gray-100';
+    return 'bg-gray-800/95 border-gray-600/40 text-gray-100 shadow-xl shadow-black/25';
   };
 
   const getStatCardStyles = (color: string) => {
     if (theme === 'pleasure') {
-      return `bg-white/[0.06] backdrop-blur-sm border-white/[0.10] text-white rounded-xl`;
+      return `bg-purple-700/60 border-purple-500/40 text-white rounded-xl shadow-lg`;
     }
-    return `bg-${color}-50 border-${color}-200 text-${color}-900 rounded-xl`;
+    return `bg-gray-700/80 border-gray-500/50 text-gray-100 rounded-xl shadow-lg`;
+  };
+
+  const getItemStyles = () => {
+    if (theme === 'pleasure') {
+      return "bg-purple-700/40 border-purple-500/30 hover:bg-purple-600/50";
+    }
+    return "bg-gray-700/60 border-gray-500/40 hover:bg-gray-600/70";
   };
 
   return (
@@ -69,12 +76,12 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
             <CreditCard className="w-5 h-5" />
             <CardTitle className={theme === 'pleasure' ? 'text-white' : 'text-gray-100'}>Invoice Management</CardTitle>
           </div>
-          <Button onClick={onCreateNew} size="sm" className="professional-button">
+          <Button onClick={onCreateNew} size="sm" className="solid-button">
             <Plus className="w-4 h-4 mr-2" />
             New Invoice
           </Button>
         </div>
-        <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+        <CardDescription className={theme === 'pleasure' ? 'text-purple-200' : 'text-gray-300'}>
           Manage your invoices and track payments
         </CardDescription>
       </CardHeader>
@@ -82,26 +89,26 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className={cn("p-4 border", getStatCardStyles('green'))}>
-            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-green-300' : 'text-green-700')}>
+            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-green-300' : 'text-green-400')}>
               Total Revenue
             </div>
-            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-green-200' : 'text-green-900')}>
+            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-green-200' : 'text-green-300')}>
               {formatCurrency(totalRevenue)}
             </div>
           </div>
           <div className={cn("p-4 border", getStatCardStyles('blue'))}>
-            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-blue-300' : 'text-blue-700')}>
+            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-blue-300' : 'text-blue-400')}>
               Pending
             </div>
-            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-blue-200' : 'text-blue-900')}>
+            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-blue-200' : 'text-blue-300')}>
               {formatCurrency(pendingAmount)}
             </div>
           </div>
           <div className={cn("p-4 border", getStatCardStyles('gray'))}>
-            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-gray-300' : 'text-gray-700')}>
+            <div className={cn("text-sm font-medium", theme === 'pleasure' ? 'text-gray-300' : 'text-gray-400')}>
               Total Invoices
             </div>
-            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-gray-200' : 'text-gray-900')}>
+            <div className={cn("text-2xl font-bold", theme === 'pleasure' ? 'text-gray-200' : 'text-gray-300')}>
               {invoices.length}
             </div>
           </div>
@@ -109,7 +116,7 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
 
         {/* Recent Invoices */}
         <div className="space-y-4">
-          <h4 className={cn("font-medium text-sm", theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300')}>
+          <h4 className={cn("font-medium text-sm", theme === 'pleasure' ? 'text-purple-200' : 'text-gray-300')}>
             Recent Invoices
           </h4>
           
@@ -124,14 +131,12 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
               {invoices.slice(0, 5).map((invoice) => (
                 <div key={invoice.id} className={cn(
                   "flex items-center justify-between p-3 border rounded-lg transition-colors",
-                  theme === 'pleasure' 
-                    ? "bg-white/[0.04] border-white/[0.10] hover:bg-white/[0.08]" 
-                    : "bg-gray-700/50 border-gray-600 hover:bg-gray-600/50"
+                  getItemStyles()
                 )}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className="font-medium text-sm">{invoice.invoice_number}</span>
-                      <Badge className={`${getStatusColor(invoice.status)} text-white text-xs`}>
+                      <Badge className={`${getStatusColor(invoice.status)} text-xs`}>
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </Badge>
                     </div>
@@ -154,16 +159,12 @@ export const InvoiceManagementCard: React.FC<InvoiceManagementCardProps> = ({
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className={cn(
-                        theme === 'pleasure' 
-                          ? "bg-white/[0.08] backdrop-blur-md border-white/[0.15] text-white" 
-                          : "bg-gray-800 border-gray-600 text-gray-100"
-                      )}>
-                        <DropdownMenuItem onClick={() => onViewDetails(invoice)} className="hover:bg-white/[0.08]">
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onViewDetails(invoice)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="hover:bg-white/[0.08]">
+                        <DropdownMenuItem>
                           <Download className="w-4 h-4 mr-2" />
                           Download PDF
                         </DropdownMenuItem>
