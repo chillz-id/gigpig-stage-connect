@@ -17,7 +17,7 @@ export const useProfileUrl = () => {
         .select('id')
         .eq('profile_slug', newSlug)
         .neq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;

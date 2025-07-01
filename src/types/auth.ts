@@ -12,6 +12,16 @@ export interface Profile {
   is_verified: boolean;
   created_at: string;
   updated_at: string;
+  phone: string | null;
+  website_url: string | null;
+  instagram_url: string | null;
+  twitter_url: string | null;
+  youtube_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  show_contact_in_epk: boolean;
+  custom_show_types: string[];
+  profile_slug: string | null;
 }
 
 export interface UserRole {
