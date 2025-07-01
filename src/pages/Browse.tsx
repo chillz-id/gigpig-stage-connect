@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
@@ -52,8 +51,8 @@ const Browse = () => {
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.venue.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesLocation = locationFilter === '' || 
-        event.city.toLowerCase().includes(locationFilter.toLowerCase());
-      const matchesType = typeFilter === '' || event.event_type === typeFilter;
+        event.city?.toLowerCase().includes(locationFilter.toLowerCase());
+      const matchesType = typeFilter === '' || event.type === typeFilter;
       
       return matchesMonth && matchesSearch && matchesLocation && matchesType;
     }).sort((a, b) => {
