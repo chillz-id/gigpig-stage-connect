@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Users, Plus, Search, Edit, Trash2, FileText, DollarSign } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import EditBookingDialog from './EditBookingDialog';
 
 interface ComedianBooking {
   id: string;
@@ -18,6 +21,10 @@ interface ComedianBooking {
   performance_notes?: string;
   currency: string;
   created_at: string;
+  is_selected: boolean;
+  payment_type: 'fixed' | 'percentage_revenue' | 'percentage_door';
+  percentage_amount: number;
+  is_editable: boolean;
   // Join with profiles for comedian info
   comedian_name?: string;
   comedian_email?: string;
@@ -33,6 +40,10 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
   const [bookings, setBookings] = useState<ComedianBooking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalFees, setTotalFees] = useState(0);
+  const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
+  const [eventRevenue, setEventRevenue] = useState(0);
+  const [editingBooking, setEditingBooking] = useState<ComedianBooking | null>(null);
+  const [isProcessingInvoices, setIsProcessingInvoices] = useState(false);
 
   const fetchLineupData = async () => {
     try {
@@ -58,14 +69,32 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
       const transformedBookings = bookingsData?.map(booking => ({
         ...booking,
         comedian_name: booking.profiles?.stage_name || booking.profiles?.name || 'Unknown Comedian',
-        comedian_email: booking.profiles?.email || ''
+        comedian_email: booking.profiles?.email || '',
+        is_selected: booking.is_selected || false,
+        payment_type: booking.payment_type || 'fixed',
+        percentage_amount: booking.percentage_amount || 0,
+        is_editable: booking.is_editable !== false
       })) || [];
 
       setBookings(transformedBookings);
       
-      // Calculate total fees
-      const total = transformedBookings.reduce((sum, booking) => sum + Number(booking.performance_fee), 0);
-      setTotalFees(total);
+      // Get selected bookings
+      const selected = transformedBookings
+        .filter(booking => booking.is_selected)
+        .map(booking => booking.id);
+      setSelectedBookings(selected);
+
+      // Fetch event revenue for percentage calculations
+      const { data: revenueData } = await supabase
+        .from('ticket_sales')
+        .select('total_amount')
+        .eq('event_id', eventId);
+      
+      const totalRevenue = revenueData?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
+      setEventRevenue(totalRevenue);
+      
+      // Calculate total fees including percentage-based payments
+      await calculateTotalFees(transformedBookings, totalRevenue);
 
     } catch (error: any) {
       console.error('Error fetching lineup data:', error);
@@ -79,9 +108,163 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
     }
   };
 
+  const calculateTotalFees = async (bookingsList: ComedianBooking[], revenue: number) => {
+    let total = 0;
+    
+    for (const booking of bookingsList) {
+      if (booking.payment_type === 'fixed') {
+        total += Number(booking.performance_fee);
+      } else if (booking.payment_type === 'percentage_revenue') {
+        total += (revenue * booking.percentage_amount / 100);
+      } else if (booking.payment_type === 'percentage_door') {
+        // For door sales, we'll use the same revenue for now
+        // In a real scenario, you might have separate door sales tracking
+        total += (revenue * booking.percentage_amount / 100);
+      }
+    }
+    
+    setTotalFees(total);
+  };
+
   useEffect(() => {
     fetchLineupData();
   }, [eventId]);
+
+  const handleSelectBooking = async (bookingId: string, isSelected: boolean) => {
+    try {
+      // Update selection in database
+      const { error } = await supabase
+        .from('comedian_bookings')
+        .update({ is_selected: isSelected })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(prev => prev.map(booking => 
+        booking.id === bookingId 
+          ? { ...booking, is_selected: isSelected }
+          : booking
+      ));
+
+      setSelectedBookings(prev => 
+        isSelected 
+          ? [...prev, bookingId]
+          : prev.filter(id => id !== bookingId)
+      );
+    } catch (error: any) {
+      console.error('Error updating selection:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update selection",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSelectAll = async () => {
+    const allSelected = selectedBookings.length === bookings.length;
+    const newSelection = !allSelected;
+    
+    try {
+      // Update all bookings in database
+      const { error } = await supabase
+        .from('comedian_bookings')
+        .update({ is_selected: newSelection })
+        .eq('event_id', eventId);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(prev => prev.map(booking => ({ ...booking, is_selected: newSelection })));
+      setSelectedBookings(newSelection ? bookings.map(b => b.id) : []);
+
+      toast({
+        title: newSelection ? "All Selected" : "All Deselected",
+        description: `${newSelection ? 'Selected' : 'Deselected'} ${bookings.length} comedians`,
+      });
+    } catch (error: any) {
+      console.error('Error updating all selections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update selections",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateInvoices = async () => {
+    if (selectedBookings.length === 0) {
+      toast({
+        title: "No Selection",
+        description: "Please select comedians to create invoices for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingInvoices(true);
+    
+    try {
+      // Calculate total amount for selected bookings
+      const selectedBookingData = bookings.filter(b => selectedBookings.includes(b.id));
+      let totalAmount = 0;
+      
+      for (const booking of selectedBookingData) {
+        if (booking.payment_type === 'fixed') {
+          totalAmount += Number(booking.performance_fee);
+        } else if (booking.payment_type === 'percentage_revenue') {
+          totalAmount += (eventRevenue * booking.percentage_amount / 100);
+        } else if (booking.payment_type === 'percentage_door') {
+          totalAmount += (eventRevenue * booking.percentage_amount / 100);
+        }
+      }
+
+      // Create batch payment record
+      const { data: batchPayment, error: batchError } = await supabase
+        .from('batch_payments')
+        .insert({
+          event_id: eventId,
+          total_amount: totalAmount,
+          selected_bookings: selectedBookings,
+          processing_status: 'pending',
+          notes: `Batch payment for ${selectedBookings.length} comedian(s)`
+        })
+        .select()
+        .single();
+
+      if (batchError) throw batchError;
+
+      // Update payment status for selected bookings
+      const { error: updateError } = await supabase
+        .from('comedian_bookings')
+        .update({ payment_status: 'processing' })
+        .in('id', selectedBookings);
+
+      if (updateError) throw updateError;
+
+      // Refresh data
+      await fetchLineupData();
+
+      toast({
+        title: "Invoices Created",
+        description: `Created batch payment for ${selectedBookings.length} comedian(s) totaling $${totalAmount.toFixed(2)}`,
+      });
+
+      // Clear selections
+      setSelectedBookings([]);
+      
+    } catch (error: any) {
+      console.error('Error creating invoices:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoices",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingInvoices(false);
+    }
+  };
 
   const handleDeleteBooking = async (bookingId: string) => {
     if (!confirm('Are you sure you want to remove this comedian from the lineup?')) {
@@ -97,6 +280,8 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
       if (error) throw error;
 
       setBookings(prev => prev.filter(booking => booking.id !== bookingId));
+      setSelectedBookings(prev => prev.filter(id => id !== bookingId));
+      
       toast({
         title: "Booking Removed",
         description: "Comedian has been removed from the lineup",
@@ -146,12 +331,43 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
         return 'default';
       case 'pending':
         return 'secondary';
+      case 'processing':
+        return 'outline';
       case 'overdue':
         return 'destructive';
       default:
         return 'outline';
     }
   };
+
+  const calculateBookingAmount = (booking: ComedianBooking) => {
+    if (booking.payment_type === 'fixed') {
+      return booking.performance_fee;
+    } else if (booking.payment_type === 'percentage_revenue') {
+      return eventRevenue * booking.percentage_amount / 100;
+    } else if (booking.payment_type === 'percentage_door') {
+      return eventRevenue * booking.percentage_amount / 100;
+    }
+    return booking.performance_fee;
+  };
+
+  const getPaymentDisplayText = (booking: ComedianBooking) => {
+    if (booking.payment_type === 'fixed') {
+      return `$${Number(booking.performance_fee).toFixed(2)} ${booking.currency}`;
+    } else if (booking.payment_type === 'percentage_revenue') {
+      const amount = eventRevenue * booking.percentage_amount / 100;
+      return `${booking.percentage_amount}% of revenue ($${amount.toFixed(2)})`;
+    } else if (booking.payment_type === 'percentage_door') {
+      const amount = eventRevenue * booking.percentage_amount / 100;
+      return `${booking.percentage_amount}% of door ($${amount.toFixed(2)})`;
+    }
+    return `$${Number(booking.performance_fee).toFixed(2)} ${booking.currency}`;
+  };
+
+  const selectedTotal = selectedBookings.reduce((total, bookingId) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    return booking ? total + calculateBookingAmount(booking) : total;
+  }, 0);
 
   const filteredBookings = bookings.filter(booking =>
     booking.comedian_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,7 +385,7 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white/5 backdrop-blur-sm border-white/20">
           <CardContent className="p-4">
             <div className="text-white/60 text-sm">Total Comedians</div>
@@ -186,10 +402,15 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
         
         <Card className="bg-white/5 backdrop-blur-sm border-white/20">
           <CardContent className="p-4">
-            <div className="text-white/60 text-sm">Paid Comedians</div>
-            <div className="text-2xl font-bold text-white">
-              {bookings.filter(b => b.payment_status === 'paid').length}
-            </div>
+            <div className="text-white/60 text-sm">Selected ({selectedBookings.length})</div>
+            <div className="text-2xl font-bold text-white">${selectedTotal.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
+          <CardContent className="p-4">
+            <div className="text-white/60 text-sm">Event Revenue</div>
+            <div className="text-2xl font-bold text-white">${eventRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
@@ -206,12 +427,33 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
           />
         </div>
         
-        <Button
-          className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Book Comedian
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSelectAll}
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            {selectedBookings.length === bookings.length ? 'Deselect All' : 'Select All'}
+          </Button>
+          
+          {selectedBookings.length > 0 && (
+            <Button
+              onClick={handleCreateInvoices}
+              disabled={isProcessingInvoices}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {isProcessingInvoices ? 'Processing...' : `Invoice ${selectedBookings.length} Selected`}
+            </Button>
+          )}
+          
+          <Button
+            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Book Comedian
+          </Button>
+        </div>
       </div>
 
       {/* Lineup Table */}
@@ -227,6 +469,13 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/20">
+                  <th className="text-left text-white/80 font-medium p-3 w-12">
+                    <Checkbox
+                      checked={selectedBookings.length === bookings.length && bookings.length > 0}
+                      onCheckedChange={handleSelectAll}
+                      className="border-white/40"
+                    />
+                  </th>
                   <th className="text-left text-white/80 font-medium p-3">Comedian</th>
                   <th className="text-left text-white/80 font-medium p-3">Contact</th>
                   <th className="text-left text-white/80 font-medium p-3">Set Duration</th>
@@ -238,6 +487,13 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
               <tbody>
                 {filteredBookings.map((booking) => (
                   <tr key={booking.id} className="border-b border-white/10 hover:bg-white/5">
+                    <td className="text-white p-3">
+                      <Checkbox
+                        checked={selectedBookings.includes(booking.id)}
+                        onCheckedChange={(checked) => handleSelectBooking(booking.id, !!checked)}
+                        className="border-white/40"
+                      />
+                    </td>
                     <td className="text-white p-3">
                       <div>
                         <div className="font-medium">{booking.comedian_name}</div>
@@ -255,15 +511,19 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
                       {booking.set_duration || 'N/A'} minutes
                     </td>
                     <td className="text-white p-3">
-                      ${Number(booking.performance_fee).toFixed(2)} {booking.currency}
+                      <div className="text-sm">
+                        {getPaymentDisplayText(booking)}
+                      </div>
                     </td>
                     <td className="text-white p-3">
                       <select
                         value={booking.payment_status}
                         onChange={(e) => updatePaymentStatus(booking.id, e.target.value)}
                         className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                        disabled={!booking.is_editable}
                       >
                         <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
                         <option value="paid">Paid</option>
                         <option value="overdue">Overdue</option>
                       </select>
@@ -275,6 +535,8 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
                           size="sm"
                           className="text-white hover:bg-white/10 p-2 h-auto"
                           title="Edit Booking"
+                          onClick={() => setEditingBooking(booking)}
+                          disabled={!booking.is_editable}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -305,6 +567,16 @@ const EventLineupTab: React.FC<EventLineupTabProps> = ({ eventId }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Booking Dialog */}
+      {editingBooking && (
+        <EditBookingDialog
+          booking={editingBooking}
+          eventRevenue={eventRevenue}
+          onClose={() => setEditingBooking(null)}
+          onSave={fetchLineupData}
+        />
+      )}
     </div>
   );
 };

@@ -47,6 +47,60 @@ export type Database = {
           },
         ]
       }
+      batch_payments: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processing_status: string | null
+          selected_bookings: string[] | null
+          total_amount: number | null
+          xero_batch_payment_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processing_status?: string | null
+          selected_bookings?: string[] | null
+          total_amount?: number | null
+          xero_batch_payment_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processing_status?: string | null
+          selected_bookings?: string[] | null
+          total_amount?: number | null
+          xero_batch_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_payments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_requests: {
         Row: {
           budget: number | null
@@ -182,7 +236,11 @@ export type Database = {
           currency: string | null
           event_id: string | null
           id: string
+          is_editable: boolean | null
+          is_selected: boolean | null
           payment_status: string | null
+          payment_type: string | null
+          percentage_amount: number | null
           performance_fee: number | null
           performance_notes: string | null
           set_duration: number | null
@@ -194,7 +252,11 @@ export type Database = {
           currency?: string | null
           event_id?: string | null
           id?: string
+          is_editable?: boolean | null
+          is_selected?: boolean | null
           payment_status?: string | null
+          payment_type?: string | null
+          percentage_amount?: number | null
           performance_fee?: number | null
           performance_notes?: string | null
           set_duration?: number | null
@@ -206,7 +268,11 @@ export type Database = {
           currency?: string | null
           event_id?: string | null
           id?: string
+          is_editable?: boolean | null
+          is_selected?: boolean | null
           payment_status?: string | null
+          payment_type?: string | null
+          percentage_amount?: number | null
           performance_fee?: number | null
           performance_notes?: string | null
           set_duration?: number | null
@@ -1507,6 +1573,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_comedian_payment: {
+        Args: {
+          booking_id: string
+          total_event_revenue?: number
+          door_sales?: number
+        }
+        Returns: number
+      }
       calculate_event_profitability: {
         Args: { event_id_param: string }
         Returns: {
