@@ -67,7 +67,7 @@ export const useDesignSystem = () => {
   const loadSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('design_system_settings')
+        .from('customization_settings')
         .select('*')
         .eq('is_active', true)
         .single();
@@ -76,7 +76,7 @@ export const useDesignSystem = () => {
         throw error;
       }
 
-      if (data) {
+      if (data && data.settings_data) {
         setSettings(data.settings_data as DesignSystemSettings);
       } else {
         setSettings(DEFAULT_SETTINGS);
@@ -108,10 +108,10 @@ export const useDesignSystem = () => {
       if (presetName) {
         // Save as named preset
         const { error } = await supabase
-          .from('design_system_settings')
+          .from('customization_settings')
           .insert({
             name: presetName,
-            settings_data: settings,
+            settings_data: settings as any,
             is_active: false,
           });
 
@@ -119,15 +119,15 @@ export const useDesignSystem = () => {
       } else {
         // Apply as active settings
         await supabase
-          .from('design_system_settings')
+          .from('customization_settings')
           .update({ is_active: false })
           .neq('id', '');
 
         const { error } = await supabase
-          .from('design_system_settings')
+          .from('customization_settings')
           .insert({
             name: 'Active Settings',
-            settings_data: settings,
+            settings_data: settings as any,
             is_active: true,
           });
 
