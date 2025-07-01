@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
+import AuthCallback from '@/pages/AuthCallback';
 import Dashboard from '@/pages/Dashboard';
 import Shows from '@/pages/Shows';
 import Profile from '@/pages/Profile';
@@ -70,6 +71,7 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/shows" element={<Shows />} />
                         <Route path="/browse" element={<Navigate to="/shows" replace />} />

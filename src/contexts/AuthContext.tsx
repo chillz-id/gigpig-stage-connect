@@ -56,8 +56,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             try {
               console.log('=== FETCHING USER DATA ===');
-              const userProfile = await fetchProfile(session.user.id);
-              const userRoles = await fetchRoles(session.user.id);
+              let userProfile = await fetchProfile(session.user.id);
+              let userRoles = await fetchRoles(session.user.id);
+              
+              // If profile doesn't exist (OAuth user), wait and try again
+              if (!userProfile && event === 'SIGNED_IN') {
+                console.log('=== PROFILE NOT FOUND, WAITING FOR TRIGGER ===');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                userProfile = await fetchProfile(session.user.id);
+                userRoles = await fetchRoles(session.user.id);
+              }
+              
               console.log('=== USER DATA FETCHED ===', { profile: userProfile, roles: userRoles });
               setProfile(userProfile);
               setRoles(userRoles);

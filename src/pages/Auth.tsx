@@ -31,11 +31,16 @@ const Auth = () => {
     setIsGoogleLoading(true);
     try {
       console.log('=== GOOGLE SIGN IN ATTEMPT ===');
+      console.log('Current origin:', window.location.origin);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
@@ -46,6 +51,8 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        console.log('=== GOOGLE SIGN IN INITIATED ===', data);
       }
     } catch (error: any) {
       console.error('=== GOOGLE SIGN IN EXCEPTION ===', error);
