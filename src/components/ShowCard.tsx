@@ -68,10 +68,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({
       gradientColor={magicColors.gradientColor}
       gradientFrom={magicColors.gradientFrom}
       gradientTo={magicColors.gradientTo}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative w-full h-full">
+      <div 
+        className="relative w-full h-full"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {/* Background Image */}
         <div className="absolute inset-0">
           {show.banner_url ? (

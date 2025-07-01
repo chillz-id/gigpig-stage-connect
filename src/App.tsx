@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import Navigation from '@/components/Navigation';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
@@ -65,6 +66,14 @@ function App() {
                       <Route path="/applications" element={<Applications />} />
                       <Route path="/invoices/*" element={<Invoices />} />
                       <Route path="/admin" element={<AdminDashboard />} />
+                      <Route 
+                        path="/design-system" 
+                        element={
+                          <ProtectedRoute roles={['admin']}>
+                            <DesignSystem />
+                          </ProtectedRoute>
+                        } 
+                      />
                       <Route path="/admin/design-system" element={<DesignSystem />} />
                       <Route path="/admin/events/:eventId" element={<EventDetail />} />
                       <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
