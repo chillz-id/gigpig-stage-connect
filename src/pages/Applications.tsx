@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import ApplicationStats from '@/components/admin/ApplicationStats';
 import ApplicationList from '@/components/admin/ApplicationList';
@@ -15,6 +16,7 @@ import {
 
 const Applications = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<ApplicationData[]>(mockApplications);
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   
@@ -94,8 +96,13 @@ const Applications = () => {
   };
 
   const handleViewProfile = (comedianId: string) => {
-    // Implementation for viewing comedian profile
-    console.log('View profile for comedian:', comedianId);
+    // Find the comedian's name to create the profile slug
+    const application = applications.find(app => app.comedian_id === comedianId);
+    if (application) {
+      // Create slug from comedian name
+      const slug = application.comedian_name.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/comedian/${slug}`);
+    }
   };
 
   const handleClearFilters = () => {

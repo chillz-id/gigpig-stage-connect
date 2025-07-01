@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, Check, EyeOff } from 'lucide-react';
@@ -16,6 +17,7 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
   eventId,
   eventTitle,
 }) => {
+  const navigate = useNavigate();
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   const {
     applications,
@@ -114,7 +116,13 @@ const EventApplicationsPanel: React.FC<EventApplicationsPanelProps> = ({
   };
 
   const handleViewProfile = (comedianId: string) => {
-    // Implementation for viewing comedian profile
+    // Find the comedian's name from mock applications to create the profile slug
+    const application = mockApplications.find(app => app.comedian_id === comedianId);
+    if (application) {
+      // Create slug from comedian name
+      const slug = application.comedian_name.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/comedian/${slug}`);
+    }
   };
 
   if (isLoading) {
