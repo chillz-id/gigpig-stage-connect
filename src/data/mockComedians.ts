@@ -18,7 +18,15 @@ export const mockComedians: Comedian[] = [
       instagram: '@sarahmitchellcomedy',
       tiktok: '@sarahcomedyaus',
       twitter: '@sarahmcomedy'
-    }
+    },
+    phone: null,
+    website_url: null,
+    instagram_url: 'https://instagram.com/sarahmitchellcomedy',
+    twitter_url: 'https://twitter.com/sarahmcomedy',
+    youtube_url: null,
+    facebook_url: null,
+    tiktok_url: 'https://tiktok.com/@sarahcomedyaus',
+    show_contact_in_epk: true
   },
   {
     id: 'mock-2',
@@ -35,7 +43,15 @@ export const mockComedians: Comedian[] = [
     social_media: {
       instagram: '@marcuschencomedy',
       youtube: '@MarcusChenStandUp'
-    }
+    },
+    phone: '+61 2 9876 5432',
+    website_url: 'https://marcuschen.com.au',
+    instagram_url: 'https://instagram.com/marcuschencomedy',
+    twitter_url: null,
+    youtube_url: 'https://youtube.com/@MarcusChenStandUp',
+    facebook_url: null,
+    tiktok_url: null,
+    show_contact_in_epk: true
   },
   {
     id: 'mock-3',
@@ -52,6 +68,14 @@ export const mockComedians: Comedian[] = [
     social_media: {
       instagram: '@emmarodriguezcomedy',
       youtube: '@EmmaRodriguezMusic'
-    }
+    },
+    phone: null,
+    website_url: null,
+    instagram_url: 'https://instagram.com/emmarodriguezcomedy',
+    twitter_url: null,
+    youtube_url: 'https://youtube.com/@EmmaRodriguezMusic',
+    facebook_url: null,
+    tiktok_url: null,
+    show_contact_in_epk: false
   }
 ];

@@ -4,10 +4,26 @@ import { Comedian } from '@/types/comedian';
 import { mockComedians } from '@/data/mockComedians';
 
 export const fetchComedians = async (): Promise<Comedian[]> => {
-  // Fetch all profiles for now (remove problematic query)
+  // Fetch all profiles with contact fields
   const { data: profilesData, error } = await supabase
     .from('profiles')
-    .select('id, name, bio, location, avatar_url, is_verified, email');
+    .select(`
+      id, 
+      name, 
+      bio, 
+      location, 
+      avatar_url, 
+      is_verified, 
+      email,
+      phone,
+      website_url,
+      instagram_url,
+      twitter_url,
+      youtube_url,
+      facebook_url,
+      tiktok_url,
+      show_contact_in_epk
+    `);
 
   if (error) throw error;
   
@@ -18,7 +34,15 @@ export const fetchComedians = async (): Promise<Comedian[]> => {
     location: profile.location,
     avatar_url: profile.avatar_url,
     is_verified: profile.is_verified || false,
-    email: profile.email
+    email: profile.email,
+    phone: profile.phone,
+    website_url: profile.website_url,
+    instagram_url: profile.instagram_url,
+    twitter_url: profile.twitter_url,
+    youtube_url: profile.youtube_url,
+    facebook_url: profile.facebook_url,
+    tiktok_url: profile.tiktok_url,
+    show_contact_in_epk: profile.show_contact_in_epk || false
   }));
   
   return [...dbComedians, ...mockComedians];
