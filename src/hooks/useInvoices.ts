@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
 import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, isAfter, startOfMonth, endOfMonth } from 'date-fns';
-import { Invoice, DateFilter, AmountFilter } from '@/types/invoice';
+import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
   const { user } = useUser();
@@ -103,26 +103,12 @@ export const useInvoices = () => {
     }
   };
 
-  const matchesAmountFilter = (invoice: Invoice, amountFilter: AmountFilter) => {
-    if (amountFilter === 'all') return true;
-    
+  const matchesAmountRange = (invoice: Invoice, amountRange: AmountRange) => {
     const amount = invoice.total_amount;
-    
-    switch (amountFilter) {
-      case '0-100':
-        return amount >= 0 && amount <= 100;
-      case '100-500':
-        return amount > 100 && amount <= 500;
-      case '500-1000':
-        return amount > 500 && amount <= 1000;
-      case '1000+':
-        return amount > 1000;
-      default:
-        return true;
-    }
+    return amount >= amountRange.min && amount <= amountRange.max;
   };
 
-  const filterInvoices = (searchTerm: string, statusFilter: string, dateFilter: DateFilter, amountFilter: AmountFilter) => {
+  const filterInvoices = (searchTerm: string, statusFilter: string, dateFilter: DateFilter, amountRange: AmountRange) => {
     return invoices.filter(invoice => {
       const matchesSearch = 
         invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -133,7 +119,7 @@ export const useInvoices = () => {
       
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
       
-      return matchesSearch && matchesStatus && matchesDateFilter(invoice, dateFilter) && matchesAmountFilter(invoice, amountFilter);
+      return matchesSearch && matchesStatus && matchesDateFilter(invoice, dateFilter) && matchesAmountRange(invoice, amountRange);
     });
   };
 

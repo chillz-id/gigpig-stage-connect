@@ -45,17 +45,14 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   // Handle tab change - validate and pass to parent
   const handleTabChange = (newTab: string) => {
-    
     // Only pass valid tabs to parent
     if (availableTabs.includes(newTab)) {
       setActiveTab(newTab);
-    } else {
     }
   };
 
   // Ensure we have a valid active tab - fallback to first available tab
   const currentTab = availableTabs.includes(activeTab) ? activeTab : availableTabs[0];
-  
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">

@@ -16,3 +16,11 @@ export interface Invoice {
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 export type DateFilter = 'all' | 'this-month' | 'last-month' | 'this-quarter' | 'this-year' | 'overdue';
 export type AmountFilter = 'all' | '0-100' | '100-500' | '500-1000' | '1000+';
+
+// New type for slider-based amount filtering
+export interface AmountRange {
+  min: number;
+  max: number;
+}
+
+export const DEFAULT_AMOUNT_RANGE: AmountRange = { min: 0, max: 10000 };

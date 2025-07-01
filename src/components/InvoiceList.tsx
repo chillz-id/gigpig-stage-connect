@@ -9,7 +9,7 @@ import { InvoiceCard } from './invoice/InvoiceCard';
 import { InvoiceEmptyState } from './invoice/InvoiceEmptyState';
 import { InvoiceLoadingState } from './invoice/InvoiceLoadingState';
 import { useInvoices } from '@/hooks/useInvoices';
-import { DateFilter, AmountFilter } from '@/types/invoice';
+import { DateFilter, AmountRange, DEFAULT_AMOUNT_RANGE } from '@/types/invoice';
 
 const InvoiceList: React.FC = () => {
   const { user } = useUser();
@@ -17,15 +17,15 @@ const InvoiceList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-  const [amountFilter, setAmountFilter] = useState<AmountFilter>('all');
+  const [amountRange, setAmountRange] = useState<AmountRange>(DEFAULT_AMOUNT_RANGE);
 
-  const filteredInvoices = filterInvoices(searchTerm, statusFilter, dateFilter, amountFilter);
+  const filteredInvoices = filterInvoices(searchTerm, statusFilter, dateFilter, amountRange);
 
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
     setDateFilter('all');
-    setAmountFilter('all');
+    setAmountRange(DEFAULT_AMOUNT_RANGE);
   };
 
   if (loading) {
@@ -51,8 +51,8 @@ const InvoiceList: React.FC = () => {
         setStatusFilter={setStatusFilter}
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        amountFilter={amountFilter}
-        setAmountFilter={setAmountFilter}
+        amountRange={amountRange}
+        setAmountRange={setAmountRange}
         onClearFilters={clearFilters}
       />
 
