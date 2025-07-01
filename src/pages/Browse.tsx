@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
-import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { SearchAndFilters } from '@/components/SearchAndFilters';
 import { ShowCard } from '@/components/ShowCard';
@@ -18,31 +17,61 @@ const Browse = () => {
   // Get month from URL params
   const searchParams = new URLSearchParams(location.search);
   const monthParam = searchParams.get('month');
-  const initialMonth = monthParam ? new Date(monthParam) : new Date();
+  const initialDate = monthParam ? new Date(monthParam) : new Date();
   
-  const [selectedMonth, setSelectedMonth] = useState<Date>(initialMonth);
-
-  const { data: events, isLoading, error } = useEvents();
+  const [selectedMonth, setSelectedMonth] = useState<number>(initialDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(initialDate.getFullYear());
   
-  const {
-    filteredEvents,
-    searchTerm,
-    setSearchTerm,
-    locationFilter,
-    setLocationFilter,
-    showTypeFilter,
-    setShowTypeFilter,
-    sortBy,
-    setSortBy,
-    clearFilters,
-  } = useBrowseLogic(events || [], selectedMonth);
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [sortBy, setSortBy] = useState('date');
 
-  // Update URL when month changes
-  useEffect(() => {
+  const { events, isLoading, error } = useEvents();
+
+  // Filter events based on selected month/year and other filters
+  const filteredEvents = React.useMemo(() => {
+    if (!events) return [];
+    
+    return events.filter(event => {
+      const eventDate = new Date(event.event_date);
+      const matchesMonth = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
+      const matchesSearch = searchTerm === '' || 
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.venue.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesLocation = locationFilter === '' || 
+        event.city.toLowerCase().includes(locationFilter.toLowerCase());
+      const matchesType = typeFilter === '' || event.show_type === typeFilter;
+      
+      return matchesMonth && matchesSearch && matchesLocation && matchesType;
+    }).sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+      } else if (sortBy === 'title') {
+        return a.title.localeCompare(b.title);
+      }
+      return 0;
+    });
+  }, [events, selectedMonth, selectedYear, searchTerm, locationFilter, typeFilter, sortBy]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setLocationFilter('');
+    setTypeFilter('');
+    setSortBy('date');
+  };
+
+  const handleMonthChange = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    
+    // Update URL
     const url = new URL(window.location.href);
-    url.searchParams.set('month', selectedMonth.toISOString().slice(0, 7));
+    const dateStr = new Date(year, month).toISOString().slice(0, 7);
+    url.searchParams.set('month', dateStr);
     window.history.replaceState({}, '', url.toString());
-  }, [selectedMonth]);
+  };
 
   if (isLoading) {
     return (
@@ -93,14 +122,16 @@ const Browse = () => {
 
         {/* Featured Events Carousel */}
         <div className="mb-6 sm:mb-8">
-          <FeaturedEventsCarousel events={events || []} />
+          <FeaturedEventsCarousel />
         </div>
 
         {/* Month Filter */}
         <div className="mb-6">
           <MonthFilter 
             selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
+            events={events || []}
           />
         </div>
 
@@ -110,8 +141,8 @@ const Browse = () => {
           setSearchTerm={setSearchTerm}
           locationFilter={locationFilter}
           setLocationFilter={setLocationFilter}
-          showTypeFilter={showTypeFilter}
-          setShowTypeFilter={setShowTypeFilter}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
           sortBy={sortBy}
           setSortBy={setSortBy}
           onClearFilters={clearFilters}
@@ -122,7 +153,7 @@ const Browse = () => {
         {filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredEvents.map((event) => (
-              <ShowCard key={event.id} event={event} />
+              <ShowCard key={event.id} {...event} />
             ))}
           </div>
         ) : (

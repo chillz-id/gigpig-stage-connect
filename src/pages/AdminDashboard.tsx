@@ -5,11 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Navigate } from 'react-router-dom';
-import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
-import { EventManagement } from '@/components/admin/EventManagement';
-import { UserManagement } from '@/components/admin/UserManagement';
-import { FinancialDashboard } from '@/components/admin/FinancialDashboard';
-import { SystemSettings } from '@/components/admin/SystemSettings';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
+import EventManagement from '@/components/admin/EventManagement';
+import UserManagement from '@/components/admin/UserManagement';
+import FinancialDashboard from '@/components/admin/FinancialDashboard';
+import SystemSettings from '@/components/admin/SystemSettings';
 import { cn } from '@/lib/utils';
 
 const AdminDashboard = () => {
