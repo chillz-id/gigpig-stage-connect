@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,7 +74,14 @@ export const useInvoices = () => {
       }
 
       console.log('=== INVOICES FETCHED SUCCESSFULLY ===', data?.length || 0);
-      setInvoices(data || []);
+      
+      // Type cast the data to match our Invoice interface
+      const typedInvoices: Invoice[] = (data || []).map(invoice => ({
+        ...invoice,
+        gst_treatment: invoice.gst_treatment as 'inclusive' | 'exclusive' | 'none'
+      }));
+      
+      setInvoices(typedInvoices);
     } catch (error) {
       console.error('=== ERROR FETCHING INVOICES ===', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to load invoices';
