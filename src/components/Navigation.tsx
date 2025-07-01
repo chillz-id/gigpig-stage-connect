@@ -76,17 +76,14 @@ const Navigation = () => {
           : 'bg-gray-800/95 border-gray-600/40'
       )}>
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
               <img 
                 src="/id-logo.png" 
                 alt="Stand Up Sydney" 
-                className="h-8 w-auto"
+                className="h-12 w-auto"
               />
-              <span className="font-bold text-lg text-white hidden sm:block">
-                Stand Up Sydney
-              </span>
             </Link>
 
             {/* Desktop Menu */}
@@ -177,7 +174,7 @@ const Navigation = () => {
       />
 
       {/* Spacer for fixed navigation */}
-      <div className="h-16" />
+      <div className="h-20" />
     </>
   );
 };
