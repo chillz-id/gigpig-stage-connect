@@ -1,133 +1,84 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Crown, Shield, Drama } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import UserManagement from '@/components/admin/UserManagement';
-import EventManagement from '@/components/admin/EventManagement';
-import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
-import MetaPixelSettings from '@/components/admin/MetaPixelSettings';
-import SystemSettings from '@/components/admin/SystemSettings';
-import TicketSalesManagement from '@/components/admin/ticket-sales/TicketSalesManagement';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Navigate } from 'react-router-dom';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+import { EventManagement } from '@/components/admin/EventManagement';
+import { UserManagement } from '@/components/admin/UserManagement';
+import { FinancialDashboard } from '@/components/admin/FinancialDashboard';
+import { SystemSettings } from '@/components/admin/SystemSettings';
+import { cn } from '@/lib/utils';
 
 const AdminDashboard = () => {
   const { user, hasRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const { theme } = useTheme();
+  const [activeTab, setActiveTab] = useState('analytics');
 
-  // Block access for non-admins
+  // Check if user is admin
   if (!user || !hasRole('admin')) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center p-4">
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white max-w-md w-full">
-          <CardContent className="p-6 md:p-8 text-center">
-            <Shield className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-4 text-red-400" />
-            <h1 className="text-xl md:text-2xl font-bold mb-4">Admin Access Required</h1>
-            <p className="text-purple-200 text-content">Only system administrators can access this dashboard.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Navigate to="/dashboard" replace />;
   }
 
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+  };
+
+  const getCardStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-white/[0.08] backdrop-blur-md border-white/[0.15] text-white';
+    }
+    return 'bg-gray-800/90 border-gray-600 text-gray-100';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
-      <div className="container mx-auto px-4 py-4 md:py-8">
-        <div className="mb-6 md:mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Crown className="w-6 md:w-8 h-6 md:h-8 text-yellow-400 flex-shrink-0" />
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Admin Dashboard</h1>
-          </div>
-          <p className="text-purple-200 text-content">Manage all aspects of Stand Up Sydney</p>
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+          <p className={cn(
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            Manage your comedy platform and oversee all operations
+          </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-6 md:mb-8">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white text-lg md:text-xl">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <Link to="/customization">
-                  <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white min-h-[44px] text-base">
-                    <Drama className="w-4 h-4 mr-2" />
-                    Customize Website
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className={cn("grid w-full grid-cols-5", 
+            theme === 'pleasure' 
+              ? 'bg-white/[0.08] border-white/[0.15]' 
+              : 'bg-gray-800 border-gray-600'
+          )}>
+            <TabsTrigger value="analytics" className="text-white">Analytics</TabsTrigger>
+            <TabsTrigger value="events" className="text-white">Events</TabsTrigger>
+            <TabsTrigger value="users" className="text-white">Users</TabsTrigger>
+            <TabsTrigger value="financial" className="text-white">Financial</TabsTrigger>
+            <TabsTrigger value="settings" className="text-white">Settings</TabsTrigger>
+          </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <div className="overflow-x-auto pb-1">
-            <TabsList className="inline-flex bg-white/10 backdrop-blur-sm min-w-full">
-              <TabsTrigger 
-                value="overview" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Overview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="users" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Users</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="events" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Events</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="sales" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Ticket Sales</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Analytics</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-900 px-2 py-2 text-xs sm:text-sm sm:px-4 flex-1 min-w-0"
-              >
-                <span className="truncate">Settings</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="overview" className="space-y-4 md:space-y-6">
+          <TabsContent value="analytics" className="space-y-6">
             <AnalyticsDashboard />
           </TabsContent>
 
-          <TabsContent value="users" className="space-y-4 md:space-y-6">
-            <UserManagement />
-          </TabsContent>
-
-          <TabsContent value="events" className="space-y-4 md:space-y-6">
+          <TabsContent value="events" className="space-y-6">
             <EventManagement />
           </TabsContent>
 
-          <TabsContent value="sales" className="space-y-4 md:space-y-6">
-            <TicketSalesManagement />
+          <TabsContent value="users" className="space-y-6">
+            <UserManagement />
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4 md:space-y-6">
-            <AnalyticsDashboard />
-            <MetaPixelSettings />
+          <TabsContent value="financial" className="space-y-6">
+            <FinancialDashboard />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4 md:space-y-6">
+          <TabsContent value="settings" className="space-y-6">
             <SystemSettings />
-            <MetaPixelSettings />
           </TabsContent>
         </Tabs>
       </div>

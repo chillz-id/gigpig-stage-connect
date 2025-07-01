@@ -78,7 +78,7 @@ const Navigation = () => {
 
   const getNavStyles = () => {
     if (theme === 'pleasure') {
-      return 'bg-gradient-to-r from-pink-700/90 via-purple-600/90 to-purple-800/90 backdrop-blur-md border-b border-white/10';
+      return 'bg-gradient-to-r from-purple-700/90 via-purple-800/90 to-purple-900/90 backdrop-blur-md';
     }
     return 'bg-gradient-to-r from-gray-800 via-gray-900 to-red-900/30 border-b border-gray-700';
   };
@@ -97,8 +97,8 @@ const Navigation = () => {
           baseStyles,
           mobileStyles,
           isActive 
-            ? "bg-white/20 text-white font-medium backdrop-blur-md border border-white/30" 
-            : "text-white/80 hover:bg-white/10 hover:text-white hover:backdrop-blur-md"
+            ? "bg-white/[0.15] text-white font-medium backdrop-blur-md border border-white/[0.20]" 
+            : "text-white/80 hover:bg-white/[0.08] hover:text-white hover:backdrop-blur-md"
         );
       } else {
         return cn(
@@ -126,8 +126,8 @@ const Navigation = () => {
   const getButtonStyles = (variant: 'primary' | 'ghost' = 'ghost') => {
     if (theme === 'pleasure') {
       return variant === 'primary' 
-        ? "bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 min-h-[44px]"
-        : "text-white hover:bg-white/10 hover:backdrop-blur-md min-h-[44px]";
+        ? "bg-white/[0.15] hover:bg-white/[0.25] text-white backdrop-blur-md border border-white/[0.20] min-h-[44px]"
+        : "text-white hover:bg-white/[0.08] hover:backdrop-blur-md min-h-[44px]";
     } else {
       return variant === 'primary'
         ? "bg-red-600 hover:bg-red-700 text-white min-h-[44px]"
@@ -138,7 +138,7 @@ const Navigation = () => {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className={cn("hidden md:flex shadow-lg", getNavStyles())}>
+      <nav className={cn("hidden md:flex", getNavStyles())}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/browse" className="flex items-center gap-2 text-white font-bold text-lg">
@@ -188,7 +188,7 @@ const Navigation = () => {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className={cn("md:hidden shadow-lg", getNavStyles())}>
+      <nav className={cn("md:hidden", getNavStyles())}>
         <div className="flex items-center justify-between h-16 px-4">
           <Link to="/browse" className="flex items-center gap-2 text-white font-bold">
             <Drama className="w-6 h-6" />
@@ -207,7 +207,7 @@ const Navigation = () => {
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
           <div className={theme === 'pleasure' 
-            ? "bg-purple-900/95 backdrop-blur-sm border-t border-white/10" 
+            ? "bg-purple-900/95 backdrop-blur-sm" 
             : "bg-gray-900/95 backdrop-blur-sm border-t border-gray-700"
           }>
             <div className="px-4 py-4 space-y-2">

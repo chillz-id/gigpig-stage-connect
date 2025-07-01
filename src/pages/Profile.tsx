@@ -9,12 +9,15 @@ import { ImageCrop } from '@/components/ImageCrop';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useProfileData } from '@/hooks/useProfileData';
+import { cn } from '@/lib/utils';
 
 const Profile = () => {
   const { user, profile, signOut, updateProfile, hasRole } = useAuth();
+  const { theme } = useTheme();
   const { toast } = useToast();
   const location = useLocation();
   
@@ -54,11 +57,18 @@ const Profile = () => {
     }
   }, []); // Empty dependency array - only run on mount
 
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+  };
+
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className={cn("min-h-screen flex items-center justify-center p-4", getBackgroundStyles())}>
         <div className="text-center max-w-md w-full">
-          <h1 className="text-xl sm:text-2xl font-bold mb-4">Please sign in to view your profile</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-4">Please sign in to view your profile</h1>
           <Button className="w-full">Sign In</Button>
         </div>
       </div>
@@ -130,7 +140,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Profile Header */}
         <ProfileHeader 

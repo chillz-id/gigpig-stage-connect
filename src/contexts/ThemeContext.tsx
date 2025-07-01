@@ -36,11 +36,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.classList.add(`theme-${theme}`);
     body.classList.add(`theme-${theme}`);
     
-    // Apply theme-specific styles
+    // Apply theme-specific styles with darker, softer pink
     if (theme === 'pleasure') {
-      body.style.background = 'linear-gradient(135deg, #BE185D, #7C3AED, #581C87)';
+      body.style.background = 'linear-gradient(135deg, #9D4EDD, #7209B7, #5A189A)';
       body.style.color = 'white';
-      body.className = `theme-pleasure bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 text-white min-h-screen`;
+      body.className = `theme-pleasure bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 text-white min-h-screen`;
     } else {
       body.style.background = 'linear-gradient(135deg, #1F2937, #111827, #450A0A)';
       body.style.color = '#F3F4F6';
@@ -49,11 +49,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Set CSS custom properties for theme variables
     if (theme === 'pleasure') {
-      root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #BE185D, #7C3AED, #581C87)');
-      root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.1)');
-      root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.2)');
-      root.style.setProperty('--accent-primary', '#E91E63');
-      root.style.setProperty('--accent-secondary', '#7C3AED');
+      root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #9D4EDD, #7209B7, #5A189A)');
+      root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.08)');
+      root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.15)');
+      root.style.setProperty('--accent-primary', '#C77DFF');
+      root.style.setProperty('--accent-secondary', '#9D4EDD');
     } else {
       root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #1F2937, #111827, #450A0A)');
       root.style.setProperty('--card-bg', '#374151');

@@ -1,14 +1,16 @@
 
 import React from 'react';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, Share2 } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import ComedianHeader from './ComedianHeader';
 import ComedianBio from './ComedianBio';
 import ComedianMedia from './ComedianMedia';
 import ComedianUpcomingShows from './ComedianUpcomingShows';
 import ComedianAccomplishments from './ComedianAccomplishments';
 import ComedianContact from './ComedianContact';
+import { cn } from '@/lib/utils';
 
 interface ComedianProfileLayoutProps {
   comedian: any;
@@ -16,6 +18,7 @@ interface ComedianProfileLayoutProps {
 
 const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian }) => {
   const { hasRole } = useAuth();
+  const { theme } = useTheme();
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -50,8 +53,15 @@ const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian 
     }
   };
 
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8 relative">
           {/* Action Buttons positioned absolutely */}

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { CardContent } from '@/components/ui/card';
-import { Share2 } from 'lucide-react';
 import ComedianAvatar from './ComedianAvatar';
 import ComedianBasicInfo from './ComedianBasicInfo';
 import ComedianActions from './ComedianActions';
@@ -31,11 +30,6 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare, onCo
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='60' cy='60' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}
       />
-      
-      {/* Share Profile positioned to align with social icons */}
-      <div className="absolute top-8 right-8 z-10 opacity-60 hover:opacity-100 transition-opacity cursor-pointer" onClick={onShare}>
-        <Share2 className="w-6 h-6 text-white" />
-      </div>
       
       <CardContent className="relative p-12">
         <div className="flex flex-col lg:flex-row items-center gap-8">

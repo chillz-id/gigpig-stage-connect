@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 import ApplicationStats from '@/components/admin/ApplicationStats';
 import ApplicationList from '@/components/admin/ApplicationList';
 import ApplicationFilters from '@/components/admin/ApplicationFilters';
@@ -13,9 +14,11 @@ import {
   calculateApplicationStats,
   ApplicationData
 } from '@/services/applicationService';
+import { cn } from '@/lib/utils';
 
 const Applications = () => {
   const { toast } = useToast();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [applications, setApplications] = useState<ApplicationData[]>(mockApplications);
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
@@ -112,12 +115,23 @@ const Applications = () => {
     setDateRange({ from: undefined, to: undefined });
   };
 
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Applications Management</h1>
-          <p className="text-purple-100">Review and manage comedian applications for your events</p>
+          <p className={cn(
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            Review and manage comedian applications for your events
+          </p>
         </div>
 
         <ApplicationStats stats={stats} />

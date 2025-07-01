@@ -1,181 +1,156 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useEvents } from '@/hooks/useEvents';
-import { ModernEventCard } from '@/components/ModernEventCard';
-import { EventDetailsPopup } from '@/components/EventDetailsPopup';
-import { RecurringEventDateSelector } from '@/components/RecurringEventDateSelector';
-import { RecurringApplicationDateSelector } from '@/components/RecurringApplicationDateSelector';
-import { TicketPage } from '@/components/TicketPage';
-import { MonthFilter } from '@/components/MonthFilter';
-import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
-import { mockEvents } from '@/data/mockEvents';
+import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
+import { SearchAndFilters } from '@/components/SearchAndFilters';
+import { ShowCard } from '@/components/ShowCard';
+import { MonthFilter } from '@/components/MonthFilter';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 
 const Browse = () => {
-  const { events, isLoading } = useEvents();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [showRecurringApplicationSelector, setShowRecurringApplicationSelector] = useState(false);
-  const [selectedRecurringEvent, setSelectedRecurringEvent] = useState<any>(null);
+  const { theme } = useTheme();
+  const location = useLocation();
+  
+  // Get month from URL params
+  const searchParams = new URLSearchParams(location.search);
+  const monthParam = searchParams.get('month');
+  const initialMonth = monthParam ? new Date(monthParam) : new Date();
+  
+  const [selectedMonth, setSelectedMonth] = useState<Date>(initialMonth);
 
+  const { data: events, isLoading, error } = useEvents();
+  
   const {
-    selectedEventForTickets,
-    selectedEventForDetails,
-    showTicketPage,
-    showEventDetailsDialog,
-    showRecurringDateSelector,
-    interestedEvents,
-    isIndustryUser,
-    isConsumerUser,
-    handleApply,
-    handleBuyTickets,
-    handleToggleInterested,
-    handleGetDirections,
-    handleShowDetails,
-    handleDateSelected,
-    setShowTicketPage,
-    setShowEventDetailsDialog,
-    setShowRecurringDateSelector,
-  } = useBrowseLogic();
+    filteredEvents,
+    searchTerm,
+    setSearchTerm,
+    locationFilter,
+    setLocationFilter,
+    showTypeFilter,
+    setShowTypeFilter,
+    sortBy,
+    setSortBy,
+    clearFilters,
+  } = useBrowseLogic(events || [], selectedMonth);
 
-  // Combine real events with mock events
-  const allEvents = [...events, ...mockEvents];
+  // Update URL when month changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('month', selectedMonth.toISOString().slice(0, 7));
+    window.history.replaceState({}, '', url.toString());
+  }, [selectedMonth]);
 
-  // Filter to show only upcoming events (from today onwards)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  if (isLoading) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", 
+        theme === 'pleasure' 
+          ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
+          : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
+      )}>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
-  const upcomingEvents = allEvents.filter(event => {
-    const eventDate = new Date(event.event_date);
-    return eventDate >= today;
-  });
+  if (error) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center p-4",
+        theme === 'pleasure' 
+          ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
+          : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
+      )}>
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-2">Oops! Something went wrong</h2>
+          <p className="text-gray-300">We couldn't load the events. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Filter events by selected month/year and search term
-  const filteredEvents = upcomingEvents.filter(event => {
-    const eventDate = new Date(event.event_date);
-    const matchesMonth = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         `${event.city}, ${event.state}`.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesMonth && matchesSearch;
-  });
-
-  const handleRecurringApply = (event: any) => {
-    setSelectedRecurringEvent(event);
-    setShowRecurringApplicationSelector(true);
-  };
-
-  const handleRecurringApplicationSubmit = (event: any, selectedDates: Date[]) => {
-    // Handle the application for multiple dates
-    // This would normally make API calls for each selected date
-    handleApply(event); // For now, just use the regular apply logic
-  };
-
-  const handleMonthChange = (month: number, year: number) => {
-    setSelectedMonth(month);
-    setSelectedYear(year);
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Featured Events Carousel */}
-          <FeaturedEventsCarousel />
-
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search for events"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card/50 border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </div>
-
-          {/* Month Filter */}
-          <MonthFilter
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthChange={handleMonthChange}
-            events={upcomingEvents}
-          />
-
-          {/* Event Cards */}
-          <div className="mt-6">
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="text-xl text-muted-foreground">Loading events...</div>
-              </div>
-            ) : filteredEvents.length === 0 ? (
-              <Card className="bg-card/50 backdrop-blur-sm border-border text-foreground">
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-xl font-semibold mb-2">No shows found</h3>
-                  <p className="text-muted-foreground">
-                    Try selecting a different month or adjusting your search
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.map((show) => (
-                  <ModernEventCard
-                    key={show.id}
-                    show={show}
-                    interestedEvents={interestedEvents}
-                    onToggleInterested={handleToggleInterested}
-                    onApply={handleApply}
-                    onBuyTickets={handleBuyTickets}
-                    onShowDetails={handleShowDetails}
-                    onGetDirections={handleGetDirections}
-                    onRecurringApply={handleRecurringApply}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Page Header */}
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Comedy Shows</h1>
+          <p className={cn("text-sm sm:text-base", 
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            Discover amazing comedy shows happening around Sydney
+          </p>
         </div>
+
+        {/* Featured Events Carousel */}
+        <div className="mb-6 sm:mb-8">
+          <FeaturedEventsCarousel events={events || []} />
+        </div>
+
+        {/* Month Filter */}
+        <div className="mb-6">
+          <MonthFilter 
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
+        </div>
+
+        {/* Search and Filters */}
+        <SearchAndFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          locationFilter={locationFilter}
+          setLocationFilter={setLocationFilter}
+          showTypeFilter={showTypeFilter}
+          setShowTypeFilter={setShowTypeFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          onClearFilters={clearFilters}
+          totalResults={filteredEvents.length}
+        />
+
+        {/* Events Grid */}
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {filteredEvents.map((event) => (
+              <ShowCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className={cn("text-xl font-semibold mb-2",
+              theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+            )}>
+              No shows found
+            </div>
+            <p className={cn("text-sm sm:text-base mb-4",
+              theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'
+            )}>
+              Try adjusting your filters or check back later for new shows.
+            </p>
+            <button
+              onClick={clearFilters}
+              className={cn("px-4 py-2 rounded-lg transition-colors",
+                theme === 'pleasure' 
+                  ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              )}
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
       </div>
-
-      <EventDetailsPopup
-        event={selectedEventForDetails}
-        isOpen={showEventDetailsDialog}
-        onClose={() => setShowEventDetailsDialog(false)}
-        onApply={handleApply}
-        onBuyTickets={handleBuyTickets}
-        onGetDirections={handleGetDirections}
-        isIndustryUser={isIndustryUser}
-        isConsumerUser={isConsumerUser}
-      />
-
-      <RecurringEventDateSelector
-        event={selectedEventForTickets}
-        isOpen={showRecurringDateSelector}
-        onClose={() => setShowRecurringDateSelector(false)}
-        onDateSelected={handleDateSelected}
-      />
-
-      <RecurringApplicationDateSelector
-        event={selectedRecurringEvent}
-        isOpen={showRecurringApplicationSelector}
-        onClose={() => setShowRecurringApplicationSelector(false)}
-        onApply={handleRecurringApplicationSubmit}
-      />
-
-      <TicketPage
-        event={selectedEventForTickets}
-        isOpen={showTicketPage}
-        onClose={() => setShowTicketPage(false)}
-      />
-    </>
+    </div>
   );
 };
 

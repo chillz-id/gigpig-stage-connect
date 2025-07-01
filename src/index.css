@@ -61,27 +61,27 @@
     --chart-5: 340 75% 55%;
   }
 
-  /* Pleasure Theme */
+  /* Pleasure Theme - Updated with softer glass morphic effects */
   .theme-pleasure {
     --background: 190 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: rgba(255, 255, 255, 0.1);
+    --card: rgba(255, 255, 255, 0.08);
     --card-foreground: 0 0% 98%;
-    --popover: rgba(255, 255, 255, 0.1);
+    --popover: rgba(255, 255, 255, 0.08);
     --popover-foreground: 0 0% 98%;
-    --primary: 334 81% 49%;
+    --primary: 280 100% 70%;
     --primary-foreground: 0 0% 98%;
-    --secondary: rgba(255, 255, 255, 0.1);
+    --secondary: rgba(255, 255, 255, 0.08);
     --secondary-foreground: 0 0% 98%;
-    --muted: rgba(255, 255, 255, 0.05);
+    --muted: rgba(255, 255, 255, 0.04);
     --muted-foreground: 240 5% 84.9%;
-    --accent: rgba(255, 255, 255, 0.1);
+    --accent: rgba(255, 255, 255, 0.08);
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: rgba(255, 255, 255, 0.2);
-    --input: rgba(255, 255, 255, 0.1);
-    --ring: 334 81% 49%;
+    --border: rgba(255, 255, 255, 0.15);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: 280 100% 70%;
   }
 
   /* Business Theme */
@@ -119,17 +119,17 @@
 }
 
 @layer components {
-  /* Pleasure Theme Components */
+  /* Pleasure Theme Components - Updated glass morphic effects */
   .pleasure-card {
-    @apply backdrop-blur-md bg-white/10 border border-white/20 rounded-xl shadow-xl;
+    @apply backdrop-blur-md bg-white/[0.08] border border-white/[0.15] rounded-xl shadow-xl;
   }
   
   .pleasure-button {
-    @apply bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 transition-all duration-200;
+    @apply bg-white/[0.12] hover:bg-white/[0.20] text-white backdrop-blur-md border border-white/[0.20] transition-all duration-200;
   }
   
   .pleasure-input {
-    @apply bg-white/10 border border-white/20 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-pink-400 focus:ring-pink-400/20;
+    @apply bg-white/[0.08] border border-white/[0.15] backdrop-blur-sm text-white placeholder:text-white/60 focus:border-purple-400 focus:ring-purple-400/20;
   }
 
   /* Business Theme Components */
