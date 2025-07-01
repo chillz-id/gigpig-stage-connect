@@ -1,19 +1,20 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import InvoiceFilters from './InvoiceFilters';
 import { InvoiceCard } from './invoice/InvoiceCard';
 import { InvoiceEmptyState } from './invoice/InvoiceEmptyState';
 import { InvoiceLoadingState } from './invoice/InvoiceLoadingState';
 import { useInvoices } from '@/hooks/useInvoices';
 import { DateFilter, AmountRange, DEFAULT_AMOUNT_RANGE } from '@/types/invoice';
+import { Card, CardContent } from '@/components/ui/card';
 
 const InvoiceList: React.FC = () => {
-  const { user } = useUser();
-  const { invoices, loading, deleteInvoice, filterInvoices } = useInvoices();
+  const { user, hasRole } = useAuth();
+  const { invoices, loading, error, deleteInvoice, filterInvoices } = useInvoices();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
@@ -28,8 +29,45 @@ const InvoiceList: React.FC = () => {
     setAmountRange(DEFAULT_AMOUNT_RANGE);
   };
 
+  // Show access denied for non-promoters/admins
+  if (!user || (!hasRole('promoter') && !hasRole('admin'))) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold">Invoices</h2>
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-amber-600" />
+            <h3 className="text-xl font-semibold text-amber-800 mb-2">Access Required</h3>
+            <p className="text-amber-700">
+              You need promoter or admin access to manage invoices.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return <InvoiceLoadingState />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold">Invoices</h2>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-600" />
+            <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Invoices</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

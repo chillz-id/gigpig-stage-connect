@@ -1,24 +1,42 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchInvoices();
+    if (user) {
+      console.log('=== FETCHING INVOICES ===', user.id);
+      fetchInvoices();
+    } else {
+      console.log('=== NO USER, CLEARING INVOICES ===');
+      setInvoices([]);
+      setLoading(false);
+      setError(null);
+    }
   }, [user]);
 
   const fetchInvoices = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('=== NO USER FOR INVOICE FETCH ===');
+      setLoading(false);
+      return;
+    }
 
     try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('=== STARTING INVOICE FETCH ===', user.id);
+      
       const { data, error } = await supabase
         .from('invoices')
         .select(`
@@ -37,14 +55,22 @@ export const useInvoices = () => {
         .eq('promoter_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('=== INVOICE FETCH RESPONSE ===', { data, error });
 
+      if (error) {
+        console.error('=== INVOICE FETCH ERROR ===', error);
+        throw error;
+      }
+
+      console.log('=== INVOICES FETCHED SUCCESSFULLY ===', data?.length || 0);
       setInvoices(data || []);
     } catch (error) {
-      console.error('Error fetching invoices:', error);
+      console.error('=== ERROR FETCHING INVOICES ===', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load invoices';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to load invoices",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -126,6 +152,7 @@ export const useInvoices = () => {
   return {
     invoices,
     loading,
+    error,
     deleteInvoice,
     filterInvoices,
     refetchInvoices: fetchInvoices
