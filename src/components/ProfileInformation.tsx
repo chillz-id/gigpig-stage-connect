@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SocialMediaInput } from '@/components/SocialMediaInput';
 
 interface ProfileData {
   firstName: string;
@@ -22,6 +23,8 @@ interface ProfileData {
   twitterUrl: string;
   websiteUrl: string;
   youtubeUrl: string;
+  facebookUrl: string;
+  tiktokUrl: string;
 }
 
 interface ProfileInformationProps {
@@ -49,7 +52,9 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
     instagramUrl: user.instagram_url || '',
     twitterUrl: user.twitter_url || '',
     websiteUrl: user.website_url || '',
-    youtubeUrl: user.youtube_url || ''
+    youtubeUrl: user.youtube_url || '',
+    facebookUrl: user.facebook_url || '',
+    tiktokUrl: user.tiktok_url || ''
   });
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
@@ -243,47 +248,53 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         {/* Social Media Links */}
         <div className="space-y-4">
           <Label className="text-base font-semibold">Social Media & Links</Label>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Just enter @username or username - we'll convert it to the full URL automatically!
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="instagram">Instagram URL</Label>
-              <Input 
-                id="instagram" 
-                value={formData.instagramUrl}
-                onChange={(e) => handleInputChange('instagramUrl', e.target.value)}
-                placeholder="https://instagram.com/username"
-              />
-            </div>
-            <div>
-              <Label htmlFor="twitter">Twitter/X URL</Label>
-              <Input 
-                id="twitter" 
-                value={formData.twitterUrl}
-                onChange={(e) => handleInputChange('twitterUrl', e.target.value)}
-                placeholder="https://twitter.com/username"
-              />
-            </div>
+            <SocialMediaInput
+              id="instagram"
+              platform="instagram"
+              value={formData.instagramUrl}
+              onChange={(value) => handleInputChange('instagramUrl', value)}
+            />
+            <SocialMediaInput
+              id="twitter"
+              platform="twitter"
+              value={formData.twitterUrl}
+              onChange={(value) => handleInputChange('twitterUrl', value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="website">Website URL</Label>
-              <Input 
-                id="website" 
-                value={formData.websiteUrl}
-                onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-                placeholder="https://yourwebsite.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="youtube">YouTube Channel</Label>
-              <Input 
-                id="youtube" 
-                value={formData.youtubeUrl}
-                onChange={(e) => handleInputChange('youtubeUrl', e.target.value)}
-                placeholder="https://youtube.com/channel/..."
-              />
-            </div>
+            <SocialMediaInput
+              id="website"
+              platform="website"
+              value={formData.websiteUrl}
+              onChange={(value) => handleInputChange('websiteUrl', value)}
+            />
+            <SocialMediaInput
+              id="youtube"
+              platform="youtube"
+              value={formData.youtubeUrl}
+              onChange={(value) => handleInputChange('youtubeUrl', value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SocialMediaInput
+              id="facebook"
+              platform="facebook"
+              value={formData.facebookUrl}
+              onChange={(value) => handleInputChange('facebookUrl', value)}
+            />
+            <SocialMediaInput
+              id="tiktok"
+              platform="tiktok"
+              value={formData.tiktokUrl}
+              onChange={(value) => handleInputChange('tiktokUrl', value)}
+            />
           </div>
         </div>
 
