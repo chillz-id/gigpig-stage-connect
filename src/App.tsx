@@ -22,6 +22,10 @@ import EventDetail from '@/pages/EventDetail';
 import ComedianProfile from '@/pages/ComedianProfile';
 import ComedianProfileBySlug from '@/pages/ComedianProfileBySlug';
 import DesignSystem from '@/pages/DesignSystem';
+import Organizer from '@/pages/Organizer';
+import Comedians from '@/pages/Comedians';
+import Messages from '@/pages/Messages';
+import Notifications from '@/pages/Notifications';
 import { Suspense } from 'react';
 
 const queryClient = new QueryClient({
@@ -61,6 +65,10 @@ function App() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/browse" element={<Browse />} />
                       <Route path="/shows" element={<Navigate to="/browse" replace />} />
+                      <Route path="/comedians" element={<Comedians />} />
+                      <Route path="/organizer" element={<Organizer />} />
+                      <Route path="/messages" element={<Messages />} />
+                      <Route path="/notifications" element={<Notifications />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/create-event" element={<CreateEvent />} />
                       <Route path="/applications" element={<Applications />} />

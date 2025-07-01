@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3 } from 'lucide-react';
+import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings, Palette } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavigationLinksProps {
@@ -26,12 +26,12 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     <div className="space-y-1 py-6">
       {/* Main Navigation */}
       <Link
-        to="/shows"
+        to="/browse"
         className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
-        <Home className="w-5 h-5" />
-        <span className="font-medium">Shows</span>
+        <Search className="w-5 h-5" />
+        <span className="font-medium">Browse Shows</span>
       </Link>
 
       <Link
@@ -55,13 +55,37 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             <span className="font-medium">Dashboard</span>
           </Link>
 
+          {/* Comedian Applications */}
+          {isComedian && (
+            <Link
+              to="/applications"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Calendar className="w-5 h-5" />
+              <span className="font-medium">Applications</span>
+            </Link>
+          )}
+
+          {/* Promoter Events */}
+          {isPromoter && (
+            <Link
+              to="/organizer"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Calendar className="w-5 h-5" />
+              <span className="font-medium">Events</span>
+            </Link>
+          )}
+
           <Link
-            to="/profile?tab=calendar"
+            to="/messages"
             className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={handleLinkClick}
           >
-            <Calendar className="w-5 h-5" />
-            <span className="font-medium">Calendar</span>
+            <MessageCircle className="w-5 h-5" />
+            <span className="font-medium">Messages</span>
           </Link>
 
           <Link
@@ -73,15 +97,6 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             <span className="font-medium">Notifications</span>
           </Link>
 
-          <Link
-            to="/messages"
-            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
-            onClick={handleLinkClick}
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="font-medium">Messages</span>
-          </Link>
-
           {/* Admin Dashboard - Always visible for admins */}
           {isAdmin && (
             <Link
@@ -89,8 +104,20 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
               className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
               onClick={handleLinkClick}
             >
-              <Crown className="w-5 h-5 text-yellow-400" />
+              <Settings className="w-5 h-5" />
               <span className="font-medium">Admin Dashboard</span>
+            </Link>
+          )}
+
+          {/* Design System - Admin only */}
+          {isAdmin && (
+            <Link
+              to="/design-system"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Palette className="w-5 h-5" />
+              <span className="font-medium">Design System</span>
             </Link>
           )}
 

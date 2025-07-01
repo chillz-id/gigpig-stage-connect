@@ -14,7 +14,9 @@ import {
   Settings,
   Palette,
   Menu,
-  X
+  X,
+  Users,
+  MessageCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -93,6 +95,11 @@ const Navigation = () => {
                 Browse
               </Link>
 
+              <Link to="/comedians" className={getNavLinkClass('/comedians')}>
+                <Users className="w-4 h-4" />
+                Comedians
+              </Link>
+
               {hasRole('comedian') && (
                 <Link to="/applications" className={getNavLinkClass('/applications')}>
                   <Calendar className="w-4 h-4" />
@@ -107,6 +114,21 @@ const Navigation = () => {
                 </Link>
               )}
 
+              <Link to="/messages" className={getNavLinkClass('/messages')}>
+                <MessageCircle className="w-4 h-4" />
+                Messages
+              </Link>
+
+              <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")}>
+                <Bell className="w-4 h-4" />
+                Notifications
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Link>
+
               {hasRole('admin') && (
                 <Link to="/admin" className={getNavLinkClass('/admin')}>
                   <Settings className="w-4 h-4" />
@@ -120,16 +142,6 @@ const Navigation = () => {
                   Design
                 </Link>
               )}
-
-              <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")}>
-                <Bell className="w-4 h-4" />
-                Notifications
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </Link>
 
               <Link to="/profile" className={getNavLinkClass('/profile')}>
                 <User className="w-4 h-4" />
