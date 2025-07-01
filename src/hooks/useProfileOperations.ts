@@ -13,7 +13,28 @@ export const useProfileOperations = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          email,
+          name,
+          stage_name,
+          bio,
+          location,
+          avatar_url,
+          is_verified,
+          created_at,
+          updated_at,
+          phone,
+          website_url,
+          instagram_url,
+          twitter_url,
+          youtube_url,
+          facebook_url,
+          tiktok_url,
+          show_contact_in_epk,
+          custom_show_types,
+          profile_slug
+        `)
         .eq('id', userId)
         .single();
       
