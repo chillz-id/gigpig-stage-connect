@@ -1,0 +1,57 @@
+
+import { DesignSystemSettings } from '@/types/designSystem';
+
+export const DEFAULT_DESIGN_SETTINGS: DesignSystemSettings = {
+  colors: {
+    primary: '#7C3AED',
+    secondary: '#64748B',
+    accent: '#F59E0B',
+    background: '#FFFFFF',
+    foreground: '#0F172A',
+    card: '#FFFFFF',
+    'card-foreground': '#0F172A',
+    muted: '#F8FAFC',
+    'muted-foreground': '#64748B',
+    border: '#E2E8F0',
+    input: '#FFFFFF',
+    'primary-foreground': '#FFFFFF',
+    'secondary-foreground': '#FFFFFF',
+    destructive: '#EF4444',
+    'destructive-foreground': '#FFFFFF',
+    success: '#10B981',
+    'success-foreground': '#FFFFFF',
+    warning: '#F59E0B',
+    'warning-foreground': '#FFFFFF',
+  },
+  buttons: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingX: 16,
+    paddingY: 8,
+    fontSize: 14,
+    fontWeight: 500,
+  },
+  typography: {
+    headingFont: 'Inter',
+    bodyFont: 'Inter',
+    h1Size: 32,
+    h2Size: 24,
+    h3Size: 20,
+    bodySize: 16,
+    smallSize: 14,
+    lineHeight: 1.5,
+    letterSpacing: 0,
+  },
+  layout: {
+    containerMaxWidth: 1200,
+    sectionPadding: 24,
+    cardSpacing: 16,
+    gridGap: 24,
+  },
+  effects: {
+    shadowIntensity: 0.1,
+    blurIntensity: 12,
+    animationSpeed: 'normal',
+    hoverScale: 1.02,
+  },
+};
