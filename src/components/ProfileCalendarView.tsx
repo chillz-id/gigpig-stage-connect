@@ -140,7 +140,7 @@ export const ProfileCalendarView: React.FC = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              {isConsumer ? 'Event Calendar' : 'My Calendar'}
+              {isConsumer ? 'Event Calendar' : isComedian ? 'My Gig Calendar' : 'My Events'}
             </CardTitle>
             {/* Only show Add Event button for promoters */}
             {!isConsumer && !isComedian && (
@@ -173,7 +173,9 @@ export const ProfileCalendarView: React.FC = () => {
           <div className="mt-4 text-sm text-muted-foreground text-center">
             {isConsumer 
               ? 'Dates with events you\'re interested in are highlighted'
-              : 'Dates with your events are highlighted'
+              : isComedian
+                ? 'Dates with your confirmed and pending gigs are highlighted'
+                : 'Dates with your events are highlighted'
             }
           </div>
         </CardContent>

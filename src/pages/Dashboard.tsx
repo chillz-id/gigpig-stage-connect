@@ -8,11 +8,13 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, DollarSign, Users, FileText, Calendar, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUpcomingGigs } from '@/hooks/useUpcomingGigs';
 
 const Dashboard = () => {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { confirmedGigCount, nextGig, isLoading: gigsLoading } = useUpcomingGigs();
 
   if (!user) {
     return (
@@ -93,15 +95,22 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className={cn(getStatCardStyles())}>
+          <Card className={cn(getStatCardStyles(isComedian))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Shows This Month</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {isComedian ? 'Upcoming Gigs' : 'Shows This Month'}
+              </CardTitle>
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold">
+                {isComedian ? (gigsLoading ? '...' : confirmedGigCount) : '8'}
+              </div>
               <p className="text-xs text-muted-foreground">
-                4 upcoming shows
+                {isComedian 
+                  ? (nextGig ? `Next: ${new Date(nextGig.event_date).toLocaleDateString()}` : 'No upcoming gigs')
+                  : '4 upcoming shows'
+                }
               </p>
             </CardContent>
           </Card>
@@ -143,6 +152,24 @@ const Dashboard = () => {
                   <Eye className="w-4 h-4 mr-2" />
                   Shows
                 </Button>
+                
+                {/* Calendar Button for Comedians */}
+                {isComedian && (
+                  <Button 
+                    onClick={() => navigate('/profile?tab=calendar')} 
+                    className="w-full justify-between bg-blue-600 hover:bg-blue-700 text-white border-0"
+                  >
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Calendar
+                    </div>
+                    {!gigsLoading && confirmedGigCount > 0 && (
+                      <Badge className="bg-white/20 text-white hover:bg-white/30">
+                        {confirmedGigCount}
+                      </Badge>
+                    )}
+                  </Button>
+                )}
                 
                 {isPromoter && (
                   <Button 
