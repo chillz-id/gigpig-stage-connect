@@ -8,6 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Search, UserPlus, Shield, Crown, Mic, Building, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface User {
   id: string;
@@ -20,58 +23,53 @@ interface User {
 }
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { hasRole } = useAuth();
 
-  // Mock data for demonstration
-  useEffect(() => {
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        email: 'admin@standupSydney.com',
-        name: 'System Admin',
-        created_at: '2024-01-15T10:00:00Z',
-        roles: ['admin'],
-        is_verified: true,
-        last_sign_in: '2024-12-27T09:30:00Z'
-      },
-      {
-        id: '2',
-        email: 'sarah@example.com',
-        name: 'Sarah Mitchell',
-        created_at: '2024-02-20T14:30:00Z',
-        roles: ['comedian'],
-        is_verified: true,
-        last_sign_in: '2024-12-26T18:45:00Z'
-      },
-      {
-        id: '3',
-        email: 'mike@venues.com',
-        name: 'Mike Johnson',
-        created_at: '2024-03-10T11:15:00Z',
-        roles: ['promoter'],
-        is_verified: true,
-        last_sign_in: '2024-12-25T16:20:00Z'
-      },
-      {
-        id: '4',
-        email: 'jane@example.com',
-        name: 'Jane Smith',
-        created_at: '2024-11-15T08:00:00Z',
-        roles: ['member'],
-        is_verified: false,
-        last_sign_in: null
+  // Fetch users from database
+  const { data: users = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['admin-users', searchTerm, roleFilter],
+    queryFn: async () => {
+      if (!hasRole('admin')) {
+        throw new Error('Unauthorized');
       }
-    ];
-    
-    setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 1000);
-  }, []);
+
+      // Fetch profiles with their roles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          name,
+          created_at,
+          is_verified,
+          last_sign_in_at,
+          user_roles!inner(
+            role_type
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Transform data to match expected format
+      const transformedUsers = (profiles || []).map(profile => ({
+        id: profile.id,
+        email: profile.email || '',
+        name: profile.name,
+        created_at: profile.created_at,
+        roles: profile.user_roles?.map(ur => ur.role_type) || ['member'],
+        is_verified: profile.is_verified || false,
+        last_sign_in: profile.last_sign_in_at
+      }));
+
+      return transformedUsers;
+    },
+    enabled: !!hasRole('admin'),
+    staleTime: 30 * 1000, // 30 seconds
+  });
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -102,18 +100,30 @@ const UserManagement = () => {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      // In a real app, this would call your backend API
-      setUsers(users.map(user => 
-        user.id === userId 
-          ? { ...user, roles: [newRole] }
-          : user
-      ));
+      // First delete existing role
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) throw deleteError;
+
+      // Then insert new role
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role_type: newRole });
+
+      if (insertError) throw insertError;
+
+      // Refresh the data
+      refetch();
       
       toast({
         title: "Role Updated",
         description: "User role has been successfully updated.",
       });
     } catch (error) {
+      console.error('Role update error:', error);
       toast({
         title: "Error",
         description: "Failed to update user role.",
@@ -235,27 +245,24 @@ const UserManagement = () => {
           </Table>
         </div>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-gray-300">
-              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No users found matching your criteria.</p>
-              <Button 
-                variant="outline" 
-                className="mt-4 text-white border-white/20 hover:bg-white/10"
-                onClick={() => {
-                  setSearchTerm('');
-                  setRoleFilter('all');
-                  setStatusFilter('all');
-                  setVerificationFilter('all');
-                }}
-              >
-                Clear Filters
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-8 text-gray-300">
+            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No users found matching your criteria.</p>
+            <Button 
+              variant="outline" 
+              className="mt-4 text-white border-white/20 hover:bg-white/10"
+              onClick={() => {
+                setSearchTerm('');
+                setRoleFilter('all');
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

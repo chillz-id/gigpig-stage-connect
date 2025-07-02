@@ -51,22 +51,50 @@ export const ProfileCalendarView: React.FC = () => {
           status: 'interested',
           calendar_sync_status: 'manual'
         }));
-      } else {
-        // For industry users, fetch their calendar events
+      } else if (isComedian) {
+        // For comedians, fetch their bookings from comedian_bookings table
         const { data, error } = await supabase
-          .from('calendar_events')
-          .select('*')
+          .from('comedian_bookings')
+          .select(`
+            id,
+            status,
+            fee,
+            events!inner(
+              id,
+              title,
+              venue,
+              date,
+              created_at
+            )
+          `)
           .eq('comedian_id', user.id)
-          .order('event_date', { ascending: true });
+          .order('events.date', { ascending: true });
+
+        if (error) throw error;
+        return (data || []).map(booking => ({
+          id: booking.id,
+          title: booking.events?.title || 'Gig',
+          venue: booking.events?.venue || 'Venue TBA',
+          event_date: booking.events?.date || new Date().toISOString(),
+          status: booking.status,
+          calendar_sync_status: 'confirmed'
+        }));
+      } else {
+        // For promoters, fetch events they created
+        const { data, error } = await supabase
+          .from('events')
+          .select('id, title, venue, date, status')
+          .eq('promoter_id', user.id)
+          .order('date', { ascending: true });
 
         if (error) throw error;
         return (data || []).map(event => ({
           id: event.id,
           title: event.title,
           venue: event.venue,
-          event_date: event.event_date,
-          status: event.status,
-          calendar_sync_status: event.calendar_sync_status
+          event_date: event.date,
+          status: event.status || 'published',
+          calendar_sync_status: 'published'
         }));
       }
     },

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { CalendarDays, DollarSign, Users, FileText, Calendar, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUpcomingGigs } from '@/hooks/useUpcomingGigs';
+import { EarningsCard } from '@/components/dashboard/EarningsCard';
 
 const Dashboard = () => {
   const { user, hasRole } = useAuth();
@@ -82,18 +83,7 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className={cn(getStatCardStyles())}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-400">$2,450</div>
-              <p className="text-xs text-muted-foreground">
-                +12% from last month
-              </p>
-            </CardContent>
-          </Card>
+          <EarningsCard />
 
           <Card className={cn(getStatCardStyles(isComedian))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
