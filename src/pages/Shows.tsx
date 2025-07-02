@@ -28,6 +28,8 @@ const Shows = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [sortBy, setSortBy] = useState('date');
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const [showDateRange, setShowDateRange] = useState(false);
 
   const { events, isLoading, error } = useEvents();
   
@@ -44,13 +46,28 @@ const Shows = () => {
     handleGetDirections
   } = useBrowseLogic();
 
-  // Filter events based on selected month/year and other filters
+  // Filter events based on selected month/year, date range, and other filters
   const filteredEvents = React.useMemo(() => {
     if (!events) return [];
     
     return events.filter(event => {
       const eventDate = new Date(event.event_date);
-      const matchesMonth = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
+      
+      // Date filtering logic - use date range if set, otherwise use month/year
+      let matchesDate = true;
+      if (dateRange.start || dateRange.end) {
+        // Custom date range filtering
+        if (dateRange.start && eventDate < dateRange.start) {
+          matchesDate = false;
+        }
+        if (dateRange.end && eventDate > dateRange.end) {
+          matchesDate = false;
+        }
+      } else {
+        // Month/year filtering (default behavior)
+        matchesDate = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
+      }
+      
       const matchesSearch = searchTerm === '' || 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.venue.toLowerCase().includes(searchTerm.toLowerCase());
@@ -58,7 +75,7 @@ const Shows = () => {
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
       const matchesType = typeFilter === '' || event.type === typeFilter;
       
-      return matchesMonth && matchesSearch && matchesLocation && matchesType;
+      return matchesDate && matchesSearch && matchesLocation && matchesType;
     }).sort((a, b) => {
       if (sortBy === 'date') {
         return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
@@ -67,13 +84,36 @@ const Shows = () => {
       }
       return 0;
     });
-  }, [events, selectedMonth, selectedYear, searchTerm, locationFilter, typeFilter, sortBy]);
+  }, [events, selectedMonth, selectedYear, dateRange, searchTerm, locationFilter, typeFilter, sortBy]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setLocationFilter('');
     setTypeFilter('');
     setSortBy('date');
+    setDateRange({ start: null, end: null });
+    setShowDateRange(false);
+  };
+
+  const handleDateRangeChange = (range: { start: Date | null; end: Date | null }) => {
+    setDateRange(range);
+    // Clear month/year selection when using custom date range
+    if (range.start || range.end) {
+      // Don't update month/year when using custom range
+    } else {
+      // Reset to current month when clearing date range
+      const now = new Date();
+      setSelectedMonth(now.getMonth());
+      setSelectedYear(now.getFullYear());
+    }
+  };
+
+  const toggleDateRangeMode = () => {
+    setShowDateRange(!showDateRange);
+    if (!showDateRange) {
+      // Clear existing date range when switching to date range mode
+      setDateRange({ start: null, end: null });
+    }
   };
 
   const handleMonthChange = (month: number, year: number) => {
@@ -130,14 +170,73 @@ const Shows = () => {
           <FeaturedEventsCarousel />
         </div>
 
-        {/* Month Filter */}
-        <div className="mb-6">
-          <MonthFilter 
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthChange={handleMonthChange}
-            events={events || []}
-          />
+        {/* Date Filters */}
+        <div className="mb-6 space-y-4">
+          {/* Toggle between Month Filter and Date Range */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleDateRangeMode}
+              className={cn(
+                "px-4 py-2 rounded-lg transition-colors text-sm font-medium",
+                theme === 'pleasure' 
+                  ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              )}
+            >
+              {showDateRange ? 'Use Month Filter' : 'Use Date Range'}
+            </button>
+            
+            {(dateRange.start || dateRange.end || showDateRange) && (
+              <button
+                onClick={() => {
+                  setDateRange({ start: null, end: null });
+                  setShowDateRange(false);
+                }}
+                className={cn(
+                  "px-3 py-2 rounded-lg transition-colors text-sm",
+                  theme === 'pleasure' 
+                    ? 'bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30'
+                    : 'bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-600/30'
+                )}
+              >
+                Clear Date Filter
+              </button>
+            )}
+          </div>
+          
+          {/* Show either Month Filter or Date Range based on mode */}
+          {!showDateRange ? (
+            <MonthFilter 
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={handleMonthChange}
+              events={events || []}
+            />
+          ) : (
+            <div className="p-4 rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/[0.20]">
+              <h3 className="text-lg font-semibold text-white mb-3">Custom Date Range</h3>
+              <div className="max-w-md">
+                <SearchAndFilters
+                  searchTerm=""
+                  setSearchTerm={() => {}}
+                  locationFilter=""
+                  setLocationFilter={() => {}}
+                  typeFilter=""
+                  setTypeFilter={() => {}}
+                  dateRange={dateRange}
+                  onDateRangeChange={handleDateRangeChange}
+                  showDateRange={true}
+                />
+              </div>
+              {(dateRange.start || dateRange.end) && (
+                <div className="mt-3 text-sm text-white/80">
+                  Showing events {dateRange.start ? `from ${dateRange.start.toLocaleDateString()}` : ''}
+                  {dateRange.start && dateRange.end ? ' ' : ''}
+                  {dateRange.end ? `to ${dateRange.end.toLocaleDateString()}` : ''}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Search and Filters */}

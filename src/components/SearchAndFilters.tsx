@@ -5,6 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
+import { DateRangePicker } from '@/components/DateRangePicker';
+
+interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
 
 interface SearchAndFiltersProps {
   searchTerm: string;
@@ -13,6 +19,9 @@ interface SearchAndFiltersProps {
   setLocationFilter: (location: string) => void;
   typeFilter: string;
   setTypeFilter: (type: string) => void;
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
+  showDateRange?: boolean;
 }
 
 export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
@@ -22,6 +31,9 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   setLocationFilter,
   typeFilter,
   setTypeFilter,
+  dateRange = { start: null, end: null },
+  onDateRangeChange,
+  showDateRange = false,
 }) => {
   const { theme } = useTheme();
 
@@ -51,6 +63,16 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             className="pl-10"
           />
         </div>
+        
+        {/* Date Range Picker */}
+        {showDateRange && onDateRangeChange && (
+          <DateRangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            className="w-full md:w-64"
+          />
+        )}
+        
         <Select onValueChange={setLocationFilter}>
           <SelectTrigger className={cn("w-full md:w-48 rounded-xl", getSelectStyles())}>
             <SelectValue placeholder="Location" />
