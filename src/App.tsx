@@ -81,7 +81,9 @@ function App() {
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/create-event" element={<CreateEvent />} />
                         <Route path="/applications" element={<Applications />} />
-                        <Route path="/invoices/*" element={<Invoices />} />
+                        {/* Redirect old invoice routes to Profile */}
+                        <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
+                        <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/design-system" element={<DesignSystem />} />
                         <Route path="/admin/events/:eventId" element={<EventDetail />} />

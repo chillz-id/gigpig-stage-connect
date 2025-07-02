@@ -94,6 +94,8 @@ const Profile = () => {
         twitter_url: formData.twitterUrl || null,
         website_url: formData.websiteUrl || null,
         youtube_url: formData.youtubeUrl || null,
+        facebook_url: formData.facebookUrl || null,
+        tiktok_url: formData.tiktokUrl || null,
       };
 
       await updateProfile(profileUpdate);

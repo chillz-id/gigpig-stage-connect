@@ -16,9 +16,11 @@ import {
 interface InvoiceCardProps {
   invoice: Invoice;
   onDelete: (invoiceId: string) => void;
+  onView?: (invoice: Invoice) => void;
+  onEdit?: (invoice: Invoice) => void;
 }
 
-export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete }) => {
+export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onView, onEdit }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft': return 'bg-gray-500';
@@ -64,10 +66,18 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete }) =
             
             {/* Desktop Actions */}
             <div className="hidden sm:flex gap-2">
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => onView?.(invoice)}
+              >
                 <Eye className="w-4 h-4" />
               </Button>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => onEdit?.(invoice)}
+              >
                 <Edit className="w-4 h-4" />
               </Button>
               <Button 
@@ -88,11 +98,11 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete }) =
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onView?.(invoice)}>
                     <Eye className="w-4 h-4 mr-2" />
                     View
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEdit?.(invoice)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>

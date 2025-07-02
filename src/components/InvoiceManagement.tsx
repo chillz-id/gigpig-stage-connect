@@ -1,13 +1,16 @@
 
 import React, { useState } from 'react';
 import { useInvoices } from '@/hooks/useInvoices';
-import { InvoiceManagementCard } from './invoice/InvoiceManagementCard';
 import { InvoiceDetails } from './InvoiceDetails';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Invoice } from '@/types/invoice';
+import { Invoice, DateFilter, AmountRange, DEFAULT_AMOUNT_RANGE } from '@/types/invoice';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Plus } from 'lucide-react';
+import InvoiceFilters from './InvoiceFilters';
+import { InvoiceCard } from './invoice/InvoiceCard';
+import { InvoiceEmptyState } from './invoice/InvoiceEmptyState';
+import { InvoiceLoadingState } from './invoice/InvoiceLoadingState';
 
 // Transform database invoice to match InvoiceDetails component expectations
 const transformInvoiceForDetails = (invoice: Invoice) => {
@@ -27,20 +30,17 @@ const transformInvoiceForDetails = (invoice: Invoice) => {
 
 export const InvoiceManagement: React.FC = () => {
   const { user, hasRole } = useAuth();
-  const { invoices, loading, error } = useInvoices();
+  const { invoices, loading, error, deleteInvoice, filterInvoices } = useInvoices();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const navigate = useNavigate();
+  
+  // Filter states - full feature set
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [amountRange, setAmountRange] = useState<AmountRange>(DEFAULT_AMOUNT_RANGE);
 
-  console.log('=== INVOICE MANAGEMENT RENDER ===', {
-    user: user?.id,
-    hasPromoterRole: hasRole('promoter'),
-    hasComedianRole: hasRole('comedian'),
-    hasAdminRole: hasRole('admin'),
-    loading,
-    error,
-    invoicesCount: invoices.length
-  });
+  const filteredInvoices = filterInvoices(searchTerm, statusFilter, dateFilter, amountRange);
 
   const handleViewDetails = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -48,7 +48,15 @@ export const InvoiceManagement: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    navigate('/invoices/new');
+    // Stay within profile context - we'll create a modal or inline form later
+    console.log('Create new invoice - TODO: Implement inline creation');
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setAmountRange(DEFAULT_AMOUNT_RANGE);
   };
 
   // Show authentication error if user doesn't have the right role
@@ -66,46 +74,71 @@ export const InvoiceManagement: React.FC = () => {
     );
   }
 
+  if (loading) {
+    return <InvoiceLoadingState />;
+  }
+
   // Show error state
   if (error) {
     return (
-      <Card className="border-red-200 bg-red-50">
-        <CardContent className="p-6 text-center">
-          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-600" />
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Invoices</h3>
-          <p className="text-red-700 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Retry
-          </button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Invoice Management</h2>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-600" />
+            <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Invoices</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <>
-      <InvoiceManagementCard
-        invoices={invoices}
-        onViewDetails={handleViewDetails}
-        onCreateNew={handleCreateNew}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl font-bold">Invoice Management</h2>
+        <Button onClick={handleCreateNew} className="w-full sm:w-auto h-12 text-base">
+          <Plus className="w-4 h-4 mr-2" />
+          Create Invoice
+        </Button>
+      </div>
+
+      <InvoiceFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        amountRange={amountRange}
+        setAmountRange={setAmountRange}
+        onClearFilters={clearFilters}
       />
+
+      {filteredInvoices.length === 0 ? (
+        <InvoiceEmptyState hasInvoices={invoices.length > 0} />
+      ) : (
+        <div className="grid gap-4">
+          {filteredInvoices.map((invoice) => (
+            <InvoiceCard
+              key={invoice.id}
+              invoice={invoice}
+              onDelete={deleteInvoice}
+              onView={() => handleViewDetails(invoice)}
+            />
+          ))}
+        </div>
+      )}
 
       <InvoiceDetails
         invoice={selectedInvoice ? transformInvoiceForDetails(selectedInvoice) : null}
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
       />
-    </>
+    </div>
   );
 };
