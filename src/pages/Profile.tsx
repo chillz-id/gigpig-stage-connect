@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ContactSettings } from '@/components/ContactSettings';
-import { VouchSystem } from '@/components/VouchSystem';
+import { VouchSystemEnhanced } from '@/components/VouchSystemEnhanced';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { ContactRequests } from '@/components/ContactRequests';
 import { ImageCrop } from '@/components/ImageCrop';
