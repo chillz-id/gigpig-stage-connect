@@ -15,6 +15,9 @@ interface ShowCardProps {
   onShowDetails: (event: any) => void;
   onGetDirections: (event: any) => void;
   onRecurringApply?: (event: any) => void;
+  hasAppliedToEvent?: (eventId: string) => boolean;
+  getApplicationStatus?: (eventId: string) => string | null;
+  isApplying?: boolean;
 }
 
 export const ShowCard: React.FC<ShowCardProps> = ({
@@ -26,6 +29,9 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   onShowDetails,
   onGetDirections,
   onRecurringApply,
+  hasAppliedToEvent,
+  getApplicationStatus,
+  isApplying = false,
 }) => {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
@@ -36,6 +42,9 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
   const isInterested = interestedEvents.has(show.id);
   const isShowFull = availableSpots <= 0;
+  const hasApplied = hasAppliedToEvent ? hasAppliedToEvent(show.id) : false;
+  const applicationStatus = getApplicationStatus ? getApplicationStatus(show.id) : null;
+  const isComedian = user && hasRole('comedian');
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -116,23 +125,44 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 
           {/* Apply Button - Bottom Right - Fade in on hover */}
           <div className="absolute bottom-4 right-4">
-            {isIndustryUser && (
+            {isComedian && (
               <div
                 className={`transition-opacity duration-300 ${
                   isHovered ? 'opacity-100' : 'opacity-0'
                 }`}
               >
                 <button
-                  onClick={() => isShowFull ? null : onApply(show)}
-                  disabled={isShowFull}
-                  className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
-                    isShowFull 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-white hover:scale-105'
+                  onClick={() => {
+                    if (!isShowFull && !hasApplied && !isApplying) {
+                      onApply(show);
+                    }
+                  }}
+                  disabled={isShowFull || hasApplied || isApplying}
+                  className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 rounded-md ${
+                    hasApplied
+                      ? 'bg-green-500/80 text-white cursor-default'
+                      : isShowFull 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : isApplying
+                          ? 'bg-blue-500/80 text-white cursor-wait'
+                          : 'bg-blue-500/80 text-white hover:scale-105 hover:bg-blue-600/80'
                   }`}
                 >
-                  {isShowFull ? 'Full' : 'Apply'}
+                  {isApplying ? 'Applying...' : hasApplied ? 'Applied ✓' : isShowFull ? 'Full' : 'Apply'}
                 </button>
+              </div>
+            )}
+            
+            {/* Show status badge for other industry users */}
+            {isIndustryUser && !isComedian && hasApplied && (
+              <div
+                className={`transition-opacity duration-300 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <div className="px-3 py-1.5 text-sm font-medium bg-green-500/80 text-white rounded-md">
+                  Applied ✓
+                </div>
               </div>
             )}
             
@@ -144,7 +174,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
               >
                 <button
                   onClick={() => onBuyTickets(show)}
-                  className="px-3 py-1.5 text-white hover:scale-105 text-sm font-medium transition-all duration-200"
+                  className="px-3 py-1.5 bg-blue-500/80 text-white hover:scale-105 text-sm font-medium transition-all duration-200 rounded-md hover:bg-blue-600/80"
                 >
                   Get Tickets
                 </button>

@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useEventApplications } from '@/hooks/useEventApplications';
 
 export const useBrowseLogic = () => {
   const { user, profile, hasRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { userApplications, applyToEvent, isApplying } = useEventApplications();
   
   const [selectedEventForTickets, setSelectedEventForTickets] = useState<any>(null);
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any>(null);
@@ -19,7 +21,18 @@ export const useBrowseLogic = () => {
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
 
-  const handleApply = (event: any) => {
+  // Check if user has already applied to an event
+  const hasAppliedToEvent = (eventId: string) => {
+    return userApplications.some((app: any) => app.event_id === eventId);
+  };
+
+  // Get application status for an event
+  const getApplicationStatus = (eventId: string) => {
+    const application = userApplications.find((app: any) => app.event_id === eventId);
+    return application?.status || null;
+  };
+
+  const handleApply = async (event: any) => {
     if (!user) {
       toast({
         title: "Please sign in",
@@ -29,10 +42,30 @@ export const useBrowseLogic = () => {
       return;
     }
 
+    if (!hasRole('comedian')) {
+      toast({
+        title: "Comedian access required",
+        description: "Only comedians can apply to perform at shows.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if already applied
+    if (hasAppliedToEvent(event.id)) {
+      const status = getApplicationStatus(event.id);
+      toast({
+        title: "Already applied",
+        description: `You have already applied to this show. Status: ${status}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (event.is_verified_only && !profile?.is_verified) {
       toast({
         title: "Verification required",
-        description: "This show requires Comedian Pro members only. Upgrade to Pro to get verified!",
+        description: "This show requires verified comedians only. Get verified to apply!",
         variant: "destructive",
       });
       return;
@@ -47,10 +80,15 @@ export const useBrowseLogic = () => {
       return;
     }
 
-    toast({
-      title: "Application submitted!",
-      description: `Your application for "${event.title}" has been submitted successfully.`,
-    });
+    try {
+      // Apply to the event using the hook
+      applyToEvent({
+        event_id: event.id,
+        status: 'pending'
+      });
+    } catch (error) {
+      console.error('Failed to apply to event:', error);
+    }
   };
 
   const handleBuyTickets = (event: any) => {
@@ -123,6 +161,10 @@ export const useBrowseLogic = () => {
     interestedEvents,
     isIndustryUser,
     isConsumerUser,
+    userApplications,
+    hasAppliedToEvent,
+    getApplicationStatus,
+    isApplying,
     handleApply,
     handleBuyTickets,
     handleToggleInterested,

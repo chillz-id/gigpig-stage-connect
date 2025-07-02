@@ -1,12 +1,29 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
-type EventApplication = Tables<'event_applications'>;
-type EventApplicationInsert = TablesInsert<'event_applications'>;
-type EventApplicationUpdate = TablesUpdate<'event_applications'>;
+type EventApplication = {
+  id: string;
+  event_id: string;
+  comedian_id: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  message?: string;
+  applied_at: string;
+  responded_at?: string;
+};
+
+type EventApplicationInsert = {
+  event_id: string;
+  status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  message?: string;
+};
+
+type EventApplicationUpdate = {
+  status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  message?: string;
+  responded_at?: string;
+};
 
 export const useEventApplications = (eventId?: string) => {
   const { toast } = useToast();
@@ -22,7 +39,7 @@ export const useEventApplications = (eventId?: string) => {
       if (!eventId) return [];
 
       const { data, error } = await supabase
-        .from('event_applications')
+        .from('applications')
         .select('*')
         .eq('event_id', eventId)
         .order('applied_at', { ascending: false });
@@ -44,14 +61,14 @@ export const useEventApplications = (eventId?: string) => {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('event_applications')
+        .from('applications')
         .select(`
           *,
           events (
             title,
-            venue,
+            venue_name,
             event_date,
-            address
+            venue_address
           )
         `)
         .eq('comedian_id', user.id)
@@ -69,7 +86,7 @@ export const useEventApplications = (eventId?: string) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('event_applications')
+        .from('applications')
         .insert({
           ...applicationData,
           comedian_id: user.id
@@ -80,18 +97,27 @@ export const useEventApplications = (eventId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['event-applications'] });
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       toast({
-        title: "Application submitted",
+        title: "Application submitted!",
         description: "Your application has been submitted successfully"
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Application error:', error);
+      let errorMessage = "An error occurred while applying";
+      
+      if (error?.code === '23505') {
+        errorMessage = "You have already applied to this event";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Failed to apply",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -101,7 +127,7 @@ export const useEventApplications = (eventId?: string) => {
   const updateApplicationMutation = useMutation({
     mutationFn: async ({ id, ...applicationData }: EventApplicationUpdate & { id: string }) => {
       const { data, error } = await supabase
-        .from('event_applications')
+        .from('applications')
         .update(applicationData)
         .eq('id', id)
         .select()

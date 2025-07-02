@@ -34,6 +34,9 @@ const Shows = () => {
   // Get browse logic handlers
   const {
     interestedEvents,
+    hasAppliedToEvent,
+    getApplicationStatus,
+    isApplying,
     handleToggleInterested,
     handleApply,
     handleBuyTickets,
@@ -160,8 +163,11 @@ const Shows = () => {
                 onBuyTickets={handleBuyTickets}
                 onShowDetails={handleShowDetails}
                 onGetDirections={handleGetDirections}
+                hasAppliedToEvent={hasAppliedToEvent}
+                getApplicationStatus={getApplicationStatus}
+                isApplying={isApplying}
               />
-            ))}
+            ))
           </div>
         ) : (
           <div className="text-center py-12">
