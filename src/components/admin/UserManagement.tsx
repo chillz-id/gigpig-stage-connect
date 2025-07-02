@@ -235,14 +235,27 @@ const UserManagement = () => {
           </Table>
         </div>
 
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-8 text-gray-300">
-            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No users found matching your criteria.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {filteredUsers.length === 0 && (
+            <div className="text-center py-8 text-gray-300">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No users found matching your criteria.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4 text-white border-white/20 hover:bg-white/10"
+                onClick={() => {
+                  setSearchTerm('');
+                  setRoleFilter('all');
+                  setStatusFilter('all');
+                  setVerificationFilter('all');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
