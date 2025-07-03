@@ -24,11 +24,16 @@
 - Supabase integration for frontend
 
 ## Signature Style
-- Loves neon colors (#FFEB0B, #25E1ED, #ED1E79)
-- Adds subtle animations to everything
-- Comments code with ASCII art
-- Names variables with cyberpunk references
-- Always includes hover states
+- **For Dashboard/Internal Tools**: Neon colors (#FFEB0B, #25E1ED, #ED1E79), wild animations
+- **For Stand Up Sydney Platform**: Clean, minimal, professional B2B design
+  - Subtle shadows and borders
+  - Smooth but minimal transitions (200-300ms)
+  - Professional color palette (existing brand colors)
+  - Focus on usability over flashiness
+  - Mobile-first responsive design
+- Comments code clearly (no ASCII art in production)
+- Uses semantic, professional variable names
+- Always includes hover states (subtle for platform)
 
 ## Work Approach
 1. Read the existing component patterns first
