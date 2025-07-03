@@ -115,3 +115,61 @@ async def update_supabase(table: str, filters: dict, data: dict, ctx: Context = 
             return response.json()
         else:
             raise Exception(f"Supabase update failed: {response.status_code} - {response.text}")
+
+# ========================================
+# GITHUB TOOLS
+# ========================================
+
+@mcp.tool()
+async def github_create_issue(repo: str, title: str, body: str, labels: list = None, ctx: Context = None) -> dict:
+    """Create GitHub issue in repository"""
+    await ctx.info(f"Creating GitHub issue: {title}")
+    
+    github_token = os.getenv('GITHUB_TOKEN')
+    headers = {
+        'Authorization': f'token {github_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    
+    data = {
+        'title': title,
+        'body': body,
+        'labels': labels or []
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"https://api.github.com/repos/{repo}/issues",
+            headers=headers,
+            json=data
+        )
+        if response.status_code == 201:
+            return response.json()
+        else:
+            raise Exception(f"GitHub issue creation failed: {response.status_code}")
+
+@mcp.tool()
+async def github_deploy_trigger(repo: str, branch: str = "main", environment: str = "production", ctx: Context = None) -> dict:
+    """Trigger GitHub Actions deployment workflow"""
+    await ctx.info(f"Triggering deployment for {repo}:{branch}")
+    
+    github_token = os.getenv('GITHUB_TOKEN')
+    headers = {
+        'Authorization': f'token {github_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    
+    data = {
+        'ref': branch,
+        'inputs': {
+            'environment': environment
+        }
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"https://api.github.com/repos/{repo}/actions/workflows/deploy.yml/dispatches",
+            headers=headers,
+            json=data
+        )
+        return {"status": "triggered", "repo": repo, "branch": branch}
