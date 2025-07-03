@@ -1,0 +1,48 @@
+{
+  "name": "Claude Multi-Agent Development",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "forwardPorts": [3000, 3001, 5173, 8080],
+  "portsAttributes": {
+    "3001": {
+      "label": "Agent Dashboard",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "npm install",
+  
+  "remoteUser": "node",
+  
+  "mounts": [
+    "source=claude-agent-workspace,target=/workspaces,type=volume"
+  ],
+
+  "runArgs": ["--init"],
+  
+  "shutdownAction": "stopCompose"
+}

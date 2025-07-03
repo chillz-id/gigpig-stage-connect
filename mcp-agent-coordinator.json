@@ -1,0 +1,49 @@
+{
+  "name": "agent-coordinator",
+  "version": "1.0.0",
+  "description": "Coordinates multiple AI agents on the Stand Up Sydney project",
+  "agents": [
+    {
+      "id": "frontend-specialist",
+      "role": "UI/UX Development",
+      "branch": "dev",
+      "paths": ["src/components/**", "src/pages/**", "src/styles/**"],
+      "commitPrefix": "feat(ui):",
+      "rules": [
+        "Never modify backend logic",
+        "Always use existing design system",
+        "Test responsive design"
+      ]
+    },
+    {
+      "id": "backend-specialist", 
+      "role": "API & Data Management",
+      "branch": "dev",
+      "paths": ["src/hooks/**", "src/api/**", "src/integrations/**"],
+      "commitPrefix": "feat(api):",
+      "rules": [
+        "Never modify UI components directly",
+        "Always handle errors gracefully",
+        "Document all API changes"
+      ]
+    },
+    {
+      "id": "test-engineer",
+      "role": "Testing & Quality",
+      "branch": "feature/test-suite",
+      "paths": ["**/*.test.ts", "**/*.test.tsx", "__tests__/**"],
+      "commitPrefix": "test:",
+      "rules": [
+        "Write tests for all new features",
+        "Maintain 80% code coverage",
+        "Test edge cases"
+      ]
+    }
+  ],
+  "coordination": {
+    "conflictResolution": "pause-and-notify",
+    "mergeStrategy": "sequential",
+    "communicationMethod": "git-commits",
+    "syncInterval": "10m"
+  }
+}
