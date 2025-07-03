@@ -1,0 +1,59 @@
+name: claude-multi-agent-system
+region: nyc
+services:
+- name: agent-dashboard
+  source_dir: /
+  github:
+    repo: chillz-id/gigpig-stage-connect
+    branch: main
+  run_command: node remote-agent-manager.js
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "8080"
+  - key: SLACK_BOT_TOKEN
+    value: ${SLACK_BOT_TOKEN}
+    type: SECRET
+  - key: SLACK_CHANNEL
+    value: "#dev-agents"
+
+- name: claude-frontend-agent
+  source_dir: /
+  github:
+    repo: chillz-id/gigpig-stage-connect
+    branch: main
+  run_command: ./start-claude-agent.sh frontend
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: AGENT_TYPE
+    value: frontend
+  - key: CLAUDE_CONTEXT_FILE
+    value: CLAUDE-FRONTEND.md
+
+- name: claude-backend-agent  
+  source_dir: /
+  github:
+    repo: chillz-id/gigpig-stage-connect
+    branch: main
+  run_command: ./start-claude-agent.sh backend
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: AGENT_TYPE
+    value: backend
+  - key: CLAUDE_CONTEXT_FILE
+    value: CLAUDE-BACKEND.md
+
+databases:
+- name: agent-state
+  engine: PG
+  version: "13"

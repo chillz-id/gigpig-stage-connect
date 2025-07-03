@@ -1,0 +1,60 @@
+# Railway Deployment Configuration for Claude Agents
+
+services:
+  agent-manager:
+    build:
+      dockerfile: Dockerfile.agents
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_CHANNEL=${SLACK_CHANNEL}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - agent-data:/app/data
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    
+  frontend-agent:
+    build:
+      dockerfile: Dockerfile.claude
+    environment:
+      - CLAUDE_CONTEXT=frontend
+      - AGENT_TYPE=frontend
+      - BRANCH_PREFIX=feature/frontend
+    volumes:
+      - agent-data:/app/workspace
+    depends_on:
+      - agent-manager
+    restart: unless-stopped
+
+  backend-agent:
+    build:
+      dockerfile: Dockerfile.claude  
+    environment:
+      - CLAUDE_CONTEXT=backend
+      - AGENT_TYPE=backend
+      - BRANCH_PREFIX=feature/backend
+    volumes:
+      - agent-data:/app/workspace
+    depends_on:
+      - agent-manager
+    restart: unless-stopped
+
+  testing-agent:
+    build:
+      dockerfile: Dockerfile.claude
+    environment:
+      - CLAUDE_CONTEXT=testing
+      - AGENT_TYPE=testing
+      - BRANCH_PREFIX=feature/tests
+    volumes:
+      - agent-data:/app/workspace
+    depends_on:
+      - agent-manager
+    restart: unless-stopped
+
+volumes:
+  agent-data:
+    driver: local
