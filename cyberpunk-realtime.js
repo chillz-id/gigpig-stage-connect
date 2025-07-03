@@ -1157,21 +1157,67 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-app.post('/api/agents/:agentId/task', (req, res) => {
+app.post('/api/agents/:agentId/task', async (req, res) => {
   const { agentId } = req.params;
   const { task } = req.body;
   
-  // Create task file
-  const taskDir = '.agent-comms/task-queue';
-  if (!fs.existsSync(taskDir)) {
-    fs.mkdirSync(taskDir, { recursive: true });
-  }
+  // Check if this is a mega-feature
+  const isMegaFeature = task.length > 100 || 
+    (task.match(/with|and|plus|also|including/gi) || []).length > 2;
   
-  const taskId = `TASK_${Date.now()}`;
-  const taskFile = path.join(taskDir, `${agentId}-${taskId}.md`);
-  
-  fs.writeFileSync(taskFile, `# ${taskId}
-AGENT: ${agentId.toUpperCase()}
+  if (isMegaFeature && agentId === 'auto') {
+    // Use Taskmaster for intelligent breakdown
+    console.log('🎯 TASKMASTER: Analyzing mega-feature...');
+    
+    try {
+      const TaskmasterOrchestrator = require('./taskmaster-orchestrator');
+      const taskmaster = new TaskmasterOrchestrator();
+      const result = await taskmaster.analyzeMegaFeature(task);
+      
+      // Add to activity log
+      const logEntry = `${new Date().toISOString()} - [TASKMASTER] Created ${result.totalTasks} tasks from mega-feature`;
+      fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
+      
+      res.json({
+        success: true,
+        message: `TASKMASTER: ${result.totalTasks} tasks created in optimal order!`,
+        totalTasks: result.totalTasks,
+        estimatedHours: Math.round(result.estimatedTime / 60),
+        agents: {
+          frontend: result.breakdown.filter(t => t.agent === 'frontend').length,
+          backend: result.breakdown.filter(t => t.agent === 'backend').length,
+          testing: result.breakdown.filter(t => t.agent === 'testing').length
+        }
+      });
+    } catch (error) {
+      console.error('Taskmaster error:', error);
+      res.json({
+        success: false,
+        message: 'Taskmaster failed to process mega-feature',
+        error: error.message
+      });
+    }
+  } else {
+    // Single task assignment
+    const taskDir = '.agent-comms/task-queue';
+    if (!fs.existsSync(taskDir)) {
+      fs.mkdirSync(taskDir, { recursive: true });
+    }
+    
+    // For simple tasks, use smart routing if agent is 'auto'
+    let targetAgent = agentId;
+    if (agentId === 'auto') {
+      const SmartTaskRouter = require('./smart-task-router');
+      const router = new SmartTaskRouter();
+      const agents = router.analyzeTask(task);
+      targetAgent = agents && agents.length > 0 ? agents[0] : 'frontend';
+    }
+    
+    const taskId = `TASK_${Date.now()}`;
+    const taskFile = path.join(taskDir, `${targetAgent}-${taskId}.md`);
+    
+    fs.writeFileSync(taskFile, `# ${taskId}
+AGENT: ${targetAgent.toUpperCase()}
 TIMESTAMP: ${new Date().toISOString()}
 STATUS: PENDING
 
@@ -1183,23 +1229,24 @@ ${task}
 - Awaiting agent processing...
 `);
 
-  // Update agent state
-  if (agentStates[agentId]) {
-    agentStates[agentId].status = 'BUSY';
-    agentStates[agentId].currentTask = task;
-    agentStates[agentId].lastActivity = new Date();
+    // Update agent state
+    if (agentStates[targetAgent]) {
+      agentStates[targetAgent].status = 'BUSY';
+      agentStates[targetAgent].currentTask = task;
+      agentStates[targetAgent].lastActivity = new Date();
+    }
+    
+    // Log to notifications
+    const logEntry = `${new Date().toISOString()} - [TASK_ASSIGNED] ${targetAgent}: ${task}`;
+    fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
+    
+    res.json({ 
+      success: true, 
+      taskId,
+      message: `PROTOCOL INITIATED: ${taskId}`,
+      agent: targetAgent.toUpperCase()
+    });
   }
-  
-  // Log to notifications
-  const logEntry = `${new Date().toISOString()} - [TASK_ASSIGNED] ${agentId}: ${task}`;
-  fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
-  
-  res.json({ 
-    success: true, 
-    taskId,
-    message: `PROTOCOL INITIATED: ${taskId}`,
-    agent: agentId.toUpperCase()
-  });
 });
 
 // WebSocket server
