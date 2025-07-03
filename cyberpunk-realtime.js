@@ -367,15 +367,58 @@ app.get('/', (req, res) => {
       object-fit: cover;
     }
 
+    .agent-avatar img {
+      transition: all 0.3s ease;
+    }
+
+    .agent-avatar:hover img {
+      transform: scale(1.1) rotate(3deg);
+      filter: saturate(2) contrast(1.3) hue-rotate(10deg) !important;
+    }
+
+    /* Glitch effect on busy agents */
+    .agent-card.busy .agent-avatar img {
+      animation: glitch 2s infinite;
+    }
+
+    @keyframes glitch {
+      0%, 100% { 
+        filter: saturate(1.5) contrast(1.2); 
+      }
+      20% { 
+        filter: saturate(3) contrast(2) hue-rotate(90deg);
+        transform: scale(1.02) translateX(2px);
+      }
+      40% { 
+        filter: saturate(0.5) contrast(3) hue-rotate(-90deg);
+        transform: scale(0.98) translateY(-2px);
+      }
+      60% {
+        filter: saturate(2) contrast(1.5) hue-rotate(180deg);
+        transform: scale(1.01) translateX(-1px);
+      }
+    }
+
     .agent-avatar::after {
       content: '';
       position: absolute;
-      top: 0;
+      top: -100%;
       left: 0;
       right: 0;
-      bottom: 0;
-      background: radial-gradient(circle, transparent 30%, rgba(37, 225, 237, 0.3));
-      animation: pulse-avatar 3s ease-in-out infinite;
+      height: 100%;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(37, 225, 237, 0.4) 50%,
+        transparent 100%
+      );
+      animation: scan-avatar 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes scan-avatar {
+      0%, 100% { top: -100%; }
+      50% { top: 100%; }
     }
 
     @keyframes pulse-avatar {
@@ -833,11 +876,11 @@ app.get('/', (req, res) => {
     let startTime = Date.now();
     let tasksToday = 0;
 
-    // Agent profile pics (you can customize these!)
+    // Agent profile pics - Sick cyberpunk avatars!
     const agentAvatars = {
-      frontend: '🤖',
-      backend: '👾',
-      testing: '💀'
+      frontend: 'https://robohash.org/NETRUNNER01?set=set4&size=60x60',  // Cyberpunk robot
+      backend: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=DAEMON02&backgroundColor=1a1a1a&primaryColor=25E1ED',   // Tech avatar
+      testing: 'https://api.multiavatar.com/GIGACHAD420.png?size=60'    // Unique avatar
     };
 
     // Connect WebSocket for real-time updates
@@ -900,7 +943,7 @@ app.get('/', (req, res) => {
         
         <div class="agent-profile">
           <div class="agent-avatar">
-            <div style="font-size: 30px; text-align: center; line-height: 60px;">\${agentAvatars[id]}</div>
+            <img src="\${agentAvatars[id]}" alt="\${agent.name}" style="width: 100%; height: 100%; object-fit: cover; filter: saturate(1.5) contrast(1.2);">
           </div>
           <div class="agent-name">\${agent.name}</div>
         </div>
