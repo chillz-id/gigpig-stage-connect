@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
 import MobileNavigation from './MobileNavigation';
 import ThemeControls from './ThemeControls';
+import AnimatedLogo from './ui/AnimatedLogo';
 
 const Navigation = () => {
   const { user, signOut, hasRole } = useAuth();
@@ -77,13 +78,9 @@ const Navigation = () => {
       )}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            {/* Logo */}
+            {/* Animated Logo */}
             <Link to="/" className="flex items-center gap-3">
-              <img 
-                src="/id-logo.png" 
-                alt="Stand Up Sydney" 
-                className="h-12 w-auto"
-              />
+              <AnimatedLogo size="md" />
             </Link>
 
             {/* Desktop Menu */}
