@@ -13,17 +13,11 @@ const Anthropic = require('@anthropic-ai/sdk');
 class ClaudeAgentBrain {
   constructor(agentType) {
     this.agentType = agentType;
-    this.agentName = this.getAgentName(agentType);
     this.taskQueue = [];
     this.currentTask = null;
     this.isThinking = false;
     
-    // Initialize Claude API (key from environment)
-    this.anthropic = new Anthropic({
-      apiKey: process.env.CLAUDE_API_KEY
-    });
-    
-    // Thoughtful agent configurations
+    // Thoughtful agent configurations - MUST BE DEFINED BEFORE getAgentName()
     this.config = {
       frontend: {
         name: 'NETRUNNER_01',
@@ -74,6 +68,14 @@ Break things thoughtfully to make them stronger.`,
         capabilities: ['Jest', 'React Testing Library', 'E2E Testing', 'Test Strategy']
       }
     };
+    
+    // NOW we can get the agent name after config is defined
+    this.agentName = this.getAgentName(agentType);
+    
+    // Initialize Claude API (key from environment)
+    this.anthropic = new Anthropic({
+      apiKey: process.env.CLAUDE_API_KEY
+    });
     
     this.taskDir = '.agent-comms/task-queue';
     this.workDir = `.agent-workspaces/${agentType}`;
