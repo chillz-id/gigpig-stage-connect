@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, UserPlus, Shield, Crown, Mic, Building, Eye } from 'lucide-react';
+import { Users, Search, UserPlus, Shield, Crown, Mic, Building, Eye, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -27,6 +28,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const { toast } = useToast();
   const { hasRole } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch users from database
   const { data: users = [], isLoading: loading, refetch } = useQuery({
@@ -74,8 +76,8 @@ const UserManagement = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin': return <Crown className="w-4 h-4 text-yellow-500" />;
-      case 'promoter': return <Building className="w-4 h-4 text-blue-500" />;
-      case 'comedian': return <Mic className="w-4 h-4 text-purple-500" />;
+      case 'promoter': return <span className="text-sm" title="Promoter">🏴‍☠️</span>;
+      case 'comedian': return <span className="text-sm" title="Comedian">😂</span>;
       case 'member': return <Eye className="w-4 h-4 text-green-500" />;
       default: return <Users className="w-4 h-4 text-gray-500" />;
     }
@@ -195,11 +197,29 @@ const UserManagement = () => {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id} className="border-white/20">
+                <TableRow key={user.id} className="border-white/20 hover:bg-white/5">
                   <TableCell>
                     <div className="text-white">
-                      <div className="font-medium">{user.name || 'Unnamed User'}</div>
-                      <div className="text-sm text-gray-300">{user.email}</div>
+                      <button
+                        onClick={() => {
+                          if (user.roles.includes('comedian') && user.name) {
+                            const slug = user.name.toLowerCase().replace(/\s+/g, '-');
+                            navigate(`/comedian/${slug}`);
+                          } else {
+                            toast({
+                              title: "Profile View",
+                              description: `Viewing profile for ${user.name || user.email}`,
+                            });
+                          }
+                        }}
+                        className="text-left hover:underline focus:outline-none group"
+                      >
+                        <div className="font-medium flex items-center gap-2">
+                          {user.name || 'Unnamed User'}
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="text-sm text-gray-300">{user.email}</div>
+                      </button>
                     </div>
                   </TableCell>
                   <TableCell>

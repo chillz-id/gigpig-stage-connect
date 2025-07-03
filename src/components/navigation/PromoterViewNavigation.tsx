@@ -83,7 +83,7 @@ const PromoterViewNavigation: React.FC<PromoterViewNavigationProps> = ({ hasRole
                     </Link>
                   </NavigationMenuLink>
                   <NavigationMenuLink asChild>
-                    <Link to="/invoices" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
+                    <Link to="/profile?tab=invoices" className="block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground hover:shadow-md">
                       <div className="text-sm font-semibold leading-none">Invoices</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                         Create and manage invoices

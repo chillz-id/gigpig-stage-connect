@@ -9,6 +9,8 @@ interface ShowCardActionsProps {
   isIndustryUser: boolean;
   isConsumerUser: boolean;
   isShowFull: boolean;
+  hasApplied?: boolean;
+  isApplying?: boolean;
   onApply: (show: any) => void;
   onRecurringApply?: (show: any) => void;
   onBuyTickets: (show: any) => void;
@@ -21,6 +23,8 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
   isIndustryUser,
   isConsumerUser,
   isShowFull,
+  hasApplied = false,
+  isApplying = false,
   onApply,
   onRecurringApply,
   onBuyTickets,
@@ -43,8 +47,9 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90"
               onClick={handleApplyClick}
+              disabled={hasApplied || isApplying}
             >
-              Apply Now
+              {isApplying ? 'Applying...' : hasApplied ? 'Applied ✓' : 'Apply Now'}
             </Button>
           ) : (
             <WaitlistDialog

@@ -7,21 +7,29 @@ import { Link } from 'react-router-dom';
 
 interface InvoiceEmptyStateProps {
   hasInvoices: boolean;
+  onCreateClick?: () => void;
 }
 
-export const InvoiceEmptyState: React.FC<InvoiceEmptyStateProps> = ({ hasInvoices }) => {
+export const InvoiceEmptyState: React.FC<InvoiceEmptyStateProps> = ({ hasInvoices, onCreateClick }) => {
   return (
     <Card>
       <CardContent className="p-8 text-center">
         <div className="text-muted-foreground mb-4">
           {!hasInvoices ? 'No invoices created yet' : 'No invoices match your search'}
         </div>
-        <Link to="/invoices/new">
-          <Button>
+        {onCreateClick ? (
+          <Button onClick={onCreateClick}>
             <Plus className="w-4 h-4 mr-2" />
             Create Your First Invoice
           </Button>
-        </Link>
+        ) : (
+          <Link to="/invoices/new">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Invoice
+            </Button>
+          </Link>
+        )}
       </CardContent>
     </Card>
   );

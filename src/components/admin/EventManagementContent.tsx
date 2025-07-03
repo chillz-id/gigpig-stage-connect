@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, Plus, Download, BarChart3, Settings, 
-  Megaphone, Template, Users, TrendingUp, Clock,
+  Megaphone, FileText, Users, TrendingUp, Clock,
   MapPin, DollarSign, Ticket
 } from 'lucide-react';
 import EventFilters from './EventFilters';
@@ -14,11 +14,17 @@ import { useEventManagement } from '@/hooks/useEventManagement';
 import { useEventSubscriptions } from '@/hooks/useEventSubscriptions';
 import { useTicketSalesSubscription } from '@/hooks/useTicketSalesSubscription';
 
+interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+
 const EventManagementContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('events');
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
   const {
     events,
@@ -42,7 +48,20 @@ const EventManagementContent = () => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.venue.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    // Date range filtering
+    let matchesDateRange = true;
+    if (dateRange.start || dateRange.end) {
+      const eventDate = new Date(event.event_date || event.date);
+      if (dateRange.start && eventDate < dateRange.start) {
+        matchesDateRange = false;
+      }
+      if (dateRange.end && eventDate > dateRange.end) {
+        matchesDateRange = false;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesDateRange;
   });
 
   // Calculate event statistics
@@ -102,7 +121,7 @@ const EventManagementContent = () => {
       <div className="flex justify-between items-center">
         <h3 className="text-white text-lg font-semibold">Event Templates</h3>
         <Button className="bg-purple-600 hover:bg-purple-700">
-          <Template className="w-4 h-4 mr-2" />
+          <FileText className="w-4 h-4 mr-2" />
           Create Template
         </Button>
       </div>
@@ -326,6 +345,8 @@ const EventManagementContent = () => {
                 setSearchTerm={setSearchTerm}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
               
               {/* Bulk Actions */}

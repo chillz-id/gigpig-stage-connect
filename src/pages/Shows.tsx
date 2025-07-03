@@ -266,7 +266,7 @@ const Shows = () => {
                 getApplicationStatus={getApplicationStatus}
                 isApplying={isApplying}
               />
-            ))
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">

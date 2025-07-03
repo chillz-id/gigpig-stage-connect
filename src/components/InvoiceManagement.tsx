@@ -120,7 +120,7 @@ export const InvoiceManagement: React.FC = () => {
       />
 
       {filteredInvoices.length === 0 ? (
-        <InvoiceEmptyState hasInvoices={invoices.length > 0} />
+        <InvoiceEmptyState hasInvoices={invoices.length > 0} onCreateClick={handleCreateNew} />
       ) : (
         <div className="grid gap-4">
           {filteredInvoices.map((invoice) => (

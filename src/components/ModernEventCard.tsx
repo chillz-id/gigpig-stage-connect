@@ -15,6 +15,7 @@ interface ModernEventCardProps {
   onShowDetails: (event: any) => void;
   onGetDirections: (event: any) => void;
   onRecurringApply?: (event: any) => void;
+  isApplying?: boolean;
 }
 
 export const ModernEventCard: React.FC<ModernEventCardProps> = ({
@@ -26,6 +27,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   onShowDetails,
   onGetDirections,
   onRecurringApply,
+  isApplying = false,
 }) => {
   const { user, hasRole } = useAuth();
   const { userApplications } = useEventApplications();
@@ -84,7 +86,8 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
 
   const getActionText = () => {
     if (isIndustryUser) {
-      return hasApplied ? 'Applied' : 'Apply';
+      if (isApplying) return 'Applying...';
+      return hasApplied ? 'Applied ✓' : 'Apply';
     } else {
       return isShowFull ? 'Join Waitlist' : 'Get Tickets';
     }
@@ -177,7 +180,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
         <Button 
           onClick={handleCardClick}
           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-xl transition-all duration-300 group-hover:shadow-lg"
-          disabled={hasApplied}
+          disabled={hasApplied || isApplying}
         >
           {getActionText()}
           <ArrowRight className="w-4 h-4 ml-2" />

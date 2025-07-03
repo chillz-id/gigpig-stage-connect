@@ -17,7 +17,6 @@ import Shows from '@/pages/Shows';
 import Profile from '@/pages/Profile';
 import CreateEvent from '@/pages/CreateEvent';
 import Applications from '@/pages/Applications';
-import Invoices from '@/pages/Invoices';
 import AdminDashboard from '@/pages/AdminDashboard';
 import EventDetail from '@/pages/EventDetail';
 import ComedianProfile from '@/pages/ComedianProfile';

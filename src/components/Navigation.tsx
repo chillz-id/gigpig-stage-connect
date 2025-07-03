@@ -113,7 +113,10 @@ const Navigation = () => {
               <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")} title="Notifications">
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center animate-blink animate-pulse-notification"
+                  >
                     {unreadCount}
                   </Badge>
                 )}
@@ -131,7 +134,7 @@ const Navigation = () => {
                 </Link>
               )}
 
-              {(hasRole('promoter') || hasRole('admin')) && (
+              {user && (
                 <Link to="/create-event" className={getNavLinkClass('/create-event')} title="Create Event">
                   <Plus className="w-4 h-4" />
                 </Link>

@@ -182,7 +182,7 @@ const Dashboard = () => {
                 
                 {(isPromoter || isComedian) && (
                   <Button 
-                    onClick={() => navigate('/invoices')} 
+                    onClick={() => navigate('/profile?tab=invoices')} 
                     className="w-full justify-start"
                     variant="outline"
                   >

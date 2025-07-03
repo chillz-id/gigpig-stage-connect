@@ -1,18 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DateRangePicker } from '@/components/DateRangePicker';
 import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
 import { DollarSign, TrendingUp, TrendingDown, Users } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
-interface FinancialOverviewProps {
-  selectedPeriod: string;
-  setSelectedPeriod: (period: string) => void;
+interface DateRange {
+  start: Date | null;
+  end: Date | null;
 }
 
-const FinancialOverview = ({ selectedPeriod, setSelectedPeriod }: FinancialOverviewProps) => {
-  const { data, isLoading } = useFinancialMetrics(selectedPeriod);
+const FinancialOverview = () => {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    start: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+    end: new Date()
+  });
+  const { data, isLoading } = useFinancialMetrics(dateRange);
   const metrics = data?.metrics;
   const chartData = data?.chartData;
 
@@ -37,17 +41,11 @@ const FinancialOverview = ({ selectedPeriod, setSelectedPeriod }: FinancialOverv
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-white">Financial Overview</h2>
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-          <SelectTrigger className="w-40 bg-white/10 border-white/20 text-white">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-            <SelectItem value="365">Last year</SelectItem>
-          </SelectContent>
-        </Select>
+        <DateRangePicker
+          value={dateRange}
+          onChange={setDateRange}
+          className="w-64"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

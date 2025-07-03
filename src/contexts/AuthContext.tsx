@@ -16,7 +16,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => boolean;
+  hasRole: (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => boolean;
   isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }
 
@@ -140,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const hasRole = (role: 'guest' | 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
+  const hasRole = (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);
     console.log('=== CHECKING ROLE ===', role, hasTheRole, roles);
     return hasTheRole;

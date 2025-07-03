@@ -38,13 +38,15 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
   });
   const [externalUrl, setExternalUrl] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { uploadFile, isUploading: fileUploading } = useFileUpload({
     bucket: 'comedian-media',
     maxSize: mediaType === 'photo' ? 5 * 1024 * 1024 : 100 * 1024 * 1024, // 5MB for photos, 100MB for videos
     allowedTypes: mediaType === 'photo' 
       ? ['image/jpeg', 'image/png', 'image/webp']
-      : ['video/mp4', 'video/webm', 'video/quicktime', 'video/avi']
+      : ['video/mp4', 'video/webm', 'video/quicktime', 'video/avi'],
+    onProgress: setUploadProgress
   });
 
   const addTag = () => {
@@ -308,6 +310,20 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
                   className="w-full"
                   disabled={isUploading || fileUploading}
                 />
+                {(isUploading || fileUploading) && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Uploading...</span>
+                      <span>{Math.round(uploadProgress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
                 <p className="text-sm text-gray-500 mt-2">
                   {mediaType === 'photo' 
                     ? 'Supported: JPG, PNG, WebP (max 5MB)'

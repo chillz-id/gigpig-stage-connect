@@ -4,17 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseFileUploadOptions {
-  bucket: 'event-media' | 'profile-images';
+  bucket: 'event-media' | 'profile-images' | 'comedian-media';
   folder?: string;
   maxSize?: number;
   allowedTypes?: string[];
+  onProgress?: (progress: number) => void;
 }
 
 export const useFileUpload = ({
   bucket,
   folder,
   maxSize = 50 * 1024 * 1024, // 50MB default
-  allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'],
+  onProgress
 }: UseFileUploadOptions) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -48,6 +50,7 @@ export const useFileUpload = ({
 
     setUploading(true);
     setUploadProgress(0);
+    onProgress?.(0);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -83,6 +86,7 @@ export const useFileUpload = ({
 
 
       setUploadProgress(100);
+      onProgress?.(100);
       
       toast({
         title: "Upload successful",

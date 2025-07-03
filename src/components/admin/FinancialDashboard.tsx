@@ -9,8 +9,6 @@ import XeroIntegration from './financial/XeroIntegration';
 import CostManagement from './financial/CostManagement';
 
 const FinancialDashboard = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('30');
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -42,7 +40,7 @@ const FinancialDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <FinancialOverview selectedPeriod={selectedPeriod} setSelectedPeriod={setSelectedPeriod} />
+          <FinancialOverview />
         </TabsContent>
 
         <TabsContent value="profitability">

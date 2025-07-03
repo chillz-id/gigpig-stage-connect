@@ -17,37 +17,46 @@ interface ChartData {
   costBreakdown: Array<{ category: string; amount: number }>;
 }
 
-export const useFinancialMetrics = (period: string) => {
+interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+
+export const useFinancialMetrics = (dateRange?: DateRange) => {
   return useQuery({
-    queryKey: ['financial-metrics', period],
+    queryKey: ['financial-metrics', dateRange],
     queryFn: async (): Promise<{ metrics: FinancialMetrics; chartData: ChartData }> => {
-      const daysAgo = parseInt(period);
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysAgo);
+      // Default to last 30 days if no date range provided
+      const endDate = dateRange?.end || new Date();
+      const startDate = dateRange?.start || new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
 
       // Get ticket sales data
       const { data: ticketSales } = await supabase
         .from('ticket_sales')
         .select('*')
-        .gte('purchase_date', startDate.toISOString());
+        .gte('purchase_date', startDate.toISOString())
+        .lte('purchase_date', endDate.toISOString());
 
       // Get comedian bookings data
       const { data: comedianBookings } = await supabase
         .from('comedian_bookings')
         .select('*')
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
 
       // Get venue costs data
       const { data: venueCosts } = await supabase
         .from('venue_costs')
         .select('*')
-        .gte('cost_date', startDate.toISOString());
+        .gte('cost_date', startDate.toISOString())
+        .lte('cost_date', endDate.toISOString());
 
       // Get marketing costs data
       const { data: marketingCosts } = await supabase
         .from('marketing_costs')
         .select('*')
-        .gte('spend_date', startDate.toISOString());
+        .gte('spend_date', startDate.toISOString())
+        .lte('spend_date', endDate.toISOString());
 
       const totalRevenue = ticketSales?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
       const comedianCosts = comedianBookings?.reduce((sum, booking) => sum + Number(booking.performance_fee || 0), 0) || 0;
@@ -74,9 +83,10 @@ export const useFinancialMetrics = (period: string) => {
       ];
 
       // Generate daily revenue data for chart
-      for (let i = daysAgo - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
+      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      for (let i = 0; i < daysDiff; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
         const dayRevenue = ticketSales?.filter(sale => {
           const saleDate = new Date(sale.purchase_date);
           return saleDate.toDateString() === date.toDateString();

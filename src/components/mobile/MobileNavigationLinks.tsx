@@ -97,8 +97,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             </Link>
           )}
 
-          {/* Create Event for promoters/admins - Admin should always see this */}
-          {isPromoter && (
+          {/* Create Event for authenticated users */}
+          {user && (
             <Link
               to="/create-event"
               className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"

@@ -236,3 +236,34 @@
 .animate-marquee-vertical {
   animation: marquee-vertical var(--duration) infinite linear;
 }
+
+/* Blinking notification badge animation */
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-blink {
+  animation: blink 1.5s infinite ease-in-out;
+}
+
+/* Pulse animation for notification icon */
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.animate-pulse-notification {
+  animation: pulse-red 2s infinite;
+}
