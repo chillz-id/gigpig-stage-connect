@@ -1065,45 +1065,15 @@ setInterval(() => {
 
       addLog('TASK', \`Assigning to \${agent}: \${task}\`, 'success');
       
-<<<<<<< HEAD
       // Send to server
-=======
-      // Send to server - ALWAYS goes through Taskmaster
->>>>>>> c3fbcf1c5343e82753000f692820a11a61130776
       fetch(\`/api/agents/\${agent}/task\`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task })
       }).then(res => res.json()).then(data => {
-<<<<<<< HEAD
         addLog('SYSTEM', data.message || 'Task assigned', 'success');
         tasksToday++;
         document.getElementById('tasks-today').textContent = tasksToday;
-=======
-        if (data.success) {
-          addLog('TASKMASTER', data.message, 'success');
-          
-          // Show complexity analysis
-          addLog('ANALYSIS', \`Complexity: \${data.complexity?.toUpperCase()} | Tasks: \${data.totalTasks} | ETA: \${data.estimatedMinutes || '?'} min\`, 'warning');
-          
-          // Show distribution if multiple tasks
-          if (data.totalTasks > 1) {
-            addLog('DISTRIBUTION', \`NETRUNNER: \${data.distribution.frontend} | DAEMON: \${data.distribution.backend} | GIGACHAD: \${data.distribution.testing}\`, 'info');
-          }
-          
-          // Show task breakdown
-          if (data.breakdown && data.breakdown.length > 0) {
-            data.breakdown.forEach((item, index) => {
-              addLog(\`TASK_\${index + 1}\`, \`[\${item.agent}] \${item.task.substring(0, 100)}...\`, 'info');
-            });
-          }
-          
-          tasksToday += data.totalTasks || 1;
-          document.getElementById('tasks-today').textContent = tasksToday;
-        } else {
-          addLog('ERROR', data.message || 'Task assignment failed', 'error');
-        }
->>>>>>> c3fbcf1c5343e82753000f692820a11a61130776
       });
       
       input.value = '';
@@ -1187,22 +1157,67 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-<<<<<<< HEAD
-app.post('/api/agents/:agentId/task', (req, res) => {
+app.post('/api/agents/:agentId/task', async (req, res) => {
   const { agentId } = req.params;
   const { task } = req.body;
   
-  // Create task file
-  const taskDir = '.agent-comms/task-queue';
-  if (!fs.existsSync(taskDir)) {
-    fs.mkdirSync(taskDir, { recursive: true });
-  }
+  // Check if this is a mega-feature
+  const isMegaFeature = task.length > 100 || 
+    (task.match(/with|and|plus|also|including/gi) || []).length > 2;
   
-  const taskId = `TASK_${Date.now()}`;
-  const taskFile = path.join(taskDir, `${agentId}-${taskId}.md`);
-  
-  fs.writeFileSync(taskFile, `# ${taskId}
-AGENT: ${agentId.toUpperCase()}
+  if (isMegaFeature && agentId === 'auto') {
+    // Use Taskmaster for intelligent breakdown
+    console.log('🎯 TASKMASTER: Analyzing mega-feature...');
+    
+    try {
+      const TaskmasterOrchestrator = require('./taskmaster-orchestrator');
+      const taskmaster = new TaskmasterOrchestrator();
+      const result = await taskmaster.analyzeMegaFeature(task);
+      
+      // Add to activity log
+      const logEntry = `${new Date().toISOString()} - [TASKMASTER] Created ${result.totalTasks} tasks from mega-feature`;
+      fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
+      
+      res.json({
+        success: true,
+        message: `TASKMASTER: ${result.totalTasks} tasks created in optimal order!`,
+        totalTasks: result.totalTasks,
+        estimatedHours: Math.round(result.estimatedTime / 60),
+        agents: {
+          frontend: result.breakdown.filter(t => t.agent === 'frontend').length,
+          backend: result.breakdown.filter(t => t.agent === 'backend').length,
+          testing: result.breakdown.filter(t => t.agent === 'testing').length
+        }
+      });
+    } catch (error) {
+      console.error('Taskmaster error:', error);
+      res.json({
+        success: false,
+        message: 'Taskmaster failed to process mega-feature',
+        error: error.message
+      });
+    }
+  } else {
+    // Single task assignment
+    const taskDir = '.agent-comms/task-queue';
+    if (!fs.existsSync(taskDir)) {
+      fs.mkdirSync(taskDir, { recursive: true });
+    }
+    
+    // For simple tasks, use smart routing if agent is 'auto'
+    let targetAgent = agentId;
+    if (agentId === 'auto') {
+      const SmartTaskRouter = require('./smart-task-router');
+      const router = new SmartTaskRouter();
+      const agents = router.analyzeTask(task);
+      targetAgent = agents && agents.length > 0 ? agents[0] : 'frontend';
+    }
+    
+    const taskId = `TASK_${Date.now()}`;
+    const taskFile = path.join(taskDir, `${targetAgent}-${taskId}.md`);
+    
+    fs.writeFileSync(taskFile, `# ${taskId}
+AGENT: ${targetAgent.toUpperCase()}
 TIMESTAMP: ${new Date().toISOString()}
 STATUS: PENDING
 
@@ -1214,81 +1229,24 @@ ${task}
 - Awaiting agent processing...
 `);
 
-  // Update agent state
-  if (agentStates[agentId]) {
-    agentStates[agentId].status = 'BUSY';
-    agentStates[agentId].currentTask = task;
-    agentStates[agentId].lastActivity = new Date();
-  }
-  
-  // Log to notifications
-  const logEntry = `${new Date().toISOString()} - [TASK_ASSIGNED] ${agentId}: ${task}`;
-  fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
-  
-  res.json({ 
-    success: true, 
-    taskId,
-    message: `PROTOCOL INITIATED: ${taskId}`,
-    agent: agentId.toUpperCase()
-  });
-=======
-app.post('/api/agents/:agentId/task', async (req, res) => {
-  const { agentId } = req.params;
-  const { task } = req.body;
-  
-  // ALWAYS use Taskmaster Always-On for ALL tasks
-  console.log('🎯 TASKMASTER ALWAYS-ON: Analyzing task...');
-  
-  try {
-    const TaskmasterAlwaysOn = require('./taskmaster-always-on');
-    const taskmaster = new TaskmasterAlwaysOn();
-    const result = await taskmaster.analyzeAnyTask(task);
-    
-    // Add to activity log
-    const complexity = taskmaster.assessComplexity(task);
-    const logEntry = `${new Date().toISOString()} - [TASKMASTER] Analyzed ${complexity} task: ${result.totalTasks} task(s) created`;
-    
-    if (!fs.existsSync('.agent-comms')) {
-      fs.mkdirSync('.agent-comms', { recursive: true });
+    // Update agent state
+    if (agentStates[targetAgent]) {
+      agentStates[targetAgent].status = 'BUSY';
+      agentStates[targetAgent].currentTask = task;
+      agentStates[targetAgent].lastActivity = new Date();
     }
+    
+    // Log to notifications
+    const logEntry = `${new Date().toISOString()} - [TASK_ASSIGNED] ${targetAgent}: ${task}`;
     fs.appendFileSync('.agent-comms/notifications.log', logEntry + '\n');
     
-    // Detailed response based on complexity
-    let message = '';
-    if (complexity === 'mega') {
-      message = `TASKMASTER: Mega-feature broken down into ${result.totalTasks} tasks!`;
-    } else if (complexity === 'multi') {
-      message = `TASKMASTER: Multi-agent task distributed to ${result.totalTasks} agents`;
-    } else {
-      message = `TASKMASTER: Task routed to optimal agent`;
-    }
-    
-    res.json({
-      success: true,
-      message,
-      complexity,
-      totalTasks: result.totalTasks,
-      estimatedMinutes: result.estimatedTime,
-      distribution: {
-        frontend: result.breakdown.filter(t => t.agent === 'frontend').length,
-        backend: result.breakdown.filter(t => t.agent === 'backend').length,
-        testing: result.breakdown.filter(t => t.agent === 'testing').length
-      },
-      breakdown: result.breakdown.map(t => ({
-        agent: t.agent.toUpperCase(),
-        task: t.task,
-        priority: t.priority
-      }))
-    });
-  } catch (error) {
-    console.error('Taskmaster Always-On error:', error);
-    res.json({
-      success: false,
-      message: 'Taskmaster failed to analyze task',
-      error: error.message
+    res.json({ 
+      success: true, 
+      taskId,
+      message: `PROTOCOL INITIATED: ${taskId}`,
+      agent: targetAgent.toUpperCase()
     });
   }
->>>>>>> c3fbcf1c5343e82753000f692820a11a61130776
 });
 
 // WebSocket server
