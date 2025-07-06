@@ -37,17 +37,33 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       setIsInitializing(true);
       setDebugInfo('Loading Google Maps script...');
       
+      // Check if API key is configured
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey || apiKey === 'DEMO_KEY_PLEASE_CONFIGURE') {
+        setDebugInfo('Google Maps API key not configured');
+        setIsInitializing(false);
+        // Don't show error toast for missing API key - just allow manual entry
+        return;
+      }
+      
       loadScript()
         .then(() => {
-          setDebugInfo('Google Maps loaded, initializing autocomplete...');
-          initializeAutocomplete();
+          if (window.google && window.google.maps && window.google.maps.places) {
+            setDebugInfo('Google Maps loaded, initializing autocomplete...');
+            initializeAutocomplete();
+          } else {
+            setDebugInfo('Google Maps loaded but Places library not available');
+            setIsInitializing(false);
+          }
         })
         .catch((error) => {
           setDebugInfo(`Error loading Google Maps: ${error.message || 'Unknown error'}`);
-          toast({
-            title: "Maps service unavailable",
-            description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
-            variant: "destructive",
+          // Only show toast for actual errors, not missing API key
+          if (apiKey && apiKey !== 'DEMO_KEY_PLEASE_CONFIGURE') {
+            toast({
+              title: "Maps service unavailable",
+              description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
+              variant: "destructive",
           });
         })
         .finally(() => {

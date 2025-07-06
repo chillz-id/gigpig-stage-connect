@@ -18,6 +18,8 @@ interface CreateAgencyModalProps {
 }
 
 const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({ open, onClose, onSuccess }) => {
+  console.log('CreateAgencyModal render, open:', open);
+  
   const [formData, setFormData] = useState<CreateAgencyRequest>({
     name: '',
     legal_name: '',

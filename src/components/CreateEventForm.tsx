@@ -87,8 +87,25 @@ export const CreateEventForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Double-check current auth state
-    const { data: { user: currentUser, session: currentSession } } = await supabase.auth.getUser();
+    // Double-check current auth state and refresh if needed
+    const { data: { user: currentUser, session: currentSession }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('=== CREATE EVENT: AUTH ERROR ===', authError);
+      
+      // Try to refresh the session
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshedSession) {
+        toast({
+          title: "Authentication required",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      }
+    }
     
     if (!currentUser || !currentSession) {
       console.error('=== CREATE EVENT: NO AUTH ===', { 

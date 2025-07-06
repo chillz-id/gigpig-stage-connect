@@ -55,7 +55,13 @@ const AgencyManagement: React.FC = () => {
             Create your first agency to start managing artists, negotiating deals, 
             and growing your talent management business.
           </p>
-          <Button onClick={() => setShowCreateModal(true)} size="lg">
+          <Button 
+            onClick={() => {
+              console.log('Create agency button clicked');
+              setShowCreateModal(true);
+            }} 
+            size="lg"
+          >
             <Building2 className="h-5 w-5 mr-2" />
             Create Your First Agency
           </Button>

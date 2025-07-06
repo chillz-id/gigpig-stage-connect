@@ -1,26 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useApplications } from '@/hooks/useApplications';
+import { useEvents } from '@/hooks/useEvents';
 import ApplicationStats from '@/components/admin/ApplicationStats';
 import ApplicationList from '@/components/admin/ApplicationList';
 import ApplicationFilters from '@/components/admin/ApplicationFilters';
 import BulkApplicationActions from '@/components/admin/BulkApplicationActions';
-import {
-  mockApplications,
-  mockEvents,
-  filterAndSortApplications,
-  calculateApplicationStats,
-  ApplicationData
-} from '@/services/applicationService';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
 const Applications = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<ApplicationData[]>(mockApplications);
+  
+  // Fetch real data
+  const { applications, isLoading, updateApplication, bulkUpdateApplications } = useApplications();
+  const { userEvents } = useEvents();
+  
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   
   // Filter states
@@ -32,17 +32,66 @@ const Applications = () => {
     to: undefined,
   });
 
+  // Transform applications to match the expected format
+  const transformedApplications = useMemo(() => {
+    return applications.map(app => ({
+      id: app.id,
+      comedian_id: app.comedian_id,
+      comedian_name: app.comedian?.name || 'Unknown',
+      comedian_avatar: app.comedian?.avatar_url,
+      comedian_experience: app.comedian?.years_experience ? `${app.comedian.years_experience} years` : undefined,
+      comedian_rating: undefined, // Not available in current schema
+      event_id: app.event_id,
+      event_title: app.event?.title || 'Unknown Event',
+      event_venue: app.event?.venue || 'Unknown Venue',
+      event_date: app.event?.event_date || '',
+      applied_at: app.created_at,
+      status: app.status,
+      message: app.message,
+      show_type: app.show_type || 'Spot',
+    }));
+  }, [applications]);
+
   // Filter and sort applications
-  const filteredApplications = filterAndSortApplications(
-    applications,
-    searchTerm,
-    eventFilter,
-    sortBy,
-    dateRange
-  );
+  const filteredApplications = useMemo(() => {
+    return transformedApplications
+      .filter(app => {
+        const matchesSearch = app.comedian_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             app.event_title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesEvent = eventFilter === 'all' || app.event_id === eventFilter;
+        
+        // Date range filter
+        let matchesDateRange = true;
+        if (dateRange.from || dateRange.to) {
+          const appliedDate = new Date(app.applied_at);
+          if (dateRange.from && appliedDate < dateRange.from) matchesDateRange = false;
+          if (dateRange.to && appliedDate > dateRange.to) matchesDateRange = false;
+        }
+        
+        return matchesSearch && matchesEvent && matchesDateRange;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'applied_at_desc':
+            return new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime();
+          case 'applied_at_asc':
+            return new Date(a.applied_at).getTime() - new Date(b.applied_at).getTime();
+          case 'comedian_name':
+            return a.comedian_name.localeCompare(b.comedian_name);
+          case 'event_date':
+            return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+          default:
+            return 0;
+        }
+      });
+  }, [transformedApplications, searchTerm, eventFilter, sortBy, dateRange]);
 
   // Calculate stats
-  const stats = calculateApplicationStats(applications);
+  const stats = useMemo(() => ({
+    mc: transformedApplications.filter(app => app.show_type === 'MC').length,
+    headliner: transformedApplications.filter(app => app.show_type === 'Headliner').length,
+    unread: transformedApplications.filter(app => app.status === 'pending').length,
+  }), [transformedApplications]);
 
   const handleSelectApplication = (applicationId: string, selected: boolean) => {
     setSelectedApplications(prev => 
@@ -53,54 +102,26 @@ const Applications = () => {
   };
 
   const handleBulkApprove = async (applicationIds: string[]) => {
-    setApplications(prev => prev.map(app => 
-      applicationIds.includes(app.id) 
-        ? { ...app, status: 'accepted' as const }
-        : app
-    ));
+    bulkUpdateApplications({ applicationIds, status: 'accepted' });
     setSelectedApplications([]);
   };
 
   const handleBulkHide = async (applicationIds: string[]) => {
-    setApplications(prev => prev.map(app => 
-      applicationIds.includes(app.id) 
-        ? { ...app, status: 'declined' as const }
-        : app
-    ));
+    bulkUpdateApplications({ applicationIds, status: 'declined' });
     setSelectedApplications([]);
   };
 
   const handleApprove = (applicationId: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === applicationId 
-        ? { ...app, status: 'accepted' as const }
-        : app
-    ));
-    
-    const application = applications.find(app => app.id === applicationId);
-    toast({
-      title: "Application Approved",
-      description: `${application?.comedian_name}'s application has been approved.`,
-    });
+    updateApplication({ applicationId, status: 'accepted' });
   };
 
   const handleHide = (applicationId: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === applicationId 
-        ? { ...app, status: 'declined' as const }
-        : app
-    ));
-
-    const application = applications.find(app => app.id === applicationId);
-    toast({
-      title: "Application Hidden",
-      description: `${application?.comedian_name}'s application has been hidden.`,
-    });
+    updateApplication({ applicationId, status: 'declined' });
   };
 
   const handleViewProfile = (comedianId: string) => {
     // Find the comedian's name to create the profile slug
-    const application = applications.find(app => app.comedian_id === comedianId);
+    const application = transformedApplications.find(app => app.comedian_id === comedianId);
     if (application) {
       // Create slug from comedian name
       const slug = application.comedian_name.toLowerCase().replace(/\s+/g, '-');
@@ -121,6 +142,22 @@ const Applications = () => {
     }
     return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
   };
+
+  // Transform events for the filter
+  const eventOptions = useMemo(() => {
+    return userEvents.map(event => ({
+      id: event.id,
+      title: event.title
+    }));
+  }, [userEvents]);
+
+  if (isLoading) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", getBackgroundStyles())}>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
@@ -145,7 +182,7 @@ const Applications = () => {
           setSortBy={setSortBy}
           dateRange={dateRange}
           setDateRange={setDateRange}
-          events={mockEvents}
+          events={eventOptions}
           onClearFilters={handleClearFilters}
         />
 

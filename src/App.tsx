@@ -20,6 +20,7 @@ import CreateEvent from '@/pages/CreateEvent';
 import Applications from '@/pages/Applications';
 import AdminDashboard from '@/pages/AdminDashboard';
 import EventDetail from '@/pages/EventDetail';
+import EventDetailPublic from '@/pages/EventDetailPublic';
 import ComedianProfile from '@/pages/ComedianProfile';
 import ComedianProfileBySlug from '@/pages/ComedianProfileBySlug';
 import DesignSystem from '@/pages/DesignSystem';
@@ -89,6 +90,7 @@ function App() {
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/design-system" element={<DesignSystem />} />
                         <Route path="/admin/events/:eventId" element={<EventDetail />} />
+                        <Route path="/events/:eventId" element={<EventDetailPublic />} />
                         <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
