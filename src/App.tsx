@@ -34,6 +34,7 @@ import PWASettings from '@/pages/PWASettings';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import InvoiceForm from '@/components/InvoiceForm';
+import XeroCallback from '@/pages/XeroCallback';
 import { Suspense, useState, useEffect } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
@@ -134,6 +135,7 @@ function App() {
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
+                        <Route path="/auth/xero-callback" element={<XeroCallback />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/shows" element={<Shows />} />
                         <Route path="/browse" element={<Navigate to="/shows" replace />} />
