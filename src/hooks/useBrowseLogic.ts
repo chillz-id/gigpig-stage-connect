@@ -143,8 +143,7 @@ export const useBrowseLogic = () => {
   };
 
   const handleShowDetails = (event: any) => {
-    setSelectedEventForDetails(event);
-    setShowEventDetailsDialog(true);
+    navigate(`/events/${event.id}`);
   };
 
   const handleDateSelected = (selectedDate: Date) => {

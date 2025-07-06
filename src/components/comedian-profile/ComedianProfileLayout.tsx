@@ -10,6 +10,7 @@ import ComedianMedia from './ComedianMedia';
 import ComedianUpcomingShows from './ComedianUpcomingShows';
 import ComedianAccomplishments from './ComedianAccomplishments';
 import ComedianContact from './ComedianContact';
+import ComedianAvailabilityCalendar from './ComedianAvailabilityCalendar';
 import { cn } from '@/lib/utils';
 
 interface ComedianProfileLayoutProps {
@@ -88,6 +89,11 @@ const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian 
           
           {/* Upcoming Shows */}
           <ComedianUpcomingShows comedianId={comedian.id} />
+          
+          {/* Availability Calendar - Only show for own profile or to industry users */}
+          {(isOwnProfile || hasRole('promoter') || hasRole('admin')) && (
+            <ComedianAvailabilityCalendar comedianId={comedian.id} />
+          )}
           
           {/* Accomplishments & Reviews */}
           <ComedianAccomplishments comedianId={comedian.id} />

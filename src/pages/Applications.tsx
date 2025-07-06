@@ -120,12 +120,17 @@ const Applications = () => {
   };
 
   const handleViewProfile = (comedianId: string) => {
-    // Find the comedian's name to create the profile slug
-    const application = transformedApplications.find(app => app.comedian_id === comedianId);
-    if (application) {
-      // Create slug from comedian name
-      const slug = application.comedian_name.toLowerCase().replace(/\s+/g, '-');
-      navigate(`/comedian/${slug}`);
+    // Find the application and use the comedian's profile_slug
+    const application = applications.find(app => app.comedian_id === comedianId);
+    if (application?.comedian?.profile_slug) {
+      navigate(`/comedian/${application.comedian.profile_slug}`);
+    } else {
+      // Fallback: create slug from comedian name
+      const transformedApp = transformedApplications.find(app => app.comedian_id === comedianId);
+      if (transformedApp) {
+        const fallbackSlug = transformedApp.comedian_name.toLowerCase().replace(/\s+/g, '-');
+        navigate(`/comedian/${fallbackSlug}`);
+      }
     }
   };
 

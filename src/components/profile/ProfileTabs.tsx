@@ -109,7 +109,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
       {isMemberView ? (
         <>
           <TabsContent value="tickets" className="space-y-6">
-            <TicketsSection tickets={mockTickets} isMemberView={isMemberView} />
+            <TicketsSection isMemberView={isMemberView} />
             <InterestedEventsSection userInterests={userInterests} />
           </TabsContent>
           <TabsContent value="notifications">
@@ -130,7 +130,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
             </TabsContent>
           ) : (
             <TabsContent value="tickets">
-              <TicketsSection tickets={mockTickets} isMemberView={isMemberView} />
+              <TicketsSection isMemberView={isMemberView} />
             </TabsContent>
           )}
           <TabsContent value="vouches">

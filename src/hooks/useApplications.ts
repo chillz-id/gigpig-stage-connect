@@ -73,7 +73,8 @@ export const useApplications = () => {
             name,
             avatar_url,
             bio,
-            years_experience
+            years_experience,
+            profile_slug
           )
         `)
         .in('event_id', eventIds)

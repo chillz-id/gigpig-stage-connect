@@ -1,0 +1,771 @@
+{
+  "workflows": [
+    {
+      "id": "flight-status-monitor",
+      "name": "Flight Status Monitor",
+      "description": "Monitors flight status changes and sends notifications",
+      "active": true,
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "flight-status-webhook",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-trigger",
+          "name": "Flight Status Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [240, 300],
+          "webhookId": "flight-status-webhook"
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "string": [
+                {
+                  "value1": "={{$json.flight_number}}",
+                  "operation": "isNotEmpty"
+                }
+              ]
+            }
+          },
+          "id": "validate-input",
+          "name": "Validate Input",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 1,
+          "position": [460, 300]
+        },
+        {
+          "parameters": {
+            "url": "https://aeroapi.flightaware.com/aeroapi/flights/{{$json.flight_number}}",
+            "authentication": "headerAuth",
+            "headerAuth": {
+              "name": "x-apikey",
+              "value": "={{$credentials.flightAwareApi.apiKey}}"
+            },
+            "options": {
+              "timeout": 10000
+            }
+          },
+          "id": "get-flight-data",
+          "name": "Get Flight Data",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 3,
+          "position": [680, 220],
+          "credentials": {
+            "flightAwareApi": {
+              "id": "flight-aware-credentials",
+              "name": "FlightAware API"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT fb.*, p.name as passenger_name, p.email as passenger_email FROM flight_bookings fb JOIN profiles p ON fb.passenger_id = p.id WHERE fb.flight_number = $1 AND fb.monitoring_enabled = true",
+            "additionalFields": {
+              "mode": "transaction"
+            },
+            "placeholders": {
+              "placeholder1": "={{$json.flight_number}}"
+            }
+          },
+          "id": "get-booking-data",
+          "name": "Get Booking Data",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [680, 380],
+          "credentials": {
+            "postgres": {
+              "id": "supabase-connection",
+              "name": "Supabase Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "// Process flight data and compare with stored booking\nconst flightData = $input.first().json;\nconst bookingData = $input.all()[1].json;\n\nif (!bookingData || bookingData.length === 0) {\n  return [{ json: { error: 'No booking found for this flight' } }];\n}\n\nconst booking = bookingData[0];\nconst flight = flightData.flights ? flightData.flights[0] : flightData;\n\nif (!flight) {\n  return [{ json: { error: 'No flight data found' } }];\n}\n\n// Determine status changes\nconst currentStatus = booking.status;\nlet newStatus = 'scheduled';\nconst changes = [];\n\n// Map FlightAware status to our status\nif (flight.cancelled) {\n  newStatus = 'cancelled';\n} else if (flight.actual_off) {\n  newStatus = 'departed';\n} else if (flight.actual_on) {\n  newStatus = 'arrived';\n} else if (flight.gate_departed_time || flight.estimated_off) {\n  newStatus = 'boarding';\n} else if (flight.estimated_off && new Date(flight.estimated_off) > new Date(flight.scheduled_off)) {\n  newStatus = 'delayed';\n}\n\n// Check for specific changes\nif (currentStatus !== newStatus) {\n  changes.push({\n    type: 'status_change',\n    old_value: currentStatus,\n    new_value: newStatus,\n    severity: newStatus === 'cancelled' ? 'high' : newStatus === 'delayed' ? 'medium' : 'low'\n  });\n}\n\n// Check for gate changes\nif (booking.gate && flight.gate && booking.gate !== flight.gate) {\n  changes.push({\n    type: 'gate_change',\n    old_value: booking.gate,\n    new_value: flight.gate,\n    severity: 'medium'\n  });\n}\n\n// Check for delay changes\nif (flight.estimated_off && flight.scheduled_off) {\n  const delayMinutes = Math.round((new Date(flight.estimated_off) - new Date(flight.scheduled_off)) / 60000);\n  if (delayMinutes > 15 && delayMinutes !== booking.delay_minutes) {\n    changes.push({\n      type: 'delay',\n      old_value: booking.delay_minutes || 0,\n      new_value: delayMinutes,\n      severity: delayMinutes > 120 ? 'high' : delayMinutes > 60 ? 'medium' : 'low'\n    });\n  }\n}\n\nreturn [{\n  json: {\n    booking: booking,\n    flight: flight,\n    changes: changes,\n    needs_update: changes.length > 0,\n    new_status: newStatus,\n    passenger_name: booking.passenger_name,\n    passenger_email: booking.passenger_email\n  }\n}];"
+          },
+          "id": "process-flight-data",
+          "name": "Process Flight Data",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [900, 300]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "boolean": [
+                {
+                  "value1": "={{$json.needs_update}}",
+                  "value2": true
+                }
+              ]
+            }
+          },
+          "id": "check-needs-update",
+          "name": "Check Needs Update",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 1,
+          "position": [1120, 300]
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "UPDATE flight_bookings SET status = $1, gate = $2, estimated_departure = $3, estimated_arrival = $4, updated_at = NOW() WHERE id = $5",
+            "placeholders": {
+              "placeholder1": "={{$json.new_status}}",
+              "placeholder2": "={{$json.flight.gate}}",
+              "placeholder3": "={{$json.flight.estimated_off}}",
+              "placeholder4": "={{$json.flight.estimated_on}}",
+              "placeholder5": "={{$json.booking.id}}"
+            }
+          },
+          "id": "update-booking",
+          "name": "Update Booking",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [1340, 220],
+          "credentials": {
+            "postgres": {
+              "id": "supabase-connection",
+              "name": "Supabase Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "INSERT INTO flight_status_updates (flight_booking_id, previous_status, new_status, update_type, old_value, new_value, update_source, api_response) VALUES ($1, $2, $3, $4, $5, $6, 'n8n_webhook', $7)",
+            "placeholders": {
+              "placeholder1": "={{$json.booking.id}}",
+              "placeholder2": "={{$json.booking.status}}",
+              "placeholder3": "={{$json.new_status}}",
+              "placeholder4": "={{$json.changes[0].type}}",
+              "placeholder5": "={{$json.changes[0].old_value}}",
+              "placeholder6": "={{$json.changes[0].new_value}}",
+              "placeholder7": "={{JSON.stringify($json.flight)}}"
+            }
+          },
+          "id": "log-status-update",
+          "name": "Log Status Update",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [1340, 380]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "string": [
+                {
+                  "value1": "={{$json.booking.notification_preferences}}",
+                  "operation": "notEqual",
+                  "value2": "none"
+                }
+              ]
+            }
+          },
+          "id": "check-notifications",
+          "name": "Check Notifications",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 1,
+          "position": [1560, 300]
+        },
+        {
+          "parameters": {
+            "jsCode": "// Generate notification messages based on changes\nconst changes = $json.changes;\nconst booking = $json.booking;\nconst flight = $json.flight;\nconst notifications = [];\n\nchanges.forEach(change => {\n  let title, message, type;\n  \n  switch (change.type) {\n    case 'status_change':\n      if (change.new_value === 'cancelled') {\n        title = `Flight ${booking.flight_number} Cancelled`;\n        message = `Your flight from ${booking.departure_airport} to ${booking.arrival_airport} has been cancelled. Please contact your airline for rebooking options.`;\n        type = 'cancellation';\n      } else if (change.new_value === 'delayed') {\n        title = `Flight ${booking.flight_number} Delayed`;\n        message = `Your flight is now delayed. New estimated departure: ${new Date(flight.estimated_off).toLocaleString()}.`;\n        type = 'delay';\n      } else if (change.new_value === 'boarding') {\n        title = `Flight ${booking.flight_number} Now Boarding`;\n        message = `Your flight is now boarding at gate ${flight.gate || 'TBD'}. Please proceed to the gate.`;\n        type = 'boarding';\n      }\n      break;\n      \n    case 'gate_change':\n      title = `Gate Change for Flight ${booking.flight_number}`;\n      message = `Your gate has changed from ${change.old_value} to ${change.new_value}.`;\n      type = 'gate_change';\n      break;\n      \n    case 'delay':\n      const delayHours = Math.floor(change.new_value / 60);\n      const delayMinutes = change.new_value % 60;\n      title = `Flight ${booking.flight_number} Delayed`;\n      message = `Your flight is delayed by ${delayHours}h ${delayMinutes}m. New estimated departure: ${new Date(flight.estimated_off).toLocaleString()}.`;\n      type = 'delay';\n      break;\n  }\n  \n  if (title && message) {\n    notifications.push({\n      title,\n      message,\n      type,\n      severity: change.severity,\n      flight_booking_id: booking.id,\n      user_id: booking.passenger_id,\n      passenger_email: booking.passenger_email,\n      passenger_name: booking.passenger_name\n    });\n  }\n});\n\nreturn notifications.map(notification => ({ json: notification }));"
+          },
+          "id": "generate-notifications",
+          "name": "Generate Notifications",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [1780, 220]
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "INSERT INTO flight_notifications (flight_booking_id, user_id, notification_type, title, message, sent_via) VALUES ($1, $2, $3, $4, $5, $6)",
+            "placeholders": {
+              "placeholder1": "={{$json.flight_booking_id}}",
+              "placeholder2": "={{$json.user_id}}",
+              "placeholder3": "={{$json.type}}",
+              "placeholder4": "={{$json.title}}",
+              "placeholder5": "={{$json.message}}",
+              "placeholder6": "['push', 'email']"
+            }
+          },
+          "id": "save-notification",
+          "name": "Save Notification",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [2000, 220]
+        },
+        {
+          "parameters": {
+            "authentication": "genericCredentialType",
+            "genericAuthType": "httpHeaderAuth",
+            "url": "https://api.resend.com/emails",
+            "httpMethod": "POST",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "from",
+                  "value": "flights@standupsyney.com"
+                },
+                {
+                  "name": "to",
+                  "value": "={{$json.passenger_email}}"
+                },
+                {
+                  "name": "subject",
+                  "value": "={{$json.title}}"
+                },
+                {
+                  "name": "html",
+                  "value": "<p>Dear {{$json.passenger_name}},</p><p>{{$json.message}}</p><p>Best regards,<br>Stand Up Sydney Team</p>"
+                }
+              ]
+            }
+          },
+          "id": "send-email",
+          "name": "Send Email",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 3,
+          "position": [2000, 380],
+          "credentials": {
+            "httpHeaderAuth": {
+              "id": "resend-api-key",
+              "name": "Resend API"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "{ \"status\": \"success\", \"message\": \"Flight status updated\", \"changes\": {{JSON.stringify($json.changes)}} }"
+          },
+          "id": "success-response",
+          "name": "Success Response",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [2220, 300]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "{ \"status\": \"no_update\", \"message\": \"No changes detected\" }"
+          },
+          "id": "no-update-response",
+          "name": "No Update Response",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [1340, 500]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "{ \"status\": \"error\", \"message\": \"Invalid input data\" }"
+          },
+          "id": "error-response",
+          "name": "Error Response",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [460, 500]
+        }
+      ],
+      "connections": {
+        "Flight Status Webhook": {
+          "main": [
+            [
+              {
+                "node": "Validate Input",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Validate Input": {
+          "main": [
+            [
+              {
+                "node": "Get Flight Data",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Get Booking Data",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Error Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Flight Data": {
+          "main": [
+            [
+              {
+                "node": "Process Flight Data",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Booking Data": {
+          "main": [
+            [
+              {
+                "node": "Process Flight Data",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Process Flight Data": {
+          "main": [
+            [
+              {
+                "node": "Check Needs Update",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Needs Update": {
+          "main": [
+            [
+              {
+                "node": "Update Booking",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Log Status Update",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "No Update Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Update Booking": {
+          "main": [
+            [
+              {
+                "node": "Check Notifications",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Log Status Update": {
+          "main": [
+            [
+              {
+                "node": "Check Notifications",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Notifications": {
+          "main": [
+            [
+              {
+                "node": "Generate Notifications",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Success Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Generate Notifications": {
+          "main": [
+            [
+              {
+                "node": "Save Notification",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Send Email",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Save Notification": {
+          "main": [
+            [
+              {
+                "node": "Success Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Send Email": {
+          "main": [
+            [
+              {
+                "node": "Success Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "flight-search-assistant",
+      "name": "Flight Search Assistant",
+      "description": "Helps find alternative flights when cancellations occur",
+      "active": true,
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "flight-search-webhook",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "search-webhook",
+          "name": "Flight Search Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [240, 300],
+          "webhookId": "flight-search-webhook"
+        },
+        {
+          "parameters": {
+            "url": "https://api.amadeus.com/v2/shopping/flight-offers",
+            "authentication": "oAuth2",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "originLocationCode",
+                  "value": "={{$json.departure_airport}}"
+                },
+                {
+                  "name": "destinationLocationCode",
+                  "value": "={{$json.arrival_airport}}"
+                },
+                {
+                  "name": "departureDate",
+                  "value": "={{$json.departure_date}}"
+                },
+                {
+                  "name": "adults",
+                  "value": "1"
+                },
+                {
+                  "name": "max",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "id": "search-flights",
+          "name": "Search Alternative Flights",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 3,
+          "position": [460, 300],
+          "credentials": {
+            "oAuth2Api": {
+              "id": "amadeus-api",
+              "name": "Amadeus API"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "// Process flight search results\nconst searchResults = $json.data || [];\nconst originalBooking = $json.original_booking;\n\nconst alternatives = searchResults.map(offer => {\n  const segments = offer.itineraries[0].segments;\n  const firstSegment = segments[0];\n  const lastSegment = segments[segments.length - 1];\n  \n  return {\n    airline: firstSegment.carrierCode,\n    flight_number: firstSegment.number,\n    departure_time: firstSegment.departure.at,\n    arrival_time: lastSegment.arrival.at,\n    duration: offer.itineraries[0].duration,\n    price: offer.price.total,\n    currency: offer.price.currency,\n    stops: segments.length - 1,\n    booking_class: offer.travelerPricings[0].fareDetailsBySegment[0].cabin,\n    available_seats: offer.numberOfBookableSeats\n  };\n}).filter(flight => {\n  // Filter out flights that are too early or too late\n  const departureTime = new Date(flight.departure_time);\n  const originalTime = new Date(originalBooking.scheduled_departure);\n  const timeDiff = Math.abs(departureTime - originalTime) / (1000 * 60 * 60); // hours\n  \n  return timeDiff <= 12; // Within 12 hours of original\n});\n\nreturn [{\n  json: {\n    original_booking: originalBooking,\n    alternatives: alternatives,\n    search_performed_at: new Date().toISOString()\n  }\n}];"
+          },
+          "id": "process-search-results",
+          "name": "Process Search Results",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [680, 300]
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "INSERT INTO flight_search_cache (route_key, departure_airport, arrival_airport, departure_date, search_results) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (route_key) DO UPDATE SET search_results = $5, cached_at = NOW()",
+            "placeholders": {
+              "placeholder1": "={{$json.original_booking.departure_airport}}-{{$json.original_booking.arrival_airport}}-{{$json.original_booking.departure_date}}",
+              "placeholder2": "={{$json.original_booking.departure_airport}}",
+              "placeholder3": "={{$json.original_booking.arrival_airport}}",
+              "placeholder4": "={{$json.original_booking.departure_date}}",
+              "placeholder5": "={{JSON.stringify($json.alternatives)}}"
+            }
+          },
+          "id": "cache-results",
+          "name": "Cache Search Results",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [900, 300]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "{ \"status\": \"success\", \"alternatives\": {{JSON.stringify($json.alternatives)}}, \"count\": {{$json.alternatives.length}} }"
+          },
+          "id": "return-alternatives",
+          "name": "Return Alternatives",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [1120, 300]
+        }
+      ],
+      "connections": {
+        "Flight Search Webhook": {
+          "main": [
+            [
+              {
+                "node": "Search Alternative Flights",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Search Alternative Flights": {
+          "main": [
+            [
+              {
+                "node": "Process Search Results",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Process Search Results": {
+          "main": [
+            [
+              {
+                "node": "Cache Search Results",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Cache Search Results": {
+          "main": [
+            [
+              {
+                "node": "Return Alternatives",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "scheduled-flight-monitor",
+      "name": "Scheduled Flight Monitor",
+      "description": "Runs every 5 minutes to check flight statuses",
+      "active": true,
+      "nodes": [
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minute",
+                  "minuteInterval": 5
+                }
+              ]
+            }
+          },
+          "id": "schedule-trigger",
+          "name": "Every 5 Minutes",
+          "type": "n8n-nodes-base.cron",
+          "typeVersion": 1,
+          "position": [240, 300]
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT * FROM flight_bookings WHERE monitoring_enabled = true AND status IN ('scheduled', 'delayed', 'boarding') AND scheduled_departure > NOW() - INTERVAL '2 hours' AND scheduled_departure < NOW() + INTERVAL '24 hours'"
+          },
+          "id": "get-monitored-flights",
+          "name": "Get Monitored Flights",
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.3,
+          "position": [460, 300],
+          "credentials": {
+            "postgres": {
+              "id": "supabase-connection",
+              "name": "Supabase Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "url": "http://localhost:5678/webhook/flight-status-webhook",
+            "httpMethod": "POST",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "flight_number",
+                  "value": "={{$json.flight_number}}"
+                },
+                {
+                  "name": "airline",
+                  "value": "={{$json.airline}}"
+                },
+                {
+                  "name": "departure_date",
+                  "value": "={{$json.scheduled_departure}}"
+                }
+              ]
+            }
+          },
+          "id": "trigger-status-check",
+          "name": "Trigger Status Check",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 3,
+          "position": [680, 300]
+        }
+      ],
+      "connections": {
+        "Every 5 Minutes": {
+          "main": [
+            [
+              {
+                "node": "Get Monitored Flights",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Monitored Flights": {
+          "main": [
+            [
+              {
+                "node": "Trigger Status Check",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "credentials": [
+    {
+      "id": "flight-aware-credentials",
+      "name": "FlightAware API",
+      "type": "httpHeaderAuth",
+      "data": {
+        "name": "x-apikey",
+        "value": "YOUR_FLIGHTAWARE_API_KEY"
+      }
+    },
+    {
+      "id": "amadeus-api",
+      "name": "Amadeus API",
+      "type": "oAuth2Api",
+      "data": {
+        "clientId": "YOUR_AMADEUS_CLIENT_ID",
+        "clientSecret": "YOUR_AMADEUS_CLIENT_SECRET",
+        "accessTokenUrl": "https://api.amadeus.com/v1/security/oauth2/token",
+        "scope": "read"
+      }
+    },
+    {
+      "id": "supabase-connection",
+      "name": "Supabase Database",
+      "type": "postgres",
+      "data": {
+        "host": "YOUR_SUPABASE_HOST",
+        "port": 5432,
+        "database": "postgres",
+        "user": "postgres",
+        "password": "YOUR_SUPABASE_PASSWORD",
+        "ssl": true
+      }
+    },
+    {
+      "id": "resend-api-key",
+      "name": "Resend API",
+      "type": "httpHeaderAuth",
+      "data": {
+        "name": "Authorization",
+        "value": "Bearer YOUR_RESEND_API_KEY"
+      }
+    }
+  ],
+  "variables": {
+    "WEBHOOK_BASE_URL": "http://localhost:5678/webhook",
+    "FLIGHT_MONITOR_INTERVAL": "5",
+    "MAX_DELAY_THRESHOLD": "120",
+    "NOTIFICATION_DELAY_THRESHOLD": "15"
+  }
+}

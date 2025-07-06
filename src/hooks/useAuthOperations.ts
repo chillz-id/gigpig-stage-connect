@@ -56,12 +56,34 @@ export const useAuthOperations = () => {
           console.log('=== PROFILE NOT CREATED BY TRIGGER, CREATING MANUALLY ===');
           
           // Create profile manually if trigger didn't work
+          const name = userData.name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || data.user.email!.split('@')[0];
+          
+          // Generate a unique profile slug
+          const baseSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          let profileSlug = baseSlug;
+          let counter = 1;
+          
+          // Check if slug exists and increment if needed
+          while (true) {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('profile_slug', profileSlug)
+              .single();
+              
+            if (!existingProfile) break;
+            
+            profileSlug = `${baseSlug}-${counter}`;
+            counter++;
+          }
+          
           const { error: createProfileError } = await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
               email: data.user.email!,
-              name: userData.name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || data.user.email!.split('@')[0]
+              name: name,
+              profile_slug: profileSlug
             });
           
           if (createProfileError) {

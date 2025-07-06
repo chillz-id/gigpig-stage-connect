@@ -24,6 +24,7 @@ const AgencyManagement: React.FC = () => {
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [testState, setTestState] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const { data: userAgencies, isLoading: agenciesLoading } = useUserAgencies();
@@ -55,16 +56,35 @@ const AgencyManagement: React.FC = () => {
             Create your first agency to start managing artists, negotiating deals, 
             and growing your talent management business.
           </p>
-          <Button 
-            onClick={() => {
-              console.log('Create agency button clicked');
-              setShowCreateModal(true);
-            }} 
-            size="lg"
-          >
-            <Building2 className="h-5 w-5 mr-2" />
-            Create Your First Agency
-          </Button>
+          <div className="space-y-4">
+            <Button 
+              onClick={() => {
+                console.log('Create agency button clicked');
+                setShowCreateModal(true);
+              }} 
+              size="lg"
+            >
+              <Building2 className="h-5 w-5 mr-2" />
+              Create Your First Agency
+            </Button>
+            
+            {/* Test state button */}
+            <div className="text-center">
+              <Button 
+                onClick={() => {
+                  console.log('Test button clicked, current testState:', testState);
+                  setTestState(!testState);
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Test State: {testState ? 'TRUE' : 'FALSE'}
+              </Button>
+              <p className="mt-2 text-sm text-gray-600">
+                Modal state: {showCreateModal ? 'OPEN' : 'CLOSED'}
+              </p>
+            </div>
+          </div>
         </div>
 
         <CreateAgencyModal

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 interface FeaturedEventCardProps {
   event: any;
@@ -12,6 +13,7 @@ interface FeaturedEventCardProps {
 export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) => {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
   
@@ -29,6 +31,13 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
       className="relative w-full aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px] bg-gray-900 border border-gray-700 overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => {
+        // Prevent navigation if clicking on action buttons
+        if ((e.target as HTMLElement).closest('button')) {
+          return;
+        }
+        navigate(`/events/${event.id}`);
+      }}
     >
       {/* Background Image */}
       <div className="absolute inset-0 z-0">

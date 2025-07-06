@@ -28,6 +28,7 @@ import Comedians from '@/pages/Comedians';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import AgencyManagement from '@/pages/AgencyManagement';
+import AddGig from '@/pages/AddGig';
 import { Suspense } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 
@@ -84,6 +85,7 @@ function App() {
                         <Route path="/create-event" element={<CreateEvent />} />
                         <Route path="/applications" element={<Applications />} />
                         <Route path="/agency" element={<AgencyManagement />} />
+                        <Route path="/dashboard/gigs/add" element={<ProtectedRoute requiredRole="comedian"><AddGig /></ProtectedRoute>} />
                         {/* Redirect old invoice routes to Profile */}
                         <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />

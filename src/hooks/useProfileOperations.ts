@@ -87,9 +87,44 @@ export const useProfileOperations = () => {
     try {
       console.log('=== UPDATING PROFILE ===', user.id, updates);
       
+      // If updating name, also generate/update profile slug if not already set
+      let finalUpdates = { ...updates };
+      if (updates.name) {
+        // Check if user already has a profile_slug
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('profile_slug')
+          .eq('id', user.id)
+          .single();
+          
+        if (!currentProfile?.profile_slug) {
+          // Generate a unique profile slug
+          const baseSlug = updates.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          let profileSlug = baseSlug;
+          let counter = 1;
+          
+          // Check if slug exists and increment if needed
+          while (true) {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('profile_slug', profileSlug)
+              .neq('id', user.id) // Exclude current user
+              .single();
+              
+            if (!existingProfile) break;
+            
+            profileSlug = `${baseSlug}-${counter}`;
+            counter++;
+          }
+          
+          finalUpdates.profile_slug = profileSlug;
+        }
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...finalUpdates, updated_at: new Date().toISOString() })
         .eq('id', user.id);
 
       if (error) {

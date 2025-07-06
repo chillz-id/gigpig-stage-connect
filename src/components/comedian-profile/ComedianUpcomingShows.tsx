@@ -2,8 +2,12 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Clock } from 'lucide-react';
+import { Calendar, MapPin, Clock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useComedianGigs } from '@/hooks/useComedianGigs';
+import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 
 interface ComedianUpcomingShowsProps {
   comedianId: string;
@@ -11,54 +15,39 @@ interface ComedianUpcomingShowsProps {
 
 const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianId }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
+  const { gigs, isLoading, getUpcomingGigs, getGigsByStatus } = useComedianGigs(comedianId);
+  
+  const isOwnProfile = user?.id === comedianId;
+  const upcomingGigs = getUpcomingGigs();
+  
+  // Transform gigs to match the expected format
+  const upcomingShows = upcomingGigs.map(gig => ({
+    id: gig.id,
+    title: gig.title,
+    venue: gig.venue,
+    location: gig.event?.city ? `${gig.event.city}, ${gig.event.state}` : 'Location TBA',
+    date: gig.event_date.split('T')[0],
+    time: gig.event?.start_time || '19:00',
+    type: gig.event_spot?.spot_name || 'Performance',
+    status: gig.status,
+    banner_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=225&fit=crop',
+    payment: gig.event_spot?.is_paid ? gig.event_spot.payment_amount : null,
+    duration: gig.event_spot?.duration_minutes
+  }));
 
-  // Mock upcoming shows data
-  const upcomingShows = [
-    {
-      id: '1',
-      title: 'Sydney Comedy Festival - Late Night Show',
-      venue: 'The Comedy Store',
-      location: 'Sydney, NSW',
-      date: '2024-01-15',
-      time: '20:00',
-      type: 'Solo Shows',
-      status: 'confirmed',
-      banner_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=225&fit=crop'
-    },
-    {
-      id: '2',
-      title: 'Melbourne International Comedy Festival',
-      venue: 'Forum Theatre',
-      location: 'Melbourne, VIC',
-      date: '2024-01-22',
-      time: '19:30',
-      type: 'Showcases',
-      status: 'confirmed',
-      banner_url: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400&h=225&fit=crop'
-    },
-    {
-      id: '3',
-      title: 'Comedy Podcast Live Recording',
-      venue: 'Podcast Studio Melbourne',
-      location: 'Melbourne, VIC',
-      date: '2024-01-28',
-      time: '19:00',
-      type: 'Live Podcast',
-      status: 'confirmed',
-      banner_url: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=225&fit=crop'
-    }
-  ];
-
-  // Get unique show types that exist in the data
+  // Get unique show types and status filters
   const availableTypes = useMemo(() => {
     const types = [...new Set(upcomingShows.map(show => show.type))];
-    return ['All', ...types];
+    return ['All', 'Confirmed', 'Pending', ...types];
   }, [upcomingShows]);
 
   // Filter shows based on active filter
   const filteredShows = useMemo(() => {
     if (activeFilter === 'All') return upcomingShows;
+    if (activeFilter === 'Confirmed') return upcomingShows.filter(show => show.status === 'confirmed');
+    if (activeFilter === 'Pending') return upcomingShows.filter(show => show.status === 'pending');
     return upcomingShows.filter(show => show.type === activeFilter);
   }, [upcomingShows, activeFilter]);
 
@@ -87,23 +76,54 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
     }
   };
 
-  const handleShowClick = (showId: string) => {
-    // Navigate to event details page
-    navigate(`/event/${showId}`);
+  const handleShowClick = (show: any) => {
+    // Navigate to event details page if it's a real event
+    if (show.id.startsWith('spot-')) {
+      const eventId = upcomingGigs.find(g => g.id === show.id)?.event_id;
+      if (eventId) {
+        navigate(`/events/${eventId}`);
+      }
+    } else {
+      navigate(`/events/${show.id}`);
+    }
   };
 
-  const handleGetTickets = (e: React.MouseEvent, showId: string) => {
+  const handleGetTickets = (e: React.MouseEvent, show: any) => {
     e.stopPropagation();
-    console.log('Get tickets for show:', showId);
+    // For confirmed spots, navigate to event page
+    if (show.id.startsWith('spot-')) {
+      const gig = upcomingGigs.find(g => g.id === show.id);
+      if (gig?.event_id) {
+        navigate(`/events/${gig.event_id}`);
+      }
+    }
+  };
+
+  const handleAddGig = () => {
+    // Navigate to add gig page or open modal
+    navigate('/dashboard/gigs/add');
   };
 
   return (
     <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white text-2xl">
-          <Calendar className="w-6 h-6 text-purple-400" />
-          Upcoming Shows
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-white text-2xl">
+            <Calendar className="w-6 h-6 text-purple-400" />
+            Upcoming Shows
+          </CardTitle>
+          {isOwnProfile && (
+            <Button
+              onClick={handleAddGig}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Show
+            </Button>
+          )}
+        </div>
         
         {/* Filter Navigation */}
         <div className="flex flex-wrap gap-6 text-lg mt-4">
@@ -133,7 +153,7 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
             <div 
               key={show.id} 
               className="bg-slate-700/50 rounded-xl border border-slate-600/50 hover:border-purple-500/50 transition-colors duration-200 cursor-pointer overflow-hidden"
-              onClick={() => handleShowClick(show.id)}
+              onClick={() => handleShowClick(show)}
             >
               <div className="flex">
                 {/* Image - 50% width, 16:9 aspect ratio */}
@@ -148,9 +168,17 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
                 {/* Content - 50% width */}
                 <div className="w-1/2 p-4 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
-                      {show.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold text-white line-clamp-2">
+                        {show.title}
+                      </h3>
+                      <Badge 
+                        variant={show.status === 'confirmed' ? 'default' : 'secondary'}
+                        className={show.status === 'confirmed' ? 'bg-green-600' : 'bg-yellow-600'}
+                      >
+                        {show.status}
+                      </Badge>
+                    </div>
                     
                     <div className="space-y-2 text-gray-300 text-sm">
                       <div className="flex items-center gap-2">
@@ -161,16 +189,27 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
                         <Clock className="w-4 h-4 text-purple-400" />
                         <span>{formatDate(show.date)} | {formatTime(show.time)}</span>
                       </div>
+                      {show.payment && (
+                        <div className="text-green-400 text-sm font-medium">
+                          ${show.payment} • {show.duration}min
+                        </div>
+                      )}
+                      {show.type && (
+                        <Badge variant="outline" className="text-xs">
+                          {show.type}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   
-                  {/* Get Tickets Button */}
+                  {/* Action Button */}
                   <div className="flex justify-center mt-4">
                     <Button 
-                      onClick={(e) => handleGetTickets(e, show.id)}
+                      onClick={(e) => handleGetTickets(e, show)}
                       className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2"
+                      size="sm"
                     >
-                      Get Tickets
+                      View Event
                     </Button>
                   </div>
                 </div>
@@ -178,11 +217,28 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
             </div>
           ))}
           
-          {filteredShows.length === 0 && (
+          {isLoading && (
+            <div className="text-center text-gray-400 py-12">
+              <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50 animate-spin" />
+              <p className="text-lg">Loading shows...</p>
+            </div>
+          )}
+          
+          {!isLoading && filteredShows.length === 0 && (
             <div className="text-center text-gray-400 py-12">
               <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg">No upcoming shows in this category</p>
-              <p className="text-sm">Check back later for new events</p>
+              {isOwnProfile ? (
+                <>
+                  <p className="text-sm mb-4">Start building your comedy career by adding your first show</p>
+                  <Button onClick={handleAddGig} className="bg-purple-600 hover:bg-purple-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First Show
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm">Check back later for new events</p>
+              )}
             </div>
           )}
         </div>

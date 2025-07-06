@@ -8,23 +8,33 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Calendar, MapPin, Clock, Users, DollarSign, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { getEventDetails } from '@/data/mockEventDetails';
 
 const EventDetailPublic = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { theme } = useTheme();
   const { toast } = useToast();
+  const { purchaseTicket, isPurchasing } = useTickets();
+
+  // Determine user type
+  const isComedian = user && hasRole('comedian');
+  const isPromoter = user && hasRole('promoter');
+  const isIndustryUser = isComedian || isPromoter || (user && hasRole('admin'));
+  const isCustomer = !isIndustryUser;
 
   const { data: event, isLoading, error } = useQuery({
     queryKey: ['event-public', eventId],
     queryFn: async () => {
       if (!eventId) throw new Error('No event ID provided');
 
+      // First try to get from Supabase
       const { data, error } = await supabase
         .from('events')
         .select(`
@@ -46,8 +56,21 @@ const EventDetailPublic = () => {
         .eq('status', 'published')
         .single();
 
-      if (error) throw error;
-      return data;
+      if (data) {
+        return data;
+      }
+
+      // If not found in database, try mock data
+      const mockEvent = getEventDetails(eventId);
+      if (mockEvent) {
+        return {
+          ...mockEvent,
+          profiles: mockEvent.promoter,
+          event_spots: mockEvent.event_spots
+        };
+      }
+
+      throw new Error('Event not found');
     }
   });
 
@@ -88,8 +111,27 @@ const EventDetailPublic = () => {
   };
 
   const handleBuyTickets = () => {
-    if (event?.external_ticket_url) {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to purchase tickets.",
+        variant: "destructive"
+      });
+      navigate('/auth', { state: { from: { pathname: `/events/${eventId}` } } });
+      return;
+    }
+
+    if (event?.ticketing_type === 'external' && event.external_ticket_url) {
       window.open(event.external_ticket_url, '_blank');
+    } else if (event?.ticketing_type === 'internal') {
+      // For now, create a basic ticket purchase
+      // In a real implementation, this would open a ticket selection modal
+      purchaseTicket({
+        event_id: event.id,
+        ticket_type: 'General Admission',
+        quantity: 1,
+        total_price: 25.00 // Default price, should come from event ticket data
+      });
     } else {
       toast({
         title: "Tickets not available",
@@ -216,36 +258,151 @@ const EventDetailPublic = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap text-gray-300">{event.description}</p>
+                  <p className="whitespace-pre-wrap text-gray-300">
+                    {event.full_description || event.description}
+                  </p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Event Spots */}
+            {/* Submission Guidelines - Only for Comedians */}
+            {isComedian && event.submission_guidelines && event.submission_guidelines.length > 0 && (
+              <Card className={cn(getCardStyles(), "text-white")}>
+                <CardHeader>
+                  <CardTitle>Application Requirements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {event.submission_guidelines.map((guideline: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                        <span className="text-yellow-400 mt-1">•</span>
+                        <span>{guideline}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* What to Expect - Different content for comedians vs customers */}
+            {((isComedian && event.what_to_expect) || (isCustomer && event.customer_what_to_expect) || (!user && event.customer_what_to_expect)) && (
+              <Card className={cn(getCardStyles(), "text-white")}>
+                <CardHeader>
+                  <CardTitle>
+                    {isComedian ? "What to Expect as a Performer" : "What to Expect"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {(isComedian ? event.what_to_expect : (event.customer_what_to_expect || event.what_to_expect))?.map((item: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                        <span className="text-green-400 mt-1">✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Venue Details */}
+            {event.venue_details && (
+              <Card className={cn(getCardStyles(), "text-white")}>
+                <CardHeader>
+                  <CardTitle>Venue Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-gray-300">{event.venue_details.description}</p>
+                  
+                  {event.venue_details.amenities && event.venue_details.amenities.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Amenities</h4>
+                      <ul className="space-y-1">
+                        {event.venue_details.amenities.map((amenity: string, index: number) => (
+                          <li key={index} className="flex items-center gap-2 text-gray-300">
+                            <span className="text-blue-400">•</span>
+                            <span>{amenity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Parking: </span>
+                      <span className="text-gray-300">{event.venue_details.parking}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Accessibility: </span>
+                      <span className="text-gray-300">{event.venue_details.accessibility}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Event Spots - Show different details for comedians vs customers */}
             {event.event_spots && event.event_spots.length > 0 && (
               <Card className={cn(getCardStyles(), "text-white")}>
                 <CardHeader>
-                  <CardTitle>Available Spots</CardTitle>
+                  <CardTitle>
+                    {isComedian ? "Available Performance Spots" : "Tonight's Lineup"}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {event.event_spots.map((spot: any) => (
-                      <div key={spot.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-                        <div>
-                          <h4 className="font-medium">{spot.spot_name}</h4>
-                          {spot.duration_minutes && (
-                            <p className="text-sm text-gray-400">{spot.duration_minutes} minutes</p>
+                      <div key={spot.id} className="p-3 rounded-lg bg-white/5 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{spot.spot_name}</h4>
+                            {/* Show different info for comedians vs customers */}
+                            {isComedian ? (
+                              <>
+                                {spot.description && (
+                                  <p className="text-sm text-gray-400 mt-1">{spot.description}</p>
+                                )}
+                                {spot.duration_minutes && (
+                                  <p className="text-xs text-gray-500">{spot.duration_minutes} minutes</p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-sm text-gray-400 mt-1">
+                                {spot.duration_minutes ? `${spot.duration_minutes} minutes` : 'Performance slot'}
+                              </p>
+                            )}
+                          </div>
+                          {/* Show payment info only to comedians */}
+                          {isComedian && spot.is_paid && (
+                            <Badge variant="outline" className="flex items-center gap-1 ml-3">
+                              <DollarSign className="w-3 h-3" />
+                              ${spot.payment_amount}
+                            </Badge>
                           )}
                         </div>
-                        {spot.is_paid && (
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
-                            {spot.payment_amount}
-                          </Badge>
-                        )}
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Networking Opportunities - Only for Comedians */}
+            {isComedian && event.networking_opportunities && event.networking_opportunities.length > 0 && (
+              <Card className={cn(getCardStyles(), "text-white")}>
+                <CardHeader>
+                  <CardTitle>Networking Opportunities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {event.networking_opportunities.map((opportunity: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                        <span className="text-purple-400 mt-1">→</span>
+                        <span>{opportunity}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             )}
@@ -256,11 +413,13 @@ const EventDetailPublic = () => {
             {/* Action Card */}
             <Card className={cn(getCardStyles(), "text-white sticky top-4")}>
               <CardHeader>
-                <CardTitle>Get Involved</CardTitle>
+                <CardTitle>
+                  {isComedian ? "Apply to Perform" : isCustomer ? "Get Tickets" : "Event Actions"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Apply Button for Comedians */}
-                {user && !isPastEvent && (
+                {isComedian && !isPastEvent && (
                   <Button 
                     onClick={handleApply}
                     className="w-full"
@@ -270,16 +429,43 @@ const EventDetailPublic = () => {
                   </Button>
                 )}
 
-                {/* Buy Tickets Button */}
-                {event.ticketing_type !== 'none' && !isPastEvent && (
+                {/* Buy Tickets Button for Customers */}
+                {isCustomer && event.ticketing_type !== 'none' && !isPastEvent && (
                   <Button 
                     onClick={handleBuyTickets}
-                    variant="outline"
                     className="w-full"
                     size="lg"
+                    disabled={isPurchasing}
                   >
-                    {event.ticketing_type === 'external' ? 'Get Tickets' : 'Buy Tickets'}
+                    {isPurchasing ? 'Processing...' : event.ticketing_type === 'external' ? 'Get Tickets' : 'Buy Tickets'}
                   </Button>
+                )}
+
+                {/* Industry Users (promoters, etc.) can see both options */}
+                {isIndustryUser && !isComedian && (
+                  <>
+                    {!isPastEvent && (
+                      <Button 
+                        onClick={handleApply}
+                        variant="outline"
+                        className="w-full"
+                        size="lg"
+                      >
+                        View as Comedian
+                      </Button>
+                    )}
+                    {event.ticketing_type !== 'none' && !isPastEvent && (
+                      <Button 
+                        onClick={handleBuyTickets}
+                        variant="outline"
+                        className="w-full"
+                        size="lg"
+                        disabled={isPurchasing}
+                      >
+                        {isPurchasing ? 'Processing...' : event.ticketing_type === 'external' ? 'Get Tickets' : 'Buy Tickets'}
+                      </Button>
+                    )}
+                  </>
                 )}
 
                 {/* Stats */}
@@ -302,17 +488,22 @@ const EventDetailPublic = () => {
 
                 {/* Promoter Info */}
                 {event.profiles && (
-                  <div className="pt-4 border-t border-white/20">
-                    <p className="text-sm text-gray-400 mb-2">Organized by</p>
-                    <div className="flex items-center gap-3">
+                  <div className="pt-4 border-t border-white/20 space-y-3">
+                    <p className="text-sm text-gray-400">Organized by</p>
+                    <div className="flex items-start gap-3">
                       {event.profiles.avatar_url && (
                         <img 
                           src={event.profiles.avatar_url}
                           alt={event.profiles.name}
-                          className="w-10 h-10 rounded-full"
+                          className="w-12 h-12 rounded-full flex-shrink-0"
                         />
                       )}
-                      <span className="font-medium">{event.profiles.name}</span>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-white">{event.profiles.name}</h4>
+                        {event.profiles.bio && (
+                          <p className="text-sm text-gray-400 mt-1">{event.profiles.bio}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 
 interface ShowCardProps {
@@ -34,6 +35,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
 }) => {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
   const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
@@ -59,6 +61,13 @@ export const ShowCard: React.FC<ShowCardProps> = ({
       className="relative aspect-[4/3] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:translate-y-[-4px] bg-gray-900 border border-gray-700 overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => {
+        // Prevent navigation if clicking on action buttons
+        if ((e.target as HTMLElement).closest('button')) {
+          return;
+        }
+        navigate(`/events/${show.id}`);
+      }}
     >
         {/* Background Image */}
         <div className="absolute inset-0 z-0">

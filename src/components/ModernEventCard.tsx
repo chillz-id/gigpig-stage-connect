@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Clock, Calendar, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventApplications } from '@/hooks/useEventApplications';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,6 +32,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
 }) => {
   const { user, hasRole } = useAuth();
   const { userApplications } = useEventApplications();
+  const navigate = useNavigate();
   const [hasApplied, setHasApplied] = useState(false);
 
   // Check if user has applied to this event
@@ -63,7 +65,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
     } else if (isConsumerUser) {
       onBuyTickets(show);
     } else {
-      onShowDetails(show);
+      navigate(`/events/${show.id}`);
     }
   };
 

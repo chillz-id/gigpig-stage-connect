@@ -3,7 +3,6 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { mockApplications } from '@/services/applicationService';
 import ComedianProfileLoader from '@/components/comedian-profile/ComedianProfileLoader';
 import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
 import ComedianProfileLayout from '@/components/comedian-profile/ComedianProfileLayout';
@@ -86,41 +85,7 @@ const ComedianProfileBySlug = () => {
         return fallbackData;
       }
       
-      // Final fallback: check if this matches a comedian from mock applications
-      const mockApplication = mockApplications.find(app => {
-        const appSlug = app.comedian_name.toLowerCase().replace(/\s+/g, '-');
-        return appSlug === slug;
-      });
-      
-      if (mockApplication) {
-        // Create a mock comedian profile from the application data with better bio
-        const experienceYears = parseInt(mockApplication.comedian_experience.split(' ')[0]) || 1;
-        const bioText = experienceYears >= 3 
-          ? `Stand-up comedian with ${mockApplication.comedian_experience} performing across Australia. Known for engaging storytelling and crowd work that keeps audiences laughing throughout the night.`
-          : `Rising comedian with ${mockApplication.comedian_experience} in the comedy scene. Bringing fresh perspectives and energetic performances to stages across the country.`;
-        
-        return {
-          id: mockApplication.comedian_id,
-          name: mockApplication.comedian_name,
-          stage_name: null,
-          bio: bioText,
-          location: null,
-          avatar_url: mockApplication.comedian_avatar,
-          is_verified: false,
-          email: null,
-          created_at: new Date().toISOString(),
-          phone: null,
-          website_url: null,
-          instagram_url: null,
-          twitter_url: null,
-          youtube_url: null,
-          facebook_url: null,
-          tiktok_url: null,
-          show_contact_in_epk: false,
-          custom_show_types: null,
-          profile_slug: slug
-        };
-      }
+      // If no match found in database, return null to show error
       
       throw new Error(`Comedian not found: ${slug}`);
     },

@@ -64,7 +64,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               title: "Maps service unavailable",
               description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
               variant: "destructive",
-          });
+            });
+          }
         })
         .finally(() => {
           setIsInitializing(false);
