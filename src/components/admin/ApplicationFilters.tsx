@@ -35,8 +35,8 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
   onClearFilters,
 }) => {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border-white/20 rounded-lg p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="bg-white/10 backdrop-blur-sm border-white/20 rounded-lg p-3 sm:p-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -80,7 +80,7 @@ const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
               defaultMonth={dateRange.from}
               selected={{ from: dateRange.from, to: dateRange.to }}
               onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-              numberOfMonths={2}
+              numberOfMonths={window.innerWidth < 768 ? 1 : 2}
               className="pointer-events-auto"
             />
           </PopoverContent>

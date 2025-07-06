@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings } from 'lucide-react';
+import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavigationLinksProps {
@@ -64,6 +64,18 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
             >
               <Calendar className="w-5 h-5" />
               <span className="font-medium">Applications</span>
+            </Link>
+          )}
+
+          {/* Agency Management for Promoters/Admins */}
+          {isPromoter && (
+            <Link
+              to="/agency"
+              className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+              onClick={handleLinkClick}
+            >
+              <Building2 className="w-5 h-5" />
+              <span className="font-medium">Agency Management</span>
             </Link>
           )}
 

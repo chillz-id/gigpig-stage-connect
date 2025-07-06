@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, User, Calendar, Receipt, UserCheck, Settings, Ticket, Heart } from 'lucide-react';
 import { ProfileInformation } from '@/components/ProfileInformation';
-import { MediaPortfolio } from '@/components/MediaPortfolio';
+import ComedianMedia from '@/components/comedian-profile/ComedianMedia';
 import { ContactInformation } from '@/components/ContactInformation';
 import { FinancialInformation } from '@/components/FinancialInformation';
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
@@ -99,7 +99,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
         <ProfileInformation user={user} onSave={onSave} />
         {!isMemberView && (
           <>
-            <MediaPortfolio />
+            <ComedianMedia comedianId={user?.id} isOwnProfile={true} />
             <ContactInformation />
             <FinancialInformation />
           </>

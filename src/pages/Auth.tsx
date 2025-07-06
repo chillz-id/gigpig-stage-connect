@@ -33,10 +33,16 @@ const Auth = () => {
       console.log('=== GOOGLE SIGN IN ATTEMPT ===');
       console.log('Current origin:', window.location.origin);
       
+      // Use environment variable for redirect URL, fallback to current origin
+      const redirectUrl = import.meta.env.VITE_OAUTH_REDIRECT_URL || 
+                         `${window.location.origin}/auth/callback`;
+      
+      console.log('OAuth redirect URL:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

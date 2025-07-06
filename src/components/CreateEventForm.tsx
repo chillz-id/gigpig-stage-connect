@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { EventBasicInfo } from './EventBasicInfo';
 import { EventDateTimeSection } from './EventDateTimeSection';
 import { EventRequirementsSection } from './EventRequirementsSection';
@@ -83,25 +84,35 @@ export const CreateEventForm: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !session) {
-      console.error('=== CREATE EVENT: NO AUTH ===', { user: !!user, session: !!session });
+    // Double-check current auth state
+    const { data: { user: currentUser, session: currentSession } } = await supabase.auth.getUser();
+    
+    if (!currentUser || !currentSession) {
+      console.error('=== CREATE EVENT: NO AUTH ===', { 
+        contextUser: !!user, 
+        contextSession: !!session,
+        currentUser: !!currentUser,
+        currentSession: !!currentSession 
+      });
+      
       // Auto-dismiss notification after 3 seconds
       const { dismiss } = toast({
         title: "Authentication required",
-        description: "Please log in to create an event.",
+        description: "Your session has expired. Please log in again to create an event.",
         variant: "destructive",
       });
       
       setTimeout(() => {
         dismiss();
+        navigate('/auth');
       }, 3000);
       return;
     }
 
-    console.log('=== CREATE EVENT: AUTH CHECK PASSED ===', { userId: user.id, email: user.email });
+    console.log('=== CREATE EVENT: AUTH CHECK PASSED ===', { userId: currentUser.id, email: currentUser.email });
 
     const validation = validateEventForm(formData, recurringSettings);
     if (!validation.isValid) {
@@ -114,7 +125,7 @@ export const CreateEventForm: React.FC = () => {
     }
 
     console.log('=== CREATE EVENT: VALIDATION PASSED ===');
-    const eventData = prepareEventData(formData, recurringSettings, eventSpots, user.id);
+    const eventData = prepareEventData(formData, recurringSettings, eventSpots, currentUser.id);
     console.log('=== CREATE EVENT: CALLING CREATE EVENT ===', eventData);
     createEvent(eventData);
   };
@@ -185,7 +196,7 @@ export const CreateEventForm: React.FC = () => {
         <Button 
           type="submit"
           disabled={isCreating}
-          className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+          className="bg-primary hover:bg-primary/90"
         >
           {isCreating ? 'Publishing...' : 
            recurringSettings.isRecurring ? 'Publish Recurring Events' : 'Publish Event'}

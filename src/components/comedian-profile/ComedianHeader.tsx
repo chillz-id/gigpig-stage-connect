@@ -36,14 +36,14 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, onShare, onCo
           {/* Large, prominent avatar */}
           <div className="flex-shrink-0">
             <div className="relative">
-              <div className="w-48 h-48 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-1">
+              <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 p-1">
                 <ComedianAvatar 
                   name={comedian.name} 
                   avatar_url={comedian.avatar_url}
                 />
               </div>
               {/* Glow effect */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-xl -z-10" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl -z-10" />
             </div>
           </div>
           

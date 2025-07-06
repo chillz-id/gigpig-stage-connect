@@ -292,7 +292,7 @@ const Messages = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardContent className="p-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Please sign in to view messages</h1>
@@ -303,22 +303,22 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Messages</h1>
-          <p className="text-purple-100">Communicate with comedians and promoters</p>
+          <p className="text-slate-300">Communicate with comedians and promoters</p>
         </div>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm mb-6">
-            <TabsTrigger value="conversations" className="data-[state=active]:bg-purple-500">
+            <TabsTrigger value="conversations" className="data-[state=active]:bg-primary">
               Conversations ({conversations.length})
             </TabsTrigger>
-            <TabsTrigger value="requests" className="data-[state=active]:bg-purple-500">
+            <TabsTrigger value="requests" className="data-[state=active]:bg-primary">
               Requests ({pendingRequests.length})
             </TabsTrigger>
-            <TabsTrigger value="connect" className="data-[state=active]:bg-purple-500">
+            <TabsTrigger value="connect" className="data-[state=active]:bg-primary">
               Connect
             </TabsTrigger>
           </TabsList>
@@ -397,8 +397,8 @@ const Messages = () => {
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-purple-200 truncate mt-1">{conversation.lastMessage}</p>
-                              <p className="text-xs text-purple-300 mt-1">{conversation.lastMessageTime}</p>
+                              <p className="text-sm text-slate-300 truncate mt-1">{conversation.lastMessage}</p>
+                              <p className="text-xs text-slate-400 mt-1">{conversation.lastMessageTime}</p>
                             </div>
                           </div>
                         </div>
@@ -438,7 +438,7 @@ const Messages = () => {
                               >
                                 {selectedConversation.participantRole}
                               </Badge>
-                              <span className="text-xs text-purple-300">
+                              <span className="text-xs text-slate-400">
                                 {selectedConversation.isOnline ? 'Online' : 'Offline'}
                               </span>
                             </div>
@@ -490,12 +490,12 @@ const Messages = () => {
                             </Avatar>
                             <div className={`rounded-lg p-3 ${
                               message.senderId === user.id 
-                                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                                ? 'bg-gradient-to-r from-primary to-secondary text-white' 
                                 : 'bg-white/20 text-white'
                             }`}>
                               <p className="text-sm">{message.content}</p>
                               <p className={`text-xs mt-1 ${
-                                message.senderId === user.id ? 'text-purple-100' : 'text-purple-300'
+                                message.senderId === user.id ? 'text-slate-100' : 'text-slate-300'
                               }`}>
                                 {message.timestamp}
                               </p>
@@ -521,7 +521,7 @@ const Messages = () => {
                         <Button 
                           onClick={sendMessage}
                           disabled={!newMessage.trim()}
-                          className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                          className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
                         >
                           <Send className="w-4 h-4" />
                         </Button>
@@ -531,9 +531,9 @@ const Messages = () => {
                 ) : (
                   <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white h-full flex items-center justify-center">
                     <CardContent className="text-center">
-                      <MessageCircle className="w-16 h-16 mx-auto mb-4 text-purple-300" />
+                      <MessageCircle className="w-16 h-16 mx-auto mb-4 text-slate-400" />
                       <h3 className="text-xl font-semibold mb-2">Select a conversation</h3>
-                      <p className="text-purple-100">Choose a conversation from the list to start messaging</p>
+                      <p className="text-slate-300">Choose a conversation from the list to start messaging</p>
                     </CardContent>
                   </Card>
                 )}
@@ -563,14 +563,14 @@ const Messages = () => {
             ) : (
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
                 <CardContent className="p-8 text-center">
-                  <UserPlus className="w-16 h-16 mx-auto mb-4 text-purple-300" />
+                  <UserPlus className="w-16 h-16 mx-auto mb-4 text-slate-400" />
                   <h3 className="text-xl font-semibold mb-2">Connect with New People</h3>
-                  <p className="text-purple-100 mb-6">
+                  <p className="text-slate-300 mb-6">
                     Find comedians and promoters to collaborate with. Send connection requests to start messaging.
                   </p>
                   <Button 
                     onClick={() => setShowConnectionRequest(true)}
-                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                    className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
                     Find People to Connect

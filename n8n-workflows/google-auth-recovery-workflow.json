@@ -1,0 +1,333 @@
+{
+  "name": "Google Auth Recovery & User Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "google-auth-recovery",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-auth-trigger",
+      "name": "Google Auth Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "google-auth-recovery"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "auth-event-check",
+              "leftValue": "={{ $json.event_type }}",
+              "rightValue": "user.created",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-auth-event",
+      "name": "Check Auth Event Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/profiles",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "apikey": "={{ $env.SUPABASE_ANON_KEY }}",
+            "Authorization": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+          },
+          "queryParameters": {
+            "id": "eq.{{ $json.user_id }}"
+          }
+        }
+      },
+      "id": "check-profile-exists",
+      "name": "Check Profile Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and fix Google Auth user data\nconst authUser = $input.first().json;\nconst profileCheck = $('Check Profile Exists').first().json;\n\n// Check if profile creation is needed\nconst profileExists = Array.isArray(profileCheck) && profileCheck.length > 0;\n\nif (!profileExists) {\n  // Create missing profile data\n  const profileData = {\n    id: authUser.user_id,\n    email: authUser.email,\n    full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],\n    avatar_url: authUser.user_metadata?.avatar_url || null,\n    role: 'comedian', // Default role\n    created_at: new Date().toISOString(),\n    onboarding_completed: false,\n    provider: authUser.provider || 'google'\n  };\n  \n  return {\n    needs_profile: true,\n    user_data: authUser,\n    profile_data: profileData,\n    action: 'create_profile',\n    debug_info: {\n      profile_check_result: profileCheck,\n      profile_exists: profileExists\n    }\n  };\n} else {\n  return {\n    needs_profile: false,\n    user_data: authUser,\n    existing_profile: profileCheck[0],\n    action: 'profile_exists',\n    debug_info: {\n      profile_check_result: profileCheck,\n      profile_exists: profileExists\n    }\n  };\n}"
+      },
+      "id": "process-auth-data",
+      "name": "Process Auth Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "needs-profile-check",
+              "leftValue": "={{ $json.needs_profile }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "needs-profile-check",
+      "name": "Needs Profile?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/profiles",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.profile_data) }}",
+        "options": {
+          "headers": {
+            "apikey": "={{ $env.SUPABASE_ANON_KEY }}",
+            "Authorization": "Bearer {{ $env.SUPABASE_ANON_KEY }}",
+            "Prefer": "return=representation"
+          }
+        }
+      },
+      "id": "create-missing-profile",
+      "name": "Create Missing Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $env.SLACK_SUPPORT_CHANNEL }}",
+        "text": "🔧 Google Auth Recovery: Created missing profile for {{ $json.profile_data.email }}\\n\\n👤 User: {{ $json.profile_data.full_name }}\\n📧 Email: {{ $json.profile_data.email }}\\n🔗 Provider: {{ $json.profile_data.provider }}\\n⏰ Time: {{ new Date().toLocaleString() }}",
+        "attachments": []
+      },
+      "id": "notify-auth-fix",
+      "name": "Notify Auth Fix",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "={{ $json.profile_data.email }}",
+        "subject": "Welcome to Stand Up Sydney! 🎤",
+        "message": "Hi {{ $json.profile_data.full_name }},\\n\\nWelcome to Stand Up Sydney! Your profile has been successfully created.\\n\\nNext steps:\\n1. Complete your comedian profile\\n2. Browse available events\\n3. Start applying to shows!\\n\\nGet started: {{ $env.FRONTEND_URL }}/profile\\n\\nBreak a leg!\\nThe Stand Up Sydney Team",
+        "options": {
+          "cc": "",
+          "bcc": "",
+          "replyTo": "{{ $env.SUPPORT_EMAIL }}"
+        }
+      },
+      "id": "send-welcome-email",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  action: $json.action,\n  user_id: $json.user_data.user_id,\n  profile_created: $json.needs_profile,\n  timestamp: new Date().toISOString(),\n  frontend_url: $env.FRONTEND_URL\n}) }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_USER_ISSUES_DB }}",
+        "title": "Google Auth Issue Resolved - {{ $json.profile_data.email }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status",
+              "value": "Resolved"
+            },
+            {
+              "key": "User Email",
+              "value": "={{ $json.profile_data.email }}"
+            },
+            {
+              "key": "Resolution",
+              "value": "Auto-created missing profile via N8N workflow"
+            },
+            {
+              "key": "Provider",
+              "value": "={{ $json.profile_data.provider }}"
+            },
+            {
+              "key": "Resolved At",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "log-to-notion",
+      "name": "Log to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $env.SLACK_SUPPORT_CHANNEL }}",
+        "text": "ℹ️ Google Auth Event: User already has profile\\n\\n👤 User: {{ $json.existing_profile.full_name }}\\n📧 Email: {{ $json.user_data.email }}\\n✅ Profile exists, no action needed",
+        "attachments": []
+      },
+      "id": "notify-profile-exists",
+      "name": "Notify Profile Exists",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Google Auth Event": {
+      "main": [
+        [
+          {
+            "node": "Check Auth Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Auth Event Type": {
+      "main": [
+        [
+          {
+            "node": "Check Profile Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Profile Exists": {
+      "main": [
+        [
+          {
+            "node": "Process Auth Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Auth Data": {
+      "main": [
+        [
+          {
+            "node": "Needs Profile?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Profile?": {
+      "main": [
+        [
+          {
+            "node": "Create Missing Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Profile Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Missing Profile": {
+      "main": [
+        [
+          {
+            "node": "Notify Auth Fix",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Profile Exists": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

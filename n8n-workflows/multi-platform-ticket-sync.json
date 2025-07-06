@@ -1,0 +1,394 @@
+{
+  "name": "Multi-Platform Real-Time Ticket Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/ticket_platforms",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "apikey": "={{ $env.SUPABASE_ANON_KEY }}",
+            "Authorization": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+          },
+          "queryParameters": {
+            "select": "*, events(id,title,event_date)"
+          }
+        }
+      },
+      "id": "get-active-platforms",
+      "name": "Get Active Ticket Platforms",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split platforms by type for parallel processing\nconst platforms = $input.first().json || [];\n\nconst humanitixPlatforms = [];\nconst eventbritePlatforms = [];\nconst otherPlatforms = [];\n\nplatforms.forEach(platform => {\n  switch(platform.platform) {\n    case 'humanitix':\n      humanitixPlatforms.push(platform);\n      break;\n    case 'eventbrite':\n      eventbritePlatforms.push(platform);\n      break;\n    default:\n      otherPlatforms.push(platform);\n  }\n});\n\nreturn [\n  { platforms: humanitixPlatforms, type: 'humanitix' },\n  { platforms: eventbritePlatforms, type: 'eventbrite' },\n  { platforms: otherPlatforms, type: 'other' }\n];"
+      },
+      "id": "split-by-platform",
+      "name": "Split by Platform",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-humanitix",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "humanitix",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "is-humanitix",
+      "name": "Is Humanitix?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-humanitix",
+      "name": "Split Humanitix Events",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 100]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.humanitix.com/v1/events/{{ $json.platforms[0].external_event_id }}",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "x-api-key": "={{ $env.HUMANITIX_API_KEY }}"
+          }
+        }
+      },
+      "id": "fetch-humanitix-details",
+      "name": "Fetch Humanitix Event Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 100]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.humanitix.com/v1/events/{{ $json.platforms[0].external_event_id }}/orders",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "x-api-key": "={{ $env.HUMANITIX_API_KEY }}"
+          },
+          "queryParameters": {
+            "page": "1",
+            "pageSize": "1"
+          }
+        }
+      },
+      "id": "fetch-humanitix-orders",
+      "name": "Fetch Humanitix Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Humanitix event data with smart matching\nconst platform = $('Split Humanitix Events').first().json.platforms[0];\nconst eventDetails = $('Fetch Humanitix Event Details').first().json;\nconst ordersResponse = $('Fetch Humanitix Orders').first().json;\n\n// Calculate tickets sold from capacity\nconst totalCapacity = eventDetails.totalCapacity || 0;\nlet ticketsSold = 0;\nlet ticketsAvailable = totalCapacity;\n\n// Sum up sold tickets from ticket types\nif (eventDetails.ticketTypes) {\n  eventDetails.ticketTypes.forEach(ticketType => {\n    const sold = ticketType.quantity - (ticketType.quantityRemaining || ticketType.quantity);\n    ticketsSold += sold;\n  });\n  ticketsAvailable = totalCapacity - ticketsSold;\n}\n\n// Get total orders for gross sales estimate\nconst totalOrders = ordersResponse.total || 0;\nconst avgTicketPrice = eventDetails.pricing?.minimumPrice || 0;\nconst grossSales = ticketsSold * avgTicketPrice;\n\n// Extract venue info for matching\nconst venueName = eventDetails.eventLocation?.venueName || '';\nconst eventDate = eventDetails.dates?.[0]?.startDate || eventDetails.startDate;\n\nreturn {\n  // If we have a matched event_id use it, otherwise we'll process for matching\n  event_id: platform.event_id,\n  matched: !!platform.event_id,\n  \n  // Data for matching if needed\n  matching_data: {\n    platform: 'humanitix',\n    external_id: eventDetails._id,\n    title: eventDetails.name,\n    venue: venueName,\n    event_date: eventDate,\n    capacity: totalCapacity\n  },\n  \n  // Ticket sales data\n  platform: 'humanitix',\n  external_event_id: eventDetails._id,\n  tickets_sold: ticketsSold,\n  tickets_available: ticketsAvailable,\n  gross_sales: grossSales,\n  external_url: eventDetails.url,\n  platform_data: {\n    total_capacity: totalCapacity,\n    ticket_types: eventDetails.ticketTypes,\n    pricing: eventDetails.pricing,\n    total_orders: totalOrders,\n    last_sync: new Date().toISOString(),\n    event_details: {\n      name: eventDetails.name,\n      venue: venueName,\n      date: eventDate\n    }\n  }\n};"
+      },
+      "id": "process-humanitix-data",
+      "name": "Process Humanitix Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT update_ticket_sales(\n  '{{ $json.event_id }}'::UUID,\n  '{{ $json.platform }}',\n  '{{ $json.external_event_id }}',\n  {{ $json.tickets_sold }},\n  {{ $json.tickets_available }},\n  {{ $json.gross_sales }},\n  '{{ $json.external_url }}',\n  '{{ JSON.stringify($json.platform_data) }}'::JSONB\n);"
+      },
+      "id": "update-ticket-sales",
+      "name": "Update Ticket Sales",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2000, 300],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-postgres",
+          "name": "Supabase PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-eventbrite",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "eventbrite",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "is-eventbrite",
+      "name": "Is Eventbrite?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Eventbrite API integration would go here\n// This is a placeholder for the Eventbrite sync logic\n// You'll need to add Eventbrite API credentials and endpoints\n\nconst eventbritePlatforms = $json.platforms || [];\n\n// For now, return sample data structure\nreturn eventbritePlatforms.map(platform => ({\n  event_id: platform.event_id,\n  platform: 'eventbrite',\n  external_event_id: platform.external_event_id,\n  tickets_sold: 0, // Will be fetched from Eventbrite API\n  tickets_available: 0,\n  gross_sales: 0,\n  external_url: `https://www.eventbrite.com/e/${platform.external_event_id}`,\n  platform_data: {\n    last_sync: new Date().toISOString(),\n    status: 'pending_implementation'\n  }\n}));"
+      },
+      "id": "process-eventbrite",
+      "name": "Process Eventbrite (Placeholder)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/event_ticket_summary",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "apikey": "={{ $env.SUPABASE_ANON_KEY }}",
+            "Authorization": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+          },
+          "queryParameters": {
+            "event_date": "gte.{{ new Date().toISOString() }}",
+            "order": "tickets_sold_last_hour.desc",
+            "limit": "10"
+          }
+        }
+      },
+      "id": "get-hot-events",
+      "name": "Get Hot Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format summary for Slack notification\nconst hotEvents = $('Get Hot Events').first().json || [];\n\nlet message = '🎟️ **Multi-Platform Ticket Sync Complete**\\n\\n';\n\nif (hotEvents.length > 0) {\n  message += '🔥 **Top Selling Events:**\\n';\n  \n  hotEvents.slice(0, 5).forEach((event, index) => {\n    const platforms = event.platform_breakdown || [];\n    const platformSummary = platforms\n      .map(p => `${p.platform}: ${p.tickets_sold}`)\n      .join(', ');\n    \n    message += `${index + 1}. **${event.title}**\\n`;\n    message += `   📍 ${event.venue} | 📅 ${new Date(event.event_date).toLocaleDateString()}\\n`;\n    message += `   🎫 Total Sold: ${event.total_tickets_sold}/${event.capacity} (${event.capacity_utilization_percent}%)\\n`;\n    message += `   💰 Revenue: $${event.total_gross_sales}\\n`;\n    message += `   📊 Platforms: ${platformSummary}\\n`;\n    message += `   ⚡ Last Hour: +${event.tickets_sold_last_hour} tickets\\n\\n`;\n  });\n}\n\nmessage += `\\n✅ Sync completed at ${new Date().toLocaleString()}`;\n\nreturn { message };"
+      },
+      "id": "format-summary",
+      "name": "Format Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $env.SLACK_SUPPORT_CHANNEL }}",
+        "text": "={{ $json.message }}"
+      },
+      "id": "notify-summary",
+      "name": "Notify Summary",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [2660, 300]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Active Ticket Platforms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Ticket Platforms": {
+      "main": [
+        [
+          {
+            "node": "Split by Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split by Platform": {
+      "main": [
+        [
+          {
+            "node": "Is Humanitix?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Eventbrite?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Humanitix?": {
+      "main": [
+        [
+          {
+            "node": "Split Humanitix Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Humanitix Events": {
+      "main": [
+        [
+          {
+            "node": "Fetch Humanitix Event Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Humanitix Event Details": {
+      "main": [
+        [
+          {
+            "node": "Fetch Humanitix Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Humanitix Orders": {
+      "main": [
+        [
+          {
+            "node": "Process Humanitix Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Humanitix Data": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Eventbrite?": {
+      "main": [
+        [
+          {
+            "node": "Process Eventbrite (Placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Eventbrite (Placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Sales": {
+      "main": [
+        [
+          {
+            "node": "Get Hot Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Hot Events": {
+      "main": [
+        [
+          {
+            "node": "Format Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary": {
+      "main": [
+        [
+          {
+            "node": "Notify Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

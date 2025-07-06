@@ -18,7 +18,8 @@ import {
   MessageCircle,
   BarChart3,
   Plus,
-  Palette
+  Palette,
+  Building2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -103,6 +104,12 @@ const Navigation = () => {
               {hasRole('comedian') && (
                 <Link to="/applications" className={getNavLinkClass('/applications')} title="Applications">
                   <Calendar className="w-4 h-4" />
+                </Link>
+              )}
+
+              {(hasRole('promoter') || hasRole('admin')) && (
+                <Link to="/agency" className={getNavLinkClass('/agency')} title="Agency Management">
+                  <Building2 className="w-4 h-4" />
                 </Link>
               )}
 

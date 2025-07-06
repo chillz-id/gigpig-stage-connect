@@ -47,7 +47,7 @@ export const RequirementsManager: React.FC<RequirementsManagerProps> = ({
           className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
           onKeyPress={handleKeyPress}
         />
-        <Button type="button" onClick={addRequirement} className="bg-purple-500 hover:bg-purple-600">
+        <Button type="button" onClick={addRequirement} className="bg-primary hover:bg-primary/90">
           <Plus className="w-4 h-4" />
         </Button>
       </div>

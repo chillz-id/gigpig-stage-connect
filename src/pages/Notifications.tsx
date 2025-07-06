@@ -134,8 +134,8 @@ const Notifications = () => {
       case 'application': return 'text-blue-400';
       case 'booking': return 'text-green-400';
       case 'payment': return 'text-yellow-400';
-      case 'review': return 'text-purple-400';
-      case 'message': return 'text-pink-400';
+      case 'review': return 'text-secondary';
+      case 'message': return 'text-primary';
       case 'achievement': return 'text-orange-400';
       default: return 'text-gray-400';
     }
@@ -146,8 +146,8 @@ const Notifications = () => {
       case 'application': return 'bg-blue-500/20';
       case 'booking': return 'bg-green-500/20';
       case 'payment': return 'bg-yellow-500/20';
-      case 'review': return 'bg-purple-500/20';
-      case 'message': return 'bg-pink-500/20';
+      case 'review': return 'bg-secondary/20';
+      case 'message': return 'bg-primary/20';
       case 'achievement': return 'bg-orange-500/20';
       default: return 'bg-gray-500/20';
     }
@@ -197,7 +197,7 @@ const Notifications = () => {
     return (
       <Card 
         className={`bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/15 transition-colors cursor-pointer ${
-          !notification.isRead ? 'border-purple-400/50' : ''
+          !notification.isRead ? 'border-primary/50' : ''
         }`}
         onClick={() => !notification.isRead && markAsRead(notification.id)}
       >
@@ -213,10 +213,10 @@ const Notifications = () => {
                   <div className="flex items-center space-x-2">
                     <h3 className="font-medium">{notification.title}</h3>
                     {!notification.isRead && (
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
                     )}
                   </div>
-                  <p className="text-sm text-purple-200 mt-1">{notification.message}</p>
+                  <p className="text-sm text-slate-300 mt-1">{notification.message}</p>
                   
                   {/* Metadata */}
                   {notification.metadata && (
@@ -229,7 +229,7 @@ const Notifications = () => {
                               {notification.metadata.senderName.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-xs text-purple-300">{notification.metadata.senderName}</span>
+                          <span className="text-xs text-slate-400">{notification.metadata.senderName}</span>
                         </div>
                       )}
                       
@@ -248,7 +248,7 @@ const Notifications = () => {
                       )}
                       
                       {notification.metadata.showTitle && (
-                        <Badge variant="outline" className="text-purple-200 border-purple-300">
+                        <Badge variant="outline" className="text-slate-300 border-slate-400">
                           {notification.metadata.showTitle}
                         </Badge>
                       )}
@@ -257,7 +257,7 @@ const Notifications = () => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-purple-300">{notification.timestamp}</span>
+                  <span className="text-xs text-slate-400">{notification.timestamp}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -280,7 +280,7 @@ const Notifications = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardContent className="p-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Please sign in to view notifications</h1>
@@ -291,7 +291,7 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -304,7 +304,7 @@ const Notifications = () => {
                   </Badge>
                 )}
               </h1>
-              <p className="text-purple-100">Stay updated with your comedy career</p>
+              <p className="text-slate-300">Stay updated with your comedy career</p>
             </div>
             
             <div className="flex space-x-2">
@@ -340,13 +340,13 @@ const Notifications = () => {
         {/* Filter Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
           <TabsList className="grid grid-cols-7 bg-white/10 backdrop-blur-sm">
-            <TabsTrigger value="all" className="data-[state=active]:bg-purple-500">All</TabsTrigger>
-            <TabsTrigger value="unread" className="data-[state=active]:bg-purple-500">Unread</TabsTrigger>
-            <TabsTrigger value="application" className="data-[state=active]:bg-purple-500">Applications</TabsTrigger>
-            <TabsTrigger value="booking" className="data-[state=active]:bg-purple-500">Bookings</TabsTrigger>
-            <TabsTrigger value="payment" className="data-[state=active]:bg-purple-500">Payments</TabsTrigger>
-            <TabsTrigger value="message" className="data-[state=active]:bg-purple-500">Messages</TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-purple-500">System</TabsTrigger>
+            <TabsTrigger value="all" className="data-[state=active]:bg-primary">All</TabsTrigger>
+            <TabsTrigger value="unread" className="data-[state=active]:bg-primary">Unread</TabsTrigger>
+            <TabsTrigger value="application" className="data-[state=active]:bg-primary">Applications</TabsTrigger>
+            <TabsTrigger value="booking" className="data-[state=active]:bg-primary">Bookings</TabsTrigger>
+            <TabsTrigger value="payment" className="data-[state=active]:bg-primary">Payments</TabsTrigger>
+            <TabsTrigger value="message" className="data-[state=active]:bg-primary">Messages</TabsTrigger>
+            <TabsTrigger value="system" className="data-[state=active]:bg-primary">System</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -355,9 +355,9 @@ const Notifications = () => {
           {filteredNotifications.length === 0 ? (
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
               <CardContent className="p-8 text-center">
-                <Bell className="w-16 h-16 mx-auto mb-4 text-purple-300" />
+                <Bell className="w-16 h-16 mx-auto mb-4 text-slate-400" />
                 <h3 className="text-xl font-semibold mb-2">No notifications</h3>
-                <p className="text-purple-100">
+                <p className="text-slate-300">
                   {activeTab === 'unread' 
                     ? "You're all caught up! No unread notifications." 
                     : "You don't have any notifications in this category."

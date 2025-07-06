@@ -14,15 +14,33 @@ const AuthCallback = () => {
         console.log('=== AUTH CALLBACK TRIGGERED ===');
         console.log('Current URL:', window.location.href);
         console.log('URL Hash:', window.location.hash);
+        console.log('URL Search Params:', window.location.search);
         
-        // Handle the auth callback
-        const { data, error } = await supabase.auth.getSession();
+        // Parse the hash fragment to handle the OAuth response
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const error = hashParams.get('error');
+        const errorDescription = hashParams.get('error_description');
         
         if (error) {
-          console.error('=== AUTH CALLBACK ERROR ===', error);
+          console.error('=== OAUTH ERROR IN URL ===', error, errorDescription);
+          toast({
+            title: "Authentication Failed",
+            description: errorDescription || error,
+            variant: "destructive",
+          });
+          navigate('/auth');
+          return;
+        }
+        
+        // Handle the auth callback
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('=== AUTH CALLBACK ERROR ===', sessionError);
           toast({
             title: "Authentication Error",
-            description: error.message,
+            description: sessionError.message,
             variant: "destructive",
           });
           navigate('/auth');

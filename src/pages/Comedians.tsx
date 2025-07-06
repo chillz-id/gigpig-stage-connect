@@ -9,12 +9,12 @@ const Comedians = () => {
   const { comedians, loading, contacting, handleContact } = useComedians();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Stand Up Sydney Comedians</h1>
-          <p className="text-muted-foreground">
-            Discover talented comedians in Sydney's vibrant comedy scene
+          <h1 className="text-3xl font-bold text-white mb-2">Comedians</h1>
+          <p className="text-gray-300">
+            Discover talented Comedians from all over Australia
           </p>
         </div>
 

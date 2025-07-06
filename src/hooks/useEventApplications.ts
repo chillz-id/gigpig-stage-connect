@@ -76,7 +76,9 @@ export const useEventApplications = (eventId?: string) => {
 
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 0, // Always consider data stale
+    refetchInterval: 5000 // Refetch every 5 seconds
   });
 
   // Apply to event mutation

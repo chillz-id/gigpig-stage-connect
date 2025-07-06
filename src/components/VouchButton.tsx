@@ -11,13 +11,17 @@ interface VouchButtonProps {
   comedianName: string;
   vouchCount?: number;
   hasVouched?: boolean;
+  className?: string;
+  variant?: 'default' | 'icon';
 }
 
 const VouchButton: React.FC<VouchButtonProps> = ({ 
   comedianId, 
   comedianName, 
   vouchCount = 0, 
-  hasVouched = false 
+  hasVouched = false,
+  className = '',
+  variant = 'default'
 }) => {
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
@@ -77,14 +81,48 @@ const VouchButton: React.FC<VouchButtonProps> = ({
 
   // Only show vouch button if user is a comedian
   if (!hasRole('comedian')) {
+    if (variant === 'icon') {
+      return currentVouchCount > 0 ? (
+        <div className="flex items-center gap-1">
+          <Crown className="w-5 h-5 text-yellow-400 fill-current" />
+          <span className="text-white text-sm font-medium">{currentVouchCount}</span>
+        </div>
+      ) : null;
+    }
+    
     return currentVouchCount > 0 ? (
-      <Badge variant="outline" className="text-xs">
+      <Badge variant="outline" className={`text-xs ${className}`}>
         <Crown className="w-3 h-3 mr-1 text-yellow-400 fill-current" />
         {currentVouchCount} vouch{currentVouchCount !== 1 ? 'es' : ''}
       </Badge>
     ) : null;
   }
 
+  // Icon variant - just crown and number
+  if (variant === 'icon') {
+    return (
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleVouch}
+        disabled={isVouching}
+        className={`group flex items-center gap-1 p-2 bg-black/50 hover:bg-black/70 transition-all duration-300 ${className}`}
+      >
+        {isVouching ? (
+          <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
+        ) : (
+          <Crown className={`w-5 h-5 text-yellow-400 ${userHasVouched ? 'fill-current' : ''}`} />
+        )}
+        
+        {/* Vouch count */}
+        {currentVouchCount > 0 && (
+          <span className="text-white text-sm font-medium">{currentVouchCount}</span>
+        )}
+      </Button>
+    );
+  }
+
+  // Default variant
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -92,7 +130,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
         variant={userHasVouched ? "default" : "outline"}
         onClick={handleVouch}
         disabled={isVouching}
-        className="text-xs"
+        className={`text-xs ${className}`}
       >
         {isVouching ? (
           <Loader2 className="w-3 h-3 animate-spin mr-1" />

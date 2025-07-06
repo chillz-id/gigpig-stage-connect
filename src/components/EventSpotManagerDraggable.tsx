@@ -208,7 +208,7 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
           type="button" 
           onClick={addSpot} 
           disabled={!newSpot.spot_name.trim()}
-          className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Spot

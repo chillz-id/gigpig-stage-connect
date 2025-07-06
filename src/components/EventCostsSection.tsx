@@ -115,7 +115,7 @@ export const EventCostsSection: React.FC<EventCostsSectionProps> = ({
             type="button" 
             onClick={addCost} 
             disabled={!newCost.cost_name.trim() || newCost.amount <= 0}
-            className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Cost

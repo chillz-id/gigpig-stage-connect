@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Check, EyeOff, Eye, Calendar, MapPin, Star } from 'lucide-react';
 import { ApplicationData } from '@/services/applicationService';
+import { cn } from '@/lib/utils';
 
 interface ApplicationCardProps {
   application: ApplicationData;
@@ -57,27 +58,43 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   return (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
       <CardContent className="p-4">
-        <div className="flex items-start gap-4">
-          {onSelect && (
-            <div className="flex items-center pt-2">
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(checked) => onSelect(application.id, checked as boolean)}
-                className="border-white/30 data-[state=checked]:bg-purple-500"
-              />
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            {onSelect && (
+              <div className="flex items-center">
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={(checked) => onSelect(application.id, checked as boolean)}
+                  className="border-white/30 data-[state=checked]:bg-purple-500"
+                />
+              </div>
+            )}
+            
+            <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-white/20">
+              <AvatarImage src={application.comedian_avatar} alt={application.comedian_name} />
+              <AvatarFallback className="bg-purple-500 text-white text-sm sm:text-lg font-semibold">
+                {application.comedian_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            
+            {/* Mobile comedian info */}
+            <div className="flex-1 sm:hidden">
+              <h3 className="text-base font-semibold">{application.comedian_name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge className={cn("text-xs", getStatusColor(application.status))}>
+                  {getStatusText(application.status)}
+                </Badge>
+                {application.comedian_experience && (
+                  <span className="text-xs text-purple-200">• {application.comedian_experience}</span>
+                )}
+              </div>
+              <span className="text-xs text-purple-200">Applied: {formatDate(application.applied_at)}</span>
             </div>
-          )}
-          
-          <Avatar className="w-16 h-16 border-2 border-white/20">
-            <AvatarImage src={application.comedian_avatar} alt={application.comedian_name} />
-            <AvatarFallback className="bg-purple-500 text-white text-lg font-semibold">
-              {application.comedian_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-            </AvatarFallback>
-          </Avatar>
+          </div>
 
           <div className="flex-1 space-y-3">
-            {/* Comedian Info */}
-            <div>
+            {/* Comedian Info - Desktop only */}
+            <div className="hidden sm:block">
               <h3 className="text-lg font-semibold mb-1">{application.comedian_name}</h3>
               <div className="flex items-center gap-4 text-sm text-purple-200">
                 {application.comedian_experience && (
@@ -96,17 +113,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             {/* Event Details */}
             {showEventDetails && (
               <div className="bg-white/5 p-3 rounded-lg">
-                <h4 className="font-medium mb-2 flex items-center gap-2">
+                <h4 className="font-medium mb-2 flex items-center gap-2 text-sm sm:text-base">
                   🎭 {application.event_title}
                 </h4>
-                <div className="flex items-center gap-4 text-sm text-purple-200">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-purple-200">
                   <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>{new Date(application.event_date).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{application.event_venue}</span>
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="truncate max-w-[150px] sm:max-w-none">{application.event_venue}</span>
                   </div>
                 </div>
               </div>
@@ -115,38 +132,38 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             {/* Application Message */}
             {application.message && (
               <div className="bg-white/5 p-3 rounded-lg">
-                <p className="text-sm text-purple-100 italic">
-                  "{application.message.length > 150 
-                    ? `${application.message.slice(0, 150)}...` 
+                <p className="text-xs sm:text-sm text-purple-100 italic">
+                  "{application.message.length > 100 
+                    ? `${application.message.slice(0, 100)}...` 
                     : application.message}"
                 </p>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between">
-              <Badge className={getStatusColor(application.status)}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <Badge className={cn("hidden sm:inline-flex", getStatusColor(application.status))}>
                 {getStatusText(application.status)}
               </Badge>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 {application.status === 'pending' && (
                   <>
                     <Button
                       size="sm"
                       onClick={() => onApprove(application.id)}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none text-xs sm:text-sm"
                     >
-                      <Check className="w-4 h-4 mr-1" />
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Approve
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onHide(application.id)}
-                      className="text-white border-white/30 hover:bg-white/10"
+                      className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                     >
-                      <EyeOff className="w-4 h-4 mr-1" />
+                      <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Hide
                     </Button>
                   </>
@@ -155,9 +172,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={() => onViewProfile(application.comedian_id)}
-                  className="text-white border-white/30 hover:bg-white/10"
+                  className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                 >
-                  <Eye className="w-4 h-4 mr-1" />
+                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   Profile
                 </Button>
               </div>

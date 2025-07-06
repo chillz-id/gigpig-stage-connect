@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import Navigation from '@/components/Navigation';
+import DockNavigation from '@/components/DockNavigation';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -25,9 +26,9 @@ import DesignSystem from '@/pages/DesignSystem';
 import Comedians from '@/pages/Comedians';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
+import AgencyManagement from '@/pages/AgencyManagement';
 import { Suspense } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
-import DesignSystemStatusIndicator from '@/components/DesignSystemStatusIndicator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,7 +66,8 @@ function App() {
               <DesignSystemInitializer>
                 <Router>
                   <div className="min-h-screen transition-all duration-200">
-                    <Navigation />
+                    {/* <Navigation /> */}
+                    <DockNavigation />
                     <Suspense fallback={<LoadingFallback />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
@@ -80,6 +82,7 @@ function App() {
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/create-event" element={<CreateEvent />} />
                         <Route path="/applications" element={<Applications />} />
+                        <Route path="/agency" element={<AgencyManagement />} />
                         {/* Redirect old invoice routes to Profile */}
                         <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
@@ -91,7 +94,8 @@ function App() {
                       </Routes>
                     </Suspense>
                     <Toaster />
-                    <DesignSystemStatusIndicator />
+                    {/* Add bottom padding for dock navigation */}
+                    <div className="h-20 md:h-32" />
                   </div>
                 </Router>
               </DesignSystemInitializer>
