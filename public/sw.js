@@ -151,6 +151,11 @@ async function networkFirstWithCache(request) {
 
 // Network first with offline page fallback (for HTML pages)
 async function networkFirstWithOffline(request) {
+  // Skip chrome-extension and other non-http(s) URLs
+  if (!request.url.startsWith('http')) {
+    return fetch(request);
+  }
+  
   try {
     const networkResponse = await fetch(request);
     
