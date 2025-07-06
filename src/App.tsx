@@ -29,6 +29,7 @@ import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import AgencyManagement from '@/pages/AgencyManagement';
 import AddGig from '@/pages/AddGig';
+import GoogleCalendarCallback from '@/pages/GoogleCalendarCallback';
 import { Suspense } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 
@@ -75,6 +76,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/shows" element={<Shows />} />
                         <Route path="/browse" element={<Navigate to="/shows" replace />} />

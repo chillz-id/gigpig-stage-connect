@@ -11,6 +11,7 @@ import ComedianUpcomingShows from './ComedianUpcomingShows';
 import ComedianAccomplishments from './ComedianAccomplishments';
 import ComedianContact from './ComedianContact';
 import ComedianAvailabilityCalendar from './ComedianAvailabilityCalendar';
+import ComedianCalendarSync from './ComedianCalendarSync';
 import { cn } from '@/lib/utils';
 
 interface ComedianProfileLayoutProps {
@@ -93,6 +94,11 @@ const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian 
           {/* Availability Calendar - Only show for own profile or to industry users */}
           {(isOwnProfile || hasRole('promoter') || hasRole('admin')) && (
             <ComedianAvailabilityCalendar comedianId={comedian.id} />
+          )}
+          
+          {/* Calendar Sync - Only show for own profile */}
+          {isOwnProfile && (
+            <ComedianCalendarSync comedianId={comedian.id} />
           )}
           
           {/* Accomplishments & Reviews */}

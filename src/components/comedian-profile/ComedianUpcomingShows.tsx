@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Clock, Plus } from 'lucide-react';
+import { Calendar, MapPin, Clock, Plus, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useComedianGigs } from '@/hooks/useComedianGigs';
@@ -34,7 +34,8 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
     status: gig.status,
     banner_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=225&fit=crop',
     payment: gig.event_spot?.is_paid ? gig.event_spot.payment_amount : null,
-    duration: gig.event_spot?.duration_minutes
+    duration: gig.event_spot?.duration_minutes,
+    calendar_sync_status: gig.calendar_sync_status
   }));
 
   // Get unique show types and status filters
@@ -194,11 +195,27 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({ comedianI
                           ${show.payment} • {show.duration}min
                         </div>
                       )}
-                      {show.type && (
-                        <Badge variant="outline" className="text-xs">
-                          {show.type}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {show.type && (
+                          <Badge variant="outline" className="text-xs">
+                            {show.type}
+                          </Badge>
+                        )}
+                        {/* Calendar Sync Status */}
+                        {show.calendar_sync_status && isOwnProfile && (
+                          <div className="flex items-center gap-1">
+                            {show.calendar_sync_status === 'synced' && (
+                              <CheckCircle className="w-3 h-3 text-green-400" title="Synced to calendar" />
+                            )}
+                            {show.calendar_sync_status === 'pending' && (
+                              <RefreshCw className="w-3 h-3 text-yellow-400 animate-spin" title="Syncing to calendar" />
+                            )}
+                            {show.calendar_sync_status === 'failed' && (
+                              <AlertCircle className="w-3 h-3 text-red-400" title="Sync failed" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   

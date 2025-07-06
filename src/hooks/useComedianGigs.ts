@@ -204,8 +204,49 @@ export const useComedianGigs = (comedianId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (newGig) => {
       queryClient.invalidateQueries({ queryKey: ['comedian-gigs', user?.id] });
+      
+      // Trigger calendar sync if gig is confirmed
+      if (newGig.status === 'confirmed') {
+        // Check if user has Google Calendar integration
+        const { data: integrations } = await supabase
+          .from('calendar_integrations')
+          .select('*')
+          .eq('user_id', user?.id)
+          .eq('provider', 'google')
+          .eq('is_active', true);
+
+        if (integrations && integrations.length > 0) {
+          // Trigger sync to Google Calendar
+          try {
+            await fetch('/api/google-calendar/sync-event', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                integration_id: integrations[0].id,
+                event_id: newGig.id,
+                action: 'create'
+              })
+            });
+            
+            // Update sync status
+            await supabase
+              .from('calendar_events')
+              .update({ calendar_sync_status: 'synced' })
+              .eq('id', newGig.id);
+              
+          } catch (syncError) {
+            console.error('Calendar sync failed:', syncError);
+            // Update sync status to failed
+            await supabase
+              .from('calendar_events')
+              .update({ calendar_sync_status: 'failed' })
+              .eq('id', newGig.id);
+          }
+        }
+      }
+      
       toast({
         title: "Gig Added",
         description: "Your gig has been added to your calendar.",
