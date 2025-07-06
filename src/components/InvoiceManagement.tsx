@@ -48,8 +48,8 @@ export const InvoiceManagement: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    // Stay within profile context - we'll create a modal or inline form later
-    console.log('Create new invoice - TODO: Implement inline creation');
+    // Navigate to invoice creation form
+    window.location.href = '/invoices/new';
   };
 
   const clearFilters = () => {

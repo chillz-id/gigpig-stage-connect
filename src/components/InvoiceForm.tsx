@@ -15,6 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useInvoiceOperations } from '@/hooks/useInvoiceOperations';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InvoiceItem {
   id: string;
@@ -27,9 +30,15 @@ interface InvoiceItem {
 const InvoiceForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, hasRole } = useAuth();
+  const { createInvoice } = useInvoiceOperations();
+  
   const [invoiceData, setInvoiceData] = useState({
     clientName: '',
     clientEmail: '',
+    clientPhone: '',
+    clientAddress: '',
+    clientABN: '',
     issueDate: new Date(),
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     notes: '',
@@ -73,17 +82,87 @@ const InvoiceForm = () => {
   const taxAmount = subtotal * (invoiceData.taxRate / 100);
   const total = subtotal + taxAmount;
 
-  const handleSave = (status: 'draft' | 'sent') => {
-    // Here you would typically save to your backend
-    
-    toast({
-      title: status === 'draft' ? "Invoice Saved" : "Invoice Sent",
-      description: status === 'draft' 
-        ? "Your invoice has been saved as a draft." 
-        : "Your invoice has been sent to the client.",
-    });
+  const handleSave = async (status: 'draft' | 'sent') => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create invoices.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    navigate('/invoices');
+    // Validate form
+    if (!invoiceData.clientName || !invoiceData.clientEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate items
+    const validItems = items.filter(item => item.description && item.total > 0);
+    if (validItems.length === 0) {
+      toast({
+        title: "No Items",
+        description: "Please add at least one item to the invoice.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Determine invoice type based on user role
+      const invoiceType = hasRole('promoter') ? 'promoter' : 'comedian';
+      
+      // Get user profile for sender information
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email, phone')
+        .eq('id', user.id)
+        .single();
+
+      await createInvoice.mutateAsync({
+        invoice_type: invoiceType,
+        promoter_id: invoiceType === 'promoter' ? user.id : undefined,
+        comedian_id: invoiceType === 'comedian' ? user.id : undefined,
+        sender_name: profile?.full_name || user.email || '',
+        sender_email: profile?.email || user.email || '',
+        sender_phone: profile?.phone || '',
+        issue_date: invoiceData.issueDate.toISOString(),
+        due_date: invoiceData.dueDate.toISOString(),
+        currency: 'AUD',
+        tax_rate: invoiceData.taxRate,
+        tax_treatment: 'inclusive',
+        subtotal_amount: subtotal,
+        tax_amount: taxAmount,
+        total_amount: total,
+        notes: invoiceData.notes,
+        status: status,
+        items: validItems.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.rate,
+          subtotal: item.total,
+          tax_amount: item.total * (invoiceData.taxRate / (100 + invoiceData.taxRate)),
+          total: item.total
+        })),
+        recipients: [{
+          recipient_name: invoiceData.clientName,
+          recipient_email: invoiceData.clientEmail,
+          recipient_phone: invoiceData.clientPhone,
+          recipient_address: invoiceData.clientAddress,
+          recipient_abn: invoiceData.clientABN,
+          recipient_type: 'business'
+        }]
+      });
+
+      navigate('/profile?tab=invoices');
+    } catch (error) {
+      console.error('Failed to create invoice:', error);
+    }
   };
 
   return (

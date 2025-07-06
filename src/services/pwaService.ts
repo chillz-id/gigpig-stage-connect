@@ -48,7 +48,8 @@ class PWAService {
 
   private async initializePWA(): Promise<void> {
     try {
-      // Register service worker
+      // Register service worker - TEMPORARILY DISABLED FOR DEBUGGING
+      /*
       if ('serviceWorker' in navigator) {
         this.swRegistration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/'
@@ -66,6 +67,7 @@ class PWAService {
           this.showUpdateAvailable();
         }
       }
+      */
 
       // Load offline actions from storage
       await this.loadOfflineActions();

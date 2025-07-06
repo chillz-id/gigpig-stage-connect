@@ -33,6 +33,7 @@ import GoogleCalendarCallback from '@/pages/GoogleCalendarCallback';
 import PWASettings from '@/pages/PWASettings';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
+import InvoiceForm from '@/components/InvoiceForm';
 import { Suspense, useState, useEffect } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
@@ -144,8 +145,9 @@ function App() {
                         <Route path="/applications" element={<Applications />} />
                         <Route path="/agency" element={<AgencyManagement />} />
                         <Route path="/dashboard/gigs/add" element={<ProtectedRoute requiredRole="comedian"><AddGig /></ProtectedRoute>} />
-                        {/* Redirect old invoice routes to Profile */}
+                        {/* Invoice routes */}
                         <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
+                        <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                         <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/design-system" element={<DesignSystem />} />

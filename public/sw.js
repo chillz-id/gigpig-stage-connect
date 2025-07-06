@@ -78,6 +78,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Skip chrome-extension and other non-HTTP URLs
+  if (!request.url.startsWith('http')) {
+    return;
+  }
+  
   // Handle different types of requests
   if (url.pathname.startsWith('/static/') || STATIC_ASSETS.includes(url.pathname)) {
     // Static assets - cache first
@@ -93,6 +98,11 @@ self.addEventListener('fetch', (event) => {
 
 // Cache first strategy (for static assets)
 async function cacheFirst(request) {
+  // Skip chrome-extension and other non-http(s) URLs
+  if (!request.url.startsWith('http')) {
+    return fetch(request);
+  }
+  
   try {
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
@@ -113,6 +123,11 @@ async function cacheFirst(request) {
 
 // Network first with cache fallback (for API requests)
 async function networkFirstWithCache(request) {
+  // Skip chrome-extension and other non-http(s) URLs
+  if (!request.url.startsWith('http')) {
+    return fetch(request);
+  }
+  
   try {
     // Try network first
     const networkResponse = await fetch(request);
