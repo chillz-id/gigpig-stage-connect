@@ -1,5 +1,5 @@
 // Flight Management Service - API layer for flight tracking and management
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import type {
   FlightBooking,
   FlightStatusUpdate,

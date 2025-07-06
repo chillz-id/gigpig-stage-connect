@@ -30,8 +30,12 @@ import Notifications from '@/pages/Notifications';
 import AgencyManagement from '@/pages/AgencyManagement';
 import AddGig from '@/pages/AddGig';
 import GoogleCalendarCallback from '@/pages/GoogleCalendarCallback';
-import { Suspense } from 'react';
+import PWASettings from '@/pages/PWASettings';
+import { PWAInstaller } from '@/components/pwa/PWAInstaller';
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
+import { Suspense, useState, useEffect } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
+import { pwaService } from '@/services/pwaService';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +63,57 @@ const DesignSystemInitializer = ({ children }: { children: React.ReactNode }) =>
   return <>{children}</>;
 };
 
+// PWA Integration Component
+const PWAIntegration = () => {
+  const [showInstaller, setShowInstaller] = useState(false);
+  const [capabilities, setCapabilities] = useState(pwaService.getCapabilities());
+
+  useEffect(() => {
+    const updateCapabilities = () => {
+      setCapabilities(pwaService.getCapabilities());
+    };
+
+    // Show installer after 10 seconds if installable and not already shown
+    const timer = setTimeout(() => {
+      if (capabilities.isInstallable && !capabilities.isInstalled) {
+        const hasShownInstaller = localStorage.getItem('pwa-installer-shown');
+        if (!hasShownInstaller) {
+          setShowInstaller(true);
+          localStorage.setItem('pwa-installer-shown', 'true');
+        }
+      }
+    }, 10000);
+
+    // Listen for capability changes
+    window.addEventListener('beforeinstallprompt', updateCapabilities);
+    window.addEventListener('appinstalled', updateCapabilities);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', updateCapabilities);
+      window.removeEventListener('appinstalled', updateCapabilities);
+    };
+  }, [capabilities.isInstallable, capabilities.isInstalled]);
+
+  return (
+    <>
+      {/* Offline indicator in bottom right */}
+      <div className="fixed bottom-20 right-4 z-40 md:bottom-6">
+        <OfflineIndicator />
+      </div>
+
+      {/* PWA installer modal */}
+      {showInstaller && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full">
+            <PWAInstaller onClose={() => setShowInstaller(false)} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -71,6 +126,7 @@ function App() {
                   <div className="min-h-screen transition-all duration-200">
                     {/* <Navigation /> */}
                     <DockNavigation />
+                    <PWAIntegration />
                     <Suspense fallback={<LoadingFallback />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
@@ -93,6 +149,7 @@ function App() {
                         <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/design-system" element={<DesignSystem />} />
+                        <Route path="/settings/pwa" element={<PWASettings />} />
                         <Route path="/admin/events/:eventId" element={<EventDetail />} />
                         <Route path="/events/:eventId" element={<EventDetailPublic />} />
                         <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />

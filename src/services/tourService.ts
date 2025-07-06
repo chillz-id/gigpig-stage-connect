@@ -1,5 +1,5 @@
 // Tour Service - Complete service layer for tour management
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import type {
   Tour,
   TourStop,

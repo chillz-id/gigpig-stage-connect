@@ -1,5 +1,5 @@
 // Task Management Service - API layer for all task-related operations
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import type {
   Task,
   TaskComment,

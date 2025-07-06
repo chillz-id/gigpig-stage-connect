@@ -1,5 +1,5 @@
 // Error Handling and Logging Service - Comprehensive error management and monitoring
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';

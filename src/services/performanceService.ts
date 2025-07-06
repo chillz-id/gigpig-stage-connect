@@ -1,5 +1,5 @@
 // Performance Optimization Service - Caching, optimization, and performance monitoring
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CacheEntry<T = any> {
   data: T;
