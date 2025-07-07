@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Comedian } from '@/types/comedian';
-import { mockComedians } from '@/data/mockComedians';
 
 export const fetchComedians = async (): Promise<Comedian[]> => {
   // Fetch all profiles with contact fields
@@ -45,7 +44,7 @@ export const fetchComedians = async (): Promise<Comedian[]> => {
     show_contact_in_epk: profile.show_contact_in_epk || false
   }));
   
-  return [...dbComedians, ...mockComedians];
+  return dbComedians;
 };
 
 export const sendComedianMessage = async (

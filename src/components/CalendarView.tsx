@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, Users, Star, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockEvents } from '@/data/mockEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 import { ModernEventCard } from '@/components/ModernEventCard';
 
 export const CalendarView: React.FC = () => {
@@ -14,18 +14,17 @@ export const CalendarView: React.FC = () => {
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
-
-  // Filter to show only upcoming events (from today onwards)
+  
+  // Get events from the hook
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  const upcomingEvents = mockEvents.filter(event => {
-    const eventDate = new Date(event.event_date);
-    return eventDate >= today;
+  const { items: events, isLoading } = useEvents({
+    date_from: today.toISOString(),
+    status: 'published'
   });
 
   // Use upcoming events for all views
-  const eventsToShow = upcomingEvents;
+  const eventsToShow = events || [];
 
   // Determine if user is a consumer (not an industry user)
   const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));

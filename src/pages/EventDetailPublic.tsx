@@ -13,7 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Calendar, MapPin, Clock, Users, DollarSign, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { getEventDetails } from '@/data/mockEventDetails';
+import { useEvent } from '@/hooks/data/useEvents';
 
 const EventDetailPublic = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -56,21 +56,11 @@ const EventDetailPublic = () => {
         .eq('status', 'published')
         .single();
 
-      if (data) {
-        return data;
+      if (!data) {
+        throw new Error('Event not found');
       }
-
-      // If not found in database, try mock data
-      const mockEvent = getEventDetails(eventId);
-      if (mockEvent) {
-        return {
-          ...mockEvent,
-          profiles: mockEvent.promoter,
-          event_spots: mockEvent.event_spots
-        };
-      }
-
-      throw new Error('Event not found');
+      
+      return data;
     }
   });
 

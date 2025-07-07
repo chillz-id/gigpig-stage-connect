@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { mockEvents } from '@/data/mockEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 
 interface MapEventListProps {
   onEventSelect: (event: any) => void;
@@ -12,14 +12,16 @@ export const MapEventList: React.FC<MapEventListProps> = ({
   onEventSelect,
   selectedShow,
 }) => {
-  // Filter to show only upcoming events (from today onwards)
+  // Get upcoming events from the hook
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  const upcomingEvents = mockEvents.filter(event => {
-    const eventDate = new Date(event.event_date);
-    return eventDate >= today;
+  
+  const { items: events, isLoading } = useEvents({
+    date_from: today.toISOString(),
+    status: 'published'
   });
+  
+  const upcomingEvents = events || [];
 
   return (
     <div className="space-y-2">
