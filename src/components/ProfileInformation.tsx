@@ -41,8 +41,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   const [newShowType, setNewShowType] = useState('');
   
   const [formData, setFormData] = useState<ProfileData>({
-    firstName: user.name?.split(' ')[0] || '',
-    lastName: user.name?.split(' ').slice(1).join(' ') || '',
+    firstName: user.first_name || user.name?.split(' ')[0] || '',
+    lastName: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
     email: user.email || '',
     phone: user.phone || '',
     bio: user.bio || '',

@@ -16,7 +16,9 @@ export interface Venue {
 export interface Profile {
   id: string;
   email: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
+  full_name?: string; // Generated column
   stage_name?: string;
   bio?: string;
   avatar_url?: string;

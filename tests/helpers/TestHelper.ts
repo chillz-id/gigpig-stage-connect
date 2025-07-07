@@ -1,81 +1,103 @@
-import { Page, ElementHandle } from 'puppeteer';
+import { Page } from '@playwright/test';
 
 export class TestHelper {
   constructor(private page: Page) {}
 
-  // Navigation helpers
-  async navigateToHome() {
-    await this.page.goto('http://localhost:8080/', { waitUntil: 'networkidle0' });
+  // Setup and navigation
+  async setup() {
+    // Set up any necessary test state
+    await this.page.goto('/');
   }
 
-  async navigateToProfile() {
-    await this.page.goto('http://localhost:8080/profile', { waitUntil: 'networkidle0' });
+  // Authentication helpers
+  async signIn(email: string, password: string) {
+    await this.page.goto('/auth');
+    
+    // Make sure we're on sign in tab
+    const signInTab = this.page.getByText('Sign in', { exact: true });
+    if (await signInTab.isVisible()) {
+      await signInTab.click();
+    }
+    
+    await this.page.fill('input[type="email"]', email);
+    await this.page.fill('input[type="password"]', password);
+    await this.page.click('button[type="submit"]:has-text("Sign in")');
+    
+    // Wait for redirect after successful login
+    await this.page.waitForURL((url) => !url.pathname.includes('/auth'), { 
+      timeout: 10000 
+    });
   }
 
-  async navigateToDesignSystem() {
-    await this.page.goto('http://localhost:8080/design-system', { waitUntil: 'networkidle0' });
+  async signUp(email: string, password: string, role: 'comedian' | 'promoter') {
+    await this.page.goto('/auth');
+    
+    // Switch to sign up tab
+    const signUpTab = this.page.getByText('Sign up', { exact: true });
+    if (await signUpTab.isVisible()) {
+      await signUpTab.click();
+    }
+    
+    await this.page.fill('input[type="email"]', email);
+    await this.page.fill('input[type="password"]', password);
+    
+    // Select role
+    await this.page.click(`text=${role.charAt(0).toUpperCase() + role.slice(1)}`);
+    
+    await this.page.click('button[type="submit"]:has-text("Sign up")');
+    
+    // Wait for redirect
+    await this.page.waitForURL('/dashboard', { timeout: 10000 });
   }
 
-  // Wait helpers
-  async waitForElement(selector: string, timeout = 5000): Promise<ElementHandle<Element> | null> {
-    return await this.page.waitForSelector(selector, { timeout });
-  }
-
-  async waitForText(text: string, timeout = 5000) {
-    return await this.page.waitForFunction(
-      (searchText) => document.body.innerText.includes(searchText),
-      { timeout },
-      text
-    );
+  async signOut() {
+    // Look for sign out button in navigation or profile menu
+    const signOutButton = this.page.locator('button:has-text("Sign out"), a:has-text("Sign out")').first();
+    if (await signOutButton.isVisible()) {
+      await signOutButton.click();
+      await this.page.waitForURL('/auth');
+    }
   }
 
   // Form helpers
-  async fillInput(selector: string, value: string) {
-    await this.page.waitForSelector(selector);
-    await this.page.click(selector);
-    await this.page.keyboard.down('Control');
-    await this.page.keyboard.press('KeyA');
-    await this.page.keyboard.up('Control');
-    await this.page.type(selector, value);
-  }
-
-  async clickButton(selector: string) {
-    await this.page.waitForSelector(selector);
-    await this.page.click(selector);
+  async fillForm(fields: Record<string, string>) {
+    for (const [name, value] of Object.entries(fields)) {
+      const input = this.page.locator(`input[name="${name}"], textarea[name="${name}"]`).first();
+      if (await input.isVisible()) {
+        await input.fill(value);
+      }
+    }
   }
 
   async selectOption(selector: string, value: string) {
-    await this.page.waitForSelector(selector);
-    await this.page.select(selector, value);
+    const select = this.page.locator(selector).first();
+    await select.selectOption(value);
   }
 
   // Verification helpers
-  async hasText(text: string): Promise<boolean> {
-    try {
-      await this.waitForText(text, 2000);
-      return true;
-    } catch {
-      return false;
+  async waitForToast(text?: string) {
+    if (text) {
+      await this.page.waitForSelector(`text=/${text}/i`);
+    } else {
+      await this.page.waitForSelector('[data-radix-toast-viewport] [role="status"], .toast, .notification');
     }
   }
 
   async hasElement(selector: string): Promise<boolean> {
-    try {
-      await this.waitForElement(selector, 2000);
-      return true;
-    } catch {
-      return false;
+    return await this.page.locator(selector).isVisible();
+  }
+
+  async hasText(text: string): Promise<boolean> {
+    return await this.page.locator(`text=${text}`).isVisible();
+  }
+
+  // Navigation helpers
+  async navigateToTab(tabName: string) {
+    const tab = this.page.locator(`[role="tab"]:has-text("${tabName}"), button:has-text("${tabName}")`).first();
+    if (await tab.isVisible()) {
+      await tab.click();
+      await this.page.waitForTimeout(500); // Wait for tab content to load
     }
-  }
-
-  async getElementText(selector: string): Promise<string> {
-    await this.waitForElement(selector);
-    return await this.page.$eval(selector, (el) => el.textContent || '');
-  }
-
-  async getElementAttribute(selector: string, attribute: string): Promise<string | null> {
-    await this.waitForElement(selector);
-    return await this.page.$eval(selector, (el, attr) => el.getAttribute(attr), attribute);
   }
 
   // Screenshot helper for debugging
@@ -87,65 +109,19 @@ export class TestHelper {
     });
   }
 
-  // Toast notification helper
-  async waitForToast(expectedText?: string, timeout = 5000) {
-    try {
-      if (expectedText) {
-        await this.page.waitForFunction(
-          (text) => {
-            const toasts = Array.from(document.querySelectorAll('[data-radix-toast-viewport] [role="status"]'));
-            return toasts.some(toast => toast.textContent?.includes(text));
-          },
-          { timeout },
-          expectedText
-        );
-      } else {
-        await this.page.waitForSelector('[data-radix-toast-viewport] [role="status"]', { timeout });
-      }
-      return true;
-    } catch {
-      return false;
-    }
+  // Wait helpers
+  async waitForNetworkIdle() {
+    await this.page.waitForLoadState('networkidle');
   }
 
-  // Theme helpers
-  async switchTheme(_theme: 'business' | 'pleasure') {
-    const themeButton = '[data-testid="theme-toggle"], button[aria-label*="theme"]';
-    if (await this.hasElement(themeButton)) {
-      await this.clickButton(themeButton);
-    }
+  // Mock data helpers
+  generateTestEmail(prefix: string = 'test'): string {
+    const timestamp = Date.now();
+    return `${prefix}.${timestamp}@example.com`;
   }
 
-  // Design System helpers
-  async adjustBlurIntensity(value: number) {
-    const blurSlider = 'input[type="range"][min="0"][max="24"]';
-    await this.page.waitForSelector(blurSlider);
-    
-    // Set slider value
-    await this.page.$eval(blurSlider, (slider: any, val) => {
-      slider.value = val;
-      slider.dispatchEvent(new Event('change', { bubbles: true }));
-    }, value);
-  }
-
-  // Authentication helpers (for future use)
-  async mockLogin(email: string = 'test@example.com') {
-    // This would be used with a test user account
-    // For now, we'll focus on testing public pages
-    console.log(`Mocking login for ${email}`);
-  }
-
-  // Performance monitoring
-  async measurePageLoad() {
-    const performanceMetrics = await this.page.evaluate(() => {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      return {
-        domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-        loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-        firstContentfulPaint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
-      };
-    });
-    
-    return performanceMetrics;
+  generateTestPhone(): string {
+    const randomDigits = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    return `+6141${randomDigits}`;
   }
 }

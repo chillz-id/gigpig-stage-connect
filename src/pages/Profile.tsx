@@ -83,7 +83,8 @@ const Profile = () => {
 
       // Map form data to profile update format
       const profileUpdate = {
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
         phone: formData.phone || null,
         bio: formData.bio || null,
