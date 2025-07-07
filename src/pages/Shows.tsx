@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { SearchAndFilters } from '@/components/SearchAndFilters';

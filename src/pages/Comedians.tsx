@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import ComedianSearch from '@/components/ComedianSearch';
 import ComedianList from '@/components/ComedianList';
-import { useComedians } from '@/hooks/useComedians';
+import { useComedians } from '@/hooks/data/useComedians';
 
 const Comedians = () => {
   const [searchTerm, setSearchTerm] = useState('');

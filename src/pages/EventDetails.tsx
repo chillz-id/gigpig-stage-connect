@@ -19,7 +19,7 @@ import {
   CheckCircle,
   Image as ImageIcon
 } from 'lucide-react';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 import { useEventSpots } from '@/hooks/useEventSpots';
 import { useWaitlist } from '@/hooks/useWaitlist';
 import { useUser } from '@/contexts/UserContext';

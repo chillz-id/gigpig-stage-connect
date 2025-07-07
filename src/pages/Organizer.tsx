@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { EventDetailsPopup } from '@/components/EventDetailsPopup';

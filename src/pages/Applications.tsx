@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useApplications } from '@/hooks/useApplications';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/data/useEvents';
 import ApplicationStats from '@/components/admin/ApplicationStats';
 import ApplicationList from '@/components/admin/ApplicationList';
 import ApplicationFilters from '@/components/admin/ApplicationFilters';
