@@ -3,8 +3,12 @@
 // Simple script to help generate PWA icons
 // This is a basic template - for production, use proper icon generation tools
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
