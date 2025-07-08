@@ -39,7 +39,7 @@ export const useApplications = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // First get all events for this promoter
+      // First get all events for this promoter (stage_manager_id is the promoter)
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('id')
