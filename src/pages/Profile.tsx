@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useProfileData } from '@/hooks/useProfileData';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 const Profile = () => {
   const { user, profile, signOut, updateProfile, hasRole } = useAuth();
@@ -126,12 +127,49 @@ const Profile = () => {
     }
   };
 
-  const handleCroppedImage = (croppedImage: string) => {
-    updateProfile({ avatar_url: croppedImage });
-    toast({
-      title: "Profile Picture Updated",
-      description: "Your profile picture has been successfully updated.",
-    });
+  const handleCroppedImage = async (croppedImage: string) => {
+    try {
+      // Convert base64 to blob
+      const base64Response = await fetch(croppedImage);
+      const blob = await base64Response.blob();
+      
+      // Create a unique filename
+      const fileExt = 'png';
+      const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+      
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, blob, {
+          contentType: 'image/png',
+          upsert: true
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+      
+      // Update profile with the public URL
+      await updateProfile({ avatar_url: publicUrl });
+      
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload profile picture. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle tab changes with validation and URL update

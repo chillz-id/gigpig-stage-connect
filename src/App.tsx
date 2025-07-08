@@ -10,34 +10,38 @@ import DockNavigation from '@/components/DockNavigation';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { PWAInstaller } from '@/components/pwa/PWAInstaller';
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
+import { Suspense, useState, useEffect, lazy } from 'react';
+import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
+import { pwaService } from '@/services/pwaService';
+
+// Eagerly load critical pages
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import AuthCallback from '@/pages/AuthCallback';
-import Dashboard from '@/pages/Dashboard';
-import Shows from '@/pages/Shows';
-import Profile from '@/pages/Profile';
-import CreateEvent from '@/pages/CreateEvent';
-import Applications from '@/pages/Applications';
-import AdminDashboard from '@/pages/AdminDashboard';
-import EventDetail from '@/pages/EventDetail';
-import EventDetailPublic from '@/pages/EventDetailPublic';
-import ComedianProfile from '@/pages/ComedianProfile';
-import ComedianProfileBySlug from '@/pages/ComedianProfileBySlug';
-import DesignSystem from '@/pages/DesignSystem';
-import Comedians from '@/pages/Comedians';
-import Messages from '@/pages/Messages';
-import Notifications from '@/pages/Notifications';
-import AgencyManagement from '@/pages/AgencyManagement';
-import AddGig from '@/pages/AddGig';
-import GoogleCalendarCallback from '@/pages/GoogleCalendarCallback';
-import PWASettings from '@/pages/PWASettings';
-import { PWAInstaller } from '@/components/pwa/PWAInstaller';
-import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
-import InvoiceForm from '@/components/InvoiceForm';
-import XeroCallback from '@/pages/XeroCallback';
-import { Suspense, useState, useEffect } from 'react';
-import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
-import { pwaService } from '@/services/pwaService';
+
+// Lazy load non-critical pages
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Shows = lazy(() => import('@/pages/Shows'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
+const Applications = lazy(() => import('@/pages/Applications'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const EventDetail = lazy(() => import('@/pages/EventDetail'));
+const EventDetailPublic = lazy(() => import('@/pages/EventDetailPublic'));
+const ComedianProfile = lazy(() => import('@/pages/ComedianProfile'));
+const ComedianProfileBySlug = lazy(() => import('@/pages/ComedianProfileBySlug'));
+const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
+const Comedians = lazy(() => import('@/pages/Comedians'));
+const Messages = lazy(() => import('@/pages/Messages'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
+const AgencyManagement = lazy(() => import('@/pages/AgencyManagement'));
+const AddGig = lazy(() => import('@/pages/AddGig'));
+const GoogleCalendarCallback = lazy(() => import('@/pages/GoogleCalendarCallback'));
+const PWASettings = lazy(() => import('@/pages/PWASettings'));
+const InvoiceForm = lazy(() => import('@/components/InvoiceForm'));
+const XeroCallback = lazy(() => import('@/pages/XeroCallback'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
