@@ -88,6 +88,32 @@ export function useEvents(filters?: {
   };
 }
 
+// Optimized hook for event listings (Shows page)
+export function useEventsForListing(filters?: {
+  status?: string;
+  venue_id?: string;
+  date_from?: string;
+  date_to?: string;
+  my_events?: boolean;
+}) {
+  const { data: events, isLoading, error, refetch } = useQuery({
+    queryKey: ['events-listing', filters],
+    queryFn: async () => {
+      const response = await eventsApi.getEventsForListing(filters);
+      if (response.error) throw response.error;
+      return response.data || [];
+    },
+    staleTime: 60 * 1000, // Cache for 1 minute
+  });
+  
+  return {
+    events,
+    isLoading,
+    error,
+    refetch
+  };
+}
+
 // Hook for single event
 export function useEvent(eventId: string | undefined) {
   const { data: event, isLoading, error } = useQuery({

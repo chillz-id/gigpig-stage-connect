@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useEvents } from '@/hooks/data/useEvents';
+import { useEventsForListing } from '@/hooks/data/useEvents';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { SearchAndFilters } from '@/components/SearchAndFilters';
@@ -31,7 +31,7 @@ const Shows = () => {
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [showDateRange, setShowDateRange] = useState(false);
 
-  const { events, isLoading, error } = useEvents();
+  const { events, isLoading, error } = useEventsForListing();
   
   // Get browse logic handlers
   const {

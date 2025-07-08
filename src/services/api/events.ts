@@ -53,7 +53,80 @@ export class EventsApi extends BaseApi<Event> {
     }
   }
   
-  // Get events with related data
+  // Get events with minimal data for listing pages
+  async getEventsForListing(filters?: {
+    status?: string;
+    venue_id?: string;
+    date_from?: string;
+    date_to?: string;
+    my_events?: boolean;
+  }) {
+    try {
+      let query = supabase
+        .from('events')
+        .select(`
+          id,
+          title,
+          event_date,
+          start_time,
+          venue,
+          city,
+          type,
+          status,
+          image_url,
+          ticket_price,
+          ticket_url,
+          total_spots,
+          event_spots(count),
+          applications(count)
+        `)
+        .eq('status', 'published'); // Only show published events
+      
+      // Apply filters
+      if (filters?.venue_id) {
+        query = query.eq('venue_id', filters.venue_id);
+      }
+      
+      if (filters?.date_from) {
+        query = query.gte('event_date', filters.date_from);
+      }
+      
+      if (filters?.date_to) {
+        query = query.lte('event_date', filters.date_to);
+      }
+      
+      if (filters?.my_events) {
+        const userId = await this.getCurrentUserId();
+        if (userId) {
+          query = query.or(`stage_manager_id.eq.${userId},co_promoter_ids.cs.{${userId}}`);
+        }
+      }
+      
+      // Order by date and limit results
+      query = query
+        .order('event_date', { ascending: true })
+        .gte('event_date', new Date().toISOString().split('T')[0]) // Only future events
+        .limit(100); // Limit to 100 events
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Transform the data to include computed fields
+      const transformedData = (data || []).map(event => ({
+        ...event,
+        spots_count: event.event_spots?.[0]?.count || 0,
+        applications_count: event.applications?.[0]?.count || 0,
+        is_full: (event.event_spots?.[0]?.count || 0) >= (event.total_spots || 0),
+      }));
+      
+      return { data: transformedData, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  }
+  
+  // Get events with related data (keep for detail pages)
   async getEventsWithDetails(filters?: {
     status?: string;
     venue_id?: string;
