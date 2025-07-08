@@ -156,8 +156,8 @@ function App() {
                         <Route path="/agency" element={<AgencyManagement />} />
                         <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian']}><AddGig /></ProtectedRoute>} />
                         {/* Invoice routes */}
-                        <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
+                        <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/design-system" element={<DesignSystem />} />

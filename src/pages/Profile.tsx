@@ -135,8 +135,10 @@ const Profile = () => {
       
       // Create a unique filename
       const fileExt = 'png';
-      const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       const filePath = `${user?.id}/${fileName}`;
+      
+      console.log('Uploading profile image:', { filePath, blobSize: blob.size });
       
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
@@ -147,6 +149,7 @@ const Profile = () => {
         });
       
       if (error) {
+        console.error('Storage upload error:', error);
         throw error;
       }
       
@@ -155,8 +158,18 @@ const Profile = () => {
         .from('profile-images')
         .getPublicUrl(filePath);
       
+      console.log('Public URL:', publicUrl);
+      
       // Update profile with the public URL
-      await updateProfile({ avatar_url: publicUrl });
+      const updateResult = await updateProfile({ avatar_url: publicUrl });
+      
+      if (updateResult.error) {
+        console.error('Profile update error:', updateResult.error);
+        throw updateResult.error;
+      }
+      
+      // Close the modal after successful update
+      setShowImageCrop(false);
       
       toast({
         title: "Profile Picture Updated",
@@ -166,7 +179,7 @@ const Profile = () => {
       console.error('Error uploading profile picture:', error);
       toast({
         title: "Upload Failed",
-        description: "Failed to upload profile picture. Please try again.",
+        description: error.message || "Failed to upload profile picture. Please try again.",
         variant: "destructive",
       });
     }

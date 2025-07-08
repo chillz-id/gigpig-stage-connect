@@ -221,15 +221,17 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
       </CardHeader>
       <CardContent>
         <Tabs value={uploadMethod} onValueChange={(value) => setUploadMethod(value as any)}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={cn("grid w-full", mediaType === 'video' ? "grid-cols-3" : "grid-cols-2")}>
             <TabsTrigger value="file" className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
               Upload File
             </TabsTrigger>
-            <TabsTrigger value="youtube" className="flex items-center gap-2">
-              <Youtube className="w-4 h-4" />
-              YouTube
-            </TabsTrigger>
+            {mediaType === 'video' && (
+              <TabsTrigger value="youtube" className="flex items-center gap-2">
+                <Youtube className="w-4 h-4" />
+                YouTube
+              </TabsTrigger>
+            )}
             <TabsTrigger value="google_drive" className="flex items-center gap-2">
               <HardDrive className="w-4 h-4" />
               Google Drive

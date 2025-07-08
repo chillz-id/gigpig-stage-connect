@@ -76,7 +76,7 @@ export const ContactInformation: React.FC = () => {
   };
 
   return (
-    <Card className="professional-card">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Phone className="w-5 h-5" />
@@ -94,7 +94,7 @@ export const ContactInformation: React.FC = () => {
             <h3 className="font-semibold">Personal Contact</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex-1 mr-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4" />
@@ -114,7 +114,7 @@ export const ContactInformation: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex-1 mr-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Phone className="w-4 h-4" />
@@ -145,7 +145,7 @@ export const ContactInformation: React.FC = () => {
             <h3 className="font-semibold">Manager Contact</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex-1 mr-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4" />
@@ -165,7 +165,7 @@ export const ContactInformation: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex-1 mr-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Phone className="w-4 h-4" />
