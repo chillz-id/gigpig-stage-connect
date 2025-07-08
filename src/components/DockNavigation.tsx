@@ -96,7 +96,7 @@ const DockNavigation = () => {
     { path: '/shows', icon: Calendar1, label: 'Shows', show: true },
     { path: '/comedians', icon: Drama, label: 'Comedians', show: true },
     { path: '/dashboard', icon: BarChart3, label: 'Dashboard', show: true },
-    { path: '/applications', icon: FileUser, label: 'Applications', show: hasRole('comedian') },
+    { path: '/applications', icon: FileUser, label: 'Applications', show: hasRole('promoter') || hasRole('admin') },
     { path: '/messages', icon: MessageCircle, label: 'Messages', show: true },
     { path: '/notifications', icon: Bell, label: 'Notifications', show: true, badge: unreadCount },
     { path: '/create-event', icon: Plus, label: 'New Event', show: true },

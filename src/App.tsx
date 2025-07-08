@@ -144,7 +144,7 @@ function App() {
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/applications" element={<Applications />} />
+                        <Route path="/applications" element={<ProtectedRoute requiredRole="promoter"><Applications /></ProtectedRoute>} />
                         <Route path="/agency" element={<AgencyManagement />} />
                         <Route path="/dashboard/gigs/add" element={<ProtectedRoute requiredRole="comedian"><AddGig /></ProtectedRoute>} />
                         {/* Invoice routes */}
