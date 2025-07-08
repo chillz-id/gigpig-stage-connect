@@ -14,8 +14,19 @@ export const useFeaturedEvents = () => {
       // First try to get featured events (temporarily showing all featured events)
       const { data: featuredData, error: featuredError } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          id,
+          title,
+          event_date,
+          start_time,
+          venue,
+          city,
+          image_url,
+          ticket_url,
+          ticket_price
+        `)
         .eq('featured', true)
+        .eq('status', 'published')
         .order('event_date', { ascending: true })
         .limit(6);
 
@@ -31,7 +42,18 @@ export const useFeaturedEvents = () => {
       // Otherwise, fall back to recent upcoming events
       const { data: recentData, error: recentError } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          id,
+          title,
+          event_date,
+          start_time,
+          venue,
+          city,
+          image_url,
+          ticket_url,
+          ticket_price
+        `)
+        .eq('status', 'published')
         .gte('event_date', today.toISOString())
         .order('event_date', { ascending: true })
         .limit(6);
