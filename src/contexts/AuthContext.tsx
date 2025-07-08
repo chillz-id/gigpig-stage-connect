@@ -135,8 +135,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const result = await updateUserProfile(user, updates);
     if (!result.error) {
-      // Update local profile state
+      // Update local profile state immediately
       setProfile(prev => prev ? { ...prev, ...updates } : null);
+      
+      // Also refetch profile to ensure we have the latest data
+      const latestProfile = await fetchProfile(user.id);
+      if (latestProfile) {
+        setProfile(latestProfile);
+      }
     }
     return result;
   };

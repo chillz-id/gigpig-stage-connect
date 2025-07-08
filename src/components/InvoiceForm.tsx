@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, Plus, Trash2, Save, Send, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, Save, Send, ArrowLeft, ChevronDown, ChevronUp, Percent, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -43,8 +43,17 @@ const InvoiceForm = () => {
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     notes: '',
     taxRate: 10,
-    status: 'draft' as 'draft' | 'sent' | 'paid'
+    status: 'draft' as 'draft' | 'sent' | 'paid',
+    // Deposit fields
+    requireDeposit: false,
+    depositType: 'percentage' as 'amount' | 'percentage',
+    depositAmount: 0,
+    depositPercentage: 30,
+    depositDueDaysBeforeEvent: 7,
+    eventDate: undefined as Date | undefined
   });
+  
+  const [showDepositSection, setShowDepositSection] = useState(false);
 
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: '1', description: '', quantity: 1, rate: 0, total: 0 }
@@ -81,6 +90,29 @@ const InvoiceForm = () => {
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const taxAmount = subtotal * (invoiceData.taxRate / 100);
   const total = subtotal + taxAmount;
+  
+  // Calculate deposit amount
+  const calculateDepositAmount = () => {
+    if (!invoiceData.requireDeposit) return 0;
+    if (invoiceData.depositType === 'amount') {
+      return invoiceData.depositAmount;
+    } else {
+      return total * (invoiceData.depositPercentage / 100);
+    }
+  };
+  
+  const depositAmount = calculateDepositAmount();
+  const remainingAmount = total - depositAmount;
+  
+  // Calculate deposit due date
+  const calculateDepositDueDate = () => {
+    if (!invoiceData.eventDate || !invoiceData.depositDueDaysBeforeEvent) return null;
+    const dueDate = new Date(invoiceData.eventDate);
+    dueDate.setDate(dueDate.getDate() - invoiceData.depositDueDaysBeforeEvent);
+    return dueDate;
+  };
+  
+  const depositDueDate = calculateDepositDueDate();
 
   const handleSave = async (status: 'draft' | 'sent') => {
     if (!user) {
@@ -156,7 +188,12 @@ const InvoiceForm = () => {
           recipient_address: invoiceData.clientAddress,
           recipient_abn: invoiceData.clientABN,
           recipient_type: 'business'
-        }]
+        }],
+        // Deposit fields
+        deposit_amount: invoiceData.requireDeposit && invoiceData.depositType === 'amount' ? invoiceData.depositAmount : undefined,
+        deposit_percentage: invoiceData.requireDeposit && invoiceData.depositType === 'percentage' ? invoiceData.depositPercentage : undefined,
+        deposit_due_days_before_event: invoiceData.requireDeposit ? invoiceData.depositDueDaysBeforeEvent : undefined,
+        event_date: invoiceData.requireDeposit && invoiceData.eventDate ? invoiceData.eventDate.toISOString() : undefined
       });
 
       navigate('/profile?tab=invoices');
@@ -291,6 +328,199 @@ const InvoiceForm = () => {
               </CardContent>
             </Card>
 
+            {/* Deposit Settings */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader 
+                className="cursor-pointer"
+                onClick={() => setShowDepositSection(!showDepositSection)}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-white">Deposit Settings</CardTitle>
+                    <CardDescription className="text-purple-200">
+                      Require an upfront deposit to secure the booking
+                    </CardDescription>
+                  </div>
+                  {showDepositSection ? (
+                    <ChevronUp className="w-5 h-5 text-white" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-white" />
+                  )}
+                </div>
+              </CardHeader>
+              {showDepositSection && (
+                <CardContent className="space-y-4">
+                  {/* Deposit Toggle */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="requireDeposit"
+                      checked={invoiceData.requireDeposit}
+                      onChange={(e) => setInvoiceData(prev => ({...prev, requireDeposit: e.target.checked}))}
+                      className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500"
+                    />
+                    <Label htmlFor="requireDeposit" className="text-white cursor-pointer">
+                      Require deposit for this invoice
+                    </Label>
+                  </div>
+
+                  {invoiceData.requireDeposit && (
+                    <>
+                      {/* Deposit Type and Amount */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-white">Deposit Type</Label>
+                          <Select
+                            value={invoiceData.depositType}
+                            onValueChange={(value: 'amount' | 'percentage') => 
+                              setInvoiceData(prev => ({...prev, depositType: value}))
+                            }
+                          >
+                            <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percentage">
+                                <div className="flex items-center">
+                                  <Percent className="w-4 h-4 mr-2" />
+                                  Percentage
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="amount">
+                                <div className="flex items-center">
+                                  <DollarSign className="w-4 h-4 mr-2" />
+                                  Fixed Amount
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          {invoiceData.depositType === 'percentage' ? (
+                            <>
+                              <Label htmlFor="depositPercentage" className="text-white">
+                                Deposit Percentage
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  id="depositPercentage"
+                                  type="number"
+                                  min="1"
+                                  max="100"
+                                  value={invoiceData.depositPercentage}
+                                  onChange={(e) => setInvoiceData(prev => ({
+                                    ...prev, 
+                                    depositPercentage: Math.min(100, Math.max(0, parseFloat(e.target.value) || 0))
+                                  }))}
+                                  className="bg-white/5 border-white/20 text-white pr-10"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50">%</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Label htmlFor="depositAmount" className="text-white">
+                                Deposit Amount
+                              </Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">$</span>
+                                <Input
+                                  id="depositAmount"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={invoiceData.depositAmount}
+                                  onChange={(e) => setInvoiceData(prev => ({
+                                    ...prev, 
+                                    depositAmount: Math.max(0, parseFloat(e.target.value) || 0)
+                                  }))}
+                                  className="bg-white/5 border-white/20 text-white pl-8"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Event Date and Due Days */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-white">Event Date</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal bg-white/5 border-white/20 text-white hover:bg-white/10",
+                                  !invoiceData.eventDate && "text-white/50"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {invoiceData.eventDate ? format(invoiceData.eventDate, "PPP") : "Pick event date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={invoiceData.eventDate}
+                                onSelect={(date) => date && setInvoiceData(prev => ({...prev, eventDate: date}))}
+                                initialFocus
+                                disabled={(date) => date < new Date()}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div>
+                          <Label htmlFor="depositDueDays" className="text-white">
+                            Due Days Before Event
+                          </Label>
+                          <Select
+                            value={invoiceData.depositDueDaysBeforeEvent.toString()}
+                            onValueChange={(value) => 
+                              setInvoiceData(prev => ({...prev, depositDueDaysBeforeEvent: parseInt(value)}))
+                            }
+                          >
+                            <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="3">3 days before</SelectItem>
+                              <SelectItem value="7">7 days before</SelectItem>
+                              <SelectItem value="14">14 days before</SelectItem>
+                              <SelectItem value="21">21 days before</SelectItem>
+                              <SelectItem value="30">30 days before</SelectItem>
+                              <SelectItem value="45">45 days before</SelectItem>
+                              <SelectItem value="60">60 days before</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Deposit Summary */}
+                      {invoiceData.eventDate && (
+                        <div className="p-4 bg-purple-900/30 rounded-lg space-y-2">
+                          <div className="flex justify-between text-white">
+                            <span>Deposit Amount:</span>
+                            <span className="font-medium">${depositAmount.toFixed(2)}</span>
+                          </div>
+                          {depositDueDate && (
+                            <div className="flex justify-between text-white">
+                              <span>Deposit Due Date:</span>
+                              <span className="font-medium">{format(depositDueDate, "PPP")}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-purple-200 text-sm">
+                            <span>Remaining Balance:</span>
+                            <span>${remainingAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+
             {/* Invoice Items */}
             <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
@@ -406,6 +636,32 @@ const InvoiceForm = () => {
                     <span>${total.toFixed(2)}</span>
                   </div>
                 </div>
+
+                {/* Deposit Breakdown */}
+                {invoiceData.requireDeposit && depositAmount > 0 && (
+                  <div className="space-y-2 pt-4 border-t border-white/20">
+                    <div className="text-purple-200 text-sm font-medium mb-2">Deposit Required</div>
+                    <div className="flex justify-between text-white">
+                      <span>Deposit ({invoiceData.depositType === 'percentage' ? `${invoiceData.depositPercentage}%` : 'Fixed'}):</span>
+                      <span className="font-medium">${depositAmount.toFixed(2)}</span>
+                    </div>
+                    {depositDueDate && (
+                      <div className="flex justify-between text-purple-200 text-sm">
+                        <span>Due by:</span>
+                        <span>{format(depositDueDate, "MMM d, yyyy")}</span>
+                      </div>
+                    )}
+                    <Separator className="bg-white/20" />
+                    <div className="flex justify-between text-white">
+                      <span>Remaining Balance:</span>
+                      <span>${remainingAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-purple-200 text-sm">
+                      <span>Final payment due:</span>
+                      <span>{format(invoiceData.dueDate, "MMM d, yyyy")}</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2 pt-4">
                   <Button

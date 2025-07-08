@@ -171,10 +171,13 @@ const Profile = () => {
       // Close the modal after successful update
       setShowImageCrop(false);
       
-      toast({
-        title: "Profile Picture Updated",
-        description: "Your profile picture has been successfully updated.",
-      });
+      // Force a small delay to ensure image loads
+      setTimeout(() => {
+        toast({
+          title: "Profile Picture Updated",
+          description: "Your profile picture has been successfully updated.",
+        });
+      }, 100);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       toast({

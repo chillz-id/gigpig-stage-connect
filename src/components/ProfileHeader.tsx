@@ -64,7 +64,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <CardContent className="p-8">
         <div className="flex flex-col md:flex-row items-start gap-6">
           <div className="relative">
-            <Avatar className="w-32 h-32">
+            <Avatar className="w-32 h-32" key={user.avatar}>
               <AvatarImage src={user.avatar} />
               <AvatarFallback className="text-2xl">{userName[0]}</AvatarFallback>
             </Avatar>

@@ -25,6 +25,12 @@ export interface CreateInvoiceRequest {
   status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   items: Omit<InvoiceItem, 'id' | 'invoice_id' | 'created_at'>[];
   recipients: Omit<InvoiceRecipient, 'id' | 'invoice_id' | 'created_at'>[];
+  // Deposit fields
+  deposit_amount?: number;
+  deposit_percentage?: number;
+  deposit_due_days_before_event?: number;
+  deposit_due_date?: string;
+  event_date?: string;
 }
 
 export interface XeroSyncRequest {
@@ -78,6 +84,13 @@ class InvoiceService {
     // Generate invoice number if not provided
     const invoiceNumber = request.invoice_number || await this.generateInvoiceNumber(request.invoice_type);
 
+    // Calculate deposit due date if needed
+    let depositDueDate = request.deposit_due_date;
+    if (request.event_date && request.deposit_due_days_before_event && !depositDueDate) {
+      const eventDate = new Date(request.event_date);
+      depositDueDate = new Date(eventDate.getTime() - (request.deposit_due_days_before_event * 24 * 60 * 60 * 1000)).toISOString();
+    }
+
     // Start a transaction
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
@@ -102,7 +115,14 @@ class InvoiceService {
         notes: request.notes,
         terms: request.terms,
         status: request.status || 'draft',
-        created_by: user.id
+        created_by: user.id,
+        // Deposit fields
+        deposit_amount: request.deposit_amount || null,
+        deposit_percentage: request.deposit_percentage || null,
+        deposit_due_days_before_event: request.deposit_due_days_before_event || null,
+        deposit_due_date: depositDueDate || null,
+        event_date: request.event_date || null,
+        deposit_status: (request.deposit_amount || request.deposit_percentage) ? 'pending' : 'not_required'
       })
       .select()
       .single();
