@@ -136,8 +136,6 @@ export const ContactInformation: React.FC = () => {
           </div>
         </div>
 
-        <Separator />
-
         {/* Manager Contact */}
         <div>
           <div className="flex items-center gap-2 mb-4">

@@ -86,6 +86,8 @@ const Profile = () => {
       const profileUpdate = {
         first_name: formData.firstName,
         last_name: formData.lastName,
+        stage_name: formData.stageName || null,
+        name_display_preference: formData.nameDisplayPreference || 'real',
         email: formData.email,
         phone: formData.phone || null,
         bio: formData.bio || null,

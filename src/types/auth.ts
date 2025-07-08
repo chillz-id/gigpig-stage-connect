@@ -6,6 +6,7 @@ export interface Profile {
   email: string;
   name: string | null;
   stage_name: string | null;
+  name_display_preference: 'real' | 'stage' | 'both';
   bio: string | null;
   location: string | null;
   avatar_url: string | null;

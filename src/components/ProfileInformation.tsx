@@ -13,6 +13,8 @@ import { SocialMediaInput } from '@/components/SocialMediaInput';
 interface ProfileData {
   firstName: string;
   lastName: string;
+  stageName: string;
+  nameDisplayPreference: 'real' | 'stage' | 'both';
   email: string;
   phone: string;
   bio: string;
@@ -43,6 +45,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   const [formData, setFormData] = useState<ProfileData>({
     firstName: user.first_name || user.name?.split(' ')[0] || '',
     lastName: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
+    stageName: user.stage_name || '',
+    nameDisplayPreference: user.name_display_preference || 'real',
     email: user.email || '',
     phone: user.phone || '',
     bio: user.bio || '',
@@ -149,6 +153,34 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               required
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="stage-name">Stage Name</Label>
+            <Input 
+              id="stage-name" 
+              value={formData.stageName}
+              onChange={(e) => handleInputChange('stageName', e.target.value)}
+              placeholder="Your professional/stage name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="name-display">Name Display Preference</Label>
+            <Select 
+              value={formData.nameDisplayPreference} 
+              onValueChange={(value) => handleInputChange('nameDisplayPreference', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select how your name is displayed" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="real">Real name only</SelectItem>
+                <SelectItem value="stage">Stage name only</SelectItem>
+                <SelectItem value="both">Both (Stage name - Real name)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

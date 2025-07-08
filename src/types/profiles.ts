@@ -9,6 +9,7 @@ export interface ProfileUpdate {
   bio?: string | null;
   location?: string | null;
   stage_name?: string | null;
+  name_display_preference?: 'real' | 'stage' | 'both';
   years_experience?: number | null;
   custom_show_types?: string[] | null;
   instagram_url?: string | null;
@@ -32,6 +33,7 @@ export interface ProfileWithNames {
   name?: string; // Legacy field for backward compatibility
   role: 'comedian' | 'promoter' | 'admin';
   stage_name?: string | null;
+  name_display_preference?: 'real' | 'stage' | 'both';
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
