@@ -11,10 +11,7 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log('=== AUTH CALLBACK TRIGGERED ===');
-        console.log('Current URL:', window.location.href);
-        console.log('URL Hash:', window.location.hash);
-        console.log('URL Search Params:', window.location.search);
+        // Processing OAuth callback
         
         // Parse the hash fragment to handle the OAuth response
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -23,7 +20,7 @@ const AuthCallback = () => {
         const errorDescription = hashParams.get('error_description');
         
         if (error) {
-          console.error('=== OAUTH ERROR IN URL ===', error, errorDescription);
+          // OAuth error in URL
           toast({
             title: "Authentication Failed",
             description: errorDescription || error,
@@ -37,7 +34,7 @@ const AuthCallback = () => {
         const { data, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error('=== AUTH CALLBACK ERROR ===', sessionError);
+          // Auth callback error
           toast({
             title: "Authentication Error",
             description: sessionError.message,
@@ -48,7 +45,7 @@ const AuthCallback = () => {
         }
 
         if (data.session) {
-          console.log('=== AUTH CALLBACK SUCCESS ===', data.session.user.email);
+          // Auth callback successful
           
           // Wait for user data to be processed
           setTimeout(async () => {
@@ -61,7 +58,7 @@ const AuthCallback = () => {
                 .single();
               
               if (profileError || !profile) {
-                console.log('=== PROFILE NOT FOUND, CREATING ===');
+                // Creating profile
                 
                 // Create profile if it doesn't exist
                 const { error: createError } = await supabase
@@ -75,12 +72,12 @@ const AuthCallback = () => {
                   });
                 
                 if (createError) {
-                  console.error('=== PROFILE CREATION ERROR ===', createError);
+                  // Profile creation error
                 } else {
-                  console.log('=== PROFILE CREATED SUCCESSFULLY ===');
+                  // Profile created successfully
                 }
               } else {
-                console.log('=== PROFILE EXISTS ===', profile);
+                // Profile exists
               }
               
               // Check if user has roles
@@ -90,7 +87,7 @@ const AuthCallback = () => {
                 .eq('user_id', data.session.user.id);
               
               if (rolesError || !roles || roles.length === 0) {
-                console.log('=== NO ROLES FOUND, CREATING DEFAULT ROLE ===');
+                // Creating default role
                 
                 // Create default member role
                 const { error: roleError } = await supabase
@@ -101,12 +98,12 @@ const AuthCallback = () => {
                   });
                 
                 if (roleError && !roleError.message.includes('duplicate key')) {
-                  console.error('=== ROLE CREATION ERROR ===', roleError);
+                  // Role creation error
                 } else {
-                  console.log('=== DEFAULT ROLE CREATED ===');
+                  // Default role created
                 }
               } else {
-                console.log('=== USER HAS ROLES ===', roles);
+                // User has roles
               }
               
               toast({
@@ -116,7 +113,7 @@ const AuthCallback = () => {
               
               navigate('/dashboard');
             } catch (setupError) {
-              console.error('=== USER SETUP ERROR ===', setupError);
+              // User setup error
               toast({
                 title: "Setup Error",
                 description: "There was an issue setting up your account. Please try again.",
@@ -126,7 +123,7 @@ const AuthCallback = () => {
             }
           }, 1500); // Give triggers time to fire
         } else {
-          console.log('=== NO SESSION FOUND IN CALLBACK ===');
+          // No session found
           toast({
             title: "Authentication Failed",
             description: "No session was created. Please try again.",
@@ -135,7 +132,7 @@ const AuthCallback = () => {
           navigate('/auth');
         }
       } catch (error: any) {
-        console.error('=== AUTH CALLBACK EXCEPTION ===', error);
+        // Auth callback exception
         toast({
           title: "Authentication Error",
           description: error.message || "An unexpected error occurred.",

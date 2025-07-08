@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mic } from 'lucide-react';
+import { Mic, Camera, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GoogleSignInButton from './GoogleSignInButton';
 
@@ -26,11 +26,15 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [isComedian, setIsComedian] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const handleIsComedianChange = (checked: boolean | "indeterminate") => {
-    setIsComedian(checked === true);
+  const handleRoleToggle = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) 
+        ? prev.filter(r => r !== role)
+        : [...prev, role]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,11 +64,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       mobile: mobile.trim(),
-      role: isComedian ? 'comedian' : 'member',
-      roles: isComedian ? ['comedian', 'member'] : ['member']
+      role: selectedRoles.length > 0 ? selectedRoles[0] : 'member',
+      roles: selectedRoles.length > 0 ? [...selectedRoles, 'member'] : ['member']
     };
     
-    console.log('=== FORM SUBMIT DATA ===', userData);
+    // Submitting form with user data
     await onSignUp(email.trim(), password, userData);
   };
 
@@ -156,17 +160,46 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           <p className="text-xs text-neutral-400 mt-1">Minimum 6 characters</p>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="is-comedian"
-            checked={isComedian}
-            onCheckedChange={handleIsComedianChange}
-            className="h-4 w-4 accent-indigo-500"
-          />
-          <Label htmlFor="is-comedian" className="text-sm cursor-pointer flex items-center gap-2">
-            <Mic className="w-4 h-4" />
-            I'm a comedian
-          </Label>
+        <div className="space-y-3">
+          <Label className="text-sm text-neutral-400">I am a... (select all that apply)</Label>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is-comedian"
+                checked={selectedRoles.includes('comedian')}
+                onCheckedChange={() => handleRoleToggle('comedian')}
+                className="h-4 w-4 accent-indigo-500"
+              />
+              <Label htmlFor="is-comedian" className="text-sm cursor-pointer flex items-center gap-2">
+                <Mic className="w-4 h-4" />
+                Comedian
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is-photographer"
+                checked={selectedRoles.includes('photographer')}
+                onCheckedChange={() => handleRoleToggle('photographer')}
+                className="h-4 w-4 accent-indigo-500"
+              />
+              <Label htmlFor="is-photographer" className="text-sm cursor-pointer flex items-center gap-2">
+                <Camera className="w-4 h-4" />
+                Photographer
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is-videographer"
+                checked={selectedRoles.includes('videographer')}
+                onCheckedChange={() => handleRoleToggle('videographer')}
+                className="h-4 w-4 accent-indigo-500"
+              />
+              <Label htmlFor="is-videographer" className="text-sm cursor-pointer flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Videographer
+              </Label>
+            </div>
+          </div>
         </div>
 
         <Button

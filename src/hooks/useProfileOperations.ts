@@ -9,7 +9,7 @@ export const useProfileOperations = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('=== FETCHING PROFILE ===', userId);
+      // Fetching user profile
       
       const { data, error } = await supabase
         .from('profiles')
@@ -40,28 +40,28 @@ export const useProfileOperations = () => {
         .single();
       
       if (error) {
-        console.error('=== PROFILE FETCH ERROR ===', error);
+        console.error('Profile fetch error:', error.message);
         
         // If no profile found, this might be expected for new users
         if (error.code === 'PGRST116') {
-          console.log('=== NO PROFILE FOUND ===', userId);
+          // No profile found for user
           return null;
         }
         
         return null;
       }
       
-      console.log('=== PROFILE FETCHED ===', data);
+      // Profile fetched successfully
       return data;
     } catch (error) {
-      console.error('=== PROFILE FETCH EXCEPTION ===', error);
+      console.error('Profile fetch exception:', error);
       return null;
     }
   };
 
   const fetchRoles = async (userId: string) => {
     try {
-      console.log('=== FETCHING ROLES ===', userId);
+      // Fetching user roles
       
       const { data, error } = await supabase
         .from('user_roles')
@@ -69,14 +69,14 @@ export const useProfileOperations = () => {
         .eq('user_id', userId);
       
       if (error) {
-        console.error('=== ROLES FETCH ERROR ===', error);
+        console.error('Roles fetch error:', error.message);
         return [];
       }
       
-      console.log('=== ROLES FETCHED ===', data);
+      // Roles fetched successfully
       return data || [];
     } catch (error) {
-      console.error('=== ROLES FETCH EXCEPTION ===', error);
+      console.error('Roles fetch exception:', error);
       return [];
     }
   };
@@ -85,7 +85,7 @@ export const useProfileOperations = () => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      console.log('=== UPDATING PROFILE ===', user.id, updates);
+      // Updating user profile
       
       // If updating name, also generate/update profile slug if not already set
       let finalUpdates = { ...updates };
@@ -128,11 +128,11 @@ export const useProfileOperations = () => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('=== PROFILE UPDATE ERROR ===', error);
+        console.error('Profile update error:', error.message);
         throw error;
       }
 
-      console.log('=== PROFILE UPDATED ===');
+      // Profile updated successfully
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -140,7 +140,7 @@ export const useProfileOperations = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('=== PROFILE UPDATE EXCEPTION ===', error);
+      console.error('Profile update exception:', error.message);
       toast({
         title: "Update Error",
         description: error.message,

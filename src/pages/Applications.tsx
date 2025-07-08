@@ -18,8 +18,13 @@ const Applications = () => {
   const navigate = useNavigate();
   
   // Fetch real data
-  const { applications, isLoading, updateApplication, bulkUpdateApplications } = useApplications();
+  const { applications, isLoading, error, updateApplication, bulkUpdateApplications } = useApplications();
   const { userEvents } = useEvents();
+  
+  // Debug logging
+  console.log('Applications page - isLoading:', isLoading);
+  console.log('Applications page - error:', error);
+  console.log('Applications page - applications:', applications?.length || 0);
   
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   
@@ -160,6 +165,17 @@ const Applications = () => {
     return (
       <div className={cn("min-h-screen flex items-center justify-center", getBackgroundStyles())}>
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", getBackgroundStyles())}>
+        <div className="text-center text-white">
+          <h2 className="text-xl font-bold mb-2">Error Loading Applications</h2>
+          <p className="text-sm opacity-80">{error.message || 'Failed to load applications'}</p>
+        </div>
       </div>
     );
   }

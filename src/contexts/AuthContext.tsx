@@ -16,7 +16,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => boolean;
+  hasRole: (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => boolean;
+  hasAnyRole: (roles: Array<'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => boolean;
   isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }
 
@@ -41,12 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { fetchProfile, fetchRoles, updateProfile: updateUserProfile } = useProfileOperations();
 
   useEffect(() => {
-    console.log('=== SETTING UP AUTH LISTENER ===');
+    // Setting up auth listener
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('=== AUTH STATE CHANGE ===', event, session?.user?.email);
+        // Auth state changed
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -55,23 +56,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Fetch profile and roles when user is authenticated
           setTimeout(async () => {
             try {
-              console.log('=== FETCHING USER DATA ===');
+              // Fetching user data
               let userProfile = await fetchProfile(session.user.id);
               let userRoles = await fetchRoles(session.user.id);
               
               // If profile doesn't exist (OAuth user), wait and try again
               if (!userProfile && event === 'SIGNED_IN') {
-                console.log('=== PROFILE NOT FOUND, WAITING FOR TRIGGER ===');
+                // Profile not found, waiting for trigger
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 userProfile = await fetchProfile(session.user.id);
                 userRoles = await fetchRoles(session.user.id);
               }
               
-              console.log('=== USER DATA FETCHED ===', { profile: userProfile, roles: userRoles });
+              // User data fetched successfully
               setProfile(userProfile);
               setRoles(userRoles);
             } catch (error) {
-              console.error('=== ERROR FETCHING USER DATA ===', error);
+              console.error('Error fetching user data:', error);
             }
           }, 0);
         } else {
@@ -89,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error getting session:', error);
       }
       
-      console.log('=== INITIAL SESSION ===', session?.user?.email);
+      // Processing initial session
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -100,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(userProfile);
           setRoles(userRoles);
         } catch (error) {
-          console.error('=== ERROR FETCHING INITIAL USER DATA ===', error);
+          console.error('Error fetching initial user data:', error);
         }
       }
       
@@ -113,17 +114,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('=== CONTEXT SIGN IN ===', email);
+    // Processing sign in
     return await authSignIn(email, password);
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
-    console.log('=== CONTEXT SIGN UP ===', email, userData);
+    // Processing sign up
     return await authSignUp(email, password, userData);
   };
 
   const signOut = async () => {
-    console.log('=== CONTEXT SIGN OUT ===');
+    // Processing sign out
     await authSignOut();
     setProfile(null);
     setRoles([]);
@@ -140,10 +141,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const hasRole = (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin') => {
+  const hasRole = (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);
-    console.log('=== CHECKING ROLE ===', role, hasTheRole, roles);
+    // Checking user role
     return hasTheRole;
+  };
+
+  const hasAnyRole = (checkRoles: Array<'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => {
+    return roles.some(userRole => checkRoles.includes(userRole.role));
   };
 
   const isCoPromoterForEvent = async (eventId: string) => {
@@ -178,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     updateProfile,
     hasRole,
+    hasAnyRole,
     isCoPromoterForEvent,
   };
 

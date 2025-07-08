@@ -7,8 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface VouchButtonProps {
-  comedianId: string;
-  comedianName: string;
+  profileId: string;
+  profileName: string;
   vouchCount?: number;
   hasVouched?: boolean;
   className?: string;
@@ -16,8 +16,8 @@ interface VouchButtonProps {
 }
 
 const VouchButton: React.FC<VouchButtonProps> = ({ 
-  comedianId, 
-  comedianName, 
+  profileId, 
+  profileName, 
   vouchCount = 0, 
   hasVouched = false,
   className = '',
@@ -30,16 +30,16 @@ const VouchButton: React.FC<VouchButtonProps> = ({
   const [userHasVouched, setUserHasVouched] = useState(hasVouched);
 
   const handleVouch = async () => {
-    if (!user || !hasRole('comedian')) {
+    if (!user) {
       toast({
-        title: "Access Required",
-        description: "Only comedians can vouch for each other.",
+        title: "Sign In Required",
+        description: "Please sign in to vouch for someone.",
         variant: "destructive",
       });
       return;
     }
 
-    if (comedianId === user.id) {
+    if (profileId === user.id) {
       toast({
         title: "Cannot Vouch",
         description: "You cannot vouch for yourself.",
@@ -58,14 +58,14 @@ const VouchButton: React.FC<VouchButtonProps> = ({
         setUserHasVouched(false);
         toast({
           title: "Vouch Removed",
-          description: `You removed your vouch for ${comedianName}`,
+          description: `You removed your vouch for ${profileName}`,
         });
       } else {
         setCurrentVouchCount(prev => prev + 1);
         setUserHasVouched(true);
         toast({
           title: "Vouched!",
-          description: `You vouched for ${comedianName}`,
+          description: `You vouched for ${profileName}`,
         });
       }
     } catch (error) {
@@ -79,8 +79,8 @@ const VouchButton: React.FC<VouchButtonProps> = ({
     }
   };
 
-  // Only show vouch button if user is a comedian
-  if (!hasRole('comedian')) {
+  // Show vouch count for non-authenticated users
+  if (!user) {
     if (variant === 'icon') {
       return currentVouchCount > 0 ? (
         <div className="flex items-center gap-1">

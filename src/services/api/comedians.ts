@@ -40,7 +40,9 @@ export class ComediansApi extends BaseApi<Comedian> {
       
       // Apply search filter
       if (filters?.search) {
-        query = query.or(`full_name.ilike.%${filters.search}%,stage_name.ilike.%${filters.search}%`);
+        // Sanitize search input to prevent SQL injection
+        const sanitizedSearch = filters.search.replace(/[%_]/g, '\\$&');
+        query = query.or(`full_name.ilike.%${sanitizedSearch}%,stage_name.ilike.%${sanitizedSearch}%`);
       }
       
       // Apply sorting

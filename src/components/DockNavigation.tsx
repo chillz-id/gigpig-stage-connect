@@ -15,7 +15,8 @@ import {
   MessageCircle,
   BarChart3,
   Plus,
-  Palette
+  Palette,
+  Camera
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -95,6 +96,7 @@ const DockNavigation = () => {
   const navigationItems = [
     { path: '/shows', icon: Calendar1, label: 'Shows', show: true },
     { path: '/comedians', icon: Drama, label: 'Comedians', show: true },
+    { path: '/photographers', icon: Camera, label: 'Photographers', show: true },
     { path: '/dashboard', icon: BarChart3, label: 'Dashboard', show: true },
     { path: '/applications', icon: FileUser, label: 'Applications', show: hasRole('promoter') || hasRole('admin') },
     { path: '/messages', icon: MessageCircle, label: 'Messages', show: true },

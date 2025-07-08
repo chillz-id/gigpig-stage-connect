@@ -43,7 +43,7 @@ export const useApplications = () => {
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('id')
-        .eq('promoter_id', user.id);
+        .or(`stage_manager_id.eq.${user.id},co_promoter_ids.cs.{${user.id}}`);
 
       if (eventsError) throw eventsError;
       if (!events || events.length === 0) return [];

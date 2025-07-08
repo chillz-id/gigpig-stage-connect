@@ -42,6 +42,8 @@ const GoogleCalendarCallback = lazy(() => import('@/pages/GoogleCalendarCallback
 const PWASettings = lazy(() => import('@/pages/PWASettings'));
 const InvoiceForm = lazy(() => import('@/components/InvoiceForm'));
 const XeroCallback = lazy(() => import('@/pages/XeroCallback'));
+const Photographers = lazy(() => import('@/pages/Photographers'));
+const PhotographerProfile = lazy(() => import('@/pages/PhotographerProfile'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -144,13 +146,15 @@ function App() {
                         <Route path="/shows" element={<Shows />} />
                         <Route path="/browse" element={<Navigate to="/shows" replace />} />
                         <Route path="/comedians" element={<Comedians />} />
+                        <Route path="/photographers" element={<Photographers />} />
+                        <Route path="/photographers/:id" element={<PhotographerProfile />} />
                         <Route path="/messages" element={<Messages />} />
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/applications" element={<ProtectedRoute requiredRole="promoter"><Applications /></ProtectedRoute>} />
+                        <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
                         <Route path="/agency" element={<AgencyManagement />} />
-                        <Route path="/dashboard/gigs/add" element={<ProtectedRoute requiredRole="comedian"><AddGig /></ProtectedRoute>} />
+                        <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian']}><AddGig /></ProtectedRoute>} />
                         {/* Invoice routes */}
                         <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
                         <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />

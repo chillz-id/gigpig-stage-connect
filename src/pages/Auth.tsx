@@ -22,7 +22,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('=== USER ALREADY LOGGED IN, REDIRECTING ===', user.email);
+      // User already logged in, redirecting
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
@@ -30,14 +30,13 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      console.log('=== GOOGLE SIGN IN ATTEMPT ===');
-      console.log('Current origin:', window.location.origin);
+      // Initiating Google sign in
       
       // Use environment variable for redirect URL, fallback to current origin
       const redirectUrl = import.meta.env.VITE_OAUTH_REDIRECT_URL || 
                          `${window.location.origin}/auth/callback`;
       
-      console.log('OAuth redirect URL:', redirectUrl);
+      // OAuth redirect configured
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -51,17 +50,17 @@ const Auth = () => {
       });
       
       if (error) {
-        console.error('=== GOOGLE SIGN IN ERROR ===', error);
+        // Google sign in error
         toast({
           title: "Google Sign In Error",
           description: error.message,
           variant: "destructive",
         });
       } else {
-        console.log('=== GOOGLE SIGN IN INITIATED ===', data);
+        // Google sign in initiated
       }
     } catch (error: any) {
-      console.error('=== GOOGLE SIGN IN EXCEPTION ===', error);
+      // Google sign in exception
       toast({
         title: "Google Sign In Error",
         description: error.message,
@@ -74,14 +73,14 @@ const Auth = () => {
   const handleSignIn = async (email: string, password: string) => {
     setIsLoading(true);
     
-    console.log('=== HANDLING SIGN IN ===', email);
+    // Processing sign in
     const { error } = await signIn(email, password);
     
     if (!error) {
-      console.log('=== SIGN IN SUCCESS, REDIRECTING ===');
+      // Sign in successful
       navigate(from, { replace: true });
     } else {
-      console.log('=== SIGN IN FAILED ===', error);
+      // Sign in failed
     }
     
     setIsLoading(false);
@@ -90,11 +89,11 @@ const Auth = () => {
   const handleSignUp = async (email: string, password: string, userData: any) => {
     setIsLoading(true);
     
-    console.log('=== HANDLING SIGN UP ===', email, userData);
+    // Processing sign up
     const { error } = await signUp(email, password, userData);
     
     if (!error) {
-      console.log('=== SIGN UP SUCCESS ===');
+      // Sign up successful
       // Don't redirect immediately, wait for email confirmation or auto-login
       toast({
         title: "Account Created",
