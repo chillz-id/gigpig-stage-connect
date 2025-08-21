@@ -1,0 +1,341 @@
+{
+  "name": "Humanitix Partner-Specific Data Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-trigger",
+      "name": "Daily at Midnight",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Partner-specific extraction configuration\n// This workflow extracts data for specific partners/promoters\n\nconst partners = [\n  {\n    id: 'stand-up-sydney',\n    name: 'Stand Up Sydney',\n    eventIds: [], // Will be populated dynamically\n    email: 'admin@standupsydney.com',\n    invoiceFrequency: 'monthly',\n    sharePercentage: 74.3 // Based on analysis\n  },\n  {\n    id: 'comedy-club-partner',\n    name: 'Comedy Club Partner',\n    eventIds: [],\n    email: 'partner@comedyclub.com',\n    invoiceFrequency: 'weekly',\n    sharePercentage: 75.0\n  }\n];\n\n// Extract parameters\nconst extractionParams = {\n  dateRange: {\n    start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(), // Last 30 days\n    end: new Date().toISOString()\n  },\n  includeRefunds: true,\n  includeDiscounts: true,\n  generateInvoices: true,\n  emailInvoices: false // Set to true to auto-email\n};\n\n// Partner filtering criteria\nconst filterCriteria = {\n  byEventName: ['Stand Up Sydney', 'Comedy Night', 'Live Comedy'],\n  byVenue: ['iD Comedy Club', 'Comedy Store', 'Enmore Theatre'],\n  byPromoter: ['Stand Up Sydney'],\n  minRevenue: 100 // Minimum revenue threshold\n};\n\nreturn partners.map(partner => ({\n  json: {\n    partner,\n    extractionParams,\n    filterCriteria,\n    timestamp: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "configure-partner-extraction",
+      "name": "Configure Partner Extraction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "1",
+            "limit": "100",
+            "created_after": "={{ $json.extractionParams.dateRange.start }}",
+            "created_before": "={{ $json.extractionParams.dateRange.end }}",
+            "status": "all"
+          }
+        }
+      },
+      "id": "fetch-partner-events",
+      "name": "Fetch Partner Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter events for specific partner\nconst partnerConfig = $json.partner;\nconst filterCriteria = $json.filterCriteria;\nconst allEvents = $node['Fetch Partner Events'].json.data || [];\n\n// Filter events based on partner criteria\nconst partnerEvents = allEvents.filter(event => {\n  // Filter by event name\n  const matchesEventName = filterCriteria.byEventName.some(name => \n    event.name.toLowerCase().includes(name.toLowerCase())\n  );\n  \n  // Filter by venue\n  const matchesVenue = filterCriteria.byVenue.some(venue => \n    event.venue?.name?.toLowerCase().includes(venue.toLowerCase())\n  );\n  \n  // Filter by minimum revenue\n  const meetsMinRevenue = (event.grossRevenue || 0) >= filterCriteria.minRevenue;\n  \n  return matchesEventName || matchesVenue || meetsMinRevenue;\n});\n\nreturn partnerEvents.map(event => ({\n  json: {\n    ...event,\n    partnerConfig,\n    isPartnerEvent: true\n  }\n}));"
+      },
+      "id": "filter-partner-events",
+      "name": "Filter Partner Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-partner-events",
+      "name": "Split Partner Events",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json.id }}/orders",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "1",
+            "limit": "100",
+            "status": "all"
+          }
+        }
+      },
+      "id": "fetch-partner-orders",
+      "name": "Fetch Partner Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process partner-specific order data with custom calculations\nconst eventData = $node['Split Partner Events'].json;\nconst ordersResponse = $node['Fetch Partner Orders'].json;\nconst partnerConfig = eventData.partnerConfig;\n\n// Process orders with partner-specific calculations\nconst orders = (ordersResponse.data || []).map(order => {\n  const subtotal = order.subtotal || 0;\n  const fees = {\n    humanitix: order.totals?.humanitixFee || 0,\n    booking: order.totals?.bookingFee || 0,\n    passedOn: order.totals?.passedOnFee || 0,\n    absorbed: order.totals?.absorbedFee || 0,\n    amex: order.totals?.amexFee || 0,\n    zip: order.totals?.zipFee || 0\n  };\n  \n  const discounts = order.totals?.discounts || 0;\n  const refunds = order.totals?.refunds || 0;\n  const rebates = order.totals?.rebates || 0;\n  const total = order.total || 0;\n  \n  // Calculate partner share based on partner-specific percentage\n  const basePartnerShare = subtotal - discounts - refunds - rebates - fees.passedOn;\n  const partnerShare = basePartnerShare * (partnerConfig.sharePercentage / 100);\n  const platformShare = basePartnerShare - partnerShare;\n  \n  return {\n    id: order.id,\n    orderName: order.orderName,\n    eventId: eventData.id,\n    eventName: eventData.name,\n    customer: {\n      name: `${order.firstName || ''} ${order.lastName || ''}`.trim(),\n      email: order.email,\n      mobile: order.mobile,\n      location: order.location || 'AU'\n    },\n    tickets: order.tickets || [],\n    financials: {\n      subtotal,\n      fees,\n      discounts,\n      refunds,\n      rebates,\n      total,\n      partnerShare,\n      platformShare,\n      partnerPercentage: partnerConfig.sharePercentage\n    },\n    status: order.status,\n    financialStatus: order.financialStatus,\n    paymentGateway: order.paymentGateway,\n    createdAt: order.createdAt,\n    completedAt: order.completedAt\n  };\n});\n\n// Create partner-specific event summary\nconst partnerEventSummary = {\n  partnerId: partnerConfig.id,\n  partnerName: partnerConfig.name,\n  event: {\n    id: eventData.id,\n    name: eventData.name,\n    startDate: eventData.startDate,\n    venue: eventData.venue,\n    status: eventData.status\n  },\n  orders,\n  summary: {\n    totalOrders: orders.length,\n    totalRevenue: orders.reduce((sum, order) => sum + order.financials.total, 0),\n    totalPartnerShare: orders.reduce((sum, order) => sum + order.financials.partnerShare, 0),\n    totalPlatformShare: orders.reduce((sum, order) => sum + order.financials.platformShare, 0),\n    totalFees: orders.reduce((sum, order) => sum + Object.values(order.financials.fees).reduce((a, b) => a + b, 0), 0),\n    totalDiscounts: orders.reduce((sum, order) => sum + order.financials.discounts, 0),\n    totalRefunds: orders.reduce((sum, order) => sum + order.financials.refunds, 0),\n    averageOrderValue: orders.length > 0 ? orders.reduce((sum, order) => sum + order.financials.total, 0) / orders.length : 0,\n    partnerSharePercentage: partnerConfig.sharePercentage\n  },\n  processedAt: new Date().toISOString()\n};\n\nreturn [{ json: partnerEventSummary }];"
+      },
+      "id": "process-partner-data",
+      "name": "Process Partner Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input1"
+      },
+      "id": "merge-partner-events",
+      "name": "Merge Partner Events",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate comprehensive partner invoice\nconst partnerEvents = $input.all();\nconst partnerConfig = partnerEvents[0]?.json.partnerName ? partnerEvents[0].json : null;\n\nif (!partnerConfig) {\n  return [{ json: { error: 'No partner events found' } }];\n}\n\n// Calculate totals across all partner events\nconst totals = {\n  totalEvents: partnerEvents.length,\n  totalOrders: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalOrders, 0),\n  totalRevenue: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalRevenue, 0),\n  totalPartnerShare: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalPartnerShare, 0),\n  totalPlatformShare: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalPlatformShare, 0),\n  totalFees: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalFees, 0),\n  totalDiscounts: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalDiscounts, 0),\n  totalRefunds: partnerEvents.reduce((sum, event) => sum + event.json.summary.totalRefunds, 0)\n};\n\n// Generate partner invoice\nconst partnerInvoice = {\n  invoiceHeader: {\n    invoiceId: `${partnerConfig.partnerId}-${new Date().getTime()}`,\n    invoiceDate: new Date().toISOString(),\n    dueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),\n    partnerId: partnerConfig.partnerId,\n    partnerName: partnerConfig.partnerName,\n    partnerEmail: partnerConfig.partnerEmail || 'admin@standupsydney.com',\n    invoiceFrequency: partnerConfig.invoiceFrequency || 'monthly',\n    currency: 'AUD'\n  },\n  \n  invoiceSummary: {\n    periodStart: $node['Configure Partner Extraction'].json.extractionParams.dateRange.start,\n    periodEnd: $node['Configure Partner Extraction'].json.extractionParams.dateRange.end,\n    ...totals,\n    partnerPayoutAmount: totals.totalPartnerShare,\n    partnerSharePercentage: partnerConfig.sharePercentage || 74.3\n  },\n  \n  eventBreakdown: partnerEvents.map(event => ({\n    eventId: event.json.event.id,\n    eventName: event.json.event.name,\n    eventDate: event.json.event.startDate,\n    venue: event.json.event.venue.name,\n    eventSummary: event.json.summary,\n    orderDetails: event.json.orders.map(order => ({\n      orderId: order.id,\n      orderName: order.orderName,\n      customerName: order.customer.name,\n      customerEmail: order.customer.email,\n      orderTotal: order.financials.total,\n      partnerShare: order.financials.partnerShare,\n      platformShare: order.financials.platformShare,\n      fees: order.financials.fees,\n      discounts: order.financials.discounts,\n      refunds: order.financials.refunds,\n      status: order.status,\n      financialStatus: order.financialStatus,\n      purchaseDate: order.createdAt,\n      completedDate: order.completedAt\n    }))\n  })),\n  \n  paymentInstructions: {\n    paymentMethod: 'Bank Transfer',\n    accountDetails: {\n      accountName: 'Stand Up Sydney',\n      bsb: '123-456',\n      accountNumber: '12345678',\n      reference: `${partnerConfig.partnerId}-${new Date().getTime()}`\n    },\n    paymentDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString()\n  },\n  \n  invoiceFooter: {\n    generatedAt: new Date().toISOString(),\n    generatedBy: 'N8N Humanitix Integration',\n    version: '2.0',\n    dataSource: 'humanitix-api',\n    notes: `Invoice generated for ${partnerConfig.partnerName} covering ${totals.totalEvents} events with ${totals.totalOrders} orders.`\n  }\n};\n\nreturn [{ json: partnerInvoice }];"
+      },
+      "id": "generate-partner-invoice",
+      "name": "Generate Partner Invoice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=partner-invoice-{{ $json.invoiceHeader.partnerId }}-{{ new Date().toISOString().split('T')[0] }}.json",
+        "fileContent": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "encoding": "utf8"
+        }
+      },
+      "id": "save-partner-invoice",
+      "name": "Save Partner Invoice",
+      "type": "n8n-nodes-base.filesys",
+      "typeVersion": 1,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate partner invoice PDF content\nconst invoice = $json;\nconst header = invoice.invoiceHeader;\nconst summary = invoice.invoiceSummary;\nconst events = invoice.eventBreakdown;\n\n// Create HTML invoice template\nconst htmlInvoice = `\n<!DOCTYPE html>\n<html>\n<head>\n    <title>Partner Invoice - ${header.invoiceId}</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 20px; }\n        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }\n        .company-info { margin-bottom: 20px; }\n        .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; }\n        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }\n        .summary-table th, .summary-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n        .summary-table th { background-color: #f2f2f2; }\n        .event-section { margin-bottom: 30px; }\n        .event-title { background-color: #e6f3ff; padding: 10px; font-weight: bold; }\n        .order-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }\n        .order-table th, .order-table td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 12px; }\n        .order-table th { background-color: #f2f2f2; }\n        .total-row { font-weight: bold; background-color: #f9f9f9; }\n        .payment-section { border: 2px solid #333; padding: 20px; margin-top: 30px; }\n        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }\n    </style>\n</head>\n<body>\n    <div class=\"header\">\n        <h1>PARTNER INVOICE</h1>\n        <h2>Stand Up Sydney</h2>\n        <p>Comedy Event Management & Ticketing</p>\n    </div>\n    \n    <div class=\"company-info\">\n        <p><strong>From:</strong> Stand Up Sydney<br>\n           Email: admin@standupsydney.com<br>\n           Website: standupsydney.com</p>\n    </div>\n    \n    <div class=\"invoice-details\">\n        <div>\n            <p><strong>Invoice To:</strong><br>\n               ${header.partnerName}<br>\n               ${header.partnerEmail}</p>\n        </div>\n        <div>\n            <p><strong>Invoice #:</strong> ${header.invoiceId}<br>\n               <strong>Date:</strong> ${new Date(header.invoiceDate).toLocaleDateString()}<br>\n               <strong>Due Date:</strong> ${new Date(header.dueDate).toLocaleDateString()}</p>\n        </div>\n    </div>\n    \n    <h3>Invoice Summary</h3>\n    <table class=\"summary-table\">\n        <tr><th>Description</th><th>Amount (${header.currency})</th></tr>\n        <tr><td>Total Events</td><td>${summary.totalEvents}</td></tr>\n        <tr><td>Total Orders</td><td>${summary.totalOrders}</td></tr>\n        <tr><td>Total Revenue</td><td>$${summary.totalRevenue.toFixed(2)}</td></tr>\n        <tr><td>Total Fees</td><td>$${summary.totalFees.toFixed(2)}</td></tr>\n        <tr><td>Total Discounts</td><td>$${summary.totalDiscounts.toFixed(2)}</td></tr>\n        <tr><td>Total Refunds</td><td>$${summary.totalRefunds.toFixed(2)}</td></tr>\n        <tr class=\"total-row\"><td><strong>Partner Share (${summary.partnerSharePercentage}%)</strong></td><td><strong>$${summary.partnerPayoutAmount.toFixed(2)}</strong></td></tr>\n    </table>\n    \n    <h3>Event Breakdown</h3>\n    ${events.map(event => `\n        <div class=\"event-section\">\n            <div class=\"event-title\">\n                ${event.eventName} - ${new Date(event.eventDate).toLocaleDateString()}\n            </div>\n            <p><strong>Venue:</strong> ${event.venue} | <strong>Orders:</strong> ${event.eventSummary.totalOrders} | <strong>Revenue:</strong> $${event.eventSummary.totalRevenue.toFixed(2)} | <strong>Partner Share:</strong> $${event.eventSummary.totalPartnerShare.toFixed(2)}</p>\n            \n            <table class=\"order-table\">\n                <tr>\n                    <th>Order ID</th>\n                    <th>Customer</th>\n                    <th>Email</th>\n                    <th>Total</th>\n                    <th>Partner Share</th>\n                    <th>Status</th>\n                    <th>Date</th>\n                </tr>\n                ${event.orderDetails.map(order => `\n                    <tr>\n                        <td>${order.orderName}</td>\n                        <td>${order.customerName}</td>\n                        <td>${order.customerEmail}</td>\n                        <td>$${order.orderTotal.toFixed(2)}</td>\n                        <td>$${order.partnerShare.toFixed(2)}</td>\n                        <td>${order.status}</td>\n                        <td>${new Date(order.purchaseDate).toLocaleDateString()}</td>\n                    </tr>\n                `).join('')}\n            </table>\n        </div>\n    `).join('')}\n    \n    <div class=\"payment-section\">\n        <h3>Payment Instructions</h3>\n        <p><strong>Payment Method:</strong> ${invoice.paymentInstructions.paymentMethod}</p>\n        <p><strong>Account Details:</strong><br>\n           Account Name: ${invoice.paymentInstructions.accountDetails.accountName}<br>\n           BSB: ${invoice.paymentInstructions.accountDetails.bsb}<br>\n           Account Number: ${invoice.paymentInstructions.accountDetails.accountNumber}<br>\n           Reference: ${invoice.paymentInstructions.accountDetails.reference}</p>\n        <p><strong>Payment Due:</strong> ${new Date(invoice.paymentInstructions.paymentDueDate).toLocaleDateString()}</p>\n    </div>\n    \n    <div class=\"footer\">\n        <p>Generated on ${new Date(invoice.invoiceFooter.generatedAt).toLocaleString()}<br>\n           ${invoice.invoiceFooter.notes}</p>\n    </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { htmlInvoice, invoiceId: header.invoiceId } }];"
+      },
+      "id": "generate-invoice-html",
+      "name": "Generate Invoice HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=partner-invoice-{{ $json.invoiceId }}.html",
+        "fileContent": "={{ $json.htmlInvoice }}",
+        "options": {
+          "encoding": "utf8"
+        }
+      },
+      "id": "save-invoice-html",
+      "name": "Save Invoice HTML",
+      "type": "n8n-nodes-base.filesys",
+      "typeVersion": 1,
+      "position": [2660, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_CHANNEL }}",
+        "text": "=💰 **Partner Invoice Generated!**\n\n📋 **Invoice Details:**\n• **Partner:** {{ $node['Generate Partner Invoice'].json.invoiceHeader.partnerName }}\n• **Invoice ID:** {{ $node['Generate Partner Invoice'].json.invoiceHeader.invoiceId }}\n• **Period:** {{ new Date($node['Generate Partner Invoice'].json.invoiceSummary.periodStart).toLocaleDateString() }} to {{ new Date($node['Generate Partner Invoice'].json.invoiceSummary.periodEnd).toLocaleDateString() }}\n\n📊 **Summary:**\n• **Events:** {{ $node['Generate Partner Invoice'].json.invoiceSummary.totalEvents }}\n• **Orders:** {{ $node['Generate Partner Invoice'].json.invoiceSummary.totalOrders }}\n• **Total Revenue:** ${{ $node['Generate Partner Invoice'].json.invoiceSummary.totalRevenue.toFixed(2) }}\n• **Partner Share:** ${{ $node['Generate Partner Invoice'].json.invoiceSummary.partnerPayoutAmount.toFixed(2) }}\n• **Share Percentage:** {{ $node['Generate Partner Invoice'].json.invoiceSummary.partnerSharePercentage }}%\n\n💳 **Payment Due:** {{ new Date($node['Generate Partner Invoice'].json.invoiceHeader.dueDate).toLocaleDateString() }}\n\n✅ Invoice files saved:\n• JSON: partner-invoice-{{ $node['Generate Partner Invoice'].json.invoiceHeader.partnerId }}-{{ new Date().toISOString().split('T')[0] }}.json\n• HTML: partner-invoice-{{ $node['Generate Partner Invoice'].json.invoiceHeader.invoiceId }}.html\n\n🎫 Ready for partner payment processing!"
+      },
+      "id": "notify-invoice-generated",
+      "name": "Notify Invoice Generated",
+      "type": "@modelcontextprotocol/server-slack.sendMessage",
+      "typeVersion": 1,
+      "position": [2880, 300]
+    }
+  ],
+  "connections": {
+    "Daily at Midnight": {
+      "main": [
+        [
+          {
+            "node": "Configure Partner Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Partner Extraction": {
+      "main": [
+        [
+          {
+            "node": "Fetch Partner Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Partner Events": {
+      "main": [
+        [
+          {
+            "node": "Filter Partner Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Partner Events": {
+      "main": [
+        [
+          {
+            "node": "Split Partner Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Partner Events": {
+      "main": [
+        [
+          {
+            "node": "Fetch Partner Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Partner Orders": {
+      "main": [
+        [
+          {
+            "node": "Process Partner Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Partner Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Partner Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Partner Events": {
+      "main": [
+        [
+          {
+            "node": "Generate Partner Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Partner Invoice": {
+      "main": [
+        [
+          {
+            "node": "Save Partner Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Partner Invoice": {
+      "main": [
+        [
+          {
+            "node": "Generate Invoice HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Invoice HTML": {
+      "main": [
+        [
+          {
+            "node": "Save Invoice HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Invoice HTML": {
+      "main": [
+        [
+          {
+            "node": "Notify Invoice Generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    {
+      "id": "tag1",
+      "name": "humanitix"
+    },
+    {
+      "id": "tag2",
+      "name": "partner-specific"
+    },
+    {
+      "id": "tag3",
+      "name": "invoicing"
+    },
+    {
+      "id": "tag4",
+      "name": "daily"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "2.0"
+}

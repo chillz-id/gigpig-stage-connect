@@ -1,0 +1,19 @@
+# Production Environment Variables for Stand Up Sydney
+# Import this file directly into Vercel
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://pdikjpfulhhpqpxzpgtu.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjY4NjEsImV4cCI6MjA2NTg0Mjg2MX0.5L8mD4I3MP22p8bcGUFo6EiVHesfvahfYpPPXjGdy54
+
+# Google Maps Configuration
+VITE_GOOGLE_MAPS_API_KEY=AIzaSyD4LD2HTMkQMclQt9HgSlVQKD5O-XnrgCs
+
+# App Configuration
+VITE_APP_URL=https://stand-up-sydney.vercel.app
+VITE_ENVIRONMENT=production
+
+# OAuth Redirect URLs
+VITE_OAUTH_REDIRECT_URL=https://stand-up-sydney.vercel.app/auth/callback
+
+# Google Calendar Integration
+VITE_GOOGLE_CLIENT_ID=89129292382-skmn34r0gpnejoqjvh3l5f0b1u6s3lko.apps.googleusercontent.com

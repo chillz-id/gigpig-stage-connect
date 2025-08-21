@@ -1,0 +1,43 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment files - NEVER commit these!
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vercel
+
+# Sensitive documentation
+ADDITIONAL_API_KEYS.md
+MCP_TOKEN_REQUIREMENTS.md
+SUPABASE_ACCESS_TOKEN_SETUP.md
+*_TOKEN_*.md
+*_SECRET_*.md
+*_CREDENTIAL*.md
+
+# Local configuration
+.claude/
+.claude-agents/

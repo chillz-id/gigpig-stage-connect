@@ -1,0 +1,417 @@
+{
+  "timestamp": "2025-07-13T12:45:11.825Z",
+  "overallScore": "75.0",
+  "overallGrade": "C (Fair)",
+  "categoryScores": {
+    "signatureValidation": {
+      "passed": 10,
+      "total": 10,
+      "percentage": 100
+    },
+    "inputValidation": {
+      "passed": 16,
+      "total": 16,
+      "percentage": 100
+    },
+    "accessControl": {
+      "passed": 8,
+      "total": 8,
+      "percentage": 100
+    },
+    "rateLimiting": {
+      "passed": 0,
+      "total": 2,
+      "percentage": 0
+    },
+    "headerSecurity": {
+      "passed": 2,
+      "total": 12,
+      "percentage": 16.666666666666664
+    }
+  },
+  "criticalIssues": [],
+  "detailedResults": {
+    "signatureValidation": [
+      {
+        "test": "Valid signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Invalid signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Missing signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Empty signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Malformed signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Valid signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Invalid signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Missing signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Empty signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Malformed signature",
+        "status": 401,
+        "passed": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      }
+    ],
+    "inputValidation": [
+      {
+        "test": "XSS attempt",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "SQL injection attempt",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "XXE attempt",
+        "status": 403,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "LDAP injection",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Template injection",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Large payload (DoS)",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Nested object bomb",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Invalid JSON",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "XSS attempt",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "SQL injection attempt",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "XXE attempt",
+        "status": 403,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "LDAP injection",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Template injection",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Large payload (DoS)",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Nested object bomb",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      },
+      {
+        "test": "Invalid JSON",
+        "status": 401,
+        "passed": true,
+        "dangerous": true,
+        "expected": "rejection",
+        "actual": "rejected"
+      }
+    ],
+    "accessControl": [
+      {
+        "test": "No authentication",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Invalid auth token",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Admin impersonation",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Service account bypass",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "No authentication",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Invalid auth token",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Admin impersonation",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      },
+      {
+        "test": "Service account bypass",
+        "status": 401,
+        "passed": true,
+        "expected": "blocked",
+        "actual": "blocked"
+      }
+    ],
+    "rateLimiting": [
+      {
+        "test": "Rate limiting effectiveness",
+        "totalRequests": 50,
+        "rateLimited": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "successful": 0,
+        "blocked": 50,
+        "passed": false,
+        "protection": "none"
+      },
+      {
+        "test": "Rate limiting effectiveness",
+        "totalRequests": 50,
+        "rateLimited": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "successful": 0,
+        "blocked": 50,
+        "passed": false,
+        "protection": "none"
+      }
+    ],
+    "headerSecurity": [
+      {
+        "header": "X-Content-Type-Options",
+        "present": false,
+        "critical": true,
+        "passed": false,
+        "recommendation": "Add X-Content-Type-Options: nosniff"
+      },
+      {
+        "header": "X-Frame-Options",
+        "present": false,
+        "critical": true,
+        "passed": false,
+        "recommendation": "Add X-Frame-Options: DENY or SAMEORIGIN"
+      },
+      {
+        "header": "Strict-Transport-Security",
+        "present": true,
+        "value": "max-age=31536000; includeSubDomains; preload",
+        "critical": true,
+        "passed": true,
+        "recommendation": "Good"
+      },
+      {
+        "header": "X-XSS-Protection",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add X-XSS-Protection: 1; mode=block"
+      },
+      {
+        "header": "Referrer-Policy",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add Referrer-Policy: strict-origin-when-cross-origin"
+      },
+      {
+        "header": "Content-Security-Policy",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add Content-Security-Policy: restrictive policy"
+      },
+      {
+        "header": "X-Content-Type-Options",
+        "present": false,
+        "critical": true,
+        "passed": false,
+        "recommendation": "Add X-Content-Type-Options: nosniff"
+      },
+      {
+        "header": "X-Frame-Options",
+        "present": false,
+        "critical": true,
+        "passed": false,
+        "recommendation": "Add X-Frame-Options: DENY or SAMEORIGIN"
+      },
+      {
+        "header": "Strict-Transport-Security",
+        "present": true,
+        "value": "max-age=31536000; includeSubDomains; preload",
+        "critical": true,
+        "passed": true,
+        "recommendation": "Good"
+      },
+      {
+        "header": "X-XSS-Protection",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add X-XSS-Protection: 1; mode=block"
+      },
+      {
+        "header": "Referrer-Policy",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add Referrer-Policy: strict-origin-when-cross-origin"
+      },
+      {
+        "header": "Content-Security-Policy",
+        "present": false,
+        "critical": false,
+        "passed": false,
+        "recommendation": "Add Content-Security-Policy: restrictive policy"
+      }
+    ]
+  },
+  "recommendations": [
+    "Implement proper webhook signature verification",
+    "Add comprehensive input validation and sanitization",
+    "Set up rate limiting to prevent abuse",
+    "Configure security headers (HSTS, X-Frame-Options, etc.)",
+    "Implement proper error handling without information disclosure",
+    "Add monitoring and alerting for security events",
+    "Regular security testing and penetration testing",
+    "Keep dependencies updated and scan for vulnerabilities"
+  ]
+}

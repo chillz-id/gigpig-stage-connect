@@ -1,0 +1,148 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=YOUR_SUPABASE_PROJECT_REF"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_ACCESS_TOKEN_HERE"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github@latest"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
+      }
+    },
+    "notion": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server@latest"
+      ],
+      "env": {
+        "NOTION_TOKEN": "YOUR_NOTION_API_KEY_HERE"
+      }
+    },
+    "slack": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-slack@latest"
+      ],
+      "env": {
+        "SLACK_BOT_TOKEN": "YOUR_SLACK_BOT_TOKEN_HERE",
+        "SLACK_APP_TOKEN": "YOUR_SLACK_APP_TOKEN_HERE",
+        "SLACK_TEAM_ID": "YOUR_SLACK_TEAM_ID_HERE"
+      }
+    },
+    "metricool": {
+      "command": "uvx",
+      "args": [
+        "--upgrade",
+        "mcp-metricool"
+      ],
+      "env": {
+        "METRICOOL_USER_TOKEN": "YOUR_METRICOOL_USER_TOKEN_HERE",
+        "METRICOOL_USER_ID": "YOUR_METRICOOL_USER_ID_HERE"
+      }
+    },
+    "xero": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@xeroapi/xero-mcp-server@latest"
+      ],
+      "env": {
+        "XERO_CLIENT_ID": "YOUR_XERO_CLIENT_ID_HERE",
+        "XERO_CLIENT_SECRET": "YOUR_XERO_CLIENT_SECRET_HERE",
+        "XERO_SCOPES": "accounting.transactions accounting.contacts accounting.settings offline_access",
+        "XERO_REDIRECT_URI": "https://your-domain.com/auth/xero-callback"
+      }
+    },
+    "canva": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@canva/cli@latest",
+        "mcp"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@latest",
+        "/path/to/your/project"
+      ]
+    },
+    "n8n-local": {
+      "command": "python3",
+      "args": [
+        "/path/to/your/n8n_mcp_wrapper.py"
+      ],
+      "env": {
+        "N8N_API_KEY": "YOUR_N8N_API_KEY_HERE",
+        "N8N_API_URL": "http://localhost:5678/api/v1"
+      }
+    },
+    "@magicuidesign/mcp": {
+      "command": "npx",
+      "args": ["-y", "@magicuidesign/mcp@latest"]
+    },
+    "apify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@apify/actors-mcp-server@latest"
+      ],
+      "env": {
+        "APIFY_TOKEN": "YOUR_APIFY_API_TOKEN_HERE"
+      }
+    },
+    "task-master": {
+      "command": "npx",
+      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
+      "env": {
+        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+        "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE",
+        "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
+        "GOOGLE_API_KEY": "YOUR_GOOGLE_API_KEY_HERE"
+      }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mendable/firecrawl-mcp-server@latest"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_API_KEY_HERE"
+      }
+    },
+    "brevo": {
+      "command": "python3",
+      "args": [
+        "/path/to/your/brevo_mcp_wrapper.py"
+      ],
+      "env": {
+        "BREVO_API_KEY": "YOUR_BREVO_API_KEY_HERE",
+        "BREVO_API_URL": "https://api.brevo.com/v3"
+      }
+    }
+  }
+}

@@ -1,0 +1,425 @@
+{
+  "name": "Humanitix to Brevo Customer Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "humanitix-brevo-sync",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "humanitix-brevo-sync"
+    },
+    {
+      "parameters": {
+        "resource": "supabase",
+        "operation": "select",
+        "table": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "column": "brevo_sync_status",
+              "operator": "in",
+              "value": "pending,failed"
+            }
+          ]
+        },
+        "limit": 50,
+        "orderBy": {
+          "column": "updated_at",
+          "direction": "DESC"
+        }
+      },
+      "id": "get-pending-customers",
+      "name": "Get Pending Customers",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform customer data for Brevo API with enhanced fields\nconst customers = $input.all();\nconst transformedCustomers = [];\n\nfor (const item of customers) {\n  const customer = item.json;\n  \n  // Prepare Brevo contact object with enhanced fields\n  const brevoContact = {\n    email: customer.email,\n    attributes: {\n      FIRSTNAME: customer.first_name || '',\n      LASTNAME: customer.last_name || '',\n      SMS: customer.mobile || '',\n      DATE_OF_BIRTH: customer.date_of_birth ? new Date(customer.date_of_birth).toISOString().split('T')[0] : '',\n      ADDRESS: customer.address || '',\n      COMPANY: customer.company || '',\n      ORDER_COUNT: customer.total_orders || 0,\n      LIFETIME_VALUE: customer.total_spent || 0,\n      LAST_EVENT_NAME: customer.last_event_name || '',\n      LAST_ORDER_DATE: customer.last_order_date ? new Date(customer.last_order_date).toISOString().split('T')[0] : '',\n      CUSTOMER_SEGMENT: customer.customer_segment || 'new',\n      MARKETING_OPT_IN: customer.marketing_opt_in !== false, // Always true unless explicitly false\n      PREFERRED_VENUE: customer.preferred_venue || '',\n      SOURCE: 'Stand Up Sydney - Humanitix',\n      CUSTOMER_SINCE: customer.created_at ? new Date(customer.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]\n    },\n    listIds: [],\n    updateEnabled: true\n  };\n  \n  // Always add to main Stand Up Sydney list (ID: 3)\n  brevoContact.listIds.push(3); // Stand Up Sydney main list\n  \n  // Add to additional lists based on segment (you can create these later)\n  switch (customer.customer_segment) {\n    case 'vip':\n      // brevoContact.listIds.push(5); // VIP Customers list (create if needed)\n      break;\n    case 'active':\n      // brevoContact.listIds.push(4); // Active Customers list (create if needed)\n      break;\n    case 'inactive':\n      // brevoContact.listIds.push(6); // Inactive Customers list (create if needed)\n      break;\n  }\n  \n  transformedCustomers.push({\n    json: {\n      customer_id: customer.id,\n      brevoData: brevoContact\n    }\n  });\n}\n\nreturn transformedCustomers;"
+      },
+      "id": "transform-for-brevo",
+      "name": "Transform for Brevo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BREVO_API_URL }}/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "={{ $json.brevoData }}"
+            }
+          ]
+        },
+        "options": {
+          "bodyContentType": "json"
+        }
+      },
+      "id": "create-update-brevo-contact",
+      "name": "Create/Update Brevo Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "brevo-api-credentials",
+          "name": "Brevo API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Brevo API responses and prepare database updates\nconst results = [];\nconst items = $input.all();\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const customerId = item.json.customer_id;\n  const brevoData = item.json.brevoData;\n  \n  let updateData = {\n    customer_id: customerId,\n    brevo_sync_status: 'failed',\n    brevo_sync_error: null,\n    brevo_last_sync: new Date().toISOString()\n  };\n  \n  // Check if the request was successful\n  if (item.error) {\n    // Handle error response\n    const errorMessage = item.error.message || 'Unknown error';\n    const errorCode = item.error.httpCode || 500;\n    \n    if (errorCode === 409) {\n      // Contact already exists, try to get the contact ID\n      updateData.brevo_sync_status = 'synced';\n      updateData.brevo_sync_error = null;\n    } else {\n      updateData.brevo_sync_error = `${errorCode}: ${errorMessage}`;\n    }\n  } else {\n    // Success - contact created or updated\n    updateData.brevo_sync_status = 'synced';\n    updateData.brevo_contact_id = item.json.id || null;\n  }\n  \n  results.push({\n    json: updateData\n  });\n}\n\nreturn results;"
+      },
+      "id": "process-responses",
+      "name": "Process Responses",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "supabase",
+        "operation": "update",
+        "table": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "column": "id",
+              "operator": "eq",
+              "value": "={{ $json.customer_id }}"
+            }
+          ]
+        },
+        "updateFields": {
+          "brevo_sync_status": "={{ $json.brevo_sync_status }}",
+          "brevo_sync_error": "={{ $json.brevo_sync_error }}",
+          "brevo_last_sync": "={{ $json.brevo_last_sync }}",
+          "brevo_contact_id": "={{ $json.brevo_contact_id }}"
+        }
+      },
+      "id": "update-customer-sync-status",
+      "name": "Update Customer Sync Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate sync summary\nconst items = $input.all();\nlet successCount = 0;\nlet failureCount = 0;\nconst errors = [];\n\nfor (const item of items) {\n  if (item.json.brevo_sync_status === 'synced') {\n    successCount++;\n  } else {\n    failureCount++;\n    if (item.json.brevo_sync_error) {\n      errors.push({\n        customer_id: item.json.customer_id,\n        error: item.json.brevo_sync_error\n      });\n    }\n  }\n}\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  total_processed: items.length,\n  successful: successCount,\n  failed: failureCount,\n  success_rate: items.length > 0 ? ((successCount / items.length) * 100).toFixed(2) + '%' : '0%',\n  errors: errors.slice(0, 10) // Limit to first 10 errors\n};\n\nreturn [{ json: summary }];"
+      },
+      "id": "generate-summary",
+      "name": "Generate Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "resource": "supabase",
+        "operation": "insert",
+        "table": "brevo_sync_logs",
+        "dataToSend": {
+          "sync_type": "batch_update",
+          "request_data": {
+            "total_customers": "={{ $json.total_processed }}",
+            "trigger_type": "{{ $node['webhook-trigger'].json.trigger || 'manual' }}"
+          },
+          "response_data": "={{ $json }}",
+          "status": "={{ $json.failed > 0 ? 'partial' : 'success' }}",
+          "error_message": "={{ $json.errors.length > 0 ? JSON.stringify($json.errors) : null }}"
+        }
+      },
+      "id": "log-sync-operation",
+      "name": "Log Sync Operation",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1780, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "=Brevo Sync Complete: {{ $json.successful }} customers synced successfully, {{ $json.failed }} failed. Success rate: {{ $json.success_rate }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "scheduled-sync",
+      "name": "Scheduled Sync (Every 6 Hours)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 500],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "trigger-check",
+              "leftValue": "={{ $node['webhook-trigger'].json.trigger }}",
+              "rightValue": "humanitix_order",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-trigger-type",
+      "name": "Check Trigger Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "resource": "supabase",
+        "operation": "select",
+        "table": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "column": "email",
+              "operator": "eq",
+              "value": "={{ $node['webhook-trigger'].json.customer.email }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "get-specific-customer",
+      "name": "Get Specific Customer",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [680, 500],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "check-trigger-type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-pending-customers": {
+      "main": [
+        [
+          {
+            "node": "transform-for-brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transform-for-brevo": {
+      "main": [
+        [
+          {
+            "node": "create-update-brevo-contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-update-brevo-contact": {
+      "main": [
+        [
+          {
+            "node": "process-responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-responses": {
+      "main": [
+        [
+          {
+            "node": "update-customer-sync-status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-customer-sync-status": {
+      "main": [
+        [
+          {
+            "node": "generate-summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-summary": {
+      "main": [
+        [
+          {
+            "node": "log-sync-operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-sync-operation": {
+      "main": [
+        [
+          {
+            "node": "format-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scheduled-sync": {
+      "main": [
+        [
+          {
+            "node": "get-pending-customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-trigger-type": {
+      "main": [
+        [
+          {
+            "node": "get-specific-customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get-pending-customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-specific-customer": {
+      "main": [
+        [
+          {
+            "node": "transform-for-brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "stand-up-sydney-n8n"
+  },
+  "id": "humanitix-brevo-sync",
+  "tags": [
+    {
+      "id": "crm",
+      "name": "CRM"
+    },
+    {
+      "id": "customer-sync",
+      "name": "Customer Sync"
+    }
+  ]
+}

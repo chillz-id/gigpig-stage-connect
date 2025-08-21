@@ -1,0 +1,59 @@
+{
+  "agents": [
+    {
+      "id": "frontend-specialist",
+      "name": "Frontend Specialist",
+      "script": "frontend-agent.js",
+      "type": "frontend",
+      "model": "claude-sonnet-4-0",
+      "capabilities": ["React", "TypeScript", "UI/UX", "Tailwind CSS", "Component Design"],
+      "enabled": true
+    },
+    {
+      "id": "backend-specialist",
+      "name": "Backend Specialist", 
+      "script": "backend-agent.js",
+      "type": "backend",
+      "model": "claude-sonnet-4-0",
+      "capabilities": ["APIs", "Supabase", "Database", "Authentication", "Server Logic"],
+      "enabled": true
+    },
+    {
+      "id": "testing-specialist",
+      "name": "Testing Specialist",
+      "script": "testing-agent.js",
+      "type": "testing",
+      "model": "claude-sonnet-4-0",
+      "capabilities": ["Jest", "Puppeteer", "E2E Testing", "Unit Testing", "Test Coverage"],
+      "enabled": true
+    },
+    {
+      "id": "devops-specialist",
+      "name": "DevOps Specialist",
+      "script": "devops-agent.js",
+      "type": "devops",
+      "model": "claude-sonnet-4-0",
+      "capabilities": ["Docker", "CI/CD", "Monitoring", "Deployment", "Infrastructure"],
+      "enabled": true
+    },
+    {
+      "id": "master-agent",
+      "name": "Master Agent",
+      "script": "master-agent.js",
+      "type": "orchestrator",
+      "model": "claude-opus-4-0",
+      "capabilities": ["Agent Management", "Task Orchestration", "Knowledge Management", "System Control"],
+      "enabled": true
+    }
+  ],
+  "dashboard": {
+    "url": "http://localhost:3001",
+    "reconnectInterval": 5000
+  },
+  "claude": {
+    "maxTokens": 4000,
+    "temperature": 0.7,
+    "retryAttempts": 3,
+    "retryDelay": 1000
+  }
+}

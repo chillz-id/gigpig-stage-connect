@@ -1,0 +1,209 @@
+{
+  "1 hour": {
+    "summary": {
+      "timeRange": "1 hour",
+      "total": 45,
+      "successful": 43,
+      "failed": 2,
+      "errorRate": 4.4,
+      "recentActivity": 12
+    },
+    "byPlatform": {
+      "humanitix": {
+        "total": 23,
+        "successful": 22,
+        "failed": 1,
+        "errorRate": 4.3,
+        "eventTypes": {
+          "order.created": {
+            "total": 15,
+            "successful": 15,
+            "failed": 0,
+            "errorRate": 0
+          },
+          "order.updated": {
+            "total": 8,
+            "successful": 7,
+            "failed": 1,
+            "errorRate": 12.5
+          }
+        }
+      },
+      "eventbrite": {
+        "total": 22,
+        "successful": 21,
+        "failed": 1,
+        "errorRate": 4.5,
+        "eventTypes": {
+          "order.placed": {
+            "total": 18,
+            "successful": 17,
+            "failed": 1,
+            "errorRate": 5.6
+          },
+          "order.refunded": {
+            "total": 4,
+            "successful": 4,
+            "failed": 0,
+            "errorRate": 0
+          }
+        }
+      }
+    },
+    "recentFailures": [
+      {
+        "platform": "humanitix",
+        "eventType": "order.updated",
+        "timestamp": "2025-07-13T12:38:40.973Z",
+        "error": "Event not found for external ID",
+        "payload": {
+          "event": {
+            "id": "missing-event-123"
+          }
+        }
+      }
+    ],
+    "healthStatus": {
+      "status": "healthy",
+      "message": "All systems operating normally"
+    }
+  },
+  "6 hours": {
+    "summary": {
+      "timeRange": "1 hour",
+      "total": 45,
+      "successful": 43,
+      "failed": 2,
+      "errorRate": 4.4,
+      "recentActivity": 12
+    },
+    "byPlatform": {
+      "humanitix": {
+        "total": 23,
+        "successful": 22,
+        "failed": 1,
+        "errorRate": 4.3,
+        "eventTypes": {
+          "order.created": {
+            "total": 15,
+            "successful": 15,
+            "failed": 0,
+            "errorRate": 0
+          },
+          "order.updated": {
+            "total": 8,
+            "successful": 7,
+            "failed": 1,
+            "errorRate": 12.5
+          }
+        }
+      },
+      "eventbrite": {
+        "total": 22,
+        "successful": 21,
+        "failed": 1,
+        "errorRate": 4.5,
+        "eventTypes": {
+          "order.placed": {
+            "total": 18,
+            "successful": 17,
+            "failed": 1,
+            "errorRate": 5.6
+          },
+          "order.refunded": {
+            "total": 4,
+            "successful": 4,
+            "failed": 0,
+            "errorRate": 0
+          }
+        }
+      }
+    },
+    "recentFailures": [
+      {
+        "platform": "humanitix",
+        "eventType": "order.updated",
+        "timestamp": "2025-07-13T12:38:40.974Z",
+        "error": "Event not found for external ID",
+        "payload": {
+          "event": {
+            "id": "missing-event-123"
+          }
+        }
+      }
+    ],
+    "healthStatus": {
+      "status": "healthy",
+      "message": "All systems operating normally"
+    }
+  },
+  "24 hours": {
+    "summary": {
+      "timeRange": "1 hour",
+      "total": 45,
+      "successful": 43,
+      "failed": 2,
+      "errorRate": 4.4,
+      "recentActivity": 12
+    },
+    "byPlatform": {
+      "humanitix": {
+        "total": 23,
+        "successful": 22,
+        "failed": 1,
+        "errorRate": 4.3,
+        "eventTypes": {
+          "order.created": {
+            "total": 15,
+            "successful": 15,
+            "failed": 0,
+            "errorRate": 0
+          },
+          "order.updated": {
+            "total": 8,
+            "successful": 7,
+            "failed": 1,
+            "errorRate": 12.5
+          }
+        }
+      },
+      "eventbrite": {
+        "total": 22,
+        "successful": 21,
+        "failed": 1,
+        "errorRate": 4.5,
+        "eventTypes": {
+          "order.placed": {
+            "total": 18,
+            "successful": 17,
+            "failed": 1,
+            "errorRate": 5.6
+          },
+          "order.refunded": {
+            "total": 4,
+            "successful": 4,
+            "failed": 0,
+            "errorRate": 0
+          }
+        }
+      }
+    },
+    "recentFailures": [
+      {
+        "platform": "humanitix",
+        "eventType": "order.updated",
+        "timestamp": "2025-07-13T12:38:40.974Z",
+        "error": "Event not found for external ID",
+        "payload": {
+          "event": {
+            "id": "missing-event-123"
+          }
+        }
+      }
+    ],
+    "healthStatus": {
+      "status": "healthy",
+      "message": "All systems operating normally"
+    }
+  }
+}

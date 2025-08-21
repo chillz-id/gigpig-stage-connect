@@ -1,0 +1,9 @@
+{
+  "config": {
+    "action": "order.placed",
+    "user_id": "123456789012",
+    "endpoint_url": "https://your-webhook-endpoint.com/eventbrite",
+    "webhook_id": "987654321"
+  },
+  "api_url": "https://www.eventbriteapi.com/v3/events/234567890123/orders/345678901234/"
+}

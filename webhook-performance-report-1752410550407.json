@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-07-13T12:42:30.407Z",
+  "results": {
+    "latency": {
+      "humanitix": {
+        "min": 121.128638,
+        "max": 302.681203,
+        "mean": 219.63420214999996,
+        "p50": 235.762385,
+        "p90": 286.607222,
+        "p95": 302.681203,
+        "p99": 302.681203,
+        "errorRate": 0,
+        "successfulRequests": 20,
+        "totalRequests": 20
+      },
+      "eventbrite": {
+        "min": 116.193231,
+        "max": 218.625316,
+        "mean": 169.37938939999998,
+        "p50": 182.959484,
+        "p90": 202.232838,
+        "p95": 218.625316,
+        "p99": 218.625316,
+        "errorRate": 0,
+        "successfulRequests": 20,
+        "totalRequests": 20
+      }
+    },
+    "throughput": {
+      "humanitix": {
+        "duration": 15139,
+        "totalRequests": 58,
+        "successfulRequests": 58,
+        "errorCount": 0,
+        "requestsPerSecond": 3.83,
+        "successRate": 100
+      },
+      "eventbrite": {
+        "duration": 15014,
+        "totalRequests": 63,
+        "successfulRequests": 63,
+        "errorCount": 0,
+        "requestsPerSecond": 4.2,
+        "successRate": 100
+      }
+    },
+    "concurrency": {
+      "humanitix": {
+        "concurrentRequests": 25,
+        "totalTime": 257,
+        "averageTimePerRequest": 10.28,
+        "successfulRequests": 25,
+        "failedRequests": 0,
+        "successRate": 100
+      },
+      "eventbrite": {
+        "concurrentRequests": 25,
+        "totalTime": 356,
+        "averageTimePerRequest": 14.24,
+        "successfulRequests": 25,
+        "failedRequests": 0,
+        "successRate": 100
+      }
+    },
+    "errorRates": {
+      "humanitix": {
+        "tests": [
+          {
+            "test": "Invalid JSON",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Missing Content-Type",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Large payload",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Empty payload",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          }
+        ],
+        "handledProperly": 4,
+        "totalTests": 4
+      },
+      "eventbrite": {
+        "tests": [
+          {
+            "test": "Invalid JSON",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Missing Content-Type",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Large payload",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          },
+          {
+            "test": "Empty payload",
+            "status": 401,
+            "handled": true,
+            "responseTime": "measured"
+          }
+        ],
+        "handledProperly": 4,
+        "totalTests": 4
+      }
+    }
+  },
+  "summary": {
+    "platforms": 2,
+    "testTypes": 4
+  }
+}

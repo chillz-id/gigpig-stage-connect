@@ -1,0 +1,367 @@
+{
+  "name": "Humanitix to Notion Sync (Fixed)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "1a2b3c4d-5e6f-7890-abcd-ef1234567890",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $vars.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f78-90ab-cdef-123456789012",
+      "name": "Get Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the events array\nconst events = $input.all()[0].json;\n\n// Return each event as a separate item for processing\nif (Array.isArray(events)) {\n  return events.map(event => ({ json: event }));\n} else {\n  console.error('Unexpected response format:', events);\n  return [];\n}"
+      },
+      "id": "parse-events",
+      "name": "Parse Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "3c4d5e6f-7890-abcd-ef12-34567890abcd",
+      "name": "Split Events",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json._id }}/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $vars.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d5e6f70-890a-bcde-f123-456789012345",
+      "name": "Get Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform Humanitix order data to Notion format\nconst orderResponse = $input.all()[0].json;\nconst transformedOrders = [];\n\n// Handle the response - could be an array or object with data property\nlet orders = [];\nif (Array.isArray(orderResponse)) {\n  orders = orderResponse;\n} else if (orderResponse.data && Array.isArray(orderResponse.data)) {\n  orders = orderResponse.data;\n} else if (orderResponse.orders && Array.isArray(orderResponse.orders)) {\n  orders = orderResponse.orders;\n}\n\nfor (const order of orders) {\n  // Extract ticket information\n  const ticketTypes = order.tickets?.map(t => t.ticketType?.name || t.name || 'General').join(', ') || 'General';\n  const totalQuantity = order.tickets?.reduce((sum, t) => sum + (t.quantity || 1), 0) || 1;\n  \n  // Get event info from the previous node or from order\n  const eventInfo = $node['Split Events'].json;\n  \n  transformedOrders.push({\n    eventId: order.eventId || eventInfo._id,\n    orderId: order._id || order.id,\n    properties: {\n      \"Event Name\": {\n        title: [{ text: { content: eventInfo.name || order.event?.name || 'Unknown Event' } }]\n      },\n      \"Event Date\": {\n        date: { start: eventInfo.date || order.event?.date || new Date().toISOString() }\n      },\n      \"Platform\": {\n        select: { name: \"Humanitix\" }\n      },\n      \"Order ID\": {\n        rich_text: [{ text: { content: order._id || order.id || 'N/A' } }]\n      },\n      \"Customer Name\": {\n        rich_text: [{ text: { content: `${order.firstName || order.buyer?.firstName || ''} ${order.lastName || order.buyer?.lastName || ''}`.trim() || 'N/A' } }]\n      },\n      \"Customer Email\": {\n        email: order.email || order.buyer?.email || null\n      },\n      \"Ticket Types\": {\n        rich_text: [{ text: { content: ticketTypes } }]\n      },\n      \"Quantity\": {\n        number: totalQuantity\n      },\n      \"Amount\": {\n        number: parseFloat(order.total || order.amount || 0)\n      },\n      \"Currency\": {\n        select: { name: order.currency || eventInfo.currency || \"AUD\" }\n      },\n      \"Status\": {\n        select: { name: order.status || \"completed\" }\n      },\n      \"Purchase Date\": {\n        date: { start: order.createdAt || order.purchaseDate || new Date().toISOString() }\n      },\n      \"Venue\": {\n        rich_text: [{ text: { content: eventInfo.venue?.name || eventInfo.location || 'TBD' } }]\n      },\n      \"Last Sync\": {\n        date: { start: new Date().toISOString() }\n      }\n    }\n  });\n}\n\nreturn transformedOrders.map(order => ({ json: order }));"
+      },
+      "id": "5e6f7089-0abc-def1-2345-6789012345ab",
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "={{ $vars.NOTION_DATABASE_ID }}",
+          "mode": "id"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Order ID",
+              "condition": "rich_text",
+              "rich_textCondition": "equals",
+              "value": "={{ $json.orderId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f708901-abcd-ef12-3456-789012345abc",
+      "name": "Check for Duplicates",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1234567890abcdef",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "78901abc-def1-2345-6789-012345abcdef",
+      "name": "IF New Order",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "={{ $vars.NOTION_DATABASE_ID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": "={{ $node['Transform Data'].json.properties }}"
+        },
+        "options": {}
+      },
+      "id": "8901abcd-ef12-3456-7890-12345abcdef0",
+      "name": "Create Notion Entry",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [2000, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Count processed orders\nconst processedCount = $input.all().length;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    message: `Sync completed successfully`,\n    ordersProcessed: processedCount,\n    status: 'success'\n  }\n}];"
+      },
+      "id": "901abcde-f123-4567-8901-2345abcdef01",
+      "name": "Update Sync Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $vars.SLACK_CHANNEL_ID || 'general' }}",
+          "mode": "name"
+        },
+        "text": "=✅ Humanitix Sync Complete\n\nProcessed: {{ $json.ordersProcessed }} orders\nTimestamp: {{ $json.timestamp }}\nWorkflow: Humanitix to Notion",
+        "options": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2440, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events": {
+      "main": [
+        [
+          {
+            "node": "Parse Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Events": {
+      "main": [
+        [
+          {
+            "node": "Split Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Events": {
+      "main": [
+        [
+          {
+            "node": "Get Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Orders": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Data": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicates": {
+      "main": [
+        [
+          {
+            "node": "IF New Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF New Order": {
+      "main": [
+        [
+          {
+            "node": "Create Notion Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Create Notion Entry": {
+      "main": [
+        [
+          {
+            "node": "Update Sync Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sync Status": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 300,
+    "errorWorkflow": "",
+    "timezone": "Australia/Sydney"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "name": "humanitix",
+      "createdAt": "2025-01-13T10:30:00.000Z",
+      "updatedAt": "2025-01-13T10:30:00.000Z"
+    },
+    {
+      "name": "notion",
+      "createdAt": "2025-01-13T10:30:00.000Z",
+      "updatedAt": "2025-01-13T10:30:00.000Z"
+    },
+    {
+      "name": "sync",
+      "createdAt": "2025-01-13T10:30:00.000Z",
+      "updatedAt": "2025-01-13T10:30:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "2"
+}

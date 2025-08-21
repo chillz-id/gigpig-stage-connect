@@ -1,0 +1,318 @@
+{
+  "timestamp": "2025-07-09T21:06:53.489Z",
+  "summary": {
+    "totalTests": 21,
+    "passed": 8,
+    "failed": 13,
+    "partial": 0
+  },
+  "testResults": [
+    {
+      "test": "Home Page Load",
+      "status": "PASS",
+      "details": "16228ms",
+      "timestamp": "2025-07-09T21:05:51.824Z"
+    },
+    {
+      "test": "Events Page Load",
+      "status": "PASS",
+      "details": "5025ms",
+      "timestamp": "2025-07-09T21:05:56.850Z"
+    },
+    {
+      "test": "Event Cards Display",
+      "status": "FAIL",
+      "details": "No event cards found",
+      "timestamp": "2025-07-09T21:06:01.861Z"
+    },
+    {
+      "test": "Create Event Button",
+      "status": "FAIL",
+      "details": "Button not found",
+      "timestamp": "2025-07-09T21:06:03.875Z"
+    },
+    {
+      "test": "Event Filtering",
+      "status": "FAIL",
+      "details": "No filter elements found",
+      "timestamp": "2025-07-09T21:06:05.878Z"
+    },
+    {
+      "test": "Invoices Page Load",
+      "status": "PASS",
+      "details": "8780ms",
+      "timestamp": "2025-07-09T21:06:14.658Z"
+    },
+    {
+      "test": "Invoice Components Display",
+      "status": "FAIL",
+      "details": "No invoice components found",
+      "timestamp": "2025-07-09T21:06:16.659Z"
+    },
+    {
+      "test": "Create Invoice Button",
+      "status": "FAIL",
+      "details": "Button not found",
+      "timestamp": "2025-07-09T21:06:18.662Z"
+    },
+    {
+      "test": "Applications Page Load",
+      "status": "PASS",
+      "details": "2895ms",
+      "timestamp": "2025-07-09T21:06:21.558Z"
+    },
+    {
+      "test": "Application Components Display",
+      "status": "FAIL",
+      "details": "No application components found",
+      "timestamp": "2025-07-09T21:06:23.563Z"
+    },
+    {
+      "test": "Spot Confirmation Page Load",
+      "status": "PASS",
+      "details": "4819ms",
+      "timestamp": "2025-07-09T21:06:28.384Z"
+    },
+    {
+      "test": "Spot Confirmation Components Display",
+      "status": "FAIL",
+      "details": "No spot confirmation components found",
+      "timestamp": "2025-07-09T21:06:30.387Z"
+    },
+    {
+      "test": "Login Page Load",
+      "status": "PASS",
+      "details": "3194ms",
+      "timestamp": "2025-07-09T21:06:33.587Z"
+    },
+    {
+      "test": "Authentication Components Display",
+      "status": "FAIL",
+      "details": "No auth components found",
+      "timestamp": "2025-07-09T21:06:35.591Z"
+    },
+    {
+      "test": "Dashboard Page Load",
+      "status": "PASS",
+      "details": "3818ms",
+      "timestamp": "2025-07-09T21:06:39.409Z"
+    },
+    {
+      "test": "Dashboard Components Display",
+      "status": "FAIL",
+      "details": "No dashboard components found",
+      "timestamp": "2025-07-09T21:06:41.411Z"
+    },
+    {
+      "test": "Home Page (Mobile) Load",
+      "status": "PASS",
+      "details": "3206ms",
+      "timestamp": "2025-07-09T21:06:44.782Z"
+    },
+    {
+      "test": "Mobile Navigation",
+      "status": "FAIL",
+      "details": "No mobile navigation found",
+      "timestamp": "2025-07-09T21:06:46.786Z"
+    },
+    {
+      "test": "Database Data Loading",
+      "status": "FAIL",
+      "details": "No data or loading indicators found",
+      "timestamp": "2025-07-09T21:06:49.964Z"
+    },
+    {
+      "test": "First Contentful Paint Performance",
+      "status": "FAIL",
+      "details": "2400ms > 2000ms",
+      "timestamp": "2025-07-09T21:06:53.480Z"
+    },
+    {
+      "test": "Console Errors Check",
+      "status": "FAIL",
+      "details": "20 errors found",
+      "timestamp": "2025-07-09T21:06:53.484Z"
+    }
+  ],
+  "performanceMetrics": [
+    {
+      "metric": "Home Page Load Time",
+      "value": 16228,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:05:51.820Z"
+    },
+    {
+      "metric": "Events Page Load Time",
+      "value": 5025,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:05:56.850Z"
+    },
+    {
+      "metric": "Invoices Page Load Time",
+      "value": 8780,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:14.658Z"
+    },
+    {
+      "metric": "Applications Page Load Time",
+      "value": 2895,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:21.558Z"
+    },
+    {
+      "metric": "Spot Confirmation Page Load Time",
+      "value": 4819,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:28.383Z"
+    },
+    {
+      "metric": "Login Page Load Time",
+      "value": 3194,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:33.582Z"
+    },
+    {
+      "metric": "Dashboard Page Load Time",
+      "value": 3818,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:39.409Z"
+    },
+    {
+      "metric": "Home Page (Mobile) Load Time",
+      "value": 3206,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:44.782Z"
+    },
+    {
+      "metric": "DOM Content Loaded",
+      "value": 3,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:53.479Z"
+    },
+    {
+      "metric": "Load Complete",
+      "value": 0,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:53.480Z"
+    },
+    {
+      "metric": "First Paint",
+      "value": 1948,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:53.480Z"
+    },
+    {
+      "metric": "First Contentful Paint",
+      "value": 2400,
+      "unit": "ms",
+      "timestamp": "2025-07-09T21:06:53.480Z"
+    }
+  ],
+  "consoleLogs": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.395Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.395Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.395Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.395Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.396Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.396Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.396Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.396Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.404Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.404Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.404Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_CHANGED",
+      "timestamp": "2025-07-09T21:05:38.405Z"
+    },
+    {
+      "type": "error",
+      "text": "WebSocket connection to 'wss://pdikjpfulhhpqpxzpgtu.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjY4NjEsImV4cCI6MjA2NTg0Mjg2MX0.5L8mD4I3MP22p8bcGUFo6EiVHesfvahfYpPPXjGdy54&vsn=1.0.0' failed: Error in connection establishment: net::ERR_NAME_NOT_RESOLVED",
+      "timestamp": "2025-07-09T21:05:55.018Z"
+    },
+    {
+      "type": "error",
+      "text": "The above error occurred in the <Button> component:\n\n    at http://localhost:8082/src/components/ui/button.tsx:49:61\n    at div\n    at _c8 (http://localhost:8082/src/components/ui/card.tsx:99:61)\n    at div\n    at _c (http://localhost:8082/src/components/ui/card.tsx:23:53)\n    at div\n    at ErrorBoundary (http://localhost:8082/src/components/ErrorBoundary.tsx:158:9)\n    at App\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+      "timestamp": "2025-07-09T21:05:55.768Z"
+    },
+    {
+      "type": "error",
+      "text": "The above error occurred in the <Button> component:\n\n    at http://localhost:8082/src/components/ui/button.tsx:49:61\n    at div\n    at _c8 (http://localhost:8082/src/components/ui/card.tsx:99:61)\n    at div\n    at _c (http://localhost:8082/src/components/ui/card.tsx:23:53)\n    at div\n    at ErrorBoundary (http://localhost:8082/src/components/ErrorBoundary.tsx:158:9)\n    at App\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+      "timestamp": "2025-07-09T21:06:14.860Z"
+    },
+    {
+      "type": "error",
+      "text": "[EventsApi] Failed to get current user: JSHandle@error",
+      "timestamp": "2025-07-09T21:06:38.752Z"
+    },
+    {
+      "type": "error",
+      "text": "[HIGH] authentication_error: JSHandle@error",
+      "timestamp": "2025-07-09T21:06:38.763Z"
+    },
+    {
+      "type": "error",
+      "text": "[EventsApi] Failed to get current user: JSHandle@error",
+      "timestamp": "2025-07-09T21:06:39.773Z"
+    },
+    {
+      "type": "error",
+      "text": "[HIGH] authentication_error: JSHandle@error",
+      "timestamp": "2025-07-09T21:06:39.773Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to flush error queue: JSHandle@object",
+      "timestamp": "2025-07-09T21:06:41.766Z"
+    }
+  ],
+  "recommendations": [
+    "Critical fixes needed before production deployment",
+    "Console errors need investigation",
+    "High failure rate - extensive testing needed"
+  ]
+}

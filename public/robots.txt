@@ -1,0 +1,29 @@
+# Stand Up Sydney robots.txt
+# Allow all crawlers
+
+User-agent: *
+Allow: /
+
+# Sitemap locations
+Sitemap: https://standupsydney.com/sitemap.xml
+Sitemap: https://standupsydney.com/sitemap-comedians.xml
+Sitemap: https://standupsydney.com/sitemap-events.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /messages/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /.well-known/
+
+# Allow search engines to index images
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay (in seconds) to prevent overwhelming the server
+Crawl-delay: 1

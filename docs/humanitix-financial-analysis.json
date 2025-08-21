@@ -1,0 +1,438 @@
+{
+  "generatedAt": "2025-07-14T18:52:11.562Z",
+  "summary": {
+    "totalOrders": 746,
+    "totalEvents": 22,
+    "totalRevenue": 32472.85999999998,
+    "totalPartnerShare": 24142.07,
+    "averageOrderValue": 38.34766756032169,
+    "medianOrderValue": 27.955
+  },
+  "financialStructures": {
+    "totalOrders": 746,
+    "orderStatuses": {
+      "complete": 746
+    },
+    "financialStatuses": {
+      "paid": 550,
+      "free": 187,
+      "refunded": 9
+    },
+    "paymentMethods": {
+      "braintree": 638,
+      "manual": 105,
+      "stripe-payments": 3
+    },
+    "currencies": {
+      "AUD": 746
+    },
+    "feeStructures": {
+      "humanitixFee": {
+        "min": 1.7,
+        "max": 22.56,
+        "avg": 2.9951742627345856,
+        "total": 2234.400000000001
+      },
+      "bookingFee": {
+        "min": 1.7,
+        "max": 22.56,
+        "avg": 3.0108445040214487,
+        "total": 2246.0900000000006
+      },
+      "passedOnFee": {
+        "min": 1.7,
+        "max": 22.56,
+        "avg": 2.9849865951742642,
+        "total": 2226.800000000001
+      },
+      "absorbedFee": {
+        "min": 2.8,
+        "max": 4.8,
+        "avg": 0.010187667560321715,
+        "total": 7.6
+      },
+      "amexFee": {
+        "min": 0.13,
+        "max": 0.96,
+        "avg": 0.01567024128686327,
+        "total": 11.69
+      },
+      "zipFee": {
+        "min": 0,
+        "max": 0,
+        "avg": 0,
+        "total": 0
+      }
+    },
+    "revenueMetrics": {
+      "totalSubtotal": 30234.369999999995,
+      "totalGrossSales": 32472.85999999998,
+      "totalNetSales": 26361.269999999993,
+      "totalFeesCollected": 4480.4900000000025,
+      "totalDiscounts": 3392.5,
+      "totalRefunds": 473,
+      "totalDonations": 0,
+      "totalRebates": 1116
+    },
+    "discountPatterns": {
+      "5": 1,
+      "10": 1,
+      "20": 9,
+      "25": 20,
+      "30": 12,
+      "40": 8,
+      "50": 9,
+      "60": 6,
+      "80": 3,
+      "100": 1,
+      "105": 1,
+      "125": 1,
+      "250": 2,
+      "12.5": 5,
+      "37.5": 2
+    },
+    "refundPatterns": {
+      "20": 1,
+      "33": 1,
+      "40": 2,
+      "60": 3,
+      "80": 2
+    },
+    "taxAnalysis": {
+      "totalTaxes": 0,
+      "bookingTaxes": 0,
+      "passedOnTaxes": 0
+    },
+    "partnerRevenue": {
+      "totalPartnerShare": 24142.07,
+      "averagePartnerShare": 32.36202412868633,
+      "partnerRevenueByEvent": {
+        "686c9048a3100076cfb5f844": {
+          "eventName": "Live from Here with Sath Nadesan & Pat Doherty",
+          "totalRevenue": 55.8,
+          "totalOrders": 1,
+          "averageOrderValue": 55.8
+        },
+        "686c8857f135ed8204182c4a": {
+          "eventName": "Julian Woods: Cancel Me!",
+          "totalRevenue": 223.39999999999998,
+          "totalOrders": 2,
+          "averageOrderValue": 111.69999999999999
+        },
+        "685b9d48c8e0dcf921597321": {
+          "eventName": "Rory Lowe - Real Men Do Pilates [Perth]",
+          "totalRevenue": 414.70000000000005,
+          "totalOrders": 5,
+          "averageOrderValue": 82.94000000000001
+        },
+        "685b9af9b217505480ca3683": {
+          "eventName": "Rory Lowe - Real Men Do Pilates [Fremantle]",
+          "totalRevenue": 150.8,
+          "totalOrders": 2,
+          "averageOrderValue": 75.4
+        },
+        "685b50d9ff7c6e8cff13e196": {
+          "eventName": "New Stuff: Jenny Tian",
+          "totalRevenue": 477.68000000000023,
+          "totalOrders": 34,
+          "averageOrderValue": 14.049411764705889
+        },
+        "685102f07c3b8512cbf09c34": {
+          "eventName": "Damien Power - From Nothing",
+          "totalRevenue": 2089.31,
+          "totalOrders": 49,
+          "averageOrderValue": 42.63897959183674
+        },
+        "683ea2fea50f54e427c11070": {
+          "eventName": "Rory Lowe - The Special",
+          "totalRevenue": 3232.2900000000013,
+          "totalOrders": 31,
+          "averageOrderValue": 104.26741935483875
+        },
+        "683c20d512bfe390e658cf56": {
+          "eventName": "Off The Record - Comedy Club",
+          "totalRevenue": 918.2700000000002,
+          "totalOrders": 79,
+          "averageOrderValue": 11.623670886075953
+        },
+        "683a5dcd6034d63237dcbb62": {
+          "eventName": "Roast Battle: Sydney",
+          "totalRevenue": 1218.7399999999996,
+          "totalOrders": 46,
+          "averageOrderValue": 26.494347826086948
+        },
+        "6822b8c80015b001b47eac59": {
+          "eventName": "CIANG AJEIC: IN THE BENINGING",
+          "totalRevenue": 1654.36,
+          "totalOrders": 59,
+          "averageOrderValue": 28.04
+        },
+        "6822ace80015b001b479f112": {
+          "eventName": "Christian Elderfield: SWINGERS",
+          "totalRevenue": 715.4499999999999,
+          "totalOrders": 12,
+          "averageOrderValue": 59.62083333333333
+        },
+        "68223452595744714afce5db": {
+          "eventName": "New Stuff: Jenny Tian",
+          "totalRevenue": 447.4800000000002,
+          "totalOrders": 31,
+          "averageOrderValue": 14.434838709677425
+        },
+        "6822298419150d37a5e56a0b": {
+          "eventName": "TOMMY DASSALO – MAIN CHARACTER",
+          "totalRevenue": 483.52000000000004,
+          "totalOrders": 26,
+          "averageOrderValue": 18.59692307692308
+        },
+        "682224397a7599aeef939aee": {
+          "eventName": "Emo Majok Live in Sydney",
+          "totalRevenue": 558,
+          "totalOrders": 10,
+          "averageOrderValue": 55.8
+        },
+        "68221ba719150d37a5e4c67d": {
+          "eventName": "Shad & Pete Save The World",
+          "totalRevenue": 785.92,
+          "totalOrders": 36,
+          "averageOrderValue": 21.83111111111111
+        },
+        "682211677a7599aeef92a3ca": {
+          "eventName": "Rory Lowe - Real Men Do Pilates",
+          "totalRevenue": 1321.84,
+          "totalOrders": 40,
+          "averageOrderValue": 33.046
+        },
+        "6821d3177a7599aeef8e9f70": {
+          "eventName": "ID Comedy Club - Fri/Sat",
+          "totalRevenue": 2994.29,
+          "totalOrders": 93,
+          "averageOrderValue": 32.196666666666665
+        },
+        "6821ca1f7a7599aeef8dad42": {
+          "eventName": "Comedy Untamed - Fridays",
+          "totalRevenue": 4728.82,
+          "totalOrders": 114,
+          "averageOrderValue": 41.480877192982454
+        },
+        "6821b1ec7a7599aeef8b19c6": {
+          "eventName": "Arcade Comedy Club - Tuesdays",
+          "totalRevenue": 447.59999999999997,
+          "totalOrders": 37,
+          "averageOrderValue": 12.097297297297297
+        },
+        "6821a45a0015b001b44c7aa2": {
+          "eventName": "Magic Mic Comedy - Wednesdays",
+          "totalRevenue": 1223.8000000000002,
+          "totalOrders": 39,
+          "averageOrderValue": 31.379487179487185
+        }
+      }
+    }
+  },
+  "transactionPatterns": {
+    "averageOrderValue": 38.34766756032169,
+    "medianOrderValue": 27.955,
+    "orderValueDistribution": {
+      "$51-$100": 259,
+      "$100+": 29,
+      "$26-$50": 184,
+      "$11-$25": 78,
+      "Free": 187,
+      "$1-$10": 9
+    },
+    "completionRates": {
+      "total": 746,
+      "complete": 746,
+      "incomplete": 0,
+      "cancelled": 0,
+      "refunded": 0
+    },
+    "paymentSuccess": {
+      "paid": 550,
+      "failed": 0,
+      "pending": 0,
+      "refunded": 9,
+      "free": 187
+    }
+  },
+  "feeAbsorption": {
+    "totalAbsorbed": 7.6,
+    "totalPassedOn": 2226.800000000001,
+    "absorptionRate": 0.003401360544217685,
+    "absorptionByEvent": {
+      "686c9048a3100076cfb5f844": {
+        "eventName": "Live from Here with Sath Nadesan & Pat Doherty",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 4.2,
+        "orderCount": 1
+      },
+      "686c8857f135ed8204182c4a": {
+        "eventName": "Julian Woods: Cancel Me!",
+        "totalAbsorbed": 7.6,
+        "totalPassedOn": 6,
+        "orderCount": 2
+      },
+      "685b9d48c8e0dcf921597321": {
+        "eventName": "Rory Lowe - Real Men Do Pilates [Perth]",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 25.299999999999997,
+        "orderCount": 5
+      },
+      "685b9af9b217505480ca3683": {
+        "eventName": "Rory Lowe - Real Men Do Pilates [Fremantle]",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 9.2,
+        "orderCount": 2
+      },
+      "685b50d9ff7c6e8cff13e196": {
+        "eventName": "New Stuff: Jenny Tian",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 102.32000000000005,
+        "orderCount": 34
+      },
+      "685102f07c3b8512cbf09c34": {
+        "eventName": "Damien Power - From Nothing",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 185.69,
+        "orderCount": 49
+      },
+      "683ea2fea50f54e427c11070": {
+        "eventName": "Rory Lowe - The Special",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 196.97,
+        "orderCount": 31
+      },
+      "683c20d512bfe390e658cf56": {
+        "eventName": "Off The Record - Comedy Club",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 101.72999999999999,
+        "orderCount": 79
+      },
+      "683a5dcd6034d63237dcbb62": {
+        "eventName": "Roast Battle: Sydney",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 96.26000000000002,
+        "orderCount": 46
+      },
+      "6822b8c80015b001b47eac59": {
+        "eventName": "CIANG AJEIC: IN THE BENINGING",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 145.64,
+        "orderCount": 59
+      },
+      "6822ace80015b001b479f112": {
+        "eventName": "Christian Elderfield: SWINGERS",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 59.55000000000001,
+        "orderCount": 12
+      },
+      "68223452595744714afce5db": {
+        "eventName": "New Stuff: Jenny Tian",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 92.52000000000004,
+        "orderCount": 31
+      },
+      "6822298419150d37a5e56a0b": {
+        "eventName": "TOMMY DASSALO – MAIN CHARACTER",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 40.48,
+        "orderCount": 26
+      },
+      "682224397a7599aeef939aee": {
+        "eventName": "Emo Majok Live in Sydney",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 42.00000000000001,
+        "orderCount": 10
+      },
+      "68221ba719150d37a5e4c67d": {
+        "eventName": "Shad & Pete Save The World",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 81.58000000000001,
+        "orderCount": 36
+      },
+      "682211677a7599aeef92a3ca": {
+        "eventName": "Rory Lowe - Real Men Do Pilates",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 97.16,
+        "orderCount": 40
+      },
+      "6821d3177a7599aeef8e9f70": {
+        "eventName": "ID Comedy Club - Fri/Sat",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 295.71000000000004,
+        "orderCount": 93
+      },
+      "6821ca1f7a7599aeef8dad42": {
+        "eventName": "Comedy Untamed - Fridays",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 450.89000000000004,
+        "orderCount": 114
+      },
+      "6821b1ec7a7599aeef8b19c6": {
+        "eventName": "Arcade Comedy Club - Tuesdays",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 82.39999999999998,
+        "orderCount": 37
+      },
+      "6821a45a0015b001b44c7aa2": {
+        "eventName": "Magic Mic Comedy - Wednesdays",
+        "totalAbsorbed": 0,
+        "totalPassedOn": 111.2,
+        "orderCount": 39
+      }
+    },
+    "feeAbsorptionStrategies": {
+      "fullAbsorption": 0,
+      "partialAbsorption": 2,
+      "noAbsorption": 744
+    }
+  },
+  "sampleInvoiceData": {
+    "eventId": "686c9048a3100076cfb5f844",
+    "eventName": "Live from Here with Sath Nadesan & Pat Doherty",
+    "eventDate": "2025-08-23T10:30:00.600Z",
+    "venue": {
+      "name": "iD Comedy Club",
+      "address": "383 Bourke St, Darlinghurst NSW 2010, Australia",
+      "city": "Darlinghurst",
+      "state": "NSW",
+      "country": "AU",
+      "capacity": 110
+    },
+    "orderCount": 1,
+    "summary": {
+      "totalGrossSales": 60,
+      "totalNetSales": 64.2,
+      "totalFees": 8.4,
+      "totalDiscounts": 0,
+      "totalRefunds": 0,
+      "partnerShare": 55.8,
+      "humanitixShare": 8.4
+    },
+    "orderBreakdown": [
+      {
+        "orderId": "686cf02c25fff6460b2e7893",
+        "orderName": "9Q8QX2LW",
+        "customer": {
+          "name": "Madison Peachey",
+          "email": "madisonpeachey@gmail.com"
+        },
+        "subtotal": 60,
+        "fees": {
+          "humanitix": 4.2,
+          "booking": 4.2,
+          "passedOn": 4.2,
+          "absorbed": 0
+        },
+        "discounts": 0,
+        "refunds": 0,
+        "total": 64.2,
+        "partnerShare": 55.8,
+        "status": "complete",
+        "financialStatus": "paid",
+        "completedAt": "2025-07-08T10:17:17.240Z"
+      }
+    ]
+  }
+}

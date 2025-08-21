@@ -1,0 +1,74 @@
+{
+  "id": "345678901234",
+  "created": "2024-01-20T09:15:00Z",
+  "changed": "2024-01-20T09:15:00Z",
+  "name": "Jane Smith",
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane.smith@example.com",
+  "status": "placed",
+  "refunded": false,
+  "costs": {
+    "base_price": {
+      "display": "$40.00",
+      "currency": "USD",
+      "value": 4000,
+      "major_value": "40.00"
+    },
+    "eventbrite_fee": {
+      "display": "$4.00",
+      "currency": "USD",
+      "value": 400,
+      "major_value": "4.00"
+    },
+    "gross": {
+      "display": "$44.00",
+      "currency": "USD",
+      "value": 4400,
+      "major_value": "44.00"
+    },
+    "payment_fee": {
+      "display": "$1.50",
+      "currency": "USD",
+      "value": 150,
+      "major_value": "1.50"
+    },
+    "tax": {
+      "display": "$0.00",
+      "currency": "USD",
+      "value": 0,
+      "major_value": "0.00"
+    }
+  },
+  "attendees": [
+    {
+      "id": "456789012345",
+      "created": "2024-01-20T09:15:00Z",
+      "changed": "2024-01-20T09:15:00Z",
+      "ticket_class_id": "111222333444",
+      "ticket_class_name": "General Admission",
+      "quantity": 2,
+      "profile": {
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane.smith@example.com"
+      },
+      "checked_in": false,
+      "cancelled": false,
+      "refunded": false
+    }
+  ],
+  "event_id": "234567890123",
+  "event": {
+    "id": "234567890123",
+    "name": {
+      "text": "Melbourne Comedy Festival Show",
+      "html": "Melbourne Comedy Festival Show"
+    },
+    "start": {
+      "timezone": "Australia/Melbourne",
+      "local": "2024-02-20T20:00:00",
+      "utc": "2024-02-20T09:00:00Z"
+    }
+  }
+}

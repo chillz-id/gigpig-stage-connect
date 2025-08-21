@@ -1,0 +1,275 @@
+{
+  "name": "Eventbrite to Brevo Sync",
+  "active": true,
+  "meta": {
+    "instanceId": "e3a1c1c4e2a4f1b2c3d4e5f6a7b8c9d1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eventbrite-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://www.eventbrite.com"
+        }
+      },
+      "id": "eventbrite-webhook-trigger",
+      "name": "Eventbrite Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [280, 300],
+      "webhookId": "eventbrite-order-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.all()[0].body;\n\nif (!body || !body.config || !body.api_url) {\n  throw new Error('Invalid Eventbrite webhook payload');\n}\n\nconst apiUrl = body.api_url;\nconst orderIdMatch = apiUrl.match(/orders\\/([^\\/]+)\\//); \nif (!orderIdMatch) {\n  throw new Error('Could not extract order ID from API URL');\n}\n\nconst orderId = orderIdMatch[1];\nconst eventType = body.config.action || 'unknown';\n\nconsole.log(`Processing Eventbrite webhook: ${eventType} for order ${orderId}`);\n\nreturn [{\n  orderId,\n  eventType,\n  apiUrl,\n  webhookPayload: body,\n  timestamp: new Date().toISOString()\n}];"
+      },
+      "id": "parse-webhook",
+      "name": "Parse Webhook Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2Api",
+        "url": "={{ $json.apiUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "fetch-order-details",
+      "name": "Fetch Order Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 300],
+      "credentials": {
+        "eventbriteOAuth2Api": {
+          "id": "eventbrite-oauth2",
+          "name": "Eventbrite OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2Api",
+        "url": "=https://www.eventbriteapi.com/v3/events/{{ $json.event_id }}/",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "fetch-event-details",
+      "name": "Fetch Event Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [940, 300],
+      "credentials": {
+        "eventbriteOAuth2Api": {
+          "id": "eventbrite-oauth2",
+          "name": "Eventbrite OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2Api",
+        "url": "=https://www.eventbriteapi.com/v3/venues/{{ $('Fetch Event Details').item.json.venue_id }}/",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "fetch-venue-details",
+      "name": "Fetch Venue Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1160, 300],
+      "credentials": {
+        "eventbriteOAuth2Api": {
+          "id": "eventbrite-oauth2",
+          "name": "Eventbrite OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const orderData = $('Fetch Order Details').item.json;\nconst eventData = $('Fetch Event Details').item.json;\nconst venueData = $('Fetch Venue Details').item.json;\n\nconst stateMapping = {\n  'sydney': 'NSW', 'newcastle': 'NSW', 'wollongong': 'NSW', 'nsw': 'NSW', 'new south wales': 'NSW',\n  'melbourne': 'VIC', 'geelong': 'VIC', 'ballarat': 'VIC', 'vic': 'VIC', 'victoria': 'VIC',\n  'brisbane': 'QLD', 'gold coast': 'QLD', 'sunshine coast': 'QLD', 'qld': 'QLD', 'queensland': 'QLD',\n  'perth': 'WA', 'fremantle': 'WA', 'bunbury': 'WA', 'wa': 'WA', 'western australia': 'WA',\n  'adelaide': 'SA', 'mount gambier': 'SA', 'sa': 'SA', 'south australia': 'SA',\n  'hobart': 'TAS', 'launceston': 'TAS', 'tas': 'TAS', 'tasmania': 'TAS',\n  'darwin': 'NT', 'alice springs': 'NT', 'nt': 'NT', 'northern territory': 'NT',\n  'canberra': 'ACT', 'act': 'ACT', 'australian capital territory': 'ACT'\n};\n\nfunction mapLocationToState(city, region) {\n  const normalizeText = (text) => text?.toLowerCase().trim() || '';\n  const normalizedRegion = normalizeText(region);\n  if (stateMapping[normalizedRegion]) return stateMapping[normalizedRegion];\n  const normalizedCity = normalizeText(city);\n  if (stateMapping[normalizedCity]) return stateMapping[normalizedCity];\n  for (const [location, state] of Object.entries(stateMapping)) {\n    if (normalizedCity.includes(location) || normalizedRegion.includes(location)) {\n      return state;\n    }\n  }\n  return 'Unknown';\n}\n\nif (orderData.status !== 'placed') {\n  console.log(`Skipping order ${orderData.id} with status: ${orderData.status}`);\n  return [];\n}\n\nconst venueCity = venueData.address?.city || '';\nconst venueRegion = venueData.address?.region || '';\nconst customerState = mapLocationToState(venueCity, venueRegion);\n\nconst customers = [];\n\nif (orderData.attendees && orderData.attendees.length > 0) {\n  for (const attendee of orderData.attendees) {\n    if (attendee.email && attendee.status === 'Attending') {\n      customers.push({\n        email: attendee.email,\n        firstName: attendee.first_name || '',\n        lastName: attendee.last_name || '',\n        state: customerState,\n        eventName: eventData.name?.text || 'Unknown Event',\n        eventDate: eventData.start?.utc || '',\n        venue: venueData.name || 'Unknown Venue',\n        platform: 'Eventbrite',\n        orderTotal: orderData.costs?.gross?.value || 0,\n        ticketQuantity: orderData.attendees?.length || 1,\n        marketingOptIn: true,\n        orderDate: orderData.created,\n        listIds: [3],\n        orderId: orderData.id,\n        eventId: eventData.id\n      });\n    }\n  }\n} else {\n  customers.push({\n    email: orderData.email,\n    firstName: orderData.first_name || '',\n    lastName: orderData.last_name || '',\n    state: customerState,\n    eventName: eventData.name?.text || 'Unknown Event',\n    eventDate: eventData.start?.utc || '',\n    venue: venueData.name || 'Unknown Venue',\n    platform: 'Eventbrite',\n    orderTotal: orderData.costs?.gross?.value || 0,\n    ticketQuantity: 1,\n    marketingOptIn: true,\n    orderDate: orderData.created,\n    listIds: [3],\n    orderId: orderData.id,\n    eventId: eventData.id\n  });\n}\n\nconsole.log(`Found ${customers.length} customers to sync to Brevo from Eventbrite order`);\nreturn customers;"
+      },
+      "id": "process-order-for-brevo",
+      "name": "Process Order for Brevo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1380, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "brevoApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ {\n  email: $json.email,\n  attributes: {\n    FIRSTNAME: $json.firstName,\n    LASTNAME: $json.lastName,\n    STATE: $json.state,\n    LAST_EVENT: $json.eventName,\n    LAST_EVENT_DATE: $json.eventDate,\n    VENUE: $json.venue,\n    PLATFORM: $json.platform,\n    ORDER_TOTAL: $json.orderTotal,\n    TICKET_QUANTITY: $json.ticketQuantity,\n    MARKETING_OPT_IN: $json.marketingOptIn\n  },\n  listIds: $json.listIds,\n  updateEnabled: true\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "sync-to-brevo-eventbrite",
+      "name": "Sync to Brevo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1600, 300],
+      "credentials": {
+        "brevoApi": {
+          "id": "brevo-api-credentials",
+          "name": "Brevo API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all();\nlet successCount = 0;\nlet errorCount = 0;\nconst errors = [];\n\nfor (const result of results) {\n  if (result.json.statusCode && result.json.statusCode >= 400) {\n    errorCount++;\n    errors.push({\n      email: result.json.email || 'unknown',\n      error: result.json.message || 'Unknown error',\n      statusCode: result.json.statusCode\n    });\n  } else {\n    successCount++;\n  }\n}\n\nconst webhookData = $('Parse Webhook Payload').item.json;\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  platform: 'Eventbrite',\n  eventType: webhookData.eventType,\n  orderId: webhookData.orderId,\n  totalProcessed: results.length,\n  successCount,\n  errorCount,\n  errors: errors.slice(0, 5),\n  status: errorCount === 0 ? 'success' : errorCount < results.length / 2 ? 'partial_success' : 'failed'\n};\n\nconsole.log('Eventbrite to Brevo Webhook Sync Summary:', JSON.stringify(summary, null, 2));\n\nreturn [summary];"
+      },
+      "id": "log-webhook-results",
+      "name": "Log Webhook Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1820, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: $('Log Webhook Results').item.json.status,\n  message: 'Webhook processed successfully',\n  customersProcessed: $('Log Webhook Results').item.json.totalProcessed,\n  timestamp: $('Log Webhook Results').item.json.timestamp\n} }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2040, 300]
+    }
+  ],
+  "connections": {
+    "Eventbrite Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Webhook Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Webhook Payload": {
+      "main": [
+        [
+          {
+            "node": "Fetch Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order Details": {
+      "main": [
+        [
+          {
+            "node": "Fetch Event Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Event Details": {
+      "main": [
+        [
+          {
+            "node": "Fetch Venue Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Venue Details": {
+      "main": [
+        [
+          {
+            "node": "Process Order for Brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Order for Brevo": {
+      "main": [
+        [
+          {
+            "node": "Sync to Brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Brevo": {
+      "main": [
+        [
+          {
+            "node": "Log Webhook Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Webhook Results": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-19T11:00:00.000Z",
+  "versionId": "1"
+}

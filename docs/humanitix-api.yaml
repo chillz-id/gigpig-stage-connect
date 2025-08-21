@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: Humanitix Public API
+  description: 'The Humanitix Public API for fetching event, order, ticket or tag information. Please note that in periods of low activity the first request you make may take a few seconds longer than normal.'
+  version: 1.18.0
+servers:
+  - url: 'https://api.humanitix.com/'
+    description: Production endpoint
+security:
+  - ApiKeyAuth: []
+paths:
+  /v1/events:
+    get:
+      summary: Get Events
+      description: Returns an array of events.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/InFutureOnly'
+        - $ref: '#/components/parameters/Since'
+        - $ref: '#/components/parameters/OverrideLocation'
+      tags:
+        - Events
+      responses:
+        '200':
+          description: An array of event objects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    required:
+                      - events
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Event'
+# ... (rest of the YAML content - truncated for brevity)
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key

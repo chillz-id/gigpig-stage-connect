@@ -1,0 +1,429 @@
+{
+  "name": "Humanitix Historical Complete Data Import",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Configure historical import parameters\n// Import all data from the beginning of Humanitix integration\n\nconst endDate = new Date();\nconst startDate = new Date('2024-01-01'); // Start from Jan 1, 2024\n\n// Performance settings for bulk import\nconst bulkSettings = {\n  batchSize: 100,\n  rateLimitDelay: 500, // 0.5 seconds between API calls\n  maxRetries: 5,\n  concurrency: 10,\n  pageSize: 100\n};\n\n// Data completeness requirements\nconst completenessRequirements = {\n  events: {\n    minFields: ['id', 'name', 'startDate', 'venue'],\n    requiredData: ['ticketTypes', 'orders', 'customers']\n  },\n  orders: {\n    minFields: ['id', 'eventId', 'total', 'status'],\n    financialData: ['subtotal', 'fees', 'discounts', 'refunds']\n  },\n  customers: {\n    minFields: ['email', 'firstName', 'lastName'],\n    contactData: ['mobile', 'location']\n  }\n};\n\n// Historical data validation\nconst validation = {\n  enforceDataQuality: true,\n  skipIncompleteRecords: false,\n  logDataIssues: true,\n  generateQualityReport: true\n};\n\nreturn [{\n  json: {\n    importConfig: {\n      startDate: startDate.toISOString(),\n      endDate: endDate.toISOString(),\n      timeRange: `${startDate.toDateString()} to ${endDate.toDateString()}`,\n      bulkSettings,\n      completenessRequirements,\n      validation\n    },\n    metadata: {\n      importType: 'historical-complete',\n      version: '2.0',\n      timestamp: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "configure-historical-import",
+      "name": "Configure Historical Import",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "1",
+            "limit": "100",
+            "created_after": "={{ $json.importConfig.startDate }}",
+            "created_before": "={{ $json.importConfig.endDate }}",
+            "status": "all",
+            "sort": "created_at:asc"
+          }
+        }
+      },
+      "id": "fetch-all-events",
+      "name": "Fetch All Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle pagination for complete event retrieval\nconst response = $json;\nconst allEvents = response.data || [];\nconst hasMore = response.pagination?.hasMore || false;\nconst currentPage = response.pagination?.currentPage || 1;\nconst totalPages = response.pagination?.totalPages || 1;\n\n// If there are more pages, continue fetching\nif (hasMore && currentPage < totalPages) {\n  return [{\n    json: {\n      events: allEvents,\n      pagination: {\n        currentPage,\n        totalPages,\n        hasMore,\n        nextPage: currentPage + 1\n      },\n      needsMorePages: true\n    }\n  }];\n}\n\n// All events retrieved\nreturn [{\n  json: {\n    events: allEvents,\n    pagination: {\n      currentPage,\n      totalPages,\n      hasMore: false,\n      complete: true\n    },\n    needsMorePages: false,\n    totalEventsFound: allEvents.length\n  }\n}];"
+      },
+      "id": "handle-event-pagination",
+      "name": "Handle Event Pagination",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "needs-more-pages",
+              "leftValue": "={{ $json.needsMorePages }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "rightType": "boolean"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-needs-more-pages",
+      "name": "IF Needs More Pages",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "={{ $json.pagination.nextPage }}",
+            "limit": "100",
+            "created_after": "={{ $node['Configure Historical Import'].json.importConfig.startDate }}",
+            "created_before": "={{ $node['Configure Historical Import'].json.importConfig.endDate }}",
+            "status": "all",
+            "sort": "created_at:asc"
+          }
+        }
+      },
+      "id": "fetch-next-page",
+      "name": "Fetch Next Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 260]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-events-for-processing",
+      "name": "Split Events for Processing",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1340, 380]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json.id }}/tickets",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "1",
+            "limit": "100"
+          }
+        }
+      },
+      "id": "fetch-event-tickets",
+      "name": "Fetch Event Tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json.id }}/orders",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-API-Key",
+          "value": "{{ $env.HUMANITIX_API_KEY }}"
+        },
+        "options": {
+          "qs": {
+            "page": "1",
+            "limit": "100",
+            "status": "all"
+          }
+        }
+      },
+      "id": "fetch-event-orders",
+      "name": "Fetch Event Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process complete event data with all related entities\nconst eventData = $node['Split Events for Processing'].json;\nconst ticketsResponse = $node['Fetch Event Tickets'].json;\nconst ordersResponse = $node['Fetch Event Orders'].json;\n\n// Process event details\nconst event = {\n  id: eventData.id,\n  name: eventData.name,\n  description: eventData.description,\n  startDate: eventData.startDate,\n  endDate: eventData.endDate,\n  venue: {\n    name: eventData.venue?.name || 'TBD',\n    address: eventData.venue?.address || '',\n    city: eventData.venue?.city || '',\n    state: eventData.venue?.state || '',\n    postalCode: eventData.venue?.postalCode || '',\n    country: eventData.venue?.country || 'AU',\n    capacity: eventData.venue?.capacity || 0\n  },\n  status: eventData.status,\n  ticketsSold: eventData.ticketsSold || 0,\n  grossRevenue: eventData.grossRevenue || 0,\n  url: eventData.url,\n  createdAt: eventData.createdAt,\n  updatedAt: eventData.updatedAt\n};\n\n// Process ticket types with detailed information\nconst ticketTypes = (ticketsResponse.data || []).map(ticket => ({\n  id: ticket.id,\n  name: ticket.name,\n  description: ticket.description,\n  price: ticket.price || 0,\n  quantityAvailable: ticket.quantityAvailable || 0,\n  quantitySold: ticket.quantitySold || 0,\n  status: ticket.status,\n  saleStartDate: ticket.saleStartDate,\n  saleEndDate: ticket.saleEndDate,\n  isVisible: ticket.isVisible,\n  sortOrder: ticket.sortOrder\n}));\n\n// Process orders with comprehensive financial data\nconst orders = (ordersResponse.data || []).map(order => {\n  const subtotal = order.subtotal || 0;\n  const fees = {\n    humanitix: order.totals?.humanitixFee || 0,\n    booking: order.totals?.bookingFee || 0,\n    passedOn: order.totals?.passedOnFee || 0,\n    absorbed: order.totals?.absorbedFee || 0,\n    amex: order.totals?.amexFee || 0,\n    zip: order.totals?.zipFee || 0,\n    total: (order.totals?.humanitixFee || 0) + (order.totals?.bookingFee || 0) + (order.totals?.passedOnFee || 0) + (order.totals?.absorbedFee || 0) + (order.totals?.amexFee || 0) + (order.totals?.zipFee || 0)\n  };\n  \n  const discounts = order.totals?.discounts || 0;\n  const refunds = order.totals?.refunds || 0;\n  const rebates = order.totals?.rebates || 0;\n  const total = order.total || 0;\n  \n  // Calculate partner revenue share\n  const partnerShare = subtotal - discounts - refunds - rebates - fees.passedOn;\n  const humanitixShare = fees.humanitix + fees.booking + fees.absorbed;\n  \n  return {\n    id: order.id,\n    orderName: order.orderName,\n    eventId: event.id,\n    customer: {\n      id: order.customerId,\n      email: order.email,\n      firstName: order.firstName,\n      lastName: order.lastName,\n      mobile: order.mobile,\n      location: order.location || 'AU',\n      businessPurpose: order.businessPurpose || false,\n      international: order.international || false,\n      organiserMailListOptIn: order.organiserMailListOptIn || false,\n      additionalFields: order.additionalFields || []\n    },\n    tickets: (order.tickets || []).map(ticket => ({\n      id: ticket.id,\n      ticketTypeId: ticket.ticketTypeId,\n      ticketTypeName: ticket.ticketType?.name || 'General',\n      quantity: ticket.quantity || 1,\n      price: ticket.price || 0,\n      total: (ticket.price || 0) * (ticket.quantity || 1)\n    })),\n    financials: {\n      subtotal,\n      fees,\n      discounts,\n      refunds,\n      rebates,\n      total,\n      partnerShare,\n      humanitixShare\n    },\n    status: order.status,\n    financialStatus: order.financialStatus,\n    paymentGateway: order.paymentGateway,\n    paymentMethod: order.paymentMethod,\n    createdAt: order.createdAt,\n    updatedAt: order.updatedAt,\n    completedAt: order.completedAt,\n    incompleteAt: order.incompleteAt\n  };\n});\n\n// Extract and deduplicate customers\nconst uniqueCustomers = new Map();\norders.forEach(order => {\n  const customer = order.customer;\n  if (!uniqueCustomers.has(customer.email)) {\n    uniqueCustomers.set(customer.email, {\n      ...customer,\n      orders: [{\n        orderId: order.id,\n        orderName: order.orderName,\n        eventId: order.eventId,\n        total: order.financials.total,\n        partnerShare: order.financials.partnerShare,\n        status: order.status,\n        createdAt: order.createdAt\n      }],\n      totalSpent: order.financials.total,\n      totalOrders: 1,\n      firstOrderDate: order.createdAt,\n      lastOrderDate: order.createdAt\n    });\n  } else {\n    const existingCustomer = uniqueCustomers.get(customer.email);\n    existingCustomer.orders.push({\n      orderId: order.id,\n      orderName: order.orderName,\n      eventId: order.eventId,\n      total: order.financials.total,\n      partnerShare: order.financials.partnerShare,\n      status: order.status,\n      createdAt: order.createdAt\n    });\n    existingCustomer.totalSpent += order.financials.total;\n    existingCustomer.totalOrders += 1;\n    existingCustomer.lastOrderDate = order.createdAt;\n  }\n});\n\nconst customers = Array.from(uniqueCustomers.values());\n\n// Calculate comprehensive event summary\nconst eventSummary = {\n  totalOrders: orders.length,\n  totalCustomers: customers.length,\n  totalTicketsSold: orders.reduce((sum, order) => sum + order.tickets.reduce((ticketSum, ticket) => ticketSum + ticket.quantity, 0), 0),\n  totalGrossSales: orders.reduce((sum, order) => sum + order.financials.total, 0),\n  totalNetSales: orders.reduce((sum, order) => sum + order.financials.subtotal, 0),\n  totalFees: orders.reduce((sum, order) => sum + order.financials.fees.total, 0),\n  totalDiscounts: orders.reduce((sum, order) => sum + order.financials.discounts, 0),\n  totalRefunds: orders.reduce((sum, order) => sum + order.financials.refunds, 0),\n  totalRebates: orders.reduce((sum, order) => sum + order.financials.rebates, 0),\n  partnerShare: orders.reduce((sum, order) => sum + order.financials.partnerShare, 0),\n  humanitixShare: orders.reduce((sum, order) => sum + order.financials.humanitixShare, 0),\n  averageOrderValue: orders.length > 0 ? orders.reduce((sum, order) => sum + order.financials.total, 0) / orders.length : 0,\n  repeatCustomers: customers.filter(c => c.totalOrders > 1).length,\n  repeatCustomerRate: customers.length > 0 ? customers.filter(c => c.totalOrders > 1).length / customers.length * 100 : 0\n};\n\n// Create complete event dataset\nconst completeEventData = {\n  event,\n  ticketTypes,\n  orders,\n  customers,\n  summary: eventSummary,\n  dataQuality: {\n    eventCompleteness: 100,\n    ticketTypesCount: ticketTypes.length,\n    ordersCount: orders.length,\n    customersCount: customers.length,\n    hasCompleteFinancialData: orders.every(o => o.financials.subtotal !== undefined)\n  },\n  processedAt: new Date().toISOString()\n};\n\nreturn [{ json: completeEventData }];"
+      },
+      "id": "process-complete-event-data",
+      "name": "Process Complete Event Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 350]
+    },
+    {
+      "parameters": {
+        "amount": 500,
+        "unit": "milliseconds"
+      },
+      "id": "rate-limit-delay",
+      "name": "Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2000, 350]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input1"
+      },
+      "id": "merge-all-events",
+      "name": "Merge All Events",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [2220, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create comprehensive historical data summary\nconst allEventData = $input.all();\nconst totalEvents = allEventData.length;\n\n// Aggregate all data\nconst aggregatedData = {\n  importSummary: {\n    totalEvents,\n    totalOrders: allEventData.reduce((sum, event) => sum + event.json.summary.totalOrders, 0),\n    totalCustomers: allEventData.reduce((sum, event) => sum + event.json.summary.totalCustomers, 0),\n    totalTicketsSold: allEventData.reduce((sum, event) => sum + event.json.summary.totalTicketsSold, 0),\n    totalRevenue: allEventData.reduce((sum, event) => sum + event.json.summary.totalGrossSales, 0),\n    totalPartnerShare: allEventData.reduce((sum, event) => sum + event.json.summary.partnerShare, 0),\n    totalHumanitixShare: allEventData.reduce((sum, event) => sum + event.json.summary.humanitixShare, 0),\n    totalFees: allEventData.reduce((sum, event) => sum + event.json.summary.totalFees, 0),\n    totalDiscounts: allEventData.reduce((sum, event) => sum + event.json.summary.totalDiscounts, 0),\n    totalRefunds: allEventData.reduce((sum, event) => sum + event.json.summary.totalRefunds, 0)\n  },\n  \n  // Event performance ranking\n  eventPerformance: allEventData.map(event => ({\n    eventId: event.json.event.id,\n    eventName: event.json.event.name,\n    eventDate: event.json.event.startDate,\n    venue: event.json.event.venue.name,\n    totalRevenue: event.json.summary.totalGrossSales,\n    partnerShare: event.json.summary.partnerShare,\n    orderCount: event.json.summary.totalOrders,\n    customerCount: event.json.summary.totalCustomers,\n    ticketsSold: event.json.summary.totalTicketsSold,\n    averageOrderValue: event.json.summary.averageOrderValue,\n    repeatCustomerRate: event.json.summary.repeatCustomerRate\n  })).sort((a, b) => b.totalRevenue - a.totalRevenue),\n  \n  // Customer analytics\n  customerAnalytics: {\n    totalUniqueCustomers: allEventData.reduce((sum, event) => sum + event.json.summary.totalCustomers, 0),\n    totalRepeatCustomers: allEventData.reduce((sum, event) => sum + event.json.summary.repeatCustomers, 0),\n    overallRepeatRate: 0, // Will be calculated\n    averageOrderValue: 0, // Will be calculated\n    highValueCustomers: [] // Will be populated\n  },\n  \n  // Financial breakdown\n  financialBreakdown: {\n    revenueByMonth: {},\n    feeAnalysis: {\n      totalFeesCollected: allEventData.reduce((sum, event) => sum + event.json.summary.totalFees, 0),\n      averageFeePerOrder: 0,\n      feePercentage: 0\n    },\n    discountAnalysis: {\n      totalDiscountsGiven: allEventData.reduce((sum, event) => sum + event.json.summary.totalDiscounts, 0),\n      discountPercentage: 0,\n      averageDiscountPerOrder: 0\n    }\n  },\n  \n  // Data quality assessment\n  dataQuality: {\n    eventsWithCompleteData: allEventData.filter(event => event.json.dataQuality.hasCompleteFinancialData).length,\n    dataCompletenessPercentage: 0,\n    issuesFound: [],\n    recommendationsForImprovement: []\n  },\n  \n  // Complete datasets for partner invoicing\n  partnerInvoicingData: allEventData.map(event => ({\n    eventId: event.json.event.id,\n    eventName: event.json.event.name,\n    eventDate: event.json.event.startDate,\n    venue: event.json.event.venue,\n    summary: event.json.summary,\n    orderBreakdown: event.json.orders.map(order => ({\n      orderId: order.id,\n      orderName: order.orderName,\n      customer: {\n        name: `${order.customer.firstName} ${order.customer.lastName}`,\n        email: order.customer.email,\n        mobile: order.customer.mobile\n      },\n      tickets: order.tickets,\n      financials: order.financials,\n      status: order.status,\n      financialStatus: order.financialStatus,\n      paymentGateway: order.paymentGateway,\n      purchaseDate: order.createdAt,\n      completedDate: order.completedAt\n    })),\n    customerMetrics: {\n      totalCustomers: event.json.summary.totalCustomers,\n      repeatCustomers: event.json.summary.repeatCustomers,\n      repeatCustomerRate: event.json.summary.repeatCustomerRate\n    }\n  })),\n  \n  // Metadata\n  metadata: {\n    importType: 'historical-complete',\n    importDate: new Date().toISOString(),\n    dataSource: 'humanitix-api',\n    version: '2.0',\n    totalRecordsProcessed: allEventData.length\n  }\n};\n\n// Calculate derived metrics\nconst totalOrders = aggregatedData.importSummary.totalOrders;\nconst totalRevenue = aggregatedData.importSummary.totalRevenue;\n\naggregatedData.customerAnalytics.overallRepeatRate = aggregatedData.customerAnalytics.totalRepeatCustomers / aggregatedData.customerAnalytics.totalUniqueCustomers * 100;\naggregatedData.customerAnalytics.averageOrderValue = totalRevenue / totalOrders;\n\naggregatedData.financialBreakdown.feeAnalysis.averageFeePerOrder = aggregatedData.importSummary.totalFees / totalOrders;\naggregatedData.financialBreakdown.feeAnalysis.feePercentage = aggregatedData.importSummary.totalFees / totalRevenue * 100;\n\naggregatedData.financialBreakdown.discountAnalysis.averageDiscountPerOrder = aggregatedData.importSummary.totalDiscounts / totalOrders;\naggregatedData.financialBreakdown.discountAnalysis.discountPercentage = aggregatedData.importSummary.totalDiscounts / totalRevenue * 100;\n\naggregatedData.dataQuality.dataCompletenessPercentage = aggregatedData.dataQuality.eventsWithCompleteData / totalEvents * 100;\n\nreturn [{ json: aggregatedData }];"
+      },
+      "id": "create-historical-summary",
+      "name": "Create Historical Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 350]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=humanitix-historical-complete-{{ new Date().toISOString().split('T')[0] }}.json",
+        "fileContent": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "encoding": "utf8"
+        }
+      },
+      "id": "save-historical-data",
+      "name": "Save Historical Data",
+      "type": "n8n-nodes-base.filesys",
+      "typeVersion": 1,
+      "position": [2660, 350]
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_CHANNEL }}",
+        "text": "=🏆 **Humanitix Historical Import Complete!**\n\n📊 **Complete Dataset Summary:**\n• **Events Processed:** {{ $json.importSummary.totalEvents }}\n• **Total Orders:** {{ $json.importSummary.totalOrders }}\n• **Unique Customers:** {{ $json.importSummary.totalCustomers }}\n• **Tickets Sold:** {{ $json.importSummary.totalTicketsSold }}\n• **Total Revenue:** ${{ $json.importSummary.totalRevenue.toFixed(2) }}\n• **Partner Share:** ${{ $json.importSummary.totalPartnerShare.toFixed(2) }}\n• **Humanitix Share:** ${{ $json.importSummary.totalHumanitixShare.toFixed(2) }}\n\n🎯 **Top 3 Performing Events:**\n1. {{ $json.eventPerformance[0].eventName }} - ${{ $json.eventPerformance[0].totalRevenue.toFixed(2) }}\n2. {{ $json.eventPerformance[1].eventName }} - ${{ $json.eventPerformance[1].totalRevenue.toFixed(2) }}\n3. {{ $json.eventPerformance[2].eventName }} - ${{ $json.eventPerformance[2].totalRevenue.toFixed(2) }}\n\n📈 **Key Metrics:**\n• **Average Order Value:** ${{ $json.customerAnalytics.averageOrderValue.toFixed(2) }}\n• **Repeat Customer Rate:** {{ $json.customerAnalytics.overallRepeatRate.toFixed(1) }}%\n• **Average Fee per Order:** ${{ $json.financialBreakdown.feeAnalysis.averageFeePerOrder.toFixed(2) }}\n• **Discount Rate:** {{ $json.financialBreakdown.discountAnalysis.discountPercentage.toFixed(1) }}%\n\n✅ **Data Quality:** {{ $json.dataQuality.dataCompletenessPercentage.toFixed(1) }}% complete\n\n💼 **Partner Invoicing Ready:** All {{ $json.importSummary.totalEvents }} events processed with complete financial breakdowns\n\n🎫 Historical data import successful - ready for partner invoicing!"
+      },
+      "id": "notify-completion",
+      "name": "Notify Completion",
+      "type": "@modelcontextprotocol/server-slack.sendMessage",
+      "typeVersion": 1,
+      "position": [2880, 350]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Configure Historical Import",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Historical Import": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Events": {
+      "main": [
+        [
+          {
+            "node": "Handle Event Pagination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Event Pagination": {
+      "main": [
+        [
+          {
+            "node": "IF Needs More Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Needs More Pages": {
+      "main": [
+        [
+          {
+            "node": "Fetch Next Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Events for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Next Page": {
+      "main": [
+        [
+          {
+            "node": "Handle Event Pagination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Events for Processing": {
+      "main": [
+        [
+          {
+            "node": "Fetch Event Tickets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Event Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Event Tickets": {
+      "main": [
+        [
+          {
+            "node": "Process Complete Event Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Event Orders": {
+      "main": [
+        [
+          {
+            "node": "Process Complete Event Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Complete Event Data": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Merge All Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Events": {
+      "main": [
+        [
+          {
+            "node": "Create Historical Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Historical Summary": {
+      "main": [
+        [
+          {
+            "node": "Save Historical Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Historical Data": {
+      "main": [
+        [
+          {
+            "node": "Notify Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    {
+      "id": "tag1",
+      "name": "humanitix"
+    },
+    {
+      "id": "tag2",
+      "name": "historical-import"
+    },
+    {
+      "id": "tag3",
+      "name": "complete-data"
+    },
+    {
+      "id": "tag4",
+      "name": "partner-invoicing"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "2.0"
+}

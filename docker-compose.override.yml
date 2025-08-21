@@ -1,0 +1,42 @@
+services:
+  # Fixed Gateway with pre-built image
+  mcp-gateway:
+    image: standup-sydney-mcp-gateway
+    command: node /app/gateway.js
+    restart: unless-stopped
+    
+  # Fixed Metricool with proper Python setup
+  metricool-mcp:
+    image: python:3.11-slim
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir --upgrade pip &&
+             pip install --no-cache-dir uv &&
+             uv pip install --system mcp-metricool &&
+             python -m mcp_metricool"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - METRICOOL_USER_TOKEN=${METRICOOL_USER_TOKEN:-}
+      - METRICOOL_USER_ID=${METRICOOL_USER_ID:-}
+    restart: unless-stopped
+      
+  # Disabled Google Drive until credentials provided
+  gdrive-mcp:
+    image: busybox
+    command: >
+      sh -c "echo 'Google Drive MCP disabled - missing credentials' && 
+             echo 'To enable: Add gdrive-service-account.json to credentials/' && 
+             sleep infinity"
+    restart: unless-stopped
+    
+  # Only start Notion if API key exists
+  notion-mcp:
+    environment:
+      - NOTION_API_KEY=${NOTION_API_KEY:-dummy}
+    restart: unless-stopped
+    
+  # Only start GitHub if token exists  
+  github-mcp:
+    environment:
+      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN:-dummy}
+    restart: unless-stopped

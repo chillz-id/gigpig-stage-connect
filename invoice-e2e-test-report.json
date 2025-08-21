@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-07-13T12:54:45.730Z",
+  "summary": {
+    "totalTests": 21,
+    "totalPassed": 15,
+    "totalFailed": 6,
+    "successRate": "71.4"
+  },
+  "results": {
+    "Invoice Creation": {
+      "passed": 5,
+      "failed": 1,
+      "errors": [
+        {
+          "test": "Add line items",
+          "error": {
+            "code": "PGRST204",
+            "details": null,
+            "hint": null,
+            "message": "Could not find the 'amount' column of 'invoice_items' in the schema cache"
+          }
+        }
+      ]
+    },
+    "Invoice Management": {
+      "passed": 3,
+      "failed": 1,
+      "errors": [
+        {
+          "test": "Clone invoice",
+          "error": {
+            "code": "PGRST204",
+            "details": null,
+            "hint": null,
+            "message": "Could not find the 'number' column of 'invoices' in the schema cache"
+          }
+        }
+      ]
+    },
+    "Integrations": {
+      "passed": 0,
+      "failed": 3,
+      "errors": [
+        {
+          "test": "Email logging",
+          "error": {
+            "code": "PGRST204",
+            "details": null,
+            "hint": null,
+            "message": "Could not find the 'sent_to' column of 'invoice_email_logs' in the schema cache"
+          }
+        },
+        {
+          "test": "Payment link",
+          "error": {
+            "code": "PGRST204",
+            "details": null,
+            "hint": null,
+            "message": "Could not find the 'is_active' column of 'invoice_payment_links' in the schema cache"
+          }
+        },
+        {
+          "test": "Recurring invoice",
+          "error": {
+            "code": "PGRST204",
+            "details": null,
+            "hint": null,
+            "message": "Could not find the 'end_date' column of 'recurring_invoices' in the schema cache"
+          }
+        }
+      ]
+    },
+    "Data Integrity": {
+      "passed": 4,
+      "failed": 1,
+      "errors": [
+        {
+          "test": "Calculations",
+          "error": "9 calculation errors"
+        }
+      ]
+    },
+    "Performance": {
+      "passed": 3,
+      "failed": 0,
+      "errors": []
+    }
+  },
+  "integrationStatus": {
+    "database": "functional",
+    "pdf": "ready",
+    "email": "test_mode",
+    "stripe": "requires_config",
+    "xero": "requires_config"
+  },
+  "performance": {
+    "queryTime": "excellent",
+    "bulkOps": "good",
+    "indexes": "configured"
+  }
+}

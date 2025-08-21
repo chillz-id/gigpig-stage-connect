@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-07-09T21:07:46.692Z",
+  "tables": {
+    "profiles": {
+      "exists": true,
+      "count": 0
+    },
+    "events": {
+      "exists": true,
+      "count": 3
+    },
+    "applications": {
+      "exists": true,
+      "count": 0
+    },
+    "invoices": {
+      "exists": true,
+      "count": 0
+    },
+    "vouches": {
+      "exists": true,
+      "count": 0
+    },
+    "notifications": {
+      "exists": true,
+      "count": 0
+    },
+    "event_spots": {
+      "exists": true,
+      "count": 0
+    },
+    "event_applications": {
+      "exists": true,
+      "count": 0
+    }
+  },
+  "auth": {
+    "userLoggedIn": false,
+    "rlsAccess": false
+  },
+  "overall": "CRITICAL"
+}
