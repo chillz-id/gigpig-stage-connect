@@ -1,0 +1,20 @@
+[
+  {
+    "customer_id": "sample-001",
+    "email": "demo@example.com",
+    "first_name": "Demo",
+    "last_name": "User",
+    "last_seen_at": "2024-06-01T12:00:00Z",
+    "status": "active",
+    "notes": "Minimal sample row for local development"
+  },
+  {
+    "customer_id": "sample-002",
+    "email": "another@example.com",
+    "first_name": "Example",
+    "last_name": "Account",
+    "last_seen_at": "2024-05-15T08:30:00Z",
+    "status": "inactive",
+    "notes": "Demonstrates optional fields such as notes"
+  }
+]
