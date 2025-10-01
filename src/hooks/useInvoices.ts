@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
+import { filterInvoicesByCriteria, matchesAmountRange, matchesDateFilter } from './useInvoicesFilters';
 
 export const useInvoices = () => {
   const { user, hasRole } = useAuth();
@@ -122,49 +122,8 @@ export const useInvoices = () => {
     }
   };
 
-  const matchesDateFilter = (invoice: Invoice, dateFilter: DateFilter) => {
-    if (dateFilter === 'all') return true;
-    
-    const issueDate = new Date(invoice.issue_date);
-    const dueDate = new Date(invoice.due_date);
-    
-    switch (dateFilter) {
-      case 'this-month':
-        return isThisMonth(issueDate);
-      case 'last-month':
-        const lastMonth = subMonths(new Date(), 1);
-        const lastMonthStart = startOfMonth(lastMonth);
-        const lastMonthEnd = endOfMonth(lastMonth);
-        return isAfter(issueDate, lastMonthStart) && isBefore(issueDate, lastMonthEnd);
-      case 'this-quarter':
-        return isThisQuarter(issueDate);
-      case 'this-year':
-        return isThisYear(issueDate);
-      case 'overdue':
-        return isBefore(dueDate, new Date()) && invoice.status !== 'paid';
-      default:
-        return true;
-    }
-  };
-
-  const matchesAmountRange = (invoice: Invoice, amountRange: AmountRange) => {
-    const amount = invoice.total_amount;
-    return amount >= amountRange.min && amount <= amountRange.max;
-  };
-
   const filterInvoices = (searchTerm: string, statusFilter: string, dateFilter: DateFilter, amountRange: AmountRange) => {
-    return invoices.filter(invoice => {
-      const matchesSearch = 
-        invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.invoice_recipients.some(recipient => 
-          recipient.recipient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          recipient.recipient_email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      
-      const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-      
-      return matchesSearch && matchesStatus && matchesDateFilter(invoice, dateFilter) && matchesAmountRange(invoice, amountRange);
-    });
+    return filterInvoicesByCriteria(invoices, searchTerm, statusFilter, dateFilter, amountRange);
   };
 
   return {
@@ -176,3 +135,5 @@ export const useInvoices = () => {
     refetchInvoices: fetchInvoices
   };
 };
+
+export { matchesDateFilter, matchesAmountRange, filterInvoicesByCriteria } from './useInvoicesFilters';
