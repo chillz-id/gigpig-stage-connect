@@ -75,3 +75,7 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Handling customer data exports
+
+Sensitive customer exports are no longer tracked in Git. Use the sanitized sample at [`docs/customer-tracking-sample.json`](./docs/customer-tracking-sample.json) to understand the schema, and follow the secure workflow in [`docs/customer-export-guide.md`](./docs/customer-export-guide.md) when you need to pull fresh data from Supabase. This keeps PII confined to approved storage while preserving developer ergonomics.
