@@ -1,0 +1,26 @@
+{
+  "id": "issue-1756306412837-0e01c302",
+  "type": "issue",
+  "severity": "High",
+  "title": "N8N Humanitix Workflow Complex Architecture Failures",
+  "description": "N8N workflows for Humanitix sync were experiencing instant failures due to: 1) Complex nested workflow structure attempting to sync Events, Orders, and Tickets in single flow with /tmp/humanitix-full-sync-workflow.json, 2) N8N credential configuration issues with Notion API integration causing 'Cannot read properties of undefined' errors, 3) Memory crashes during workflow execution with large data sets, 4) Workflow complexity made debugging extremely difficult with multiple failure points in credential handling and data transformation. Root cause: N8N credential system not properly configured for Notion API access despite UI showing correct credentials.",
+  "date": "2025-08-27",
+  "timestamp": "2025-08-27T14:53:32.838Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully resolved by switching from complex N8N workflows to direct Python API integration. Created /tmp/humanitix-sync.py as complete replacement for failing N8N workflow architecture. Key solutions: 1) Direct API calls to Humanitix endpoints (/v1/events, /v1/events/{id}/orders, /v1/events/{id}/tickets), 2) Simple rate limiting with time.sleep(0.3) between calls, 3) Proper error handling and logging, 4) Direct Notion API integration without N8N credential complexity. Result: Successful sync of Events, Orders, and individual Tickets to 3 Notion databases with proper venue mapping and fee rebate extraction. Eliminated all N8N credential and memory issues.",
+    "successful": true,
+    "timestamp": "2025-08-27T14:54:17.750Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "api",
+    "error",
+    "integration",
+    "credentials"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876845756-055364ed",
+  "type": "issue",
+  "severity": "critical",
+  "title": "Frontend Application 62% Test Failure Rate",
+  "description": "Critical operational issue: Frontend application showing 62% test failure rate (13 of 21 tests failing) with missing UI components including event cards, invoice components, application components. Button elements not found across multiple pages and mobile navigation completely non-functional. Root cause: Insufficient test maintenance and component reliability issues. Prevention: Implement continuous test monitoring, maintain test coverage requirements, and establish component reliability standards.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:05.757Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": "BACKEND-52",
+  "cross_references": []
+}

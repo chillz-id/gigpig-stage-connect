@@ -1,0 +1,251 @@
+{
+  "name": "Humanitix Events → Event Dashboard (Date Separated)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "Get Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse events and separate by dates\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response structures\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\nconsole.log(`Found ${events.length} events from Humanitix`);\n\nconst separatedEvents = [];\n\nfor (const event of events) {\n  // Check if event has multiple dates\n  const dates = event.dates || event.showDates || [];\n  \n  if (dates.length > 0) {\n    // Multiple dates - create separate entry for each\n    for (const dateInfo of dates) {\n      separatedEvents.push({\n        ...event,\n        singleDate: dateInfo,\n        eventDateId: `${event._id || event.id}_${dateInfo.startDate || dateInfo.date}`,\n        isMultiDate: true\n      });\n    }\n  } else {\n    // Single date event\n    separatedEvents.push({\n      ...event,\n      singleDate: {\n        startDate: event.startDate || event.date,\n        endDate: event.endDate,\n        time: event.time\n      },\n      eventDateId: event._id || event.id,\n      isMultiDate: false\n    });\n  }\n}\n\nconsole.log(`Separated into ${separatedEvents.length} event entries`);\n\nreturn separatedEvents.map(event => ({ json: event }));"
+      },
+      "id": "parse-and-separate-events",
+      "name": "Parse and Separate Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform to Event Dashboard format\nconst event = $json;\nconst eventName = event.name || event.title || 'Unknown Event';\nconst dateInfo = event.singleDate || {};\nconst eventDate = dateInfo.startDate || event.startDate || event.date;\nconst venue = event.venue?.name || event.location?.name || event.location || '';\nconst address = event.venue?.address || event.address || '';\nconst capacity = parseInt(event.capacity) || null;\nconst ticketLink = event.ticketUrl || event.url || event.humanitixUrl || '';\nconst eventId = event._id || event.id || '';\nconst eventDateId = event.eventDateId || eventId;\nconst description = event.description || event.eventDescription || '';\nconst status = event.status || 'Planned';\n\n// Determine day of week\nlet dayOfWeek = '';\nif (eventDate) {\n  const date = new Date(eventDate);\n  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\n  dayOfWeek = days[date.getDay()];\n}\n\n// Determine show type\nlet showType = 'Showcase'; // Default\nif (eventName.toLowerCase().includes('podcast')) {\n  showType = 'Live Podcast';\n} else if (eventName.toLowerCase().includes('solo')) {\n  showType = 'Solo Show';\n}\n\n// Sales status\nlet salesStatus = 'Draft';\nif (event.ticketsAvailable === false || event.soldOut) {\n  salesStatus = 'Sold Out';\n} else if (event.published && eventDate) {\n  const now = new Date();\n  const eventDateObj = new Date(eventDate);\n  if (eventDateObj > now) {\n    salesStatus = 'On Sale';\n  } else {\n    salesStatus = 'Sales Ended';\n  }\n}\n\nconst transformedEvent = {\n  eventDateId: eventDateId,\n  properties: {\n    \"Name\": {\n      title: [{ text: { content: eventName } }]\n    },\n    \"Date & Time\": {\n      date: eventDate ? { start: eventDate } : null\n    },\n    \"Day\": {\n      select: dayOfWeek ? { name: dayOfWeek } : null\n    },\n    \"Venue\": {\n      rich_text: [{ text: { content: venue } }]\n    },\n    \"Address\": {\n      rich_text: [{ text: { content: address } }]\n    },\n    \"Capacity\": {\n      number: capacity\n    },\n    \"Ticket Link\": {\n      url: ticketLink || null\n    },\n    \"Humanitix URL\": {\n      url: ticketLink || null\n    },\n    \"Event ID\": {\n      rich_text: [{ text: { content: eventId } }]\n    },\n    \"Event Date ID\": {\n      rich_text: [{ text: { content: eventDateId } }]\n    },\n    \"Humanitix Event ID\": {\n      rich_text: [{ text: { content: eventId } }]\n    },\n    \"Event Description\": {\n      rich_text: [{ text: { content: description } }]\n    },\n    \"Status\": {\n      select: { name: status }\n    },\n    \"Show Type\": {\n      select: { name: showType }\n    },\n    \"Sales Status\": {\n      select: { name: salesStatus }\n    },\n    \"Notes\": {\n      rich_text: [{ text: { content: event.isMultiDate ? 'Multi-date event - auto-separated' : 'Single date event' } }]\n    }\n  }\n};\n\n// Remove null properties\nObject.keys(transformedEvent.properties).forEach(key => {\n  if (transformedEvent.properties[key] === null || \n      (transformedEvent.properties[key].rich_text && transformedEvent.properties[key].rich_text[0].text.content === '') ||\n      (transformedEvent.properties[key].url === null)) {\n    delete transformedEvent.properties[key];\n  }\n});\n\nreturn [{ json: transformedEvent }];"
+      },
+      "id": "transform-event-data",
+      "name": "Transform Event Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "1374745b-8cbe-80fb-aed3-f54d6a543232",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Event Date ID",
+              "condition": "equals",
+              "value": "={{ $json.eventDateId }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "id": "check-event-duplicates",
+      "name": "Check Event Duplicates",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.results ? $json.results.length : 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-new-event",
+      "name": "IF New Event",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "1374745b-8cbe-80fb-aed3-f54d6a543232",
+        "properties": "={{ $('Transform Event Data').item.json.properties }}",
+        "options": {}
+      },
+      "id": "create-event-entry",
+      "name": "Create Event Entry",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1560, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Summary of sync operation\nconst processedCount = $input.all().length;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    message: `Event sync completed`,\n    eventsProcessed: processedCount,\n    status: 'success',\n    workflow: 'Events to Dashboard'\n  }\n}];"
+      },
+      "id": "summary",
+      "name": "Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events": {
+      "main": [
+        [
+          {
+            "node": "Parse and Separate Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Separate Events": {
+      "main": [
+        [
+          {
+            "node": "Transform Event Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Event Data": {
+      "main": [
+        [
+          {
+            "node": "Check Event Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Event Duplicates": {
+      "main": [
+        [
+          {
+            "node": "IF New Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF New Event": {
+      "main": [
+        [
+          {
+            "node": "Create Event Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Event Entry": {
+      "main": [
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "executionTimeout": 300
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": null,
+  "triggerCount": 0,
+  "tags": []
+}

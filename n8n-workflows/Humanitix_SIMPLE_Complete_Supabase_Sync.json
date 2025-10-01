@@ -1,0 +1,531 @@
+{
+  "name": "Humanitix SIMPLE Complete Supabase Sync (2022 to Now)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-events",
+      "name": "Fetch Humanitix Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.all()[0]?.json || {};\nconst events = response.events || [];\n\nconsole.log(`Processing ${events.length} events from Humanitix`);\n\nconst results = [];\nconst seenIds = new Set();\n\nfor (const event of events) {\n  if (!event._id) {\n    console.log('Skipping event without ID');\n    continue;\n  }\n  \n  // Deduplicate by source_id to prevent constraint violations\n  if (seenIds.has(event._id)) {\n    console.log(`Skipping duplicate event: ${event.name} (${event._id})`);\n    continue;\n  }\n  seenIds.add(event._id);\n  \n  console.log(`Processing event: ${event.name} (${event._id})`);\n  \n  const eventLocation = event.eventLocation || {};\n  const pricing = event.pricing || {};\n  const paymentOptions = event.paymentOptions || {};\n  const accessibility = event.accessibility || {};\n  const affiliateCode = event.affiliateCode || {};\n  \n  const eventData = {\n    source: 'humanitix',\n    source_id: event._id,\n    \n    // Core Event Information\n    name: event.name || '',\n    description: event.description || '',\n    slug: event.slug || '',\n    url: event.url || '',\n    category: event.category || '',\n    classification: event.classification || null,\n    \n    // User & Organization\n    user_id: event.userId || '',\n    organiser_id: event.organiserId || '',\n    \n    // Status Fields\n    public: Boolean(event.public),\n    published: Boolean(event.published),\n    suspended_sales: Boolean(event.suspendSales),\n    marked_as_sold_out: Boolean(event.markedAsSoldOut),\n    \n    // Dates & Timing\n    start_date: event.startDate,\n    end_date: event.endDate,\n    timezone: event.timezone || '',\n    published_at: event.publishedAt,\n    \n    // Capacity & Ticketing\n    total_capacity: event.totalCapacity || null,\n    currency: event.currency || '',\n    \n    // Location Information\n    location: event.location || '',\n    location_type: eventLocation.type || null,\n    venue_name: eventLocation.venueName || '',\n    venue_address: eventLocation.address || '',\n    venue_lat_lng: eventLocation.latLng || null,\n    online_url: eventLocation.onlineUrl || null,\n    location_instructions: eventLocation.instructions || '',\n    \n    // Images\n    banner_image_url: event.bannerImage?.url || null,\n    feature_image_url: event.featureImage?.url || null,\n    social_image_url: event.socialImage?.url || null,\n    \n    // SEO & Marketing\n    keywords: event.keywords || [],\n    tag_ids: event.tagIds || [],\n    affiliate_code: affiliateCode.code || null,\n    \n    // Artists & Performers\n    artists: event.artists || [],\n    \n    // Event Structure\n    dates: event.dates || [],\n    ticket_types: event.ticketTypes || [],\n    packaged_tickets: event.packagedTickets || [],\n    additional_questions: event.additionalQuestions || [],\n    \n    // Pricing Configuration\n    pricing_currency: pricing.currency || null,\n    pricing_minimum: pricing.minimum || null,\n    pricing_maximum: pricing.maximum || null,\n    pricing_fees_included: Boolean(pricing.feesIncluded),\n    pricing_payment_plan_enabled: Boolean(pricing.paymentPlanEnabled),\n    \n    // Payment Options\n    payment_options_cash: Boolean(paymentOptions.cash),\n    payment_options_card: Boolean(paymentOptions.card),\n    payment_options_paypal: Boolean(paymentOptions.paypal),\n    payment_options_afterpay: Boolean(paymentOptions.afterpay),\n    payment_options_zip: Boolean(paymentOptions.zip),\n    payment_options_invoice: Boolean(paymentOptions.invoice),\n    payment_options_complimentary: Boolean(paymentOptions.complimentary),\n    \n    // Accessibility\n    accessibility_wheelchair_accessible: Boolean(accessibility.wheelchairAccessible),\n    accessibility_hearing_loop: Boolean(accessibility.hearingLoop),\n    accessibility_companion_card: Boolean(accessibility.companionCard),\n    accessibility_audio_description: Boolean(accessibility.audioDescription),\n    accessibility_auslan_interpreted: Boolean(accessibility.auslanInterpreted),\n    accessibility_captioned: Boolean(accessibility.captioned),\n    accessibility_relaxed_performance: Boolean(accessibility.relaxedPerformance),\n    accessibility_notes: accessibility.notes || null,\n    \n    // System Fields\n    created_at: event.createdAt,\n    updated_at: event.updatedAt,\n    \n    // Legacy/Compatibility Fields (for existing Supabase structure)\n    title: event.name || '',\n    hero_image_url: event.featureImage?.url || null,\n    details: event.description || '',\n    promoter_id: event.organiserId || '',\n    suspendedsale: Boolean(event.suspendSales), // snake_case for compatibility\n    markedassoldout: Boolean(event.markedAsSoldOut), // snake_case for compatibility\n    startdate: event.startDate, // legacy field\n    enddate: event.endDate, // legacy field\n    totalcapacity: event.totalCapacity || null, // legacy field\n    organiserid: event.organiserId || '', // legacy field\n    userid: event.userId || '', // legacy field\n    tags: event.tagIds || [], // legacy field\n    eventlocation: event.eventLocation || null, // legacy field\n    \n    // Raw Data & Metadata\n    raw: event,\n    updated_at_api: new Date().toISOString()\n  };\n  \n  results.push({ json: eventData });\n}\n\nconsole.log(`Prepared ${results.length} events for Supabase with complete data`);\nreturn results;"
+      },
+      "id": "prepare-events",
+      "name": "Prepare Events Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events_htx",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {},
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "source,source_id"
+            }
+          ]
+        }
+      },
+      "id": "upsert-events",
+      "name": "Upsert Events to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst seenSessionIds = new Set();\n\nconsole.log(`Extracting sessions from ${items.length} events`);\n\nfor (const item of items) {\n  const event = item.json;\n  \n  const dates = event.dates || [];\n  \n  console.log(`Event ${event.name}: ${dates.length} sessions found`);\n  \n  if (dates.length === 0) {\n    // Single session event - create one session\n    const sessionId = `${event.source_id}-single`;\n    if (!seenSessionIds.has(sessionId)) {\n      seenSessionIds.add(sessionId);\n      console.log(`Creating single session for: ${event.name}`);\n      results.push({\n        json: {\n          source: 'humanitix',\n          source_id: sessionId,\n          event_source_id: event.source_id,\n          event_name: event.name,\n          starts_at: event.startdate,\n          venue_name: event.location || event.eventlocation?.venue || null,\n          status: 'active',\n          updated_at: event.updated_at,\n          raw: { single_session: true, event_id: event.source_id },\n          updated_at_api: new Date().toISOString()\n        }\n      });\n    }\n  } else {\n    // Multi-session event - create from dates array\n    console.log(`Creating ${dates.length} sessions for: ${event.name}`);\n    dates.forEach((session, index) => {\n      if (!session.deleted && !session.disabled) {\n        const sessionId = session._id || `${event.source_id}-${index + 1}`;\n        if (!seenSessionIds.has(sessionId)) {\n          seenSessionIds.add(sessionId);\n          results.push({\n            json: {\n              source: 'humanitix',\n              source_id: sessionId,\n              event_source_id: event.source_id,\n              event_name: event.name,\n              starts_at: session.startDate,\n              venue_name: event.location || event.eventlocation?.venue || null,\n              status: (session.disabled || session.deleted) ? 'disabled' : 'active',\n              updated_at: event.updated_at,\n              raw: session,\n              updated_at_api: new Date().toISOString()\n            }\n          });\n        }\n      }\n    });\n  }\n}\n\nconsole.log(`Extracted ${results.length} total sessions (deduplicated)`);\nreturn results;"
+      },
+      "id": "extract-sessions",
+      "name": "Extract Sessions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sessions_htx",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {},
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "source,source_id"
+            }
+          ]
+        }
+      },
+      "id": "upsert-sessions",
+      "name": "Upsert Sessions to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all events and prepare for Orders/Tickets fetching\nconst events = $('Prepare Events Data').all();\nconst eventIds = [];\n\nfor (const event of events) {\n  eventIds.push({\n    eventId: event.json.source_id,\n    eventName: event.json.name\n  });\n}\n\nconsole.log(`Prepared ${eventIds.length} events for Orders/Tickets fetching`);\nreturn eventIds;"
+      },
+      "id": "prepare-for-orders",
+      "name": "Prepare for Orders/Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{$json.eventId}}/orders",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-orders",
+      "name": "Fetch Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{$json.eventId}}/tickets",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-tickets",
+      "name": "Fetch Tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Orders with Complete Data\nconst orders = $input.first().json.orders || [];\nconst contextData = $('Prepare for Orders/Tickets').item.json;\nconst processedOrders = [];\nconst seenOrderIds = new Set();\n\nconsole.log(`Processing ${orders.length} orders for event ${contextData.eventName}`);\n\nfor (const order of orders) {\n  // Deduplicate by order ID to prevent constraint violations\n  if (!order._id || seenOrderIds.has(order._id)) {\n    console.log(`Skipping duplicate or invalid order: ${order._id}`);\n    continue;\n  }\n  seenOrderIds.add(order._id);\n  const totals = order.totals || {};\n  const purchaseTotals = order.purchaseTotals || {};\n  const discounts = order.discounts || {};\n  const discountCode = discounts.discountCode || {};\n  const autoDiscount = discounts.autoDiscount || {};\n  \n  const orderData = {\n    source: 'humanitix',\n    source_id: order._id,\n    \n    // Core Identifiers\n    event_source_id: order.eventId || contextData.eventId,\n    session_source_id: order.eventDateId,\n    user_id: order.userId,\n    order_reference: order.reference || order._id,\n    \n    // Status Information\n    status: order.status,\n    financial_status: order.financialStatus,\n    manual_order: Boolean(order.manualOrder),\n\n    is_international_transaction: Boolean(order.isInternationalTransaction),\n    \n    // Customer Information\n    first_name: order.firstName,\n    last_name: order.lastName,\n    purchaser_name: `${order.firstName || ''} ${order.lastName || ''}`.trim(),\n    purchaser_email: order.email,\n    mobile: order.mobile,\n    organisation: order.organisation,\n    \n    // Business Information\n    business_purpose: Boolean(order.businessPurpose),\n    business_tax_id: order.businessTaxId,\n    business_name: order.businessName,\n    \n    // Payment Information\n    payment_type: order.paymentType,\n    payment_gateway: order.paymentGateway,\n    tip_fees: Boolean(order.tipFees),\n    currency: order.currency,\n    \n    // Access & Marketing\n    access_code: order.accessCode,\n    organiser_mail_list_opt_in: Boolean(order.organiserMailListOptIn),\n    waitlist_offer_id: order.waitlistOfferId,\n    \n    // Discount Information\n    discount_code_used: discountCode.code || null,\n    discount_code_amount_cents: discountCode.discountAmount ? Math.round(discountCode.discountAmount * 100) : 0,\n    auto_discount_amount_cents: autoDiscount.discountAmount ? Math.round(autoDiscount.discountAmount * 100) : 0,\n    \n    // Donation Fields\n    client_donation_cents: order.clientDonation ? Math.round(order.clientDonation * 100) : 0,\n    \n    // Core Financial Fields (Order Totals)\n    total_cents: totals.total ? Math.round(totals.total * 100) : 0,\n    subtotal_cents: totals.subtotal ? Math.round(totals.subtotal * 100) : 0,\n    net_sales_cents: totals.netSales ? Math.round(totals.netSales * 100) : 0,\n    gross_sales_cents: totals.grossSales ? Math.round(totals.grossSales * 100) : 0,\n    \n    // Fee Breakdown (Order Totals)\n    humanitix_fee_cents: totals.humanitixFee ? Math.round(totals.humanitixFee * 100) : 0,\n    booking_fee_cents: totals.bookingFee ? Math.round(totals.bookingFee * 100) : 0,\n    passed_on_fee_cents: totals.passedOnFee ? Math.round(totals.passedOnFee * 100) : 0,\n    amex_fee_cents: totals.amexFee ? Math.round(totals.amexFee * 100) : 0,\n    zip_fee_cents: totals.zipFee ? Math.round(totals.zipFee * 100) : 0,\n    \n    // Tax Fields (Order Totals)\n    booking_taxes_cents: totals.bookingTaxes ? Math.round(totals.bookingTaxes * 100) : 0,\n    passed_on_taxes_cents: totals.passedOnTaxes ? Math.round(totals.passedOnTaxes * 100) : 0,\n    taxes_cents: totals.taxes ? Math.round(totals.taxes * 100) : 0,\n    total_taxes_cents: totals.totalTaxes ? Math.round(totals.totalTaxes * 100) : 0,\n    \n    // Donation Fields (Order Totals)\n    order_client_donation_cents: totals.clientDonation ? Math.round(totals.clientDonation * 100) : 0,\n    net_client_donation_cents: totals.netClientDonation ? Math.round(totals.netClientDonation * 100) : 0,\n    donation_cents: totals.donation ? Math.round(totals.donation * 100) : 0,\n    dgr_donation_cents: totals.dgrDonation ? Math.round(totals.dgrDonation * 100) : 0,\n    \n    // Credit and Discount Fields (Order Totals)\n    gift_card_credit_cents: totals.giftCardCredit ? Math.round(totals.giftCardCredit * 100) : 0,\n    credit_cents: totals.credit ? Math.round(totals.credit * 100) : 0,\n    discounts_cents: totals.discounts ? Math.round(totals.discounts * 100) : 0,\n    refunds_cents: totals.refunds ? Math.round(totals.refunds * 100) : 0,\n    referral_amount_cents: totals.referralAmount ? Math.round(totals.referralAmount * 100) : 0,\n    outstanding_amount_cents: totals.outstandingAmount ? Math.round(totals.outstandingAmount * 100) : 0,\n    \n    // Purchase Totals (separate from order totals)\n    purchase_total_cents: purchaseTotals.total ? Math.round(purchaseTotals.total * 100) : 0,\n    purchase_subtotal_cents: purchaseTotals.subtotal ? Math.round(purchaseTotals.subtotal * 100) : 0,\n    purchase_net_sales_cents: purchaseTotals.netSales ? Math.round(purchaseTotals.netSales * 100) : 0,\n    purchase_gross_sales_cents: purchaseTotals.grossSales ? Math.round(purchaseTotals.grossSales * 100) : 0,\n    purchase_humanitix_fee_cents: purchaseTotals.humanitixFee ? Math.round(purchaseTotals.humanitixFee * 100) : 0,\n    purchase_booking_fee_cents: purchaseTotals.bookingFee ? Math.round(purchaseTotals.bookingFee * 100) : 0,\n    purchase_discounts_cents: purchaseTotals.discounts ? Math.round(purchaseTotals.discounts * 100) : 0,\n    purchase_refunds_cents: purchaseTotals.refunds ? Math.round(purchaseTotals.refunds * 100) : 0,\n    \n    // Boolean Fields\n    fees_included: Boolean(totals.feesIncluded),\n    purchase_fees_included: Boolean(purchaseTotals.feesIncluded),\n    \n    // Timestamps\n    created_at: order.createdAt,\n    updated_at: order.updatedAt,\n    incomplete_at: order.incompleteAt,\n    completed_at: order.completedAt,\n    ordered_at: order.completedAt || order.createdAt,\n    \n    // Location & Notes\n    location: order.location,\n    notes: order.notes,\n    \n    // Additional Data\n    additional_fields: order.additionalFields,\n    \n    // Raw Data & Metadata\n    raw: order,\n    ingested_at: new Date().toISOString(),\n    updated_at_api: new Date().toISOString()\n  };\n  \n  processedOrders.push(orderData);\n}\n\nconsole.log(`Processed ${processedOrders.length} orders with complete data including business info, payments, discounts`);\nreturn processedOrders;"
+      },
+      "id": "process-orders",
+      "name": "Process Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Tickets with Complete Data\nconst tickets = $input.first().json.tickets || [];\nconst contextData = $('Prepare for Orders/Tickets').item.json;\nconst processedTickets = [];\nconst seenTicketIds = new Set();\n\nconsole.log(`Processing ${tickets.length} tickets for event ${contextData.eventName}`);\n\nfor (const ticket of tickets) {\n  // Deduplicate by ticket ID to prevent constraint violations\n  if (!ticket._id || seenTicketIds.has(ticket._id)) {\n    console.log(`Skipping duplicate or invalid ticket: ${ticket._id}`);\n    continue;\n  }\n  seenTicketIds.add(ticket._id);\n  const checkIn = ticket.checkIn || {};\n  const seatingLocation = ticket.seatingLocation || {};\n  const discounts = ticket.discounts || {};\n  const discountCode = discounts.discountCode || {};\n  const autoDiscount = discounts.autoDiscount || {};\n  \n  const ticketData = {\n    source: 'humanitix',\n    source_id: ticket._id,\n    \n    // Core Identifiers\n    event_source_id: ticket.eventId || contextData.eventId,\n    order_source_id: ticket.orderId,\n    session_source_id: ticket.eventDateId,\n    ticket_type_id: ticket.ticketTypeId,\n    ticket_type_name: ticket.ticketTypeName,\n    ticket_number: ticket.number,\n    \n    // Attendee Information\n    first_name: ticket.firstName,\n    last_name: ticket.lastName,\n    organisation: ticket.organisation,\n    attendee_profile_id: ticket.attendeeProfileId,\n    \n    // Pricing Fields (in cents)\n    price_cents: ticket.price ? Math.round(ticket.price * 100) : 0,\n    net_price_cents: ticket.netPrice ? Math.round(ticket.netPrice * 100) : 0,\n    total_cents: ticket.total ? Math.round(ticket.total * 100) : 0,\n    discount_cents: ticket.discount ? Math.round(ticket.discount * 100) : 0,\n    taxes_cents: ticket.taxes ? Math.round(ticket.taxes * 100) : 0,\n    fee_cents: ticket.fee ? Math.round(ticket.fee * 100) : 0,\n    passed_on_fee_cents: ticket.passedOnFee ? Math.round(ticket.passedOnFee * 100) : 0,\n    absorbed_fee_cents: ticket.absorbedFee ? Math.round(ticket.absorbedFee * 100) : 0,\n    dgr_donation_cents: ticket.dgrDonation ? Math.round(ticket.dgrDonation * 100) : 0,\n    \n    // Package Information\n    package_id: ticket.packageId,\n    package_name: ticket.packageName,\n    package_group_id: ticket.packageGroupId,\n    package_price_cents: ticket.packagePrice ? Math.round(ticket.packagePrice * 100) : 0,\n    \n    // Discount Information\n    discount_code_used: discountCode.code || null,\n    discount_code_amount_cents: discountCode.discountAmount ? Math.round(discountCode.discountAmount * 100) : 0,\n    auto_discount_amount_cents: autoDiscount.discountAmount ? Math.round(autoDiscount.discountAmount * 100) : 0,\n    \n    // Status and Sales\n    status: ticket.status,\n    sales_channel: ticket.salesChannel,\n    is_donation: Boolean(ticket.isDonation),\n    cancelled_at: ticket.cancelledAt,\n    \n    // Check-in Information\n    checked_in: Boolean(checkIn.checkedIn),\n    check_in_status: checkIn.status || null,\n    check_in_date: checkIn.checkedInAt || null,\n    check_in_location: checkIn.location || null,\n    check_in_device: checkIn.device || null,\n    check_in_notes: checkIn.notes || null,\n    \n    // Seating Information\n    seating_map_id: seatingLocation.seatingMapId,\n    seating_name: seatingLocation.name,\n    seating_section: seatingLocation.section,\n    seating_table: seatingLocation.table,\n    seating_seat: seatingLocation.seat,\n    seating_note: seatingLocation.note,\n    \n    // Scanning & Access\n    barcode: ticket.qrCodeData?._id || ticket.customScanningCode,\n    qr_code_data: ticket.qrCodeData,\n    custom_scanning_code: ticket.customScanningCode,\n    access_code: ticket.accessCode,\n    \n    // Swapping Information\n    swapped_from: ticket.swappedFrom,\n    swapped_to: ticket.swappedTo,\n    \n    // System Fields\n    currency: ticket.currency,\n    location: ticket.location,\n    order_name: ticket.orderName,\n    additional_fields: ticket.additionalFields,\n    check_in_history: ticket.checkInHistory,\n    \n    // Timestamps\n    created_at: ticket.createdAt,\n    updated_at: ticket.updatedAt,\n    \n    // Raw Data\n    raw: ticket,\n    ingested_at: new Date().toISOString(),\n    updated_at_api: new Date().toISOString()\n  };\n  \n  processedTickets.push(ticketData);\n}\n\nconsole.log(`Processed ${processedTickets.length} tickets with complete data including packages, discounts, seating`);\nreturn processedTickets;"
+      },
+      "id": "process-tickets",
+      "name": "Process Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/orders_htx",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {},
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "source,source_id"
+            }
+          ]
+        }
+      },
+      "id": "upsert-orders",
+      "name": "Upsert Orders to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/tickets_htx",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {},
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "source,source_id"
+            }
+          ]
+        }
+      },
+      "id": "upsert-tickets",
+      "name": "Upsert Tickets to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Humanitix Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Humanitix Events": {
+      "main": [
+        [
+          {
+            "node": "Prepare Events Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Events Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Events to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Extract Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sessions": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Sessions to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Prepare for Orders/Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare for Orders/Tickets": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Orders": {
+      "main": [
+        [
+          {
+            "node": "Process Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tickets": {
+      "main": [
+        [
+          {
+            "node": "Process Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Orders": {
+      "main": [
+        [
+          {
+            "node": "Upsert Orders to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Tickets": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

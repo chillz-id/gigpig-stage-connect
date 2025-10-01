@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Linear Issue from Test Failure",
+    "description": "Create Linear issues when tests fail",
+    "trigger": "Test failure webhook",
+    "actions": [
+      "Parse test failure data",
+      "Create Linear issue with test details",
+      "Assign to Testing team",
+      "Notify relevant agents"
+    ]
+  },
+  {
+    "name": "Linear Issue from MCP Server Failure",
+    "description": "Create Linear issues when MCP servers fail",
+    "trigger": "MCP health check failure",
+    "actions": [
+      "Identify failed MCP server",
+      "Create critical Linear issue",
+      "Assign to Integration team",
+      "Alert on-call engineer"
+    ]
+  },
+  {
+    "name": "Linear Issue Status → Agent Notification",
+    "description": "Notify agents when their Linear issues change status",
+    "trigger": "Linear webhook - issue status change",
+    "actions": [
+      "Parse issue update",
+      "Identify assigned agent",
+      "Send notification to agent",
+      "Update agent task queue"
+    ]
+  }
+]

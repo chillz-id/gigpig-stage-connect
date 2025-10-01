@@ -1,0 +1,24 @@
+{
+  "id": "issue-1755892077649-b2c22dd5",
+  "type": "issue",
+  "severity": "high",
+  "title": "Humanitix API Invalid Parameter Error",
+  "description": "Humanitix API v1/events endpoint rejects 'limit' query parameter. Error: 'query should NOT have additional properties limit'. API expects different parameter name, possibly 'pageSize' based on OpenAPI spec. Workflow fails immediately at first HTTP request node with 400 Bad Request error.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T19:47:57.649Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Fixed by changing 'limit' query parameter to 'pageSize' as specified in Humanitix OpenAPI spec. Updated both workflow-1-clean.json and workflow-2-clean.json files, then redeployed workflows CK9JWj9aapFu26lH and XQ8bFr8gSIOQjWC5 to N8N via PUT API. Humanitix API v1/events expects 'pageSize' (not 'limit') with max value 100.",
+    "successful": true,
+    "timestamp": "2025-08-22T19:52:27.465Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "api",
+    "error"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

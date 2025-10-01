@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876492426-6fe23e14",
+  "type": "issue",
+  "severity": "low",
+  "title": "File Path Assumption Without Verification",
+  "description": "During session, occasionally made file path assumptions without first verifying existence using LS tool. While paths turned out correct, this could cause errors in different environments. Best practice is always verify paths before operating on them, especially for critical operations.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:28:12.426Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ]
+}

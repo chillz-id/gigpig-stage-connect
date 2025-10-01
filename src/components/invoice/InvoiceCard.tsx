@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,14 +29,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
   const [paymentStatus, setPaymentStatus] = useState<any>(null);
   const [loadingPaymentInfo, setLoadingPaymentInfo] = useState(false);
 
-  // Load payment information when component mounts
-  useEffect(() => {
-    if (invoice.status === 'sent' || invoice.status === 'overdue') {
-      loadPaymentInfo();
-    }
-  }, [invoice.id, invoice.status]);
-
-  const loadPaymentInfo = async () => {
+  const loadPaymentInfo = useCallback(async () => {
     try {
       setLoadingPaymentInfo(true);
       
@@ -57,7 +50,14 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
     } finally {
       setLoadingPaymentInfo(false);
     }
-  };
+  }, [invoice]);
+
+  // Load payment information when component mounts
+  useEffect(() => {
+    if (invoice.status === 'sent' || invoice.status === 'overdue') {
+      loadPaymentInfo();
+    }
+  }, [invoice.status, loadPaymentInfo]);
 
   const handleCreatePaymentLink = async () => {
     try {

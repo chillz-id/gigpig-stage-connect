@@ -26,15 +26,15 @@ export class TestHelper {
 
   // Navigation methods for smoke tests
   async navigateToHome() {
-    await this.page.goto('http://localhost:8081/', { waitUntil: 'networkidle0' });
+    await this.page.goto('http://localhost:8080/', { waitUntil: 'networkidle0' });
   }
 
   async navigateToDesignSystem() {
-    await this.page.goto('http://localhost:8081/design-system', { waitUntil: 'networkidle0' });
+    await this.page.goto('http://localhost:8080/design-system', { waitUntil: 'networkidle0' });
   }
 
   async navigateToProfile() {
-    await this.page.goto('http://localhost:8081/profile', { waitUntil: 'networkidle0' });
+    await this.page.goto('http://localhost:8080/profile', { waitUntil: 'networkidle0' });
   }
 
   // Interaction methods

@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755955181403-d99a66cc",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Gave Manual Instructions Instead of Using MCP Tools",
+  "description": "When user asked to deploy workflow to N8N, I provided manual instructions for them to follow instead of using the available N8N MCP tools and direct container access. User correctly pointed out: 'You have access to it, you do it'. Should have used available tools to complete the task myself.",
+  "date": "2025-08-23",
+  "timestamp": "2025-08-23T13:19:41.404Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "deployment",
+    "mcp"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

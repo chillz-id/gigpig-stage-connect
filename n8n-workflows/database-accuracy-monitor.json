@@ -1,0 +1,265 @@
+{
+  "name": "Database Accuracy Monitor & Validator",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 30
+            }
+          ]
+        },
+        "timezone": "={{$env.TIMEZONE || 'Australia/Sydney'}}"
+      },
+      "id": "MonitorSchedule",
+      "name": "Monitor Schedule (30 min)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [-800, 0]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 2,
+              "minute": 0
+            }
+          ]
+        },
+        "timezone": "={{$env.TIMEZONE || 'Australia/Sydney'}}"
+      },
+      "id": "DeepScanSchedule",
+      "name": "Deep Scan Schedule (2 AM)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [-800, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Database Accuracy Monitor - Initialize\nconst now = new Date();\nconst isDeepScan = $input.all().some(item => item.json && item.json.__cron_trigger === 'DeepScanSchedule');\n\nconsole.log(`=== DATABASE ACCURACY MONITOR ===`);\nconsole.log(`Time: ${now.toISOString()}`);\nconsole.log(`Mode: ${isDeepScan ? 'DEEP_SCAN' : 'QUICK_CHECK'}`);\nconsole.log(`======================================`);\n\nreturn [{\n  timestamp: now.toISOString(),\n  isDeepScan: isDeepScan,\n  monitoringMode: isDeepScan ? 'DEEP_SCAN' : 'QUICK_CHECK',\n  scanStartTime: now.getTime()\n}];"
+      },
+      "id": "InitMonitor",
+      "name": "Initialize Monitor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-500, 100]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Fetch Complete Humanitix Data for Validation\nconst API = 'https://api.humanitix.com/v1';\nconst KEY = $env.HUMANITIX_API_KEY;\nif (!KEY) throw new Error('HUMANITIX_API_KEY env var not set');\nconst headers = { 'x-api-key': KEY };\n\nconst isDeepScan = $node['Initialize Monitor'].json.isDeepScan;\nconsole.log(`Fetching Humanitix data for ${isDeepScan ? 'deep scan' : 'quick check'}`);\n\n// Fetch all events\nasync function fetchAllEvents() {\n  const events = [];\n  let page = 1;\n  \n  while (true) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET', \n      url: `${API}/events`,\n      qs: { inFutureOnly: false, page, pageSize: 100 },\n      headers, \n      json: true,\n    });\n    \n    const eventList = resp?.events || [];\n    events.push(...eventList);\n    \n    if (!resp?.pageSize || !resp?.total || page * resp.pageSize >= resp.total) break;\n    page++;\n  }\n  \n  console.log(`Fetched ${events.length} events from Humanitix`);\n  return events;\n}\n\n// Fetch all orders for validation\nasync function fetchAllOrdersData(events) {\n  let totalOrders = 0;\n  let totalTickets = 0;\n  let totalRevenue = 0;\n  const eventSummaries = [];\n  const allOrderIds = new Set();\n  \n  for (const event of events) {\n    let eventOrderCount = 0;\n    let eventRevenue = 0;\n    let eventTickets = 0;\n    let page = 1;\n    const orderIds = [];\n    \n    console.log(`Processing event: ${event.name} (${event._id})`);\n    \n    while (true) {\n      try {\n        const resp = await this.helpers.httpRequest({\n          method: 'GET',\n          url: `${API}/events/${event._id}/orders`,\n          qs: { page, pageSize: 100 },\n          headers,\n          json: true,\n        });\n        \n        const orders = resp?.orders || [];\n        \n        for (const order of orders) {\n          const orderId = order._id || order.id;\n          if (orderId && !allOrderIds.has(orderId)) {\n            allOrderIds.add(orderId);\n            orderIds.push(orderId);\n            eventOrderCount++;\n            \n            // Calculate financials\n            const grossSales = Number(order.totals?.grossSales || order.total || 0);\n            eventRevenue += grossSales;\n            \n            // Calculate tickets\n            const quantity = Number(order.totals?.tickets || order.quantity || 1);\n            eventTickets += quantity;\n          }\n        }\n        \n        if (!resp?.pageSize || !resp?.total || page * resp.pageSize >= resp.total) break;\n        page++;\n        \n      } catch (error) {\n        console.error(`Error fetching orders for event ${event._id}:`, error.message);\n        break;\n      }\n    }\n    \n    totalOrders += eventOrderCount;\n    totalTickets += eventTickets;\n    totalRevenue += eventRevenue;\n    \n    eventSummaries.push({\n      eventId: event._id,\n      eventName: event.name,\n      orderCount: eventOrderCount,\n      revenue: eventRevenue,\n      tickets: eventTickets,\n      orderIds: orderIds\n    });\n  }\n  \n  return {\n    totalEvents: events.length,\n    totalOrders: totalOrders,\n    totalTickets: totalTickets,\n    totalRevenue: totalRevenue,\n    allOrderIds: Array.from(allOrderIds),\n    eventSummaries: eventSummaries,\n    uniqueOrderCount: allOrderIds.size\n  };\n}\n\nconst events = await fetchAllEvents.call(this);\nconst humanitixData = await fetchAllOrdersData.call(this, events);\n\nconsole.log(`Humanitix Summary:`);\nconsole.log(`- Events: ${humanitixData.totalEvents}`);\nconsole.log(`- Orders: ${humanitixData.totalOrders}`);\nconsole.log(`- Unique Orders: ${humanitixData.uniqueOrderCount}`);\nconsole.log(`- Total Tickets: ${humanitixData.totalTickets}`);\nconsole.log(`- Total Revenue: $${humanitixData.totalRevenue.toFixed(2)}`);\n\nreturn [{\n  json: {\n    source: 'humanitix',\n    ...humanitixData,\n    scanTimestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "FetchHumanitix",
+      "name": "Fetch Humanitix Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 100]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Fetch Notion Database State for Validation\nconst DB_ID = $env.NOTION_DB_ATTENDEES;\nconst TOKEN = $env.NOTION_API_KEY;\nif (!DB_ID) throw new Error('NOTION_DB_ATTENDEES env var not set');\nif (!TOKEN) throw new Error('NOTION_API_KEY env var not set');\n\nconst headers = {\n  Authorization: `Bearer ${TOKEN}`,\n  'Notion-Version': '2022-06-28',\n  'Content-Type': 'application/json'\n};\n\nconsole.log('Fetching complete Notion database state...');\n\n// Fetch all records from Notion for validation\nasync function fetchAllNotionRecords() {\n  const allRecords = [];\n  let nextCursor = null;\n  let pageCount = 0;\n  \n  do {\n    pageCount++;\n    const requestBody = {\n      page_size: 100,\n      sorts: [{\n        property: 'Order Date',\n        direction: 'ascending'\n      }]\n    };\n    \n    if (nextCursor) {\n      requestBody.start_cursor = nextCursor;\n    }\n    \n    try {\n      const response = await this.helpers.httpRequest({\n        method: 'POST',\n        url: `https://api.notion.com/v1/databases/${DB_ID}/query`,\n        headers,\n        body: requestBody,\n        json: true,\n      });\n      \n      allRecords.push(...(response.results || []));\n      nextCursor = response.next_cursor;\n      \n      console.log(`Fetched page ${pageCount}: ${response.results?.length || 0} records`);\n      \n    } catch (error) {\n      console.error(`Error fetching Notion page ${pageCount}:`, error.message);\n      break;\n    }\n    \n  } while (nextCursor);\n  \n  return allRecords;\n}\n\n// Analyze Notion data\nasync function analyzeNotionData(records) {\n  let totalRevenue = 0;\n  let totalTickets = 0;\n  const orderIds = new Set();\n  const eventSummaries = {};\n  const missingFields = [];\n  const duplicateOrderIds = [];\n  const orderIdCounts = {};\n  \n  for (const record of records) {\n    const props = record.properties;\n    \n    // Extract Order ID\n    const orderIdProp = props['Order ID']?.rich_text?.[0]?.text?.content;\n    if (!orderIdProp) {\n      missingFields.push({\n        recordId: record.id,\n        issue: 'Missing Order ID',\n        eventName: props['Event Name']?.rich_text?.[0]?.text?.content || 'Unknown'\n      });\n      continue;\n    }\n    \n    // Track duplicate Order IDs\n    orderIdCounts[orderIdProp] = (orderIdCounts[orderIdProp] || 0) + 1;\n    if (orderIdCounts[orderIdProp] > 1) {\n      duplicateOrderIds.push(orderIdProp);\n    }\n    \n    orderIds.add(orderIdProp);\n    \n    // Extract financial data\n    const totalAmount = props['Total Amount']?.number || 0;\n    totalRevenue += totalAmount;\n    \n    // Extract ticket quantity\n    const quantity = props['Quantity']?.number || 0;\n    totalTickets += quantity;\n    \n    // Extract event data\n    const eventName = props['Event Name']?.rich_text?.[0]?.text?.content || 'Unknown';\n    const eventId = props['Event ID']?.rich_text?.[0]?.text?.content || 'Unknown';\n    \n    if (!eventSummaries[eventId]) {\n      eventSummaries[eventId] = {\n        eventId,\n        eventName,\n        orderCount: 0,\n        revenue: 0,\n        tickets: 0,\n        orderIds: []\n      };\n    }\n    \n    eventSummaries[eventId].orderCount++;\n    eventSummaries[eventId].revenue += totalAmount;\n    eventSummaries[eventId].tickets += quantity;\n    eventSummaries[eventId].orderIds.push(orderIdProp);\n    \n    // Validate required fields\n    const requiredFields = ['Name', 'Event Name', 'Total Amount', 'Quantity'];\n    for (const field of requiredFields) {\n      if (!props[field] || \n          (props[field].title && props[field].title.length === 0) ||\n          (props[field].rich_text && props[field].rich_text.length === 0)) {\n        missingFields.push({\n          recordId: record.id,\n          issue: `Missing ${field}`,\n          orderId: orderIdProp,\n          eventName\n        });\n      }\n    }\n  }\n  \n  return {\n    totalRecords: records.length,\n    totalRevenue,\n    totalTickets,\n    uniqueOrderIds: orderIds.size,\n    allOrderIds: Array.from(orderIds),\n    eventSummaries: Object.values(eventSummaries),\n    dataIssues: {\n      missingFields,\n      duplicateOrderIds: [...new Set(duplicateOrderIds)]\n    }\n  };\n}\n\nconst records = await fetchAllNotionRecords.call(this);\nconst notionData = await analyzeNotionData.call(this, records);\n\nconsole.log(`Notion Summary:`);\nconsole.log(`- Records: ${notionData.totalRecords}`);\nconsole.log(`- Unique Order IDs: ${notionData.uniqueOrderIds}`);\nconsole.log(`- Total Tickets: ${notionData.totalTickets}`);\nconsole.log(`- Total Revenue: $${notionData.totalRevenue.toFixed(2)}`);\nconsole.log(`- Missing Fields: ${notionData.dataIssues.missingFields.length}`);\nconsole.log(`- Duplicate Order IDs: ${notionData.dataIssues.duplicateOrderIds.length}`);\n\nreturn [{\n  json: {\n    source: 'notion',\n    ...notionData,\n    scanTimestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "FetchNotion",
+      "name": "Fetch Notion Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 100]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Data Validation & Comparison Analysis\nconst inputs = $input.all();\nconsole.log(`Received ${inputs.length} inputs for validation`);\nconsole.log('Input sources:', inputs.map(i => i.json?.source || 'unknown'));\n\nconst humanitixData = inputs.find(i => i.json?.source === 'humanitix')?.json;\nconst notionData = inputs.find(i => i.json?.source === 'notion')?.json;\n\nconsole.log('Humanitix data found:', !!humanitixData);\nconsole.log('Notion data found:', !!notionData);\n\nif (!humanitixData) {\n  throw new Error('Missing Humanitix data - check Fetch Humanitix Data node');\n}\n\nif (!notionData) {\n  throw new Error('Missing Notion data - check Fetch Notion Data node');\n}\n\nconsole.log('=== DATA VALIDATION ANALYSIS ===');\n\n// Compare totals\nconst validation = {\n  timestamp: new Date().toISOString(),\n  humanitixStats: {\n    events: humanitixData.totalEvents,\n    orders: humanitixData.totalOrders,\n    uniqueOrders: humanitixData.uniqueOrderCount,\n    tickets: humanitixData.totalTickets,\n    revenue: humanitixData.totalRevenue\n  },\n  notionStats: {\n    records: notionData.totalRecords,\n    uniqueOrders: notionData.uniqueOrderIds,\n    tickets: notionData.totalTickets,\n    revenue: notionData.totalRevenue\n  },\n  discrepancies: [],\n  missingOrders: [],\n  extraOrders: [],\n  dataQualityIssues: notionData.dataIssues,\n  healthScore: 100\n};\n\n// Compare order counts\nif (humanitixData.uniqueOrderCount !== notionData.uniqueOrderIds) {\n  validation.discrepancies.push({\n    type: 'ORDER_COUNT_MISMATCH',\n    humanitix: humanitixData.uniqueOrderCount,\n    notion: notionData.uniqueOrderIds,\n    difference: humanitixData.uniqueOrderCount - notionData.uniqueOrderIds\n  });\n}\n\n// Compare ticket totals\nconst ticketDiff = Math.abs(humanitixData.totalTickets - notionData.totalTickets);\nif (ticketDiff > 0) {\n  validation.discrepancies.push({\n    type: 'TICKET_COUNT_MISMATCH',\n    humanitix: humanitixData.totalTickets,\n    notion: notionData.totalTickets,\n    difference: ticketDiff\n  });\n}\n\n// Compare revenue (allow for small rounding differences)\nconst revenueDiff = Math.abs(humanitixData.totalRevenue - notionData.totalRevenue);\nif (revenueDiff > 1.00) {\n  validation.discrepancies.push({\n    type: 'REVENUE_MISMATCH',\n    humanitix: humanitixData.totalRevenue,\n    notion: notionData.totalRevenue,\n    difference: revenueDiff\n  });\n}\n\n// Find missing orders (in Humanitix but not in Notion)\nconst humanitixOrderIds = new Set(humanitixData.allOrderIds);\nconst notionOrderIds = new Set(notionData.allOrderIds);\n\nfor (const orderId of humanitixOrderIds) {\n  if (!notionOrderIds.has(orderId)) {\n    validation.missingOrders.push(orderId);\n  }\n}\n\n// Find extra orders (in Notion but not in Humanitix)\nfor (const orderId of notionOrderIds) {\n  if (!humanitixOrderIds.has(orderId)) {\n    validation.extraOrders.push(orderId);\n  }\n}\n\n// Calculate health score\nlet healthScore = 100;\nif (validation.discrepancies.length > 0) healthScore -= 20;\nif (validation.missingOrders.length > 0) healthScore -= Math.min(30, validation.missingOrders.length * 5);\nif (validation.extraOrders.length > 0) healthScore -= Math.min(10, validation.extraOrders.length * 2);\nif (validation.dataQualityIssues.missingFields.length > 0) healthScore -= Math.min(20, validation.dataQualityIssues.missingFields.length * 2);\nif (validation.dataQualityIssues.duplicateOrderIds.length > 0) healthScore -= Math.min(15, validation.dataQualityIssues.duplicateOrderIds.length * 5);\n\nvalidation.healthScore = Math.max(0, healthScore);\n\n// Event-level validation\nvalidation.eventValidation = [];\nconst humanitixEventMap = {};\nhumanitixData.eventSummaries.forEach(e => humanitixEventMap[e.eventId] = e);\n\nconst notionEventMap = {};\nnotionData.eventSummaries.forEach(e => notionEventMap[e.eventId] = e);\n\nconst allEventIds = new Set([...Object.keys(humanitixEventMap), ...Object.keys(notionEventMap)]);\n\nfor (const eventId of allEventIds) {\n  const hEvent = humanitixEventMap[eventId];\n  const nEvent = notionEventMap[eventId];\n  \n  if (!hEvent) {\n    validation.eventValidation.push({\n      eventId,\n      eventName: nEvent.eventName,\n      issue: 'Event exists in Notion but not in Humanitix',\n      notionOrders: nEvent.orderCount\n    });\n  } else if (!nEvent) {\n    validation.eventValidation.push({\n      eventId,\n      eventName: hEvent.eventName,\n      issue: 'Event exists in Humanitix but not in Notion',\n      humanitixOrders: hEvent.orderCount\n    });\n  } else if (hEvent.orderCount !== nEvent.orderCount) {\n    validation.eventValidation.push({\n      eventId,\n      eventName: hEvent.eventName,\n      issue: 'Order count mismatch',\n      humanitixOrders: hEvent.orderCount,\n      notionOrders: nEvent.orderCount,\n      difference: hEvent.orderCount - nEvent.orderCount\n    });\n  }\n}\n\n// Summary logging\nconsole.log(`Health Score: ${validation.healthScore}%`);\nconsole.log(`Discrepancies: ${validation.discrepancies.length}`);\nconsole.log(`Missing Orders: ${validation.missingOrders.length}`);\nconsole.log(`Extra Orders: ${validation.extraOrders.length}`);\nconsole.log(`Data Quality Issues: ${validation.dataQualityIssues.missingFields.length + validation.dataQualityIssues.duplicateOrderIds.length}`);\nconsole.log(`Event Issues: ${validation.eventValidation.length}`);\n\nreturn [{ json: validation }];"
+      },
+      "id": "ValidateData",
+      "name": "Validate & Compare Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1a4c5b1-4a4a-4a4a-8a1a-4c5b14a4a4a4",
+              "leftValue": "={{ $json.healthScore }}",
+              "rightValue": 90,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "CheckIssues",
+      "name": "Check for Issues",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 100]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Auto-Reconciliation for Missing Orders\nconst validation = $json;\nconst API = 'https://api.humanitix.com/v1';\nconst KEY = $env.HUMANITIX_API_KEY;\nconst DB_ID = $env.NOTION_DB_ATTENDEES;\nconst TOKEN = $env.NOTION_API_KEY;\n\nif (!KEY || !TOKEN || !DB_ID) {\n  throw new Error('Missing required environment variables');\n}\n\nconst headers = {\n  humanitix: { 'x-api-key': KEY },\n  notion: {\n    Authorization: `Bearer ${TOKEN}`,\n    'Notion-Version': '2022-06-28',\n    'Content-Type': 'application/json'\n  }\n};\n\nconsole.log('=== AUTO-RECONCILIATION ===');\nconsole.log(`Missing Orders to Fix: ${validation.missingOrders.length}`);\n\nconst reconciliationResults = {\n  timestamp: new Date().toISOString(),\n  attempted: validation.missingOrders.length,\n  successful: 0,\n  failed: 0,\n  details: []\n};\n\n// Helper function to find order in events\nasync function findOrderInHumanitix(orderId) {\n  const humanitixData = $node['Fetch Humanitix Data'].json;\n  \n  for (const eventSummary of humanitixData.eventSummaries) {\n    if (eventSummary.orderIds.includes(orderId)) {\n      // Fetch the specific order details\n      try {\n        const resp = await this.helpers.httpRequest({\n          method: 'GET',\n          url: `${API}/events/${eventSummary.eventId}/orders`,\n          qs: { page: 1, pageSize: 100 },\n          headers: headers.humanitix,\n          json: true,\n        });\n        \n        const order = resp?.orders?.find(o => (o._id || o.id) === orderId);\n        if (order) {\n          return { order, event: { _id: eventSummary.eventId, name: eventSummary.eventName } };\n        }\n      } catch (error) {\n        console.error(`Error fetching order ${orderId} from event ${eventSummary.eventId}:`, error.message);\n      }\n    }\n  }\n  return null;\n}\n\n// Process missing orders (limit to prevent timeout)\nconst maxReconcile = Math.min(10, validation.missingOrders.length);\n\nfor (let i = 0; i < maxReconcile; i++) {\n  const orderId = validation.missingOrders[i];\n  \n  try {\n    console.log(`Reconciling order: ${orderId}`);\n    \n    const orderData = await findOrderInHumanitix.call(this, orderId);\n    \n    if (!orderData) {\n      reconciliationResults.failed++;\n      reconciliationResults.details.push({\n        orderId,\n        status: 'failed',\n        reason: 'Order not found in Humanitix'\n      });\n      continue;\n    }\n    \n    // Transform order data for Notion\n    const { order, event } = orderData;\n    \n    const firstName = order.firstName || order.buyer?.firstName || '';\n    const lastName = order.lastName || order.buyer?.lastName || '';\n    const customerName = `${firstName} ${lastName}`.trim() || 'Anonymous';\n    const email = order.email || order.buyer?.email || null;\n    const phone = order.mobile || order.buyer?.mobile || null;\n    const quantity = Number(order.totals?.tickets || order.quantity || 1);\n    const grossSales = Number(order.totals?.grossSales || order.total || 0);\n    \n    const properties = {\n      \"Name\": { title: [{ text: { content: customerName } }] },\n      \"Event Name\": { rich_text: [{ text: { content: event.name } }] },\n      \"Order ID\": { rich_text: [{ text: { content: orderId } }] },\n      \"Quantity\": { number: quantity },\n      \"Total Amount\": { number: grossSales },\n      \"Ticketing Partner\": { select: { name: 'Humanitix' } },\n      \"Updated At\": { date: { start: new Date().toISOString() } }\n    };\n    \n    if (email) properties[\"Email\"] = { email };\n    if (phone) properties[\"Mobile\"] = { phone_number: phone };\n    if (event._id) properties[\"Event ID\"] = { rich_text: [{ text: { content: event._id } }] };\n    \n    // Create record in Notion\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.notion.com/v1/pages',\n      headers: headers.notion,\n      body: {\n        parent: { database_id: DB_ID },\n        properties\n      },\n      json: true,\n    });\n    \n    reconciliationResults.successful++;\n    reconciliationResults.details.push({\n      orderId,\n      status: 'success',\n      customerName,\n      eventName: event.name,\n      amount: grossSales\n    });\n    \n    console.log(`✓ Reconciled order ${orderId}: ${customerName} - $${grossSales}`);\n    \n    // Rate limiting\n    await new Promise(r => setTimeout(r, 1000));\n    \n  } catch (error) {\n    reconciliationResults.failed++;\n    reconciliationResults.details.push({\n      orderId,\n      status: 'failed',\n      reason: error.message\n    });\n    console.error(`✗ Failed to reconcile order ${orderId}:`, error.message);\n  }\n}\n\nconsole.log(`Reconciliation Complete:`);\nconsole.log(`- Successful: ${reconciliationResults.successful}`);\nconsole.log(`- Failed: ${reconciliationResults.failed}`);\n\nreturn [{ json: { ...validation, reconciliation: reconciliationResults } }];"
+      },
+      "id": "Reconcile",
+      "name": "Auto-Reconcile Missing Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 50]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Generate Monitoring Report\nconst data = $json;\nconst isHealthy = data.healthScore >= 90;\n\nconsole.log('=== MONITORING REPORT ===');\n\nconst report = {\n  timestamp: data.timestamp,\n  healthScore: data.healthScore,\n  status: isHealthy ? 'HEALTHY' : 'NEEDS_ATTENTION',\n  summary: {\n    humanitixOrders: data.humanitixStats.uniqueOrders,\n    notionRecords: data.notionStats.uniqueOrders,\n    discrepancies: data.discrepancies.length,\n    missingOrders: data.missingOrders.length,\n    dataQualityIssues: data.dataQualityIssues.missingFields.length + data.dataQualityIssues.duplicateOrderIds.length\n  },\n  details: {\n    discrepancies: data.discrepancies,\n    eventIssues: data.eventValidation,\n    dataQuality: data.dataQualityIssues\n  },\n  reconciliation: data.reconciliation || null,\n  nextActions: []\n};\n\n// Generate recommended actions\nif (data.missingOrders.length > 0) {\n  report.nextActions.push(`Sync ${data.missingOrders.length} missing orders from Humanitix`);\n}\n\nif (data.dataQualityIssues.duplicateOrderIds.length > 0) {\n  report.nextActions.push(`Review ${data.dataQualityIssues.duplicateOrderIds.length} duplicate Order IDs`);\n}\n\nif (data.dataQualityIssues.missingFields.length > 0) {\n  report.nextActions.push(`Fix ${data.dataQualityIssues.missingFields.length} records with missing fields`);\n}\n\nif (data.eventValidation.length > 0) {\n  report.nextActions.push(`Investigate ${data.eventValidation.length} event-level discrepancies`);\n}\n\nif (report.nextActions.length === 0) {\n  report.nextActions.push('Database is healthy - no immediate actions required');\n}\n\n// Create formatted summary for logging\nconst summaryText = `\n🔍 DATABASE ACCURACY REPORT\n==========================\nHealth Score: ${data.healthScore}% ${isHealthy ? '✅' : '⚠️'}\nStatus: ${report.status}\n\n📊 Summary:\n- Humanitix Orders: ${report.summary.humanitixOrders}\n- Notion Records: ${report.summary.notionRecords}\n- Missing Orders: ${report.summary.missingOrders}\n- Data Issues: ${report.summary.dataQualityIssues}\n- Event Issues: ${data.eventValidation.length}\n\n${data.reconciliation ? `🔄 Auto-Reconciliation:\n- Attempted: ${data.reconciliation.attempted}\n- Successful: ${data.reconciliation.successful}\n- Failed: ${data.reconciliation.failed}\n\n` : ''}\n📝 Next Actions:\n${report.nextActions.map(action => `- ${action}`).join('\\n')}\n\n⏰ Scan completed at: ${data.timestamp}\n==========================`;\n\nconsole.log(summaryText);\n\nreturn [{ json: { ...report, summaryText } }];"
+      },
+      "id": "GenerateReport",
+      "name": "Generate Monitoring Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 100]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Generate Clean Status Report\nconst data = $json;\n\nconst cleanReport = {\n  timestamp: data.timestamp,\n  healthScore: data.healthScore,\n  status: data.status,\n  summary: data.summary,\n  reconciliation: data.reconciliation,\n  summaryText: `✅ Database Health Check Complete\\n\\nHealth Score: ${data.healthScore}%\\nStatus: ${data.status}\\n\\nHumanitix Orders: ${data.summary.humanitixOrders}\\nNotion Records: ${data.summary.notionRecords}\\n\\nScan completed at: ${data.timestamp}`\n};\n\nconsole.log('Database monitoring completed - all systems healthy');\n\nreturn [{ json: cleanReport }];"
+      },
+      "id": "HealthyReport",
+      "name": "Generate Healthy Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    }
+  ],
+  "connections": {
+    "Monitor Schedule (30 min)": {
+      "main": [
+        [
+          {
+            "node": "Initialize Monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deep Scan Schedule (2 AM)": {
+      "main": [
+        [
+          {
+            "node": "Initialize Monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Monitor": {
+      "main": [
+        [
+          {
+            "node": "Fetch Humanitix Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Notion Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Humanitix Data": {
+      "main": [
+        [
+          {
+            "node": "Validate & Compare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Notion Data": {
+      "main": [
+        [
+          {
+            "node": "Validate & Compare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Compare Data": {
+      "main": [
+        [
+          {
+            "node": "Check for Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Issues": {
+      "main": [
+        [
+          {
+            "node": "Auto-Reconcile Missing Orders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Healthy Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Reconcile Missing Orders": {
+      "main": [
+        [
+          {
+            "node": "Generate Monitoring Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Monitoring Report": {
+      "main": []
+    },
+    "Generate Healthy Status": {
+      "main": []
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": null,
+  "triggerCount": 2,
+  "tags": []
+}

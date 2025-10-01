@@ -1,0 +1,1025 @@
+{
+  "name": "Humanitix \u2192 Notion Node Sync (Template)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.humanitix.com/v1/events",
+        "responseFormat": "json",
+        "options": {
+          "headers": {
+            "header": [
+              {
+                "name": "x-api-key",
+                "value": "={{ $env.HUMANITIX_API_KEY }}"
+              }
+            ]
+          },
+          "queryParametersUi": {
+            "parameter": [
+              {
+                "name": "pageSize",
+                "value": "100"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fetch-events",
+      "name": "Fetch Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const source = items[0]?.json?.events || []\nreturn source.map(event => ({\n  json: {\n    eventId: event._id || event.id || event.eventId || null,\n    name: event.name || '',\n    status: event.status || event.state || '',\n    startDate: event.startDateTime || event.startDate || event.start || null,\n    endDate: event.endDateTime || event.endDate || event.end || null,\n    url: event.url || event.eventUrl || event.publicUrl || '',\n    venueName: event?.venue?.name || event?.venueName || '',\n    timezone: event.timezone || event.timeZone || '',\n    rawEvent: event\n  }\n})).filter(item => item.json.eventId);"
+      },
+      "id": "flatten-events",
+      "name": "Flatten Events",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "={{ $env.NOTION_EVENTS_DB_ID }}",
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "filter": {
+            "property": "Event ID",
+            "title": {
+              "equals": "={{ $json.eventId }}"
+            }
+          }
+        }
+      },
+      "id": "find-event-page",
+      "name": "Find Event Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "lookup"
+      },
+      "id": "merge-event-lookup",
+      "name": "Merge Event Lookup",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.lookup.results[0].id }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "event-exists",
+      "name": "Event Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "update",
+        "pageId": "={{ $json.lookup.results[0].id }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Event ID",
+              "value": "={{ $json.eventId }}"
+            }
+          ]
+        }
+      },
+      "id": "update-event-page",
+      "name": "Update Event Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "pageType": "database",
+        "databaseId": "={{ $env.NOTION_EVENTS_DB_ID }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Event ID",
+              "value": "={{ $json.eventId }}"
+            }
+          ]
+        }
+      },
+      "id": "create-event-page",
+      "name": "Create Event Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "notionEvent"
+      },
+      "id": "merge-event-result",
+      "name": "Merge Event Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "eventId",
+              "value": "={{ $json.eventId }}"
+            },
+            {
+              "name": "eventName",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "notionEventId",
+              "value": "={{ $json.notionEvent.id }}"
+            },
+            {
+              "name": "notionEventUrl",
+              "value": "={{ $json.notionEvent.url }}"
+            }
+          ],
+          "dateTime": [
+            {
+              "name": "startDate",
+              "value": "={{ $json.startDate }}"
+            },
+            {
+              "name": "endDate",
+              "value": "={{ $json.endDate }}"
+            }
+          ],
+          "json": [
+            {
+              "name": "rawEvent",
+              "value": "={{ $json.rawEvent }}"
+            }
+          ]
+        }
+      },
+      "id": "event-output",
+      "name": "Event Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.humanitix.com/v1/events/{{$json.eventId}}/orders",
+        "responseFormat": "json",
+        "options": {
+          "headers": {
+            "header": [
+              {
+                "name": "x-api-key",
+                "value": "={{ $env.HUMANITIX_API_KEY }}"
+              }
+            ]
+          },
+          "queryParametersUi": {
+            "parameter": [
+              {
+                "name": "pageSize",
+                "value": "100"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fetch-event-orders",
+      "name": "Fetch Event Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        2280,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "ordersResponse"
+      },
+      "id": "merge-orders-response",
+      "name": "Merge Orders Response",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const orders = $json.ordersResponse?.orders || [];\nconst eventId = $json.eventId;\nconst notionEventId = $json.notionEventId;\nconst eventName = $json.eventName;\nreturn orders.map(order => {\n  const orderId = order._id || order.id || order.orderId;\n  if (!orderId) return null;\n  const totals = order?.totals || order?.purchaseTotals || {};\n  const buyer = order?.buyer || {};\n  return {\n    json: {\n      eventId,\n      eventName,\n      notionEventId,\n      orderId,\n      status: order.status || order.financialStatus || '',\n      orderDate: order.completedAt || order.createdAt || order.purchaseDate || null,\n      customerName: `${order.firstName || buyer.firstName || ''} ${order.lastName || buyer.lastName || ''}`.trim() || order.customerName || buyer.name || '',\n      email: order.email || buyer.email || '',\n      phone: order.mobile || order.phone || buyer.phone || '',\n      gross: totals.grossSales || totals.gross || totals.amount || null,\n      net: totals.netSales || totals.net || totals.netAmount || null,\n      discounts: totals.discounts || order.discountAmount || null,\n      discountCode: order?.discounts?.discountCode?.code || order.discountCode || '',\n      fees: totals.fees || totals.totalFees || order.fees || null,\n      rawOrder: order\n    }\n  };\n}).filter(item => item);"
+      },
+      "id": "flatten-orders",
+      "name": "Flatten Orders",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "={{ $env.NOTION_ORDERS_DB_ID }}",
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "filter": {
+            "property": "Order ID",
+            "rich_text": {
+              "equals": "={{ $json.orderId }}"
+            }
+          }
+        }
+      },
+      "id": "find-order-page",
+      "name": "Find Order Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "lookup"
+      },
+      "id": "merge-order-lookup",
+      "name": "Merge Order Lookup",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.lookup.results[0].id }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "order-exists",
+      "name": "Order Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3420,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "update",
+        "pageId": "={{ $json.lookup.results[0].id }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Order ID",
+              "value": "={{ $json.orderId }}"
+            }
+          ]
+        }
+      },
+      "id": "update-order-page",
+      "name": "Update Order Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        -440
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "pageType": "database",
+        "databaseId": "={{ $env.NOTION_ORDERS_DB_ID }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Order ID",
+              "value": "={{ $json.orderId }}"
+            }
+          ]
+        }
+      },
+      "id": "create-order-page",
+      "name": "Create Order Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "notionOrder"
+      },
+      "id": "merge-order-result",
+      "name": "Merge Order Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "eventId",
+              "value": "={{ $json.eventId }}"
+            },
+            {
+              "name": "eventName",
+              "value": "={{ $json.eventName }}"
+            },
+            {
+              "name": "orderId",
+              "value": "={{ $json.orderId }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "notionEventId",
+              "value": "={{ $json.notionEventId }}"
+            },
+            {
+              "name": "notionOrderId",
+              "value": "={{ $json.notionOrder.id }}"
+            }
+          ],
+          "dateTime": [
+            {
+              "name": "orderDate",
+              "value": "={{ $json.orderDate }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "gross",
+              "value": "={{ $json.gross }}"
+            },
+            {
+              "name": "net",
+              "value": "={{ $json.net }}"
+            },
+            {
+              "name": "discounts",
+              "value": "={{ $json.discounts }}"
+            },
+            {
+              "name": "fees",
+              "value": "={{ $json.fees }}"
+            }
+          ],
+          "json": [
+            {
+              "name": "rawOrder",
+              "value": "={{ $json.rawOrder }}"
+            }
+          ]
+        }
+      },
+      "id": "order-output",
+      "name": "Order Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        4100,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const order = $json.rawOrder || {};\nconst tickets = order.tickets || order.ticketItems || order.items || [];\nconst eventId = $json.eventId;\nconst notionEventId = $json.notionEventId;\nconst orderId = $json.orderId;\nconst notionOrderId = $json.notionOrderId;\nreturn tickets.map((ticket, index) => {\n  const ticketId = ticket._id || ticket.id || ticket.ticketId || ticket.barcode || `${orderId}-ticket-${index + 1}`;\n  return { json: {\n    eventId,\n    orderId,\n    notionEventId,\n    notionOrderId,\n    ticketId,\n    name: ticket.name || ticket.ticketType?.name || ticket.type || 'Ticket',\n    status: ticket.status || ticket.state || '',\n    quantity: ticket.quantity || ticket.qty || 1,\n    price: ticket.price || ticket.amount || ticket.total || null,\n    barcode: ticket.barcode || '',\n    rawTicket: ticket\n  }};\n}).filter(item => item.json.ticketId);"
+      },
+      "id": "extract-order-tickets",
+      "name": "Extract Order Tickets",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "={{ $env.NOTION_TICKETS_DB_ID }}",
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "filter": {
+            "property": "Ticket ID",
+            "rich_text": {
+              "equals": "={{ $json.ticketId }}"
+            }
+          }
+        }
+      },
+      "id": "find-ticket-page",
+      "name": "Find Ticket Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        4560,
+        -460
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "lookup"
+      },
+      "id": "merge-ticket-lookup",
+      "name": "Merge Ticket Lookup",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        4780,
+        -460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.lookup.results[0].id }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "ticket-exists",
+      "name": "Ticket Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5000,
+        -460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "update",
+        "pageId": "={{ $json.lookup.results[0].id }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Ticket ID",
+              "value": "={{ $json.ticketId }}"
+            }
+          ]
+        }
+      },
+      "id": "update-ticket-page",
+      "name": "Update Ticket Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        5220,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "pageType": "database",
+        "databaseId": "={{ $env.NOTION_TICKETS_DB_ID }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Ticket ID",
+              "value": "={{ $json.ticketId }}"
+            }
+          ]
+        }
+      },
+      "id": "create-ticket-page",
+      "name": "Create Ticket Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        5220,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "propertyName": "notionTicket"
+      },
+      "id": "merge-ticket-result",
+      "name": "Merge Ticket Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5460,
+        -460
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "notionTicketId",
+              "value": "={{ $json.notionTicket.id }}"
+            },
+            {
+              "name": "eventId",
+              "value": "={{ $json.eventId }}"
+            },
+            {
+              "name": "orderId",
+              "value": "={{ $json.orderId }}"
+            },
+            {
+              "name": "notionEventId",
+              "value": "={{ $json.notionEventId }}"
+            },
+            {
+              "name": "notionOrderId",
+              "value": "={{ $json.notionOrderId }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "quantity",
+              "value": "={{ $json.quantity }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $json.price }}"
+            }
+          ],
+          "json": [
+            {
+              "name": "rawTicket",
+              "value": "={{ $json.rawTicket }}"
+            }
+          ]
+        }
+      },
+      "id": "ticket-output",
+      "name": "Ticket Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        5680,
+        -460
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Events": {
+      "main": [
+        [
+          {
+            "node": "Flatten Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Events": {
+      "main": [
+        [
+          {
+            "node": "Find Event Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Event Result",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Event Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Event Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Event Lookup",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Event Lookup": {
+      "main": [
+        [
+          {
+            "node": "Event Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Event Exists?": {
+      "main": [
+        [
+          {
+            "node": "Create Event Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Event Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Event Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Event Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create Event Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Event Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Event Result": {
+      "main": [
+        [
+          {
+            "node": "Event Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Event Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Orders Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Event Orders": {
+      "main": [
+        [
+          {
+            "node": "Merge Orders Response",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Orders Response": {
+      "main": [
+        [
+          {
+            "node": "Flatten Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Orders": {
+      "main": [
+        [
+          {
+            "node": "Find Order Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Order Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Order Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Order Lookup",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Order Lookup": {
+      "main": [
+        [
+          {
+            "node": "Order Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Exists?": {
+      "main": [
+        [
+          {
+            "node": "Create Order Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Order Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Order Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create Order Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Order Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Order Result": {
+      "main": [
+        [
+          {
+            "node": "Order Output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Order Output": {
+      "main": [
+        [
+          {
+            "node": "Extract Order Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Order Tickets": {
+      "main": [
+        [
+          {
+            "node": "Find Ticket Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Ticket Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Ticket Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Ticket Lookup",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Ticket Lookup": {
+      "main": [
+        [
+          {
+            "node": "Ticket Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Exists?": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Ticket Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Ticket Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create Ticket Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Ticket Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Ticket Result": {
+      "main": [
+        [
+          {
+            "node": "Ticket Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

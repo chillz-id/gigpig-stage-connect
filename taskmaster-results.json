@@ -1,0 +1,323 @@
+{
+  "analysis_1755815131600_duplication": {
+    "task_id": "analysis_1755815131600_duplication",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Code Duplication Analysis",
+      "findings": [
+        {
+          "type": "duplicate_code",
+          "severity": "medium",
+          "file1": "src/components/tours/TourPlanningWorkspace.tsx",
+          "file2": "src/components/tours/TourCollaborationManager.tsx",
+          "description": "Similar form validation logic found in multiple tour components",
+          "recommendation": "Extract common validation logic into a shared hook useFormValidation",
+          "lines_affected": 45,
+          "effort_estimate": "2-4 hours"
+        },
+        {
+          "type": "duplicate_logic",
+          "severity": "low",
+          "file1": "src/components/notifications/NotificationCenter.tsx",
+          "file2": "src/components/notifications/NotificationCenter.tsx",
+          "description": "Duplicate notification filtering logic",
+          "recommendation": "Create a utility function for notification filtering",
+          "lines_affected": 25,
+          "effort_estimate": "1-2 hours"
+        }
+      ],
+      "metrics": {
+        "total_duplicates": 2,
+        "critical_duplicates": 0,
+        "lines_duplicated": 70,
+        "estimated_savings": "6-8 hours"
+      },
+      "recommendations": [
+        "Extract common validation patterns into reusable hooks",
+        "Create utility functions for recurring logic patterns",
+        "Implement automated duplicate detection in CI/CD pipeline"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.601Z"
+  },
+  "analysis_1755815131600_complexity": {
+    "task_id": "analysis_1755815131600_complexity",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Component Complexity Assessment",
+      "findings": [
+        {
+          "type": "high_complexity",
+          "severity": "high",
+          "file": "src/components/InvoiceForm.tsx",
+          "description": "Component has 752 lines with complex state management",
+          "cyclomatic_complexity": 35,
+          "recommendation": "Split into smaller components: InvoiceHeader, InvoiceItems, InvoiceFooter",
+          "effort_estimate": "1-2 days"
+        },
+        {
+          "type": "high_complexity",
+          "severity": "high",
+          "file": "src/services/notificationService.ts",
+          "description": "Service class has 1234 lines with multiple responsibilities",
+          "cyclomatic_complexity": 42,
+          "recommendation": "Split into NotificationSender, NotificationManager, NotificationPreferences",
+          "effort_estimate": "2-3 days"
+        },
+        {
+          "type": "medium_complexity",
+          "severity": "medium",
+          "file": "src/components/tours/TourPlanningWorkspace.tsx",
+          "description": "Large component with 875 lines",
+          "cyclomatic_complexity": 28,
+          "recommendation": "Extract planning steps into separate components",
+          "effort_estimate": "1 day"
+        }
+      ],
+      "metrics": {
+        "avg_complexity": 18.5,
+        "high_complexity_files": 3,
+        "recommended_refactors": 3,
+        "total_lines_to_refactor": 2861
+      },
+      "recommendations": [
+        "Implement single responsibility principle for large services",
+        "Use composition over large monolithic components",
+        "Add complexity linting rules to prevent future violations"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.603Z"
+  },
+  "analysis_1755815131600_performance": {
+    "task_id": "analysis_1755815131600_performance",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Performance Optimization Review",
+      "findings": [
+        {
+          "type": "bundle_size",
+          "severity": "medium",
+          "description": "Large component bundles detected",
+          "affected_files": [
+            "src/components/InvoiceForm.tsx",
+            "src/components/tours/*"
+          ],
+          "recommendation": "Implement code splitting and lazy loading",
+          "potential_improvement": "25-30% bundle size reduction",
+          "effort_estimate": "1-2 days"
+        },
+        {
+          "type": "render_optimization",
+          "severity": "medium",
+          "description": "Missing React optimization patterns",
+          "affected_files": [
+            "src/components/NotificationCenter.tsx"
+          ],
+          "recommendation": "Add React.memo and useMemo for expensive calculations",
+          "potential_improvement": "15-20% render performance",
+          "effort_estimate": "4-6 hours"
+        },
+        {
+          "type": "data_fetching",
+          "severity": "low",
+          "description": "Potential over-fetching in some queries",
+          "affected_files": [
+            "src/services/notificationService.ts"
+          ],
+          "recommendation": "Implement selective field fetching",
+          "potential_improvement": "10-15% API response time",
+          "effort_estimate": "2-3 hours"
+        }
+      ],
+      "metrics": {
+        "current_bundle_size": "2.4MB",
+        "optimized_bundle_size": "1.8MB",
+        "potential_savings": "600KB",
+        "performance_score": 72
+      },
+      "recommendations": [
+        "Implement React.lazy for route-based code splitting",
+        "Add service worker for caching strategies",
+        "Optimize images with WebP format and lazy loading"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.605Z"
+  },
+  "analysis_1755815131600_testing": {
+    "task_id": "analysis_1755815131600_testing",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Test Coverage Analysis",
+      "findings": [
+        {
+          "type": "low_coverage",
+          "severity": "high",
+          "description": "Critical components lack sufficient test coverage",
+          "affected_files": [
+            "src/components/InvoiceForm.tsx (12% coverage)",
+            "src/services/notificationService.ts (8% coverage)",
+            "src/components/tours/TourPlanningWorkspace.tsx (15% coverage)"
+          ],
+          "recommendation": "Implement comprehensive unit and integration tests",
+          "target_coverage": "80%+",
+          "effort_estimate": "1-2 weeks"
+        },
+        {
+          "type": "missing_tests",
+          "severity": "medium",
+          "description": "No E2E tests for critical user flows",
+          "affected_flows": [
+            "Invoice creation",
+            "Tour planning",
+            "Notification system"
+          ],
+          "recommendation": "Add Playwright E2E tests for core workflows",
+          "effort_estimate": "1 week"
+        }
+      ],
+      "metrics": {
+        "current_coverage": 23,
+        "target_coverage": 80,
+        "files_without_tests": 145,
+        "critical_files_without_tests": 12
+      },
+      "recommendations": [
+        "Start with testing critical business logic first",
+        "Implement snapshot testing for UI components",
+        "Add automated test generation for API endpoints"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.605Z"
+  },
+  "analysis_1755815131600_architecture": {
+    "task_id": "analysis_1755815131600_architecture",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Architecture Documentation Review",
+      "findings": [
+        {
+          "type": "documentation_gaps",
+          "severity": "medium",
+          "description": "Missing API documentation and architectural decisions",
+          "missing_docs": [
+            "API endpoints",
+            "Database schema",
+            "Integration patterns"
+          ],
+          "recommendation": "Create comprehensive technical documentation",
+          "effort_estimate": "1 week"
+        },
+        {
+          "type": "architectural_patterns",
+          "severity": "low",
+          "description": "Inconsistent patterns across modules",
+          "examples": [
+            "Mixed state management approaches",
+            "Varying error handling patterns"
+          ],
+          "recommendation": "Standardize architectural patterns and create style guide",
+          "effort_estimate": "2-3 days"
+        }
+      ],
+      "metrics": {
+        "documented_components": 45,
+        "undocumented_components": 112,
+        "documentation_coverage": 28
+      },
+      "recommendations": [
+        "Implement automated documentation generation",
+        "Create architectural decision records (ADRs)",
+        "Establish code review guidelines for documentation"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.606Z"
+  },
+  "analysis_1755815131600_security": {
+    "task_id": "analysis_1755815131600_security",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Security Vulnerability Assessment",
+      "findings": [
+        {
+          "type": "exposed_credentials",
+          "severity": "critical",
+          "description": "API keys and tokens found in configuration files",
+          "affected_files": [
+            ".mcp.json"
+          ],
+          "recommendation": "Move all credentials to environment variables",
+          "security_impact": "High - potential unauthorized access",
+          "effort_estimate": "2-4 hours"
+        },
+        {
+          "type": "input_validation",
+          "severity": "medium",
+          "description": "Insufficient input validation in form components",
+          "affected_files": [
+            "src/components/InvoiceForm.tsx"
+          ],
+          "recommendation": "Implement comprehensive Zod validation schemas",
+          "security_impact": "Medium - potential injection attacks",
+          "effort_estimate": "1-2 days"
+        }
+      ],
+      "metrics": {
+        "critical_vulnerabilities": 1,
+        "medium_vulnerabilities": 3,
+        "low_vulnerabilities": 7,
+        "security_score": 65
+      },
+      "recommendations": [
+        "Implement security scanning in CI/CD pipeline",
+        "Add Content Security Policy headers",
+        "Regular dependency vulnerability audits"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.609Z"
+  },
+  "analysis_1755815131600_dependencies": {
+    "task_id": "analysis_1755815131600_dependencies",
+    "status": "COMPLETED",
+    "result": {
+      "analysis_type": "Import Dependency Analysis",
+      "findings": [
+        {
+          "type": "unused_dependencies",
+          "severity": "low",
+          "description": "Unused packages detected in package.json",
+          "unused_packages": [
+            "lodash",
+            "moment",
+            "axios"
+          ],
+          "recommendation": "Remove unused dependencies to reduce bundle size",
+          "size_reduction": "150KB",
+          "effort_estimate": "2-3 hours"
+        },
+        {
+          "type": "outdated_dependencies",
+          "severity": "medium",
+          "description": "Outdated packages with security vulnerabilities",
+          "outdated_packages": [
+            "react-router@5.x",
+            "typescript@4.x"
+          ],
+          "recommendation": "Update to latest stable versions",
+          "effort_estimate": "1-2 days"
+        }
+      ],
+      "metrics": {
+        "total_dependencies": 156,
+        "outdated_dependencies": 23,
+        "unused_dependencies": 8,
+        "dependency_health_score": 72
+      },
+      "recommendations": [
+        "Implement automated dependency updates",
+        "Use dependency scanning tools",
+        "Regular package audit reviews"
+      ]
+    },
+    "completed_at": "2025-08-21T22:25:31.610Z"
+  }
+}

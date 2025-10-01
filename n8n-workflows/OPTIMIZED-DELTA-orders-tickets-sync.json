@@ -1,0 +1,367 @@
+{
+  "name": "Humanitix → Supabase (Events, Sessions, Orders, Tickets) — Event-Scoped Delta",
+  "meta": { "version": "2.0" },
+  "nodes": [
+    {
+      "id": "Config",
+      "name": "Config (Set)",
+      "type": "n8n-nodes-base.set",
+      "position": [140, 80],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            { "name": "HUMANITIX_BASE", "value": "https://api.humanitix.com/v1" },
+            { "name": "DOB_LABEL", "value": "Date of birth" },
+            { "name": "ADDR_COUNTRY", "value": "Country" },
+            { "name": "ADDR_LINE1", "value": "Street address" },
+            { "name": "ADDR_LINE2", "value": "Address Line 2" },
+            { "name": "ADDR_SUBURB", "value": "Suburb" },
+            { "name": "ADDR_CITY", "value": "City" },
+            { "name": "ADDR_STATE", "value": "State" },
+            { "name": "ADDR_POSTCODE", "value": "Post code" },
+            { "name": "DEFAULT_CURSOR_DAYS", "value": "14" }
+          ],
+          "number": [
+            { "name": "PAGE_LIMIT", "value": 1000 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "FetchEvents",
+      "name": "Fetch Events (/v1/events)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [360, 40],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.HUMANITIX_BASE}}/events?limit={{$json.PAGE_LIMIT}}",
+        "responseFormat": "json",
+        "options": { "splitIntoItems": true }
+      },
+      "credentials": { "httpHeaderAuth": "Humanitix API" }
+    },
+    {
+      "id": "MapEvents",
+      "name": "Map Events → Supabase",
+      "type": "n8n-nodes-base.function",
+      "position": [560, 40],
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const e=i.json; return { json: { source:'humanitix', source_id: e.id||e.eventId||e.reference, title: e.title||e.name||null, description: e.description||null, hero_image_url: e.imageUrl||null, status: (e.status||'published').toLowerCase(), raw: e, updated_at: e.updatedAt||e.lastModifiedAt||new Date().toISOString() } }; });"
+      }
+    },
+    {
+      "id": "UpsertEvents",
+      "name": "Upsert Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [760, 40],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/events?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "FlattenDates",
+      "name": "Flatten events[].dates[] → sessions",
+      "type": "n8n-nodes-base.function",
+      "position": [560, 140],
+      "parameters": {
+        "functionCode": "const out=[]; for (const it of items){ const e=it.json||{}; const eventSourceId=e.source_id; const raw=e.raw||{}; const dates=Array.isArray(raw.dates)?raw.dates:[]; for (const d of dates){ out.push({ json: { source:'humanitix', source_id: d.id||d.dateId, event_source_id: eventSourceId, starts_at: d.startDateTime||d.start||d.startsAt||null, venue_name: d.venueName||raw.venueName||null, capacity: Number(d.capacity || raw.capacity || 0) || null, ticket_url: d.ticketUrl||raw.ticketUrl||null, status: (d.status||'scheduled').toLowerCase(), raw: { event: raw, date: d }, updated_at: d.updatedAt||raw.updatedAt||new Date().toISOString() } }); } } return out;"
+      }
+    },
+    {
+      "id": "UpsertSessions",
+      "name": "Upsert Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [760, 140],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/sessions?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "MakeEventList",
+      "name": "Make Event List",
+      "type": "n8n-nodes-base.function",
+      "position": [960, 40],
+      "parameters": {
+        "functionCode": "return [{ json: { events: $items('Fetch Events (/v1/events)').map(it=>({ id: it.json.id||it.json.eventId||it.json.reference })) } }];"
+      }
+    },
+    {
+      "id": "SplitEvents",
+      "name": "For Each Event (Split In Batches)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [1160, 40],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "GetEventOrdersCursor",
+      "name": "Get Orders Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1360, 10],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/sync_state?key=eq.{{'humanitix:orders:' + $json.id}}&select=value",
+        "responseFormat": "json",
+        "options": { "splitIntoItems": false, "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\"}" }
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "GetEventTicketsCursor",
+      "name": "Get Tickets Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1360, 70],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/sync_state?key=eq.{{'humanitix:tickets:' + $json.id}}&select=value",
+        "responseFormat": "json",
+        "options": { "splitIntoItems": false, "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\"}" }
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "SeedEventCursors",
+      "name": "Seed Event Cursors (14d default)",
+      "type": "n8n-nodes-base.function",
+      "position": [1540, 40],
+      "parameters": {
+        "functionCode": "const days = Number($items('Config (Set)')[0].json.DEFAULT_CURSOR_DAYS)||14; const ago = new Date(Date.now()-days*24*3600*1000).toISOString(); const pick = r => (Array.isArray(r.body) && r.body[0] && r.body[0].value) ? r.body[0].value : ago; return [{ json: { eventId: $items('For Each Event (Split In Batches)')[0].json.id, ordersCursor: pick($items('Get Orders Cursor (per event)')[0]), ticketsCursor: pick($items('Get Tickets Cursor (per event)')[0]) } }];"
+      }
+    },
+    {
+      "id": "FetchOrdersForEvent",
+      "name": "Fetch Orders (/v1/events/{id}/orders)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1740, 10],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.HUMANITIX_BASE}}/events/{{$json.eventId}}/orders?limit={{$json.PAGE_LIMIT}}&updatedSince={{$json.ordersCursor}}",
+        "responseFormat": "json",
+        "options": { "splitIntoItems": true }
+      },
+      "credentials": { "httpHeaderAuth": "Humanitix API" }
+    },
+    {
+      "id": "NormalizeOrders",
+      "name": "Normalize Orders (DOB+Address)",
+      "type": "n8n-nodes-base.function",
+      "position": [1940, 10],
+      "parameters": {
+        "functionCode": "const cfg=$items('Config (Set)')[0].json; const parseDob=(raw)=>{ if(!raw) return null; const m=String(raw).trim().match(/^(\\\\d{1,2})[\\\\\\\\\\\\/.\\\\-](\\\\d{1,2})[\\\\\\\\\\\\/.\\\\-](\\\\d{2}|\\\\d{4})$/); if(!m) return null; let [_,d,mo,y]=m; d=+d; mo=+mo; y=+y; if(y<100) y+=(y>=30?1900:2000); if(y<1900||y>new Date().getFullYear()) return null; const dim=new Date(y,mo,0).getDate(); if(d<1||d>dim||mo<1||mo>12) return null; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }; const ageBand=(iso)=>{ if(!iso) return null; const t=new Date(); const [y,m,d]=iso.split('-').map(Number); let a=t.getFullYear()-y; const mm=t.getMonth()+1, dd=t.getDate(); if(mm<m||(mm===m&&dd<d)) a--; if(a<13||a>120) return null; if(a<=17) return '13-17'; if(a<=24) return '18-24'; if(a<=34) return '25-34'; if(a<=44) return '35-44'; if(a<=54) return '45-54'; if(a<=64) return '55-64'; return '65+'; }; const bag = o => o?.additionalFields?.details || {}; const pick=(b,k)=>{ const key=Object.keys(b).find(x=>x.toLowerCase()===k.toLowerCase()); return key? b[key]: null; }; return items.map(it=>{ const o=it.json; const b=bag(o); const dobIso=parseDob(pick(b,cfg.DOB_LABEL)||pick(b,'DOB')||pick(b,'Birthday')); const country=(pick(b,cfg.ADDR_COUNTRY)||'AU').toUpperCase(); const line1=pick(b,cfg.ADDR_LINE1)||pick(b,'Address')||null; const line2=pick(b,cfg.ADDR_LINE2)||null; const suburb=pick(b,cfg.ADDR_SUBURB)||null; const city=pick(b,cfg.ADDR_CITY)||suburb||null; const state=pick(b,cfg.ADDR_STATE)||pick(b,'Region')||pick(b,'County')||null; const postcode=pick(b,cfg.ADDR_POSTCODE)||pick(b,'Postal code')||pick(b,'ZIP')||null; const email=(o.email||o.purchaserEmail||'').trim().toLowerCase()||null; const phone=(o.mobile||o.phone||'').replace(/\\\\D/g,'')||null; const fn=(o.firstName||o.purchaserFirstName||'').trim()||null; const ln=(o.lastName||o.purchaserLastName||'').trim()||null; const normOrder={ source:'humanitix', source_id:o.id||o.orderId||o.reference, event_source_id:o.eventId||$items('Seed Event Cursors (14d default)')[0].json.eventId, session_source_id:o.sessionId||o.eventDateId||null, order_reference:o.reference||null, status:o.status||null, currency:o.currency||'AUD', total_cents: Math.round(Number(o.total||o.totalCents||0)), subtotal_cents: Math.round(Number(o.subtotal||o.subtotalCents||0)), discounts_cents: Math.round(Number(o.discounts||o.discountsCents||0)), gross_sales_cents: Math.round(Number(o.grossSales||o.grossSalesCents||0)), net_sales_cents: Math.round(Number(o.netSales||o.netSalesCents||0)), email, first_name:fn, last_name:ln, mobile:phone, ordered_at:o.createdAt||o.orderDate||null, updated_at:o.updatedAt||o.lastModifiedAt||o.createdAt||new Date().toISOString(), purchase_totals:o.purchaseTotals||null, fee_breakdown:o.feeBreakdown||null, additional_fields:o.additionalFields||null, raw:o }; const normCustomer={ email, phone, fn, ln, dob:dobIso, age_band:ageBand(dobIso), address_line1:line1, address_line2:line2, suburb, city, state, postcode, country }; return { json: { customer: normCustomer, order: normOrder } }; });"
+      }
+    },
+    {
+      "id": "UpsertCustomers",
+      "name": "Upsert Customers",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2140, 10],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/customers?on_conflict=email",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json.customer)) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "UpsertOrders",
+      "name": "Upsert Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2140, 70],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/orders?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json.order)) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "UpdateOrdersCursor",
+      "name": "Update Orders Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2340, 40],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/sync_state?on_conflict=key",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify([{ key: 'humanitix:orders:' + $items('Seed Event Cursors (14d default)')[0].json.eventId, value: ( $items('Normalize Orders (DOB+Address)').length ? ($items('Normalize Orders (DOB+Address)')[$items('Normalize Orders (DOB+Address)').length-1].json.order.updated_at) : $items('Seed Event Cursors (14d default)')[0].json.ordersCursor ) }]) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "FetchTicketsForEvent",
+      "name": "Fetch Tickets (/v1/events/{id}/tickets)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1740, 140],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.HUMANITIX_BASE}}/events/{{$json.eventId}}/tickets?limit={{$json.PAGE_LIMIT}}&updatedSince={{$json.ticketsCursor}}",
+        "responseFormat": "json",
+        "options": { "splitIntoItems": true }
+      },
+      "credentials": { "httpHeaderAuth": "Humanitix API" }
+    },
+    {
+      "id": "MapTickets",
+      "name": "Map Tickets → Supabase",
+      "type": "n8n-nodes-base.function",
+      "position": [1940, 140],
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const t=i.json; return { json: { source:'humanitix', source_id: t.id||t.ticketId, order_source_id: t.orderId||t.parentOrderId, session_source_id: t.sessionId||t.eventDateId||null, ticket_type_name: t.ticketTypeName||t.type||null, price_cents: Math.round(Number(t.price||t.priceCents||0)), net_price_cents: Math.round(Number(t.netPrice||t.netPriceCents||0)), taxes_cents: Math.round(Number(t.taxes||t.taxesCents||0)), fee_cents: Math.round(Number(t.fee||t.feeCents||0)), status: t.status||null, checked_in: !!(t.checkedIn||t.isCheckedIn), check_in_status: t.checkInStatus||null, check_in_date: t.checkInDate||null, check_in_history: t.checkInHistory||null, seating_seat: t.seat||null, seating_table: t.table||null, seating_section: t.section||null, barcode: t.barcode||null, created_at: t.createdAt||null, updated_at: t.updatedAt||t.lastModifiedAt||t.createdAt||new Date().toISOString(), additional_fields: t.additionalFields||null, raw: t } }; });"
+      }
+    },
+    {
+      "id": "UpsertTickets",
+      "name": "Upsert Tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2140, 140],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/tickets?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "UpdateTicketsCursor",
+      "name": "Update Tickets Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2340, 140],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{$json.SUPABASE_URL}}/rest/v1/sync_state?on_conflict=key",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"{{$json.SUPABASE_API_KEY}}\",\"Prefer\":\"resolution=merge-duplicates\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify([{ key: 'humanitix:tickets:' + $items('Seed Event Cursors (14d default)')[0].json.eventId, value: ( $items('Map Tickets').length ? ($items('Map Tickets')[$items('Map Tickets').length-1].json.updated_at) : $items('Seed Event Cursors (14d default)')[0].json.ticketsCursor ) }]) }}"
+      },
+      "credentials": { "httpHeaderAuth": "Supabase API" }
+    },
+    {
+      "id": "NextEvent",
+      "name": "Next Event",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [1360, 140],
+      "parameters": {
+        "batchSize": 1
+      }
+    }
+  ],
+  "connections": {
+    "Config (Set)": {
+      "main": [[{ "node": "Fetch Events (/v1/events)", "type": "main", "index": 0 }]]
+    },
+    "Fetch Events (/v1/events)": {
+      "main": [[
+        { "node": "Map Events → Supabase", "type": "main", "index": 0 },
+        { "node": "Make Event List", "type": "main", "index": 0 }
+      ]]
+    },
+    "Map Events → Supabase": {
+      "main": [[{ "node": "Upsert Events", "type": "main", "index": 0 }]]
+    },
+    "Upsert Events": {
+      "main": [[{ "node": "Flatten events[].dates[] → sessions", "type": "main", "index": 0 }]]
+    },
+    "Flatten events[].dates[] → sessions": {
+      "main": [[{ "node": "Upsert Sessions", "type": "main", "index": 0 }]]
+    },
+    "Make Event List": {
+      "main": [[{ "node": "For Each Event (Split In Batches)", "type": "main", "index": 0 }]]
+    },
+    "For Each Event (Split In Batches)": {
+      "main": [[
+        { "node": "Get Orders Cursor (per event)", "type": "main", "index": 0 },
+        { "node": "Get Tickets Cursor (per event)", "type": "main", "index": 0 }
+      ]]
+    },
+    "Get Orders Cursor (per event)": {
+      "main": [[{ "node": "Seed Event Cursors (14d default)", "type": "main", "index": 0 }]]
+    },
+    "Get Tickets Cursor (per event)": {
+      "main": [[{ "node": "Seed Event Cursors (14d default)", "type": "main", "index": 0 }]]
+    },
+    "Seed Event Cursors (14d default)": {
+      "main": [[
+        { "node": "Fetch Orders (/v1/events/{id}/orders)", "type": "main", "index": 0 },
+        { "node": "Fetch Tickets (/v1/events/{id}/tickets)", "type": "main", "index": 0 }
+      ]]
+    },
+    "Fetch Orders (/v1/events/{id}/orders)": {
+      "main": [[{ "node": "Normalize Orders (DOB+Address)", "type": "main", "index": 0 }]]
+    },
+    "Normalize Orders (DOB+Address)": {
+      "main": [[
+        { "node": "Upsert Customers", "type": "main", "index": 0 },
+        { "node": "Upsert Orders", "type": "main", "index": 0 }
+      ]]
+    },
+    "Upsert Orders": {
+      "main": [[{ "node": "Update Orders Cursor (per event)", "type": "main", "index": 0 }]]
+    },
+    "Fetch Tickets (/v1/events/{id}/tickets)": {
+      "main": [[{ "node": "Map Tickets → Supabase", "type": "main", "index": 0 }]]
+    },
+    "Map Tickets → Supabase": {
+      "main": [[{ "node": "Upsert Tickets", "type": "main", "index": 0 }]]
+    },
+    "Upsert Tickets": {
+      "main": [[{ "node": "Update Tickets Cursor (per event)", "type": "main", "index": 0 }]]
+    },
+    "Update Tickets Cursor (per event)": {
+      "main": [[{ "node": "Next Event", "type": "main", "index": 0 }]]
+    },
+    "Update Orders Cursor (per event)": {
+      "main": [[{ "node": "Next Event", "type": "main", "index": 0 }]]
+    },
+    "Next Event": {
+      "main": [[{ "node": "For Each Event (Split In Batches)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true }
+}

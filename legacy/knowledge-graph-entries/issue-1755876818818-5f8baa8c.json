@@ -1,0 +1,25 @@
+{
+  "id": "issue-1755876818818-5f8baa8c",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Development Anti-Pattern: Symptom-Based Debugging",
+  "description": "Medium process failure: Multiple instances of fixing UI symptoms instead of investigating root database causes. Pattern identified in profile picture upload fixes (July 8-9) when real issue was missing database trigger causing zero profiles. Root cause: Insufficient architectural understanding and debugging methodology. Prevention: Always validate database fundamentals and data integrity before debugging UI issues. Implement systematic debugging checklist.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:33:38.819Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "fix"
+  ],
+  "linear_issue_id": null,
+  "cross_references": [
+    {
+      "type": "caused_by",
+      "target_id": "issue-1755876786446-17e8a75a",
+      "description": "Directly resulted from Profile System failure"
+    }
+  ]
+}

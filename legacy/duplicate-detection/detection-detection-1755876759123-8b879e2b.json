@@ -1,0 +1,27 @@
+{
+  "detection_id": "detection-1755876759123-8b879e2b",
+  "task": {
+    "task_title": "Hardcoded Supabase API Key Security Vulnerability",
+    "task_description": "Critical security issue: Hardcoded Supabase public API key exposed in /root/agents/src/integrations/supabase/client.ts source code. This creates API key exposure risk and potential security breach. Immediate fix required to move to environment variables.",
+    "task_severity": "critical",
+    "detection_id": "detection-1755876759123-8b879e2b",
+    "timestamp": "2025-08-22T15:32:39.521Z"
+  },
+  "results": {
+    "exact_matches": [],
+    "high_similarity": [],
+    "pattern_matches": [],
+    "temporal_clusters": [],
+    "solution_exists": [],
+    "semantic_similarity": []
+  },
+  "duplicate_probability": 0,
+  "warnings": [],
+  "processing_time_ms": 637,
+  "total_problems_analyzed": 92,
+  "recommendation": {
+    "action": "PROCEED",
+    "message": "No significant duplicates detected. Safe to proceed.",
+    "confidence": "low"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755875481134-e8427ad9",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Missing React Import Statements in Context Files",
+  "description": "Code quality mistake: AuthContext.tsx and potentially other context files were missing explicit React import statements (createContext, useContext, useState, useEffect). Root cause: Assumed React 17+ automatic JSX transform eliminates need for all React imports, but hooks and context functions still require explicit imports. This could cause runtime errors or compilation issues in certain environments. Solution applied: Context files identified as needing proper React imports even with modern JSX transform. Prevention: Always verify React hook and utility imports are present explicitly, even in modern React setups. Don't rely solely on automatic JSX transform for all React functionality.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:11:21.135Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

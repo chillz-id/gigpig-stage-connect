@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755876879215-4950e8d8",
+  "type": "issue",
+  "severity": "low",
+  "title": "Legacy File Accumulation: 8 Backup Files Cluttering Codebase",
+  "description": "Low technical debt: 8 legacy backup files identified (*.original.tsx, *.refactored.ts, *.deprecated.tsx) cluttering codebase and causing confusion about active file status. Root cause: Incomplete cleanup after refactoring and development experiments. Prevention: Establish cleanup procedures after development iterations and implement .gitignore patterns for temporary files.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:39.215Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "refactor"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

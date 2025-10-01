@@ -1,0 +1,290 @@
+{
+  "name": "Humanitix Orders → Ticket Sales (Order Level)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "Get Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse events from Humanitix API\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response structures\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\nconsole.log(`Found ${events.length} events`);\n\n// Return each event for processing orders\nreturn events.map(event => ({ json: event }));"
+      },
+      "id": "parse-events",
+      "name": "Parse Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json._id || $json.id }}/orders",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "={{ new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-orders",
+      "name": "Get Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform orders to Ticket Sales format (ORDER LEVEL - not per ticket)\ntry {\n  console.log('=== TRANSFORM ORDERS DEBUG START ===');\n  const orderResponse = $input.all()[0].json;\n  const eventInfo = $('Parse Events').item.json;\n  \n  console.log('Order Response type:', typeof orderResponse);\n  console.log('Order Response keys:', Object.keys(orderResponse || {}));\n  console.log('Order Response full data:', JSON.stringify(orderResponse, null, 2));\n  console.log('Event Info exists:', !!eventInfo);\n  console.log('Event Info:', JSON.stringify(eventInfo, null, 2));\n  \n  const transformedOrders = [];\n\n// Extract orders from response\nlet orders = [];\nif (orderResponse.orders && Array.isArray(orderResponse.orders)) {\n  orders = orderResponse.orders;\n} else if (orderResponse.data && Array.isArray(orderResponse.data)) {\n  orders = orderResponse.data;\n} else if (Array.isArray(orderResponse)) {\n  orders = orderResponse;\n}\n\nconst eventName = eventInfo.name || eventInfo.title || 'Unknown Event';\nconsole.log(`Processing ${orders.length} orders for event: ${eventName}`);\n\nfor (const order of orders) {\n  try {\n  // Basic order info\n  const orderId = order._id || order.id || order.orderName || '';\n  const buyerInfo = order.buyer || {};\n  const customerName = `${order.firstName || buyerInfo.firstName || ''} ${order.lastName || buyerInfo.lastName || ''}`.trim() || 'Unknown';\n  const customerEmail = order.email || buyerInfo.email || '';\n  const customerPhone = order.phone || buyerInfo.phone || '';\n  \n  // Ticket information (summarized for the order)\n  const tickets = order.tickets || [];\n  let ticketTypes = [];\n  let totalQuantity = 0;\n  \n  for (const ticket of tickets) {\n    const ticketType = ticket.ticketType || ticket.type || {};\n    const typeName = ticketType.name || ticket.name || 'General';\n    const quantity = parseInt(ticket.quantity) || 1;\n    \n    ticketTypes.push(`${typeName} (${quantity})`);\n    totalQuantity += quantity;\n  }\n  \n  const ticketTypesText = ticketTypes.length > 0 ? ticketTypes.join(', ') : 'General';\n  \n  // Financial calculations\n  const finance = order.finance || {};\n  const subtotal = parseFloat(finance.subtotal || order.subtotal || order.amount || 0);\n  const platformFee = parseFloat(finance.platformFee || order.platformFee || 0);\n  const bookingFee = parseFloat(finance.bookingFee || order.bookingFee || 0);\n  const processingFee = parseFloat(finance.processingFee || order.processingFee || 0);\n  const totalFees = platformFee + bookingFee + processingFee;\n  const totalAmount = parseFloat(finance.total || order.total || subtotal + totalFees);\n  const netRevenue = subtotal - totalFees;\n  const partnerShare = netRevenue * 0.743; // 74.3% partner share\n  \n  // Dates\n  const purchaseDate = order.createdAt || order.purchaseDate || new Date().toISOString();\n  const eventDate = eventInfo.startDate || eventInfo.date || eventInfo.dates?.[0]?.startDate || null;\n  \n  // Venue info  \n  const venue = eventInfo.venue?.name || eventInfo.location?.name || eventInfo.location || '';\n  \n  // Status\n  const orderStatus = (order.status || 'complete').charAt(0).toUpperCase() + (order.status || 'complete').slice(1);\n  const currency = order.currency || eventInfo.currency || 'AUD';\n  \n  const orderEntry = {\n    orderId: orderId,\n    properties: {\n      \"Event Name\": {\n        title: [{ text: { content: eventName } }]\n      },\n      \"Customer Name\": {\n        rich_text: [{ text: { content: customerName } }]\n      },\n      \"Customer Email\": {\n        email: customerEmail || 'no-email@example.com'\n      },\n      \"Order ID\": {\n        rich_text: [{ text: { content: orderId } }]\n      },\n      \"Platform\": {\n        select: { name: \"Humanitix\" }\n      },\n      \"Ticket Types\": {\n        rich_text: [{ text: { content: ticketTypesText } }]\n      },\n      \"Quantity\": {\n        number: totalQuantity\n      },\n      \"Subtotal\": {\n        number: subtotal\n      },\n      \"Platform Fee\": {\n        number: platformFee\n      },\n      \"Booking Fee\": {\n        number: bookingFee\n      },\n      \"Processing Fee\": {\n        number: processingFee\n      },\n      \"Total Fees\": {\n        number: totalFees\n      },\n      \"Amount\": {\n        number: totalAmount\n      },\n      \"Net Revenue\": {\n        number: netRevenue\n      },\n      \"Partner Share\": {\n        number: parseFloat(partnerShare.toFixed(2))\n      },\n      \"Partner Percentage\": {\n        number: 0.743\n      },\n      \"Partner Deal Type\": {\n        select: { name: \"80% minus fees\" }\n      },\n      \"Order Status\": {\n        select: { name: orderStatus }\n      },\n      \"Status\": {\n        select: { name: \"Paid\" }\n      },\n      \"Currency\": {\n        select: { name: currency }\n      },\n      \"Purchase Date\": {\n        date: { start: purchaseDate }\n      },\n      \"Last Sync\": {\n        date: { start: new Date().toISOString() }\n      },\n      \"Data Source\": {\n        select: { name: \"Humanitix API\" }\n      },\n      \"Notes\": {\n        rich_text: [{ text: { content: `Order-level entry for ${totalQuantity} ticket(s). Event: ${eventName}` } }]\n      }\n    }\n  };\n  \n  // Add optional fields\n  if (eventDate) {\n    orderEntry.properties[\"Event Date\"] = {\n      date: { start: eventDate }\n    };\n  }\n  \n  if (venue) {\n    orderEntry.properties[\"Venue\"] = {\n      rich_text: [{ text: { content: venue } }]\n    };\n  }\n  \n  if (customerPhone) {\n    orderEntry.properties[\"Customer Phone\"] = {\n      phone_number: customerPhone\n    };\n  }\n  \n  transformedOrders.push(orderEntry);\n  } catch (orderError) {\n    console.error(`Failed to process order ${order._id || order.id}:`, orderError.message);\n    // Continue processing other orders\n  }\n}\n\n  console.log(`Transformed ${transformedOrders.length} orders`);\n  \n  if (transformedOrders.length === 0) {\n    console.log('No orders for this event - returning empty array to continue processing');\n    return [];\n  }\n  \n  console.log('=== TRANSFORM ORDERS DEBUG END ===');\n  return transformedOrders.map(order => ({ json: order }));\n  \n} catch (error) {\n  console.error('Transform Orders Error:', error.message);\n  console.error('Stack:', error.stack);\n  throw new Error(`Transform Orders failed: ${error.message}`);\n}"
+      },
+      "id": "transform-orders",
+      "name": "Transform Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "1374745b-8cbe-804b-87a2-ec93b3385e01",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Order ID",
+              "condition": "equals",
+              "value": "={{ $('Transform Orders').item.json.orderId }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "id": "check-order-duplicates",
+      "name": "Check Order Duplicates",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.results ? $json.results.length : 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-new-order",
+      "name": "IF New Order",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "1374745b-8cbe-804b-87a2-ec93b3385e01",
+        "properties": "={{ $('Transform Orders').item.json.properties }}",
+        "options": {}
+      },
+      "id": "create-order-entry",
+      "name": "Create Order Entry",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1780, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Summary of sync operation\nconst processedCount = $input.all().length;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    message: `Order sync completed`,\n    ordersProcessed: processedCount,\n    status: 'success',\n    workflow: 'Orders to Ticket Sales'\n  }\n}];"
+      },
+      "id": "summary",
+      "name": "Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events": {
+      "main": [
+        [
+          {
+            "node": "Parse Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Events": {
+      "main": [
+        [
+          {
+            "node": "Get Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Orders": {
+      "main": [
+        [
+          {
+            "node": "Transform Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Orders": {
+      "main": [
+        [
+          {
+            "node": "Check Order Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Order Duplicates": {
+      "main": [
+        [
+          {
+            "node": "IF New Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF New Order": {
+      "main": [
+        [
+          {
+            "node": "Create Order Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Order Entry": {
+      "main": [
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

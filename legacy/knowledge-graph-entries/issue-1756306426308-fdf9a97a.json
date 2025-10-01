@@ -1,0 +1,23 @@
+{
+  "id": "issue-1756306426308-fdf9a97a",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "Fee Rebate Field Missing for Quantity Calculation",
+  "description": "User required fee rebate field from Humanitix API for quantity calculations in Notion, showing  per ticket. Initial attempts looked at wrong API fields and export data. Root cause: Fee rebate is nested deep in API response at totalsV2.fees.rebate.totalFee.total.afterTax path, not in obvious top-level fields. This field is critical for financial tracking and quantity calculations in the comedy platform ticketing system. Required proper API endpoint extraction, not export data processing.",
+  "date": "2025-08-27",
+  "timestamp": "2025-08-27T14:53:46.308Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully resolved by extracting fee rebate from correct API path totalsV2.fees.rebate.totalFee.total.afterTax in Humanitix ticket data. Implemented proper nested object access in /tmp/humanitix-sync.py sync_ticket() function. Code: fee_rebate = ticket['totalsV2']['fees']['rebate']['totalFee']['total']['afterTax'] if ticket.get('totalsV2', {}).get('fees', {}).get('rebate', {}).get('totalFee', {}).get('total', {}).get('afterTax') else 0. Result: Successfully shows  fee rebate per ticket for quantity calculations. Critical insight: Humanitix uses complex nested financial structure, not simple top-level fields.",
+    "successful": true,
+    "timestamp": "2025-08-27T14:54:10.733Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "api"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

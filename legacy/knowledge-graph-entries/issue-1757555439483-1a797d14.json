@@ -1,0 +1,17 @@
+{
+  "id": "issue-1757555439483-1a797d14",
+  "type": "issue",
+  "severity": "medium",
+  "title": "MCP Supabase Tools Not Available in Claude Code Session",
+  "description": "During database migration attempt, discovered that MCP Supabase tools (mcp__supabase__execute_sql, mcp__supabase__list_columns, etc.) are not available in this Claude Code session. Only IDE tools (mcp__ide__getDiagnostics, mcp__ide__executeCode) are accessible. This impacts ability to perform database operations directly. Alternative approaches using Supabase client library were attempted but DDL operations still require manual execution.",
+  "date": "2025-09-11",
+  "timestamp": "2025-09-11T01:50:39.483Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "database"
+  ]
+}

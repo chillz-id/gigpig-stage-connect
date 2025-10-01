@@ -5,10 +5,10 @@
       "args": [
         "-y",
         "@supabase/mcp-server-supabase@latest",
-        "--project-ref=YOUR_SUPABASE_PROJECT_REF"
+        "--project-ref=pdikjpfulhhpqpxzpgtu"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_ACCESS_TOKEN_HERE"
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
     },
     "github": {
@@ -18,17 +18,13 @@
         "@modelcontextprotocol/server-github@latest"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
     "notion": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@notionhq/notion-mcp-server@latest"
-      ],
-      "env": {
-        "NOTION_TOKEN": "YOUR_NOTION_API_KEY_HERE"
+      "url": "https://mcp.notion.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${NOTION_TOKEN}"
       }
     },
     "slack": {
@@ -38,9 +34,8 @@
         "@modelcontextprotocol/server-slack@latest"
       ],
       "env": {
-        "SLACK_BOT_TOKEN": "YOUR_SLACK_BOT_TOKEN_HERE",
-        "SLACK_APP_TOKEN": "YOUR_SLACK_APP_TOKEN_HERE",
-        "SLACK_TEAM_ID": "YOUR_SLACK_TEAM_ID_HERE"
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_APP_TOKEN": "${SLACK_APP_TOKEN}"
       }
     },
     "metricool": {
@@ -50,8 +45,8 @@
         "mcp-metricool"
       ],
       "env": {
-        "METRICOOL_USER_TOKEN": "YOUR_METRICOOL_USER_TOKEN_HERE",
-        "METRICOOL_USER_ID": "YOUR_METRICOOL_USER_ID_HERE"
+        "METRICOOL_USER_TOKEN": "${METRICOOL_USER_TOKEN}",
+        "METRICOOL_USER_ID": "${METRICOOL_USER_ID}"
       }
     },
     "xero": {
@@ -61,10 +56,10 @@
         "@xeroapi/xero-mcp-server@latest"
       ],
       "env": {
-        "XERO_CLIENT_ID": "YOUR_XERO_CLIENT_ID_HERE",
-        "XERO_CLIENT_SECRET": "YOUR_XERO_CLIENT_SECRET_HERE",
+        "XERO_CLIENT_ID": "${XERO_CLIENT_ID}",
+        "XERO_CLIENT_SECRET": "${XERO_CLIENT_SECRET}",
         "XERO_SCOPES": "accounting.transactions accounting.contacts accounting.settings offline_access",
-        "XERO_REDIRECT_URI": "https://your-domain.com/auth/xero-callback"
+        "XERO_REDIRECT_URI": "https://agents.standupsydney.com/auth/xero-callback"
       }
     },
     "canva": {
@@ -76,33 +71,23 @@
       ]
     },
     "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ]
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     },
     "filesystem": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem@latest",
-        "/path/to/your/project"
+        "/root/agents"
       ]
-    },
-    "n8n-local": {
-      "command": "python3",
-      "args": [
-        "/path/to/your/n8n_mcp_wrapper.py"
-      ],
-      "env": {
-        "N8N_API_KEY": "YOUR_N8N_API_KEY_HERE",
-        "N8N_API_URL": "http://localhost:5678/api/v1"
-      }
     },
     "@magicuidesign/mcp": {
       "command": "npx",
-      "args": ["-y", "@magicuidesign/mcp@latest"]
+      "args": [
+        "-y",
+        "@magicuidesign/mcp@latest"
+      ]
     },
     "apify": {
       "command": "npx",
@@ -111,38 +96,56 @@
         "@apify/actors-mcp-server@latest"
       ],
       "env": {
-        "APIFY_TOKEN": "YOUR_APIFY_API_TOKEN_HERE"
+        "APIFY_API_TOKEN": "${APIFY_TOKEN}"
+      }
+    },
+    "n8n": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@eekfonky/n8n-mcp-modern@latest"
+      ],
+      "env": {
+        "N8N_API_KEY": "${N8N_API_KEY}",
+        "N8N_API_URL": "${N8N_API_URL}"
+      }
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@brave/brave-search-mcp-server@latest"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
       }
     },
     "task-master": {
       "command": "npx",
-      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
-      "env": {
-        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
-        "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE",
-        "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
-        "GOOGLE_API_KEY": "YOUR_GOOGLE_API_KEY_HERE"
-      }
-    },
-    "firecrawl": {
-      "command": "npx",
       "args": [
         "-y",
-        "@mendable/firecrawl-mcp-server@latest"
+        "--package=task-master-ai",
+        "task-master-ai"
       ],
       "env": {
-        "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_API_KEY_HERE"
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
+        "GOOGLE_API_KEY": "${GOOGLE_API_KEY}"
       }
     },
-    "brevo": {
-      "command": "python3",
-      "args": [
-        "/path/to/your/brevo_mcp_wrapper.py"
-      ],
-      "env": {
-        "BREVO_API_KEY": "YOUR_BREVO_API_KEY_HERE",
-        "BREVO_API_URL": "https://api.brevo.com/v3"
-      }
+    "wix": {
+      "type": "http",
+      "url": "https://mcp.wix.com/mcp",
+      "apiKey": "IST.eyJraWQiOiJQb3pIX2FDMiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiaWRcIjpcIjBjMzA4MTBhLTlmOWEtNDM3Yy04ODA2LTRlNTRkNWI1ZDNlY1wiLFwiaWRlbnRpdHlcIjp7XCJ0eXBlXCI6XCJhcHBsaWNhdGlvblwiLFwiaWRcIjpcIjIwZDc4Nzk0LWE0OTItNDU1MC05ZTkyLTc0YzlkZWFjNDAwMFwifSxcInRlbmFudFwiOntcInR5cGVcIjpcImFjY291bnRcIixcImlkXCI6XCJmNDk0NTFlNS05MGMxLTQ0NTEtODc2My0zMThhOTIzMDhjMGNcIn19IiwiaWF0IjoxNzUwNDkxNjU1fQ.aqW6d1WZ-uzaAtCRgs8lnLADHu7jbn38pzijreT54rs9-_nz0QILgw_7tMYgwlVpLx6icIhs--e7FTc3zNJ0yP92a_oFc8ZghjuRKSvN9SZAz8j7UhotHzzIld0luujXpRSN1wICP2Punn4b0-907dxCSe2UL8WIIB_QfQorbKqv_FuFHioZ9iV2fVvE5LqNPjXOekTrMQhT5uET9yQHXw-gN02y41cbUzyuY7i2Tcobr2Bf9ImkQrdGDpZfygK-3R9uJmb7bhH0efFbRYBWcGMrJdEWnIzm4jEOYK2731JaDHJt-dF0rp4684YfkGLX7eh0wg44ap5JCVHu_5ryIw",
+      "accountId": "f49451e5-90c1-4451-8763-318a92308c0c"
     }
   }
 }

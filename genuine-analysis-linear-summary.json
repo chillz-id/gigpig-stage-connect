@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-08-22T00:08:22.433Z",
+  "source_analysis": "./genuine-claude4-analysis-results.json",
+  "total_issues_created": 5,
+  "issues": [
+    {
+      "identifier": "BACKEND-40",
+      "title": "CRITICAL: Split tourService.ts Monolith (771 lines, complexity 63)",
+      "url": "https://linear.app/sus-gigpig/issue/BACKEND-40/critical-split-tourservicets-monolith-771-lines-complexity-63",
+      "priority": "Urgent",
+      "team": "Backend Development"
+    },
+    {
+      "identifier": "BACKEND-41",
+      "title": "CRITICAL: Decompose notificationService.ts (18+ notification types)",
+      "url": "https://linear.app/sus-gigpig/issue/BACKEND-41/critical-decompose-notificationservicets-18-notification-types",
+      "priority": "Urgent",
+      "team": "Backend Development"
+    },
+    {
+      "identifier": "BACKEND-42",
+      "title": "Refactor InvoiceForm.tsx - Extract Hooks and Sub-components",
+      "url": "https://linear.app/sus-gigpig/issue/BACKEND-42/refactor-invoiceformtsx-extract-hooks-and-sub-components",
+      "priority": "High",
+      "team": "Backend Development"
+    },
+    {
+      "identifier": "BACKEND-43",
+      "title": "Remove 3 Duplicate SQL Migration Files (~18KB cleanup)",
+      "url": "https://linear.app/sus-gigpig/issue/BACKEND-43/remove-3-duplicate-sql-migration-files-18kb-cleanup",
+      "priority": "Medium",
+      "team": "Backend Development"
+    },
+    {
+      "identifier": "BACKEND-44",
+      "title": "Remove 284 Unused Imports Across 149 Files (ESLint cleanup)",
+      "url": "https://linear.app/sus-gigpig/issue/BACKEND-44/remove-284-unused-imports-across-149-files-eslint-cleanup",
+      "priority": "Medium",
+      "team": "Backend Development"
+    }
+  ]
+}

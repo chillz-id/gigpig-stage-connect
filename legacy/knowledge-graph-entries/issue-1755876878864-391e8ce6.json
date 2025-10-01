@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755876878864-391e8ce6",
+  "type": "issue",
+  "severity": "medium",
+  "title": "TypeScript Safety: 31+ Any Type Usage Violations",
+  "description": "Medium technical debt: 31+ instances of 'any' type usage in error handling parameters, event handling, and template loaders reducing type safety and increasing runtime error risk. Root cause: Insufficient TypeScript strict typing enforcement and loose error handling patterns. Prevention: Enable strict TypeScript configuration, implement type-safe error handling patterns, and regular type safety audits.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:38.864Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

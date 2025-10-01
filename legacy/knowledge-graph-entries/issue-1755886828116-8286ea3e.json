@@ -1,0 +1,21 @@
+{
+  "id": "issue-1755886828116-8286ea3e",
+  "type": "issue",
+  "severity": "medium",
+  "title": "NPM/NPX Cache Accumulation Causing Disk Space Waste",
+  "description": "Critical system maintenance issue: NPM cache accumulated 4GB+ of disk space with NPX cache consuming additional 1.4GB, causing unnecessary disk usage on production droplet. Root cause: No regular cache maintenance procedures implemented, allowing caches to grow indefinitely. This impacts disk space efficiency and system performance. Prevention: Implement regular cache cleanup schedule using 'npm cache clean --force' and periodic NPX cache clearing. Consider automated monthly cache maintenance.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T18:20:28.116Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully resolved NPM/NPX cache accumulation issue. Cleared NPM cache using 'npm cache clean --force' and removed entire NPX cache directory '/root/.npm/_npx/'. Results: NPX cache reduced from 1.4GB to 4KB (99.7% reduction), NPM cache completely cleared. Total space recovered: ~4GB. System functionality verified - NPM still works correctly (v10.8.2). Established procedure for regular cache maintenance to prevent future accumulation.",
+    "successful": true,
+    "timestamp": "2025-08-22T18:20:28.465Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": null,
+  "cross_references": []
+}

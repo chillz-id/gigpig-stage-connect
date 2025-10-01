@@ -1,0 +1,273 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '/root/agents/.env' });
+
+[
+  {
+    "createdAt": "2025-08-22T07:08:15.670Z",
+    "updatedAt": "2025-08-22T07:08:15.670Z",
+    "id": "RealTimeNotionSync",
+    "name": "Humanitix Real-Time Sync to Notion",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "path": "humanitix-webhook",
+          "options": {}
+        },
+        "id": "webhook-trigger",
+        "name": "Webhook Trigger",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "webhookId": "humanitix-realtime-sync"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Log webhook data for debugging\nconst webhookData = $json;\nconsole.log('🎣 Webhook received:', JSON.stringify(webhookData, null, 2));\n\n// Extract order information from webhook\nlet orderData, eventData;\n\nif (webhookData.order && webhookData.event) {\n  // Direct webhook format\n  orderData = webhookData.order;\n  eventData = webhookData.event;\n} else if (webhookData.data) {\n  // Nested format\n  orderData = webhookData.data.order || webhookData.data;\n  eventData = webhookData.data.event;\n} else {\n  // Raw format\n  orderData = webhookData;\n  eventData = null;\n}\n\nconsole.log('📦 Processed order data:', orderData?._id || 'No order ID');\nconsole.log('🎪 Event data available:', !!eventData);\n\n// If we don't have event data, we'll need to fetch it\nif (!eventData && orderData?.eventId) {\n  console.log('🔍 Need to fetch event data for:', orderData.eventId);\n  return [{\n    json: {\n      needsEventFetch: true,\n      orderData: orderData,\n      eventId: orderData.eventId\n    }\n  }];\n} else {\n  return [{\n    json: {\n      needsEventFetch: false,\n      orderData: orderData,\n      eventData: eventData\n    }\n  }];\n}"
+        },
+        "id": "process-webhook",
+        "name": "Process Webhook Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{ $json.needsEventFetch }}",
+                "value2": true
+              }
+            ]
+          }
+        },
+        "id": "needs-event-fetch",
+        "name": "Needs Event Fetch?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          680,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.humanitix.com/v1/events/{{ $json.eventId }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "const HUMANITIX_API_KEY = process.env.HUMANITIX_API_KEY;
+if (!HUMANITIX_API_KEY) {
+    throw new Error('HUMANITIX_API_KEY environment variable not set');
+}
+
+process.env.HUMANITIX_API_KEY"
+              }
+            ]
+          }
+        },
+        "id": "fetch-event-data",
+        "name": "Fetch Event Data",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          900,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Combine fetched event data with order data\nconst eventResponse = $input.first().json;\nconst orderData = $('Process Webhook Data').first().json.orderData;\n\nconsole.log('🎪 Fetched event:', eventResponse?.name);\n\nreturn [{\n  json: {\n    orderData: orderData,\n    eventData: eventResponse\n  }\n}];"
+        },
+        "id": "combine-event-order",
+        "name": "Combine Event & Order",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Transform order data for Notion with CORRECT FINANCIAL FIELDS\nconst orderData = $json.orderData;\nconst eventData = $json.eventData;\n\nconsole.log('🔄 Transforming order for Notion:', orderData?._id);\n\ntry {\n  const orderId = orderData?._id || 'unknown-' + Date.now();\n  const eventId = orderData?.eventId || eventData?._id || 'unknown-event';\n  \n  // Safe customer name extraction\n  let customerName = 'Anonymous';\n  try {\n    const firstName = orderData?.firstName || '';\n    const lastName = orderData?.lastName || '';\n    customerName = `${firstName} ${lastName}`.trim() || 'Anonymous';\n  } catch (e) {\n    customerName = 'Anonymous';\n  }\n  \n  const email = orderData?.email || \"no-email@example.com\";\n  const phone = orderData?.mobile || orderData?.phone || null;\n  \n  // CORRECT FINANCIAL FIELDS - Use proper data sources\n  let grossSales = 0;\n  let netSales = 0;\n  let discountAmount = 0;\n  let discountCode = '';\n  \n  try {\n    // Use grossSales for Total Amount (original price before discount)\n    grossSales = parseFloat(orderData?.totals?.grossSales || orderData?.purchaseTotals?.grossSales || 0);\n    if (isNaN(grossSales)) grossSales = 0;\n    \n    // Use netSales for Net Sales (amount after discount)  \n    netSales = parseFloat(orderData?.totals?.netSales || orderData?.purchaseTotals?.netSales || 0);\n    if (isNaN(netSales)) netSales = 0;\n    \n    // Extract discount information\n    discountCode = orderData?.discounts?.discountCode?.code || '';\n    discountAmount = parseFloat(orderData?.discounts?.discountCode?.discountAmount || orderData?.totals?.discounts || 0);\n    if (isNaN(discountAmount)) discountAmount = 0;\n    \n    console.log(`💰 Financial - Gross: ${grossSales}, Net: ${netSales}, Discount: ${discountCode} (${discountAmount})`);\n    \n  } catch (e) {\n    console.error('⚠️ Error extracting financial data:', e.message);\n  }\n  \n  const totalQuantity = 1;\n  \n  // Safe date extraction\n  let eventDate = new Date().toISOString();\n  try {\n    eventDate = eventData?.startDate || eventData?.date || new Date().toISOString();\n  } catch (e) {\n    eventDate = new Date().toISOString();\n  }\n  \n  let orderDate = new Date().toISOString();\n  try {\n    orderDate = orderData?.completedAt || orderData?.createdAt || new Date().toISOString();\n  } catch (e) {\n    orderDate = new Date().toISOString();\n  }\n  \n  const status = orderData?.status || orderData?.financialStatus || \"completed\";\n  const ticketTypes = 'General Admission';\n  const eventName = eventData?.name || eventData?.title || 'Unknown Event';\n  \n  // Create the Notion entry with CORRECT field mappings\n  const notionEntry = {\n    parent: {\n      database_id: '1374745b-8cbe-804b-87a2-ec93b3385e01'\n    },\n    properties: {\n      \"Name\": {\n        title: [{ text: { content: customerName } }]\n      },\n      \"Email\": {\n        email: email\n      },\n      \"Event Name\": {\n        rich_text: [{ text: { content: eventName } }]\n      },\n      \"Event ID\": {\n        rich_text: [{ text: { content: eventId } }]\n      },\n      \"Event Date & Time\": {\n        date: { start: eventDate }\n      },\n      \"Order ID\": {\n        rich_text: [{ text: { content: orderId } }]\n      },\n      // FIXED: Use gross sales for Total Amount (original price)\n      \"Total Amount\": {\n        number: grossSales\n      },\n      // NEW: Add Net Sales field\n      \"Net Sales\": {\n        number: netSales\n      },\n      // NEW: Add Discount Code field\n      \"Discount Code\": {\n        rich_text: [{ text: { content: discountCode } }]\n      },\n      // NEW: Add Discount Amount field  \n      \"Discount Amount\": {\n        number: discountAmount\n      },\n      \"Quantity\": {\n        number: totalQuantity\n      },\n      \"Ticket Type\": {\n        rich_text: [{ text: { content: ticketTypes } }]\n      },\n      \"Payment Status\": {\n        rich_text: [{ text: { content: status } }]\n      },\n      \"Order Date\": {\n        date: { start: orderDate }\n      },\n      \"Ticketing Partner\": {\n        select: { name: \"Humanitix\" }\n      },\n      \"Created At\": {\n        date: { start: new Date().toISOString() }\n      },\n      \"Updated At\": {\n        date: { start: new Date().toISOString() }\n      }\n    }\n  };\n  \n  // Add phone if available\n  if (phone) {\n    notionEntry.properties[\"Mobile\"] = {\n      phone_number: phone\n    };\n  }\n  \n  console.log(`✅ Notion entry prepared for: ${customerName} (Gross: $${grossSales}, Net: $${netSales})`);\n  return [{ json: notionEntry }];\n  \n} catch (error) {\n  console.error('❌ Error in transform:', error.message);\n  return [];\n}"
+        },
+        "id": "transform-for-notion",
+        "name": "Transform for Notion",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1340,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/pages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer const NOTION_API_KEY = process.env.NOTION_API_KEY;
+if (!NOTION_API_KEY) {
+    throw new Error('NOTION_API_KEY environment variable not set');
+}
+
+process.env.NOTION_API_KEY"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContentType": "json",
+          "jsonBody": "={{ $json }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "create-notion-entry",
+        "name": "Create Notion Entry",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          1560,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Log the result\nconst response = $json;\n\nif (response.id) {\n  console.log('✅ Successfully created Notion entry:', response.id);\n  return [{\n    json: {\n      success: true,\n      notionId: response.id,\n      timestamp: new Date().toISOString(),\n      message: 'Order successfully synced to Notion'\n    }\n  }];\n} else {\n  console.error('❌ Failed to create Notion entry:', JSON.stringify(response, null, 2));\n  return [{\n    json: {\n      success: false,\n      error: response,\n      timestamp: new Date().toISOString(),\n      message: 'Failed to sync order to Notion'\n    }\n  }];\n}"
+        },
+        "id": "log-result",
+        "name": "Log Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1780,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook Trigger": {
+        "main": [
+          [
+            {
+              "node": "Process Webhook Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Webhook Data": {
+        "main": [
+          [
+            {
+              "node": "Needs Event Fetch?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Needs Event Fetch?": {
+        "main": [
+          [
+            {
+              "node": "Fetch Event Data",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Transform for Notion",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Event Data": {
+        "main": [
+          [
+            {
+              "node": "Combine Event & Order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Combine Event & Order": {
+        "main": [
+          [
+            {
+              "node": "Transform for Notion",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transform for Notion": {
+        "main": [
+          [
+            {
+              "node": "Create Notion Entry",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Notion Entry": {
+        "main": [
+          [
+            {
+              "node": "Log Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": {},
+    "meta": {
+      "instanceId": "e3a1c1c4e2a4f1b2c3d4e5f6a7b8c9d0"
+    },
+    "pinData": {},
+    "versionId": "realtime-notion-sync-v1",
+    "triggerCount": 0,
+    "tags": []
+  }
+]

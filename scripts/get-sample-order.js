@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 import https from 'https';
+import dotenv from 'dotenv';
+dotenv.config({ path: '/root/agents/.env' });
 
-const HUMANITIX_API_KEY = process.env.HUMANITIX_API_KEY || '9f23a99810087538c62feb645c45d195ab966d38533cd6456a4c7092f6ae679fd4515936e5b9869c261dc83721626a46c7328dd22bf6acd567646897ecf4c8c7b4f8b24a1b0dbab2fd952a8c25dd7a3b3f5542f0121c63e6616322eb128741bfbd9322b94c5a46acbe3cc9add71ec2';
+
+const HUMANITIX_API_KEY = process.env.HUMANITIX_API_KEY || 'process.env.HUMANITIX_API_KEY';
 
 const headers = {
     'x-api-key': HUMANITIX_API_KEY,

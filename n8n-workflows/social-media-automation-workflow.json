@@ -1,0 +1,303 @@
+{
+  "name": "Social Media Automation - Metricool Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1,3,5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekly Schedule (M/W/F 9AM)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "id,name,date,venue,description,featured_image"
+            },
+            {
+              "name": "status",
+              "value": "eq.active"
+            },
+            {
+              "name": "date",
+              "value": "gte.{{ $now.plus({days: 1}).toISO() }}"
+            },
+            {
+              "name": "date",
+              "value": "lte.{{ $now.plus({days: 14}).toISO() }}"
+            },
+            {
+              "name": "order",
+              "value": "date.asc"
+            },
+            {
+              "name": "limit",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-upcoming-events",
+      "name": "Fetch Upcoming Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-events-check",
+              "leftValue": "{{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-events-exist",
+      "name": "Check Events Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate social media post content\nconst events = $input.all();\nconst posts = [];\n\nfor (const eventData of events) {\n  const event = eventData.json;\n  \n  // Format date nicely\n  const eventDate = new Date(event.date);\n  const formattedDate = eventDate.toLocaleDateString('en-AU', {\n    weekday: 'long',\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n  \n  // Create post content\n  const postContent = {\n    text: `🎤 Don't miss ${event.name}!\\n\\n📅 ${formattedDate}\\n📍 ${event.venue || 'TBA'}\\n\\n${event.description ? event.description.substring(0, 100) + '...' : 'Get ready for an amazing night of comedy!'}\\n\\n🎟️ Book now: https://standupsydney.com/event/${event.id}\\n\\n#StandUpSydney #Comedy #LiveComedy #SydneyEvents`,\n    \n    // Instagram-specific content\n    instagram: {\n      caption: `🎤 ${event.name}\\n📅 ${formattedDate}\\n📍 ${event.venue}\\n\\n${event.description ? event.description.substring(0, 80) + '...' : 'Amazing comedy night coming up!'}\\n\\n🎟️ Link in bio\\n\\n#StandUpSydney #Comedy #LiveComedy #SydneyEvents #Comedian`,\n      image: event.featured_image || 'https://standupsydney.com/default-event-image.jpg'\n    },\n    \n    // Facebook-specific content  \n    facebook: {\n      message: `🎤 ${event.name} - ${formattedDate}\\n\\nJoin us for an incredible night of comedy at ${event.venue}!\\n\\n${event.description || 'Get ready to laugh until your sides hurt!'}\\n\\nBook your tickets now: https://standupsydney.com/event/${event.id}\\n\\n#StandUpSydney #Comedy #LiveComedy`,\n      link: `https://standupsydney.com/event/${event.id}`,\n      image: event.featured_image\n    },\n    \n    // Platform-agnostic data\n    event_id: event.id,\n    event_name: event.name,\n    event_date: event.date,\n    event_venue: event.venue,\n    publish_time: new Date().toISOString()\n  };\n  \n  posts.push(postContent);\n}\n\nreturn posts.map(post => ({ json: post }));"
+      },
+      "id": "generate-post-content",
+      "name": "Generate Post Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.metricool.com/v1/posts",
+        "authentication": "genericCredentialType", 
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.METRICOOL_USER_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "{{ $json.text }}"
+            },
+            {
+              "name": "socialNetworks",
+              "value": "[{\"name\": \"instagram\", \"caption\": \"{{ $json.instagram.caption }}\", \"image\": \"{{ $json.instagram.image }}\"}, {\"name\": \"facebook\", \"message\": \"{{ $json.facebook.message }}\", \"link\": \"{{ $json.facebook.link }}\"}]"
+            },
+            {
+              "name": "scheduleDate",
+              "value": "{{ $now.plus({hours: 2}).toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "schedule-metricool-post",
+      "name": "Schedule Post via Metricool",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/social_media_posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth", 
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_id",
+              "value": "{{ $json.event_id }}"
+            },
+            {
+              "name": "post_content",
+              "value": "{{ $json.text }}"
+            },
+            {
+              "name": "platforms",
+              "value": "[\"instagram\", \"facebook\"]"
+            },
+            {
+              "name": "scheduled_time",
+              "value": "{{ $now.plus({hours: 2}).toISO() }}"
+            },
+            {
+              "name": "status",
+              "value": "scheduled"
+            },
+            {
+              "name": "created_at",
+              "value": "{{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-post-to-db",
+      "name": "Log Post to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "fetch-upcoming-events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-upcoming-events": {
+      "main": [
+        [
+          {
+            "node": "check-events-exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-events-exist": {
+      "main": [
+        [
+          {
+            "node": "generate-post-content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-post-content": {
+      "main": [
+        [
+          {
+            "node": "schedule-metricool-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule-metricool-post": {
+      "main": [
+        [
+          {
+            "node": "log-post-to-db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "social-media-automation-001"
+  },
+  "id": "social-media-automation",
+  "tags": [
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z", 
+      "id": "automation",
+      "name": "automation"
+    },
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "social-media", 
+      "name": "social-media"
+    }
+  ]
+}

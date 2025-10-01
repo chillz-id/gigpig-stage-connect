@@ -35,7 +35,7 @@ export const generateRecurringEvents = (
   } else if (recurrencePattern && recurrenceEndDate) {
     const startDate = new Date(baseEventData.event_date);
     const endDate = new Date(recurrenceEndDate);
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     let isFirst = true;
 
     while (currentDate <= endDate) {

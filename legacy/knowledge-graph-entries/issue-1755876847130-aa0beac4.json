@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755876847130-aa0beac4",
+  "type": "issue",
+  "severity": "high",
+  "title": "Claude Code UI Service Deployment Failures",
+  "description": "High operational issue: Claude Code UI service experiencing spawn errors 'Error: spawn claude ENOENT' and git repository path issues 'Project path not found: /workspace/agents'. WebSocket connection failures affecting real-time features. Service unable to locate Claude CLI binary. Root cause: Incorrect path configuration and missing Claude CLI binary in deployment environment. Prevention: Validate service dependencies and paths in deployment configuration. Implement health checks for all service dependencies.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:07.130Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

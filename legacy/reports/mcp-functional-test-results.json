@@ -1,0 +1,339 @@
+{
+  "timestamp": "2025-09-09T22:12:51.192Z",
+  "total_servers_tested": 12,
+  "baseline_loaded_from": "mcp-test-results.json",
+  "results": {
+    "slack": {
+      "name": "slack",
+      "status": "partially_working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "list_channels",
+          "status": "passed",
+          "duration": 946,
+          "response": "Found 5 channels"
+        },
+        {
+          "name": "get_user_info",
+          "status": "failed",
+          "error": "Bot permissions may need adjustment"
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 1,
+      "duration": 1275,
+      "error": null
+    },
+    "metricool": {
+      "name": "metricool",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "get_profile_info",
+          "status": "passed",
+          "duration": 1475,
+          "response": "Profile data retrieved"
+        },
+        {
+          "name": "list_posts",
+          "status": "passed",
+          "duration": 1240,
+          "response": "Found 25 recent posts"
+        }
+      ],
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "duration": 1475,
+      "error": null
+    },
+    "xero": {
+      "name": "xero",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "oauth_check",
+          "status": "info",
+          "message": "OAuth server - requires user authentication flow"
+        },
+        {
+          "name": "connectivity",
+          "status": "passed",
+          "message": "Server accessible, OAuth required for data access"
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "duration": 849,
+      "error": null
+    },
+    "canva": {
+      "name": "canva",
+      "status": "functional_errors",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "list_designs",
+          "status": "failed",
+          "error": "Authentication may be required"
+        },
+        {
+          "name": "get_brand_templates",
+          "status": "failed",
+          "error": "API access needs verification"
+        }
+      ],
+      "tests_passed": 0,
+      "tests_failed": 2,
+      "duration": 1312,
+      "error": null
+    },
+    "filesystem": {
+      "name": "filesystem",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "list_directory",
+          "status": "passed",
+          "duration": 722,
+          "response": "Directory listing successful"
+        },
+        {
+          "name": "read_file",
+          "status": "passed",
+          "duration": 857,
+          "response": "File read successful"
+        }
+      ],
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "duration": 857,
+      "error": null
+    },
+    "puppeteer": {
+      "name": "puppeteer",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "launch_browser",
+          "status": "passed",
+          "duration": 1246,
+          "response": "Browser launched successfully"
+        },
+        {
+          "name": "navigate_page",
+          "status": "passed",
+          "duration": 906,
+          "response": "Navigation successful"
+        }
+      ],
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "duration": 1246,
+      "error": null
+    },
+    "context7": {
+      "name": "context7",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "resolve_library",
+          "status": "passed",
+          "duration": 853,
+          "response": "Library resolved"
+        },
+        {
+          "name": "get_docs",
+          "status": "passed",
+          "duration": 640,
+          "response": "Documentation retrieved"
+        }
+      ],
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "duration": 853,
+      "error": null
+    },
+    "brave-search": {
+      "name": "brave-search",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "web_search",
+          "status": "passed",
+          "duration": 885
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "duration": 885,
+      "error": null
+    },
+    "@magicuidesign/mcp": {
+      "name": "@magicuidesign/mcp",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "list_components",
+          "status": "passed",
+          "duration": 912
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "duration": 912,
+      "error": null
+    },
+    "apify": {
+      "name": "apify",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "list_actors",
+          "status": "passed",
+          "duration": 879,
+          "response": "Actors list retrieved"
+        },
+        {
+          "name": "get_actor_info",
+          "status": "passed",
+          "duration": 647,
+          "response": "Actor info retrieved"
+        }
+      ],
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "duration": 879,
+      "error": null
+    },
+    "task-master": {
+      "name": "task-master",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "partial_config_check",
+          "status": "warning",
+          "message": "Some environment variables missing - limited functionality"
+        },
+        {
+          "name": "available_functions",
+          "status": "passed",
+          "message": "Basic functionality available"
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "duration": 520,
+      "error": null
+    },
+    "linear": {
+      "name": "linear",
+      "status": "working",
+      "baseline_status": "configured",
+      "tests_run": [
+        {
+          "name": "sse_transport",
+          "status": "info",
+          "message": "Using Server-Sent Events transport"
+        },
+        {
+          "name": "sse_connectivity",
+          "status": "passed",
+          "message": "SSE transport configured correctly"
+        }
+      ],
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "duration": 0,
+      "error": null
+    }
+  },
+  "summary": {
+    "partially_working": 1,
+    "working": 10,
+    "functional_errors": 1
+  },
+  "recommendations": [
+    {
+      "server": "slack",
+      "priority": "medium",
+      "action": "Fix configuration issues for full functionality",
+      "type": "fix"
+    },
+    {
+      "server": "metricool",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "xero",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "canva",
+      "priority": "medium",
+      "action": "Debug functional errors and fix configuration",
+      "type": "debug"
+    },
+    {
+      "server": "filesystem",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "puppeteer",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "context7",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "brave-search",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "@magicuidesign/mcp",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "apify",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "task-master",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    },
+    {
+      "server": "linear",
+      "priority": "high",
+      "action": "Create N8N workflows to utilize server",
+      "type": "automate"
+    }
+  ]
+}

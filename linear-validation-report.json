@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-08-21T20:02:15.769Z",
+  "authentication": {
+    "user": "Chillz",
+    "email": "chillz.id@gmail.com",
+    "organization": "SUS Gigpig"
+  },
+  "issues": {
+    "total": 35,
+    "comprehensiveAnalysis": 0,
+    "categories": {
+      "Analysis": 0,
+      "Documentation": 0,
+      "Testing": 0,
+      "Infrastructure": 0,
+      "Cleanup": 0,
+      "Other": 0
+    }
+  },
+  "integrationStatus": {
+    "authentication": "✅ Working",
+    "issueCreation": "❌ Failed",
+    "projectAssignment": "⚠️ Partial",
+    "teamAssignment": "✅ Working",
+    "priorityMapping": "⚠️ Partial",
+    "estimateMapping": "⚠️ Partial"
+  },
+  "sampleUrls": []
+}

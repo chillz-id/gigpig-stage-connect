@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755894840336-8762ef1b",
+  "type": "issue",
+  "severity": "low",
+  "title": "Solution: N8N Orders Workflow Transform Orders/Check Order Duplicates Failure",
+  "description": "Solution attempt: Successfully fixed by adding comprehensive error handling to Transform Orders node and improving empty result handling in IF New Order condition. Added debug logging, try-catch blocks, and proper handling of empty order responses. Workflow now executes successfully (execution 558 finished: true). No orders synced because 24-hour filter correctly excludes older orders. Workflow architecture is working correctly.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T20:34:00.336Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error",
+    "fix",
+    "duplicate"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

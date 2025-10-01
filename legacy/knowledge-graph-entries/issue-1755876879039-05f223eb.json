@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876879039-05f223eb",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Memory Leak Risk: 18+ Uncleaned Intervals and Listeners",
+  "description": "Medium performance risk: 15+ instances of setInterval/setTimeout usage and 3+ addEventListener instances without proper cleanup in useEffect return functions. Root cause: Missing cleanup patterns in React components. Prevention: Implement standard cleanup patterns, add ESLint rules for useEffect cleanup, and establish component lifecycle best practices.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:39.039Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": null,
+  "cross_references": []
+}

@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755802189372-b3d1d1dd",
+  "type": "issue",
+  "severity": "High",
+  "title": "CLAUDE.md Documentation Errors",
+  "description": "Made incorrect changes to CLAUDE.md without following protocols, including adding servers that weren't configured and removing working documentation",
+  "date": "2025-08-21",
+  "timestamp": "2025-08-21T18:49:49.372Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": "Fixed incorrect script path from claude-startup-check.js to check-graph-status.js, added missing E2E test commands (test:e2e, test:e2e:headed, test:e2e:debug, test:e2e:ui, test:e2e:auth) and sitemap commands (sitemap:generate, sitemap:submit, sitemap:monitor) that exist in package.json but were undocumented",
+  "related_files": [],
+  "tags": [
+    "error"
+  ],
+  "solution_timestamp": "2025-09-16T18:00:19.129Z",
+  "solution_successful": true
+}

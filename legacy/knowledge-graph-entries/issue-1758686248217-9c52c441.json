@@ -1,0 +1,21 @@
+{
+  "id": "issue-1758686248217-9c52c441",
+  "type": "issue",
+  "severity": "medium",
+  "title": "FastMCP Service Obsolete and Causing System Issues",
+  "description": "Old FastMCP service (standup-sydney-fastmcp-http.service) was failing continuously with 1,272,350+ restart attempts. Service was trying to run missing /opt/standup-sydney-mcp/server_http.py file. This obsolete system should have been deleted ages ago.",
+  "date": "2025-09-24",
+  "timestamp": "2025-09-24T03:57:28.218Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Solution: Completely removed obsolete FastMCP system: 1) Stopped and disabled standup-sydney-fastmcp-http.service, 2) Deleted /etc/systemd/system/standup-sydney-fastmcp-http.service and reloaded daemon, 3) Removed entire /opt/standup-sydney-mcp/ directory, 4) Cleaned up /var/log/standup-sydney-fastmcp.log. System is now clean of FastMCP references.",
+    "successful": true,
+    "timestamp": "2025-09-24T03:57:37.808Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "mcp"
+  ]
+}

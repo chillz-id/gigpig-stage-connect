@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755875509700-0ee974da",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Inadequate Setup Process Error Handling and Validation",
+  "description": "Process mistake: Setup script reported test issues as 'normal for first run' without proper validation or clear success/failure indicators. Root cause: Didn't implement robust error handling in setup process, leading to ambiguous status reporting that masked real issues. This prevented immediate identification of module configuration problems. Solution applied: System ultimately worked correctly after module fixes, but setup process needs improvement. Prevention: Setup processes need robust error handling and clear success/failure indicators. Implement proper validation steps. Don't dismiss errors as 'normal' without investigation. Create comprehensive setup validation that clearly indicates system health.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:11:49.700Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error",
+    "fix"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

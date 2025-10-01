@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876508358-dd71a13d",
+  "type": "issue",
+  "severity": "low",
+  "title": "Environment Variable Priority Documentation Gap",
+  "description": "While implementing centralized credential management, noticed that documentation could be clearer about environment variable priority: /etc/standup-sydney/credentials.env vs local .env files vs docker-compose.yml. This could cause confusion in different deployment scenarios.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:28:28.358Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "credentials"
+  ]
+}

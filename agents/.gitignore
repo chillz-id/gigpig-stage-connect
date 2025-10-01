@@ -1,0 +1,11 @@
+
+# Exclude files with secrets
+fixed-taskmaster-integration.cjs
+real-claude4-analysis.cjs
+linear-agent-integration.js
+linear-integration-validation.js
+linear-issue-checker.js
+sync-humanitix-to-notion-final.py
+n8n-startup-after-reboot.sh
+legacy/knowledge-graph-entries/
+scripts/legacy/utils/batch-fix-credentials.js

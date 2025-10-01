@@ -1,0 +1,620 @@
+{
+  "name": "Humanitix → Supabase (Events, Sessions, Orders, Tickets) — Event-Scoped Delta (HARD-CODED + Credentials) FIXED",
+  "meta": {
+    "version": "2.0"
+  },
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        80,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "FetchEvents",
+      "name": "Fetch Events (/v1/events)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        280,
+        40
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "https://api.humanitix.com/v1/events?limit=1000",
+        "responseFormat": "json",
+        "options": {
+          "splitIntoItems": true
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": "Humanitix API"
+      }
+    },
+    {
+      "id": "MapEvents",
+      "name": "Map Events → Supabase rows",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        500,
+        40
+      ],
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const e=i.json; return { json: { source:'humanitix', source_id: e.id||e.eventId||e.reference, title: e.title||e.name||null, description: e.description||null, hero_image_url: e.imageUrl||null, status: (e.status||'published').toLowerCase(), raw: e, updated_at: e.updatedAt||e.lastModifiedAt||new Date().toISOString() } }; });"
+      }
+    },
+    {
+      "id": "UpsertEvents",
+      "name": "Upsert Events → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        720,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      }
+    },
+    {
+      "id": "FlattenDates",
+      "name": "Flatten events[].dates[] → sessions",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        500,
+        140
+      ],
+      "parameters": {
+        "functionCode": "const out=[]; for (const ev of $items('Fetch Events (/v1/events)')){ const e=ev.json||{}; const eventId=e.id||e.eventId||e.reference; const dates=Array.isArray(e.dates)?e.dates:[]; for (const d of dates){ out.push({ json: { source:'humanitix', source_id: d.id||d.dateId, event_source_id: eventId, starts_at: d.startDateTime||d.start||d.startsAt||null, venue_name: d.venueName||e.venueName||null, capacity: Number(d.capacity ?? e.capacity ?? 0) || null, ticket_url: d.ticketUrl||e.ticketUrl||null, status: (d.status||'scheduled').toLowerCase(), raw: { event: e, date: d }, updated_at: d.updatedAt||e.updatedAt||new Date().toISOString() } }); } } return out;"
+      }
+    },
+    {
+      "id": "UpsertSessions",
+      "name": "Upsert Sessions → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        720,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sessions?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      }
+    },
+    {
+      "id": "EventsToItems",
+      "name": "Make Event Items",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        920,
+        40
+      ],
+      "parameters": {
+        "functionCode": "return $items('Fetch Events (/v1/events)').map(ev=>({ json: { eventId: ev.json.id||ev.json.eventId||ev.json.reference } }));"
+      }
+    },
+    {
+      "id": "EventLoop",
+      "name": "For Each Event",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1120,
+        40
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "GetOrdersCursor",
+      "name": "Get Orders Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1320,
+        10
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{'https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?key=eq.humanitix:orders:' + $json.eventId + '&select=value'}}",
+        "responseFormat": "json",
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        }
+      }
+    },
+    {
+      "id": "GetTicketsCursor",
+      "name": "Get Tickets Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1320,
+        70
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{'https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?key=eq.humanitix:tickets:' + $json.eventId + '&select=value'}}",
+        "responseFormat": "json",
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        }
+      }
+    },
+    {
+      "id": "SeedCursors",
+      "name": "Seed Cursors (fallback 2000-01-01)",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1500,
+        40
+      ],
+      "parameters": {
+        "functionCode": "const pick=v=> (Array.isArray(v.body) && v.body[0] && v.body[0].value) ? v.body[0].value : '2000-01-01T00:00:00Z'; const ev=$items('For Each Event')[0].json.eventId; const o=pick($items('Get Orders Cursor (per event)')[0]); const t=pick($items('Get Tickets Cursor (per event)')[0]); return [{ json: { eventId: ev, ordersCursor: o, ticketsCursor: t } }];"
+      }
+    },
+    {
+      "id": "FetchOrders",
+      "name": "Fetch Orders (/v1/events/{id}/orders)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1680,
+        10
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{'https://api.humanitix.com/v1/events/' + $json.eventId + '/orders?limit=1000&updatedSince=' + encodeURIComponent($json.ordersCursor)}}",
+        "responseFormat": "json",
+        "options": {
+          "splitIntoItems": true
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": "Humanitix API"
+      }
+    },
+    {
+      "id": "NormalizeOrders",
+      "name": "Normalize Orders (DOB + Address)",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1880,
+        10
+      ],
+      "parameters": {
+        "functionCode": "const parseDob=(raw)=>{ if(!raw) return null; const m=String(raw).trim().match(/^(\\d{1,2})[\\/\\-.](\\d{1,2})[\\/\\-.](\\d{2}|\\d{4})$/); if(!m) return null; let [_,d,mo,y]=m; d=+d; mo=+mo; y=+y; if(y<100) y+=(y>=30?1900:2000); if(y<1900||y>new Date().getFullYear()) return null; const dim=new Date(y,mo,0).getDate(); if(d<1||d>dim||mo<1||mo>12) return null; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }; const ageBand=(iso)=>{ if(!iso) return null; const t=new Date(); const [y,m,d]=iso.split('-').map(Number); let a=t.getFullYear()-y; const mm=t.getMonth()+1, dd=t.getDate(); if(mm<m||(mm===m&&dd<d)) a--; if(a<13||a>120) return null; if(a<=17) return '13-17'; if(a<=24) return '18-24'; if(a<=34) return '25-34'; if(a<=44) return '35-44'; if(a<=54) return '45-54'; if(a<=64) return '55-64'; return '65+'; }; const bag=o=>o?.additionalFields?.details||{}; const pick=(b,*keys)=>{ for (const k of Object.keys(b)){ const low=k.toLowerCase(); if(keys.some(w=>w.toLowerCase()===low)) return b[k]; } return null; }; const eventId=$items('Seed Cursors (fallback 2000-01-01)')[0].json.eventId; return items.map(it=>{ const o=it.json; const b=bag(o); const dobIso=parseDob(pick(b,'Date of birth','DOB','Birthday')); const country=(pick(b,'Country')||'AU').toUpperCase(); const line1=pick(b,'Street address','Address','Address Line 1')||null; const line2=pick(b,'Address Line 2','Unit','Apartment')||null; const suburb=pick(b,'Suburb','Town','Town/City','City')||null; const city=pick(b,'City','Town','Town/City')||suburb||null; const state=pick(b,'State','Region','County')||null; const postcode=pick(b,'Post code','Postcode','Postal code','ZIP')||null; const email=(o.email||o.purchaserEmail||'').trim().toLowerCase()||null; const phone=(o.mobile||o.phone||'').replace(/\\D/g,'')||null; const fn=(o.firstName||o.purchaserFirstName||'').trim()||null; const ln=(o.lastName||o.purchaserLastName||'').trim()||null; return { json: { customer: { email, phone, fn, ln, dob: dobIso, age_band: ageBand(dobIso), address_line1: line1, address_line2: line2, suburb, city, state, postcode, country }, order: { source:'humanitix', source_id:o.id||o.orderId||o.reference, event_source_id:o.eventId||eventId, session_source_id:o.sessionId||o.eventDateId||null, order_reference:o.reference||null, status:o.status||null, currency:o.currency||'AUD', total_cents: Math.round(Number(o.total||o.totalCents||0)), subtotal_cents: Math.round(Number(o.subtotal||o.subtotalCents||0)), discounts_cents: Math.round(Number(o.discounts||o.discountsCents||0)), gross_sales_cents: Math.round(Number(o.grossSales||o.grossSalesCents||0)), net_sales_cents: Math.round(Number(o.netSales||o.netSalesCents||0)), email, first_name: fn, last_name: ln, mobile: phone, ordered_at:o.createdAt||o.orderDate||null, updated_at:o.updatedAt||o.lastModifiedAt||o.createdAt||new Date().toISOString(), purchase_totals:o.purchaseTotals||null, fee_breakdown:o.feeBreakdown||null, additional_fields:o.additionalFields||null, raw: o } } }; });"
+      }
+    },
+    {
+      "id": "UpsertCustomers",
+      "name": "Upsert Customers → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2080,
+        10
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers?on_conflict=email",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json.customer)) }}"
+      }
+    },
+    {
+      "id": "UpsertOrders",
+      "name": "Upsert Orders → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2080,
+        70
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/orders?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json.order)) }}"
+      }
+    },
+    {
+      "id": "OrdersMaxUpdated",
+      "name": "Compute Orders Max Updated",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        2280,
+        40
+      ],
+      "parameters": {
+        "functionCode": "const itemsIn=$items('Normalize Orders (DOB + Address)'); if (!itemsIn.length) return [{json:{updated:null}}]; let max=null; for (const it of itemsIn){ const u=it.json.order.updated_at; if (u && (!max || new Date(u)>new Date(max))) max=u; } return [{ json: { updated: max || $items('Seed Cursors (fallback 2000-01-01)')[0].json.ordersCursor, eventId: $items('Seed Cursors (fallback 2000-01-01)')[0].json.eventId } }];"
+      }
+    },
+    {
+      "id": "UpdateOrdersCursor",
+      "name": "Update Orders Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2480,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?on_conflict=key",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify([{ key: 'humanitix:orders:' + $json.eventId, value: $json.updated }]) }}"
+      }
+    },
+    {
+      "id": "FetchTickets",
+      "name": "Fetch Tickets (/v1/events/{id}/tickets)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1680,
+        140
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "={{'https://api.humanitix.com/v1/events/' + $items('Seed Cursors (fallback 2000-01-01)')[0].json.eventId + '/tickets?limit=1000&updatedSince=' + encodeURIComponent($items('Seed Cursors (fallback 2000-01-01)')[0].json.ticketsCursor)}}",
+        "responseFormat": "json",
+        "options": {
+          "splitIntoItems": true
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": "Humanitix API"
+      }
+    },
+    {
+      "id": "MapTickets",
+      "name": "Map Tickets → Supabase rows",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1880,
+        140
+      ],
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const t=i.json; return { json: { source:'humanitix', source_id: t.id||t.ticketId, order_source_id: t.orderId||t.parentOrderId, session_source_id: t.sessionId||t.eventDateId||null, ticket_type_name: t.ticketTypeName||t.type||null, price_cents: Math.round(Number(t.price||t.priceCents||0)), net_price_cents: Math.round(Number(t.netPrice||t.netPriceCents||0)), taxes_cents: Math.round(Number(t.taxes||t.taxesCents||0)), fee_cents: Math.round(Number(t.fee||t.feeCents||0)), status: t.status||null, checked_in: !!(t.checkedIn||t.isCheckedIn), check_in_status: t.checkInStatus||null, check_in_date: t.checkInDate||null, check_in_history: t.checkInHistory||null, seating_seat: t.seat||null, seating_table: t.table||null, seating_section: t.section||null, barcode: t.barcode||null, created_at: t.createdAt||null, updated_at: t.updatedAt||t.lastModifiedAt||t.createdAt||new Date().toISOString(), additional_fields: t.additionalFields||null, raw: t } }; });"
+      }
+    },
+    {
+      "id": "UpsertTickets",
+      "name": "Upsert Tickets → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2080,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/tickets?on_conflict=source_id",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify($items().map(i=>i.json)) }}"
+      }
+    },
+    {
+      "id": "TicketsMaxUpdated",
+      "name": "Compute Tickets Max Updated",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        2280,
+        140
+      ],
+      "parameters": {
+        "functionCode": "const itemsIn=$items('Map Tickets → Supabase rows'); if (!itemsIn.length) return [{json:{updated:null}}]; let max=null; for (const it of itemsIn){ const u=it.json.updated_at; if (u && (!max || new Date(u)>new Date(max))) max=u; } return [{ json: { updated: max || $items('Seed Cursors (fallback 2000-01-01)')[0].json.ticketsCursor, eventId: $items('Seed Cursors (fallback 2000-01-01)')[0].json.eventId } }];"
+      }
+    },
+    {
+      "id": "UpdateTicketsCursor",
+      "name": "Update Tickets Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2480,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?on_conflict=key",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "splitIntoItems": false,
+          "headerParametersJson": "{\"Prefer\":\"resolution=merge-duplicates\",\"apikey\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\",\"Authorization\":\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA3NjQ2NjMsImV4cCI6MjAzNjM0MDY2M30.7lP7EWRqRxMWHfZQJ_4nz2xR5mZ8Y6yQrxK0pYdEJbE\"}"
+        },
+        "bodyParametersJson": "={{ JSON.stringify([{ key: 'humanitix:tickets:' + $json.eventId, value: $json.updated }]) }}"
+      }
+    },
+    {
+      "id": "NextEvent",
+      "name": "Next Event",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1320,
+        140
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events (/v1/events)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Events (/v1/events)": {
+      "main": [
+        [
+          {
+            "node": "Map Events → Supabase rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Make Event Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Events → Supabase rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Events → Supabase": {
+      "main": [
+        [
+          {
+            "node": "Flatten events[].dates[] → sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten events[].dates[] → sessions": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Event Items": {
+      "main": [
+        [
+          {
+            "node": "For Each Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Each Event": {
+      "main": [
+        [
+          {
+            "node": "Get Orders Cursor (per event)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Tickets Cursor (per event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Orders Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Seed Cursors (fallback 2000-01-01)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tickets Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Seed Cursors (fallback 2000-01-01)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Cursors (fallback 2000-01-01)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders (/v1/events/{id}/orders)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Tickets (/v1/events/{id}/tickets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Orders (/v1/events/{id}/orders)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Orders (DOB + Address)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Orders (DOB + Address)": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customers → Supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert Orders → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Orders → Supabase": {
+      "main": [
+        [
+          {
+            "node": "Compute Orders Max Updated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Orders Max Updated": {
+      "main": [
+        [
+          {
+            "node": "Update Orders Cursor (per event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tickets (/v1/events/{id}/tickets)": {
+      "main": [
+        [
+          {
+            "node": "Map Tickets → Supabase rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Tickets → Supabase rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Tickets → Supabase": {
+      "main": [
+        [
+          {
+            "node": "Compute Tickets Max Updated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Tickets Max Updated": {
+      "main": [
+        [
+          {
+            "node": "Update Tickets Cursor (per event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tickets Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Next Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Orders Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Next Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  }
+}

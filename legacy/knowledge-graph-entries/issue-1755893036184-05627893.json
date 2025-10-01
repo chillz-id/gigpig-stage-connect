@@ -1,0 +1,26 @@
+{
+  "id": "issue-1755893036184-05627893",
+  "type": "issue",
+  "severity": "high",
+  "title": "N8N Notion Integration Error - Undefined Property",
+  "description": "Notion 'Check Order Duplicates' node fails with 'Cannot read properties of undefined (reading replace)' error. This suggests data transformation issue where expected property is undefined/null. Occurs after successful Humanitix API calls and Transform Orders step. Need to investigate Transform Orders output structure and Notion node property mappings.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T20:03:56.184Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Fixed by updating Notion node filter expressions from '$json.orderId' to '$('Transform Orders').item.json.orderId' and similar for Events workflow. N8N expression syntax requires explicit node reference when accessing transformed data properties. Updated both workflow-1-clean.json and workflow-2-clean.json and redeployed to N8N. Next scheduled execution should validate the fix.",
+    "successful": true,
+    "timestamp": "2025-08-22T20:06:14.642Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "api",
+    "error",
+    "integration",
+    "duplicate"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

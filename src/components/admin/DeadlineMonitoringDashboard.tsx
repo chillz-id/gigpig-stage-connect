@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { format, formatDistanceToNow, isPast, addHours } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,7 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
   const [extending, setExtending] = useState(false);
 
   // Load dashboard data
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       const data = await deadlineMonitoringService.getMonitoringDashboard(promoterId);
       setStats(data.stats);
@@ -97,16 +97,16 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [promoterId, toast]);
 
   useEffect(() => {
     loadDashboard();
-    
+
     // Refresh every 2 minutes
     const interval = setInterval(loadDashboard, 2 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
-  }, [promoterId]);
+  }, [loadDashboard]);
 
   const handleRefresh = () => {
     setRefreshing(true);

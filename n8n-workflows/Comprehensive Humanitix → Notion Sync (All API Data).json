@@ -1,0 +1,379 @@
+{
+  "name": "Comprehensive Humanitix \u2192 Notion Sync (All API Data)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger - Every 15 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$env.HUMANITIX_API_KEY}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "GET Events from Humanitix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse events from Humanitix API - PRESERVE ALL RAW DATA\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response structures\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\nconsole.log(`Processing ${events.length} events`);\n\n// Return each event with ALL original data preserved\nreturn events.map(event => ({\n  json: {\n    // PRESERVE ALL ORIGINAL FIELDS - NO CONVERSIONS\n    event_id: event.event_id || event._id,\n    location: event.location, // Keep as-is (AU, US, etc)\n    currency: event.currency, // Keep as-is (AUD, USD, etc)\n    name: event.name,\n    description: event.description,\n    slug: event.slug,\n    user_id: event.user_id,\n    organiser_id: event.organiser_id,\n    tag_ids: JSON.stringify(event.tag_ids || []),\n    classification_type: event.classification_type,\n    classification_category: event.classification_category,\n    classification_subcategory: event.classification_subcategory,\n    public: event.public,\n    published: event.published,\n    suspend_sales: event.suspend_sales,\n    marked_sold_out: event.marked_sold_out,\n    start_date: event.start_date, // PRESERVE ORIGINAL TIMESTAMP\n    end_date: event.end_date, // PRESERVE ORIGINAL TIMESTAMP\n    timezone: event.timezone, // PRESERVE ORIGINAL (Australia/Sydney, etc)\n    dates: JSON.stringify(event.dates || []), // RAW DATES ARRAY\n    total_capacity: event.total_capacity,\n    event_location_type: event.event_location_type,\n    event_location_venue_name: event.event_location_venue_name,\n    event_location_address: event.event_location_address,\n    event_location_lat_lng: JSON.stringify(event.event_location_lat_lng || []),\n    event_location_address_components: JSON.stringify(event.event_location_address_components || []),\n    event_location_place_id: event.event_location_place_id,\n    event_location_map_url: event.event_location_map_url,\n    event_location_city: event.event_location_city,\n    event_location_region: event.event_location_region,\n    event_location_country: event.event_location_country,\n    ticket_types: JSON.stringify(event.ticket_types || []), // RAW PRICING\n    packaged_tickets: JSON.stringify(event.packaged_tickets || []),\n    additional_questions: JSON.stringify(event.additional_questions || []),\n    banner_image_url: event.banner_image_url,\n    payment_options: JSON.stringify(event.payment_options || {}),\n    refund_policy: event.refund_policy,\n    accessibility: JSON.stringify(event.accessibility || {}),\n    affiliate_codes: JSON.stringify(event.affiliate_codes || []),\n    pricing_minimum_price: event.pricing_minimum_price,\n    pricing_maximum_price: event.pricing_maximum_price,\n    keywords: JSON.stringify(event.keywords || []),\n    artists: JSON.stringify(event.artists || []),\n    created_at: event.created_at,\n    updated_at: event.updated_at,\n    published_at: event.published_at,\n    url: event.url,\n    // PARSED ARRAYS FOR EASIER ACCESS\n    dates_parsed: event.dates_parsed || [],\n    ticket_types_parsed: event.ticket_types_parsed || [],\n    keywords_parsed: event.keywords_parsed || [],\n    // META\n    api_source: 'Humanitix',\n    sync_timestamp: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "parse-events",
+      "name": "Parse Events (Preserve All Data)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "upsert",
+        "databaseId": "={{ $env.NOTION_EVENTS_DB_ID }}",
+        "searchKey": "Event ID",
+        "title": "={{ $json.event_id || $json.eventId }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Event ID",
+              "value": "={{ $json.event_id || $json.eventId }}"
+            }
+          ]
+        }
+      },
+      "id": "upsert-events",
+      "name": "Upsert Events \u2192 Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse event dates and create sessions for multi-date events\nconst events = $input.all();\nconst sessions = [];\n\nevents.forEach(item => {\n  const event = item.json;\n  const eventId = event.event_id;\n  \n  // Parse dates array\n  let dates = [];\n  try {\n    if (event.dates_parsed && Array.isArray(event.dates_parsed)) {\n      dates = event.dates_parsed;\n    } else if (event.dates) {\n      dates = typeof event.dates === 'string' ? JSON.parse(event.dates) : event.dates;\n    }\n  } catch (e) {\n    console.log('Error parsing dates for event', eventId, e.message);\n    dates = [];\n  }\n  \n  // Create session for each date\n  dates.forEach(date => {\n    sessions.push({\n      json: {\n        event_date_id: date._id,\n        parent_event_id: eventId,\n        start_date: date.startDate, // PRESERVE ORIGINAL\n        end_date: date.endDate, // PRESERVE ORIGINAL\n        timezone: event.timezone, // PRESERVE ORIGINAL\n        schedule_id: date.scheduleId || null,\n        disabled: date.disabled || false,\n        deleted: date.deleted || false,\n        venue_name: event.event_location_venue_name,\n        venue_address: event.event_location_address,\n        venue_capacity: event.total_capacity,\n        date_status: date.deleted ? 'Cancelled' : (date.disabled ? 'Cancelled' : 'Scheduled'),\n        api_source: 'Humanitix',\n        sync_timestamp: new Date().toISOString()\n      }\n    });\n  });\n});\n\nconsole.log(`Created ${sessions.length} sessions from ${events.length} events`);\nreturn sessions;"
+      },
+      "id": "create-sessions",
+      "name": "Create Sessions from Event Dates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "upsert",
+        "databaseId": "={{ $env.NOTION_SESSIONS_DB_ID }}",
+        "searchKey": "Event Date ID",
+        "title": "={{ $json.event_date_id || $json.session_id }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Event Date ID",
+              "value": "={{ $json.event_date_id || $json.session_id }}"
+            }
+          ]
+        }
+      },
+      "id": "upsert-sessions",
+      "name": "Upsert Sessions \u2192 Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{$json.event_id}}/orders",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$env.HUMANITIX_API_KEY}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-orders",
+      "name": "GET Orders for Each Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        512
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse orders and preserve ALL financial data - NO CONVERSIONS\nconst response = $input.all()[0].json;\nconst eventData = $input.all()[0].event_id; // Event ID from previous node\n\nlet orders = [];\n\n// Handle different response structures\nif (response.orders && Array.isArray(response.orders)) {\n  orders = response.orders;\n} else if (response.data && Array.isArray(response.data)) {\n  orders = response.data;\n} else if (Array.isArray(response)) {\n  orders = response;\n}\n\nconsole.log(`Processing ${orders.length} orders for event ${eventData}`);\n\n// Process each order with COMPLETE financial mapping\nconst processedOrders = [];\nconst processedTickets = [];\n\norders.forEach(order => {\n  // PRESERVE ALL ORIGINAL ORDER DATA\n  const orderData = {\n    json: {\n      // CORE IDENTIFIERS\n      order_id: order.order_id || order._id,\n      order_reference: order.order_reference,\n      event_id: eventData,\n      event_date_id: order.event_date_id,\n      \n      // CUSTOMER DATA\n      customer_first_name: order.customer_first_name,\n      customer_last_name: order.customer_last_name,\n      customer_email: order.customer_email,\n      user_id: order.user_id,\n      mobile: order.mobile,\n      organisation: order.organisation,\n      \n      // FINANCIAL DATA - PRESERVE ORIGINAL VALUES\n      currency: order.currency, // PRESERVE (AUD, USD, etc)\n      subtotal: order.subtotal,\n      total: order.total,\n      total_amount: order.total_amount,\n      subtotal_amount: order.subtotal_amount,\n      gross_sales: order.gross_sales,\n      net_sales: order.net_sales,\n      \n      // FEES BREAKDOWN - ALL PRESERVED\n      booking_fee: order.booking_fee,\n      humanitix_fee: order.humanitix_fee,\n      passed_on_fee: order.passed_on_fee,\n      absorbed_fee: order.absorbed_fee,\n      amex_fee: order.amex_fee,\n      zip_fee: order.zip_fee,\n      total_fees: order.total_fees,\n      \n      // TAX DETAILS - ALL PRESERVED\n      taxes: order.taxes,\n      booking_taxes: order.booking_taxes,\n      total_taxes: order.total_taxes,\n      passed_on_taxes: order.passed_on_taxes,\n      \n      // DISCOUNTS & PROMOTIONS\n      discounts: order.discounts,\n      discount_code: order.discount_code,\n      discount_code_amount: order.discount_code_amount,\n      auto_discount_amount: order.auto_discount_amount,\n      referral_amount: order.referral_amount,\n      \n      // DONATIONS\n      donation: order.donation,\n      client_donation: order.client_donation,\n      net_client_donation: order.net_client_donation,\n      dgr_donation: order.dgr_donation,\n      \n      // CREDITS & REFUNDS\n      credit: order.credit,\n      gift_card_credit: order.gift_card_credit,\n      refunds: order.refunds,\n      outstanding_amount: order.outstanding_amount,\n      \n      // PAYMENT INFO\n      payment_gateway: order.payment_gateway,\n      payment_type: order.payment_type,\n      financial_status: order.financial_status,\n      order_status: order.order_status,\n      status: order.status,\n      \n      // BUSINESS DATA\n      business_name: order.business_name,\n      business_tax_id: order.business_tax_id,\n      business_purpose: order.business_purpose,\n      \n      // METADATA\n      sales_channel: order.sales_channel,\n      is_international_transaction: order.is_international_transaction,\n      manual_order: order.manual_order,\n      fees_included: order.fees_included,\n      tip_fees: order.tip_fees,\n      organiser_mail_list_opt_in: order.organiser_mail_list_opt_in,\n      \n      // ADDITIONAL FIELDS\n      location_code: order.location_code,\n      access_code: order.access_code,\n      waitlist_offer_id: order.waitlist_offer_id,\n      quantity: order.quantity,\n      additional_fields: JSON.stringify(order.additional_fields || {}),\n      notes: order.notes,\n      \n      // TIMESTAMPS - PRESERVE ORIGINAL\n      created_date: order.created_date,\n      completed_at: order.completed_at,\n      updated_at: order.updated_at,\n      incomplete_at: order.incomplete_at,\n      \n      // RAW DATA STORAGE\n      raw_order_data: JSON.stringify(order),\n      api_source: 'Humanitix',\n      sync_timestamp: new Date().toISOString()\n    }\n  };\n  \n  processedOrders.push(orderData);\n  \n  // EXTRACT INDIVIDUAL TICKETS FROM ORDER\n  const tickets = order.tickets || order.line_items || [];\n  \n  tickets.forEach((ticket, index) => {\n    const ticketData = {\n      json: {\n        // CORE IDENTIFIERS\n        ticket_id: ticket.ticket_id || ticket._id || `${order.order_id}-${index}`,\n        order_id: order.order_id || order._id,\n        event_id: eventData,\n        event_date_id: order.event_date_id,\n        \n        // ATTENDEE INFORMATION\n        first_name: ticket.first_name,\n        last_name: ticket.last_name,\n        attendee_first_name: ticket.attendee_first_name,\n        attendee_last_name: ticket.attendee_last_name,\n        attendee_email: ticket.attendee_email,\n        attendee_profile_id: ticket.attendee_profile_id,\n        organisation: ticket.organisation,\n        \n        // TICKET TYPE & PRICING - PRESERVE ORIGINAL\n        ticket_type_id: ticket.ticket_type_id,\n        ticket_type_name: ticket.ticket_type_name,\n        ticket_type: ticket.ticket_type,\n        ticket_name: ticket.ticket_name,\n        price: ticket.price,\n        ticket_price: ticket.ticket_price,\n        net_price: ticket.net_price,\n        fee: ticket.fee,\n        passed_on_fee: ticket.passed_on_fee,\n        absorbed_fee: ticket.absorbed_fee,\n        taxes: ticket.taxes,\n        total: ticket.total,\n        currency: order.currency, // INHERIT FROM ORDER\n        \n        // DISCOUNTS\n        discount: ticket.discount,\n        discount_code: ticket.discount_code,\n        discount_code_amount: ticket.discount_code_amount,\n        auto_discount_amount: ticket.auto_discount_amount,\n        \n        // PACKAGE INFO\n        package_id: ticket.package_id,\n        package_name: ticket.package_name,\n        package_price: ticket.package_price,\n        package_group_id: ticket.package_group_id,\n        \n        // CHECK-IN DETAILS\n        check_in_status: ticket.check_in_status || 'not_checked_in',\n        check_in_date: ticket.check_in_date,\n        check_in_user_id: ticket.check_in_user_id,\n        check_in_checked_in: ticket.check_in_checked_in,\n        check_in_history: JSON.stringify(ticket.check_in_history || []),\n        \n        // SEATING\n        seating_map_id: ticket.seating_map_id,\n        seating_section: ticket.seating_section,\n        seating_table: ticket.seating_table,\n        seating_seat: ticket.seating_seat,\n        seating_name: ticket.seating_name,\n        seating_note: ticket.seating_note,\n        \n        // BARCODES & SCANNING\n        qr_code_id: ticket.qr_code_id,\n        qr_code_event_id: ticket.qr_code_event_id,\n        barcode: ticket.barcode,\n        custom_scanning_code: ticket.custom_scanning_code,\n        \n        // STATUS & METADATA\n        ticket_status: ticket.ticket_status || 'valid',\n        status: ticket.status || 'complete',\n        cancelled_at: ticket.cancelled_at,\n        is_donation: ticket.is_donation,\n        sales_channel: order.sales_channel,\n        location_code: ticket.location_code,\n        access_code: ticket.access_code,\n        \n        // SWAP INFO\n        swapped_from: ticket.swapped_from,\n        swapped_to: ticket.swapped_to,\n        \n        // ADDITIONAL\n        additional_fields: JSON.stringify(ticket.additional_fields || {}),\n        dgr_donation: ticket.dgr_donation,\n        number: ticket.number,\n        created_date: ticket.created_date,\n        updated_at: ticket.updated_at,\n        \n        // META\n        api_source: 'Humanitix',\n        sync_timestamp: new Date().toISOString()\n      }\n    };\n    \n    processedTickets.push(ticketData);\n  });\n});\n\nconsole.log(`Processed ${processedOrders.length} orders and ${processedTickets.length} tickets`);\n\n// Return orders first, tickets will be processed separately\nreturn {\n  orders: processedOrders,\n  tickets: processedTickets\n};"
+      },
+      "id": "parse-orders-tickets",
+      "name": "Parse Orders & Tickets (Full Financial Data)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract orders from the combined data\nconst data = $input.all()[0].json;\nreturn data.orders || [];"
+      },
+      "id": "extract-orders",
+      "name": "Extract Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract tickets from the combined data\nconst data = $input.all()[0].json;\nreturn data.tickets || [];"
+      },
+      "id": "extract-tickets",
+      "name": "Extract Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "upsert",
+        "databaseId": "={{ $env.NOTION_ORDERS_DB_ID }}",
+        "searchKey": "Order ID",
+        "title": "={{ $json.order_id || $json.orderId }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Order ID",
+              "value": "={{ $json.order_id || $json.orderId }}"
+            }
+          ]
+        }
+      },
+      "id": "upsert-orders",
+      "name": "Upsert Orders \u2192 Notion (All Financial Data)",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "upsert",
+        "databaseId": "={{ $env.NOTION_TICKETS_DB_ID }}",
+        "searchKey": "Ticket ID",
+        "title": "={{ $json.ticket_id || $json.ticketId }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Ticket ID",
+              "value": "={{ $json.ticket_id || $json.ticketId }}"
+            }
+          ]
+        }
+      },
+      "id": "upsert-tickets",
+      "name": "Upsert Tickets \u2192 Notion (Complete Details)",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        608
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger - Every 15 Min": {
+      "main": [
+        [
+          {
+            "node": "GET Events from Humanitix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Events from Humanitix": {
+      "main": [
+        [
+          {
+            "node": "Parse Events (Preserve All Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Events (Preserve All Data)": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events \u2192 Notion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Sessions from Event Dates",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET Orders for Each Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sessions from Event Dates": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions \u2192 Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Orders for Each Event": {
+      "main": [
+        [
+          {
+            "node": "Parse Orders & Tickets (Full Financial Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Orders & Tickets (Full Financial Data)": {
+      "main": [
+        [
+          {
+            "node": "Extract Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Orders": {
+      "main": [
+        [
+          {
+            "node": "Upsert Orders \u2192 Notion (All Financial Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Tickets": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets \u2192 Notion (Complete Details)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Australia/Sydney"
+  },
+  "versionId": "1289ee98-d9ce-4436-ac37-1325cff43d3a",
+  "meta": {
+    "instanceId": "f7982260359ec38ac1c22ac6f7afe7d220775ffc19f83939f161a55b37bcebf7"
+  },
+  "id": "Oxv6NgeMOYi6wC0L",
+  "tags": []
+}

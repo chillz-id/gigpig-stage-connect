@@ -1,0 +1,20 @@
+{
+  "id": "issue-1757723841873-7a40ccfd",
+  "type": "issue",
+  "severity": "high",
+  "title": "MCP Tools Configuration Complete but Still Inaccessible",
+  "description": "COMPREHENSIVE FIX ATTEMPTED: 1) Identified correct configuration location: /root/.config/Claude/claude_desktop_config.json, 2) Replaced all environment variable references () with actual API token values from .env file, 3) Configured all 12 MCP servers: supabase, github, notion, slack, metricool, xero, canva, context7, filesystem, magicui, apify, task-master, 4) Used actual working API tokens: SUPABASE_SERVICE_KEY, GITHUB_PERSONAL_ACCESS_TOKEN, NOTION_TOKEN, SLACK tokens, etc. CURRENT STATUS: Configuration is complete and correct, but MCP tools remain inaccessible with simple naming (list_tables, execute_sql, list_repositories, etc.). This suggests Claude Code may require: 1) Session restart to reload MCP configuration, 2) Different authentication mechanism, 3) Additional MCP server startup process, or 4) Supabase Personal Access Token (sbp_) instead of service key. All documented steps followed correctly.",
+  "date": "2025-09-13",
+  "timestamp": "2025-09-13T00:37:21.873Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "authentication",
+    "github",
+    "api",
+    "fix"
+  ]
+}

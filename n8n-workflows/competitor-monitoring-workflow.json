@@ -1,0 +1,300 @@
+{
+  "name": "Competitor Monitoring - Web Scraping with Apify",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "weekly-schedule",
+      "name": "Weekly Monday 8AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~web-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.APIFY_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "startUrls",
+              "value": "[{\"url\": \"https://comedy.com.au/events\"}, {\"url\": \"https://www.eventbrite.com.au/d/australia--sydney/comedy/\"}, {\"url\": \"https://www.timeout.com/sydney/comedy\"}]"
+            },
+            {
+              "name": "linkSelector",
+              "value": "a[href*=\"event\"], a[href*=\"comedy\"], a[href*=\"show\"]"
+            },
+            {
+              "name": "pageFunction",
+              "value": "async function pageFunction(context) { const { page, request } = context; const title = await page.title(); const events = await page.$$eval('.event, .listing, [data-event]', els => els.map(el => ({ title: el.querySelector('h1, h2, h3, .title')?.textContent?.trim(), date: el.querySelector('.date, [data-date], time')?.textContent?.trim(), venue: el.querySelector('.venue, .location')?.textContent?.trim(), price: el.querySelector('.price, .cost')?.textContent?.trim(), link: el.querySelector('a')?.href }))); return { url: request.url, title, events: events.filter(e => e.title && e.date) }; }"
+            },
+            {
+              "name": "maxRequestsPerCrawl",
+              "value": "50"
+            },
+            {
+              "name": "waitUntil",
+              "value": "[\"networkidle2\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "start-apify-scraper",
+      "name": "Start Apify Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "id": "wait-for-completion",
+      "name": "Wait for Scraping",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.apify.com/v2/acts/{{ $('start-apify-scraper').item.json.data.id }}/runs/{{ $('start-apify-scraper').item.json.data.defaultRunId }}/dataset/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.APIFY_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-scraped-data",
+      "name": "Fetch Scraped Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process and analyze competitor events\nconst scraped_data = $input.all();\nconst analysis = {\n  total_events_found: 0,\n  venues_analysis: {},\n  price_ranges: [],\n  upcoming_events: [],\n  competitor_insights: []\n};\n\nfor (const item of scraped_data) {\n  const data = item.json;\n  \n  if (data.events && Array.isArray(data.events)) {\n    analysis.total_events_found += data.events.length;\n    \n    for (const event of data.events) {\n      // Venue analysis\n      if (event.venue) {\n        const venue = event.venue.toLowerCase().trim();\n        analysis.venues_analysis[venue] = (analysis.venues_analysis[venue] || 0) + 1;\n      }\n      \n      // Price analysis\n      if (event.price) {\n        const priceMatch = event.price.match(/\\$([0-9.]+)/);\n        if (priceMatch) {\n          analysis.price_ranges.push(parseFloat(priceMatch[1]));\n        }\n      }\n      \n      // Upcoming events (within next 30 days)\n      if (event.date) {\n        const eventDate = new Date(event.date);\n        const now = new Date();\n        const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));\n        \n        if (eventDate >= now && eventDate <= thirtyDaysFromNow) {\n          analysis.upcoming_events.push({\n            title: event.title,\n            date: event.date,\n            venue: event.venue,\n            price: event.price,\n            source: data.url\n          });\n        }\n      }\n    }\n  }\n}\n\n// Generate insights\nif (analysis.price_ranges.length > 0) {\n  const avgPrice = analysis.price_ranges.reduce((a, b) => a + b, 0) / analysis.price_ranges.length;\n  const minPrice = Math.min(...analysis.price_ranges);\n  const maxPrice = Math.max(...analysis.price_ranges);\n  \n  analysis.competitor_insights.push({\n    type: 'pricing',\n    insight: `Competitor pricing: $${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}, avg: $${avgPrice.toFixed(2)}`,\n    recommendation: avgPrice > 25 ? 'Consider premium pricing strategy' : 'Focus on value proposition'\n  });\n}\n\n// Top venues\nconst topVenues = Object.entries(analysis.venues_analysis)\n  .sort(([,a], [,b]) => b - a)\n  .slice(0, 5)\n  .map(([venue, count]) => ({ venue, event_count: count }));\n\nif (topVenues.length > 0) {\n  analysis.competitor_insights.push({\n    type: 'venues',\n    insight: `Top competitor venues: ${topVenues.map(v => v.venue).join(', ')}`,\n    recommendation: 'Consider partnership opportunities or competitive analysis'\n  });\n}\n\nanalysis.scraped_at = new Date().toISOString();\nanalysis.top_venues = topVenues;\n\nreturn [{ json: analysis }];"
+      },
+      "id": "analyze-competitor-data",
+      "name": "Analyze Competitor Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/competitor_analysis",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "analysis_date",
+              "value": "{{ $json.scraped_at }}"
+            },
+            {
+              "name": "total_events_found",
+              "value": "{{ $json.total_events_found }}"
+            },
+            {
+              "name": "venues_analysis",
+              "value": "{{ JSON.stringify($json.venues_analysis) }}"
+            },
+            {
+              "name": "top_venues",
+              "value": "{{ JSON.stringify($json.top_venues) }}"
+            },
+            {
+              "name": "upcoming_events",
+              "value": "{{ JSON.stringify($json.upcoming_events) }}"
+            },
+            {
+              "name": "insights",
+              "value": "{{ JSON.stringify($json.competitor_insights) }}"
+            },
+            {
+              "name": "price_analysis",
+              "value": "{{ JSON.stringify($json.price_ranges) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "save-analysis-to-db",
+      "name": "Save Analysis to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "📊 **Weekly Competitor Analysis Complete**\\n\\n🎭 **Events Found:** {{ $json.total_events_found }}\\n🏢 **Top Venues:** {{ $json.top_venues.slice(0,3).map(v => v.venue).join(', ') }}\\n📅 **Upcoming Events:** {{ $json.upcoming_events.length }}\\n\\n**Key Insights:**\\n{{ $json.competitor_insights.map(i => '• ' + i.insight).join('\\n') }}\\n\\nFull report available in dashboard."
+            },
+            {
+              "name": "channel",
+              "value": "#business-intelligence"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "slack-report",
+      "name": "Send Report to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "weekly-schedule": {
+      "main": [
+        [
+          {
+            "node": "start-apify-scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start-apify-scraper": {
+      "main": [
+        [
+          {
+            "node": "wait-for-completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-for-completion": {
+      "main": [
+        [
+          {
+            "node": "fetch-scraped-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-scraped-data": {
+      "main": [
+        [
+          {
+            "node": "analyze-competitor-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyze-competitor-data": {
+      "main": [
+        [
+          {
+            "node": "save-analysis-to-db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-analysis-to-db": {
+      "main": [
+        [
+          {
+            "node": "slack-report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "competitor-monitoring-001"
+  },
+  "id": "competitor-monitoring",
+  "tags": [
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "business-intelligence",
+      "name": "business-intelligence"
+    },
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "web-scraping",
+      "name": "web-scraping"
+    }
+  ]
+}

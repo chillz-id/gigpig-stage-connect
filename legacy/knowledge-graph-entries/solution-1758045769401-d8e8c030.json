@@ -1,0 +1,23 @@
+{
+  "id": "solution-1758045769401-d8e8c030",
+  "type": "solution",
+  "severity": "medium",
+  "title": "Solution: CLAUDE.md Startup Script Path Error",
+  "description": "Corrected startup script path from incorrect '/root/.claude-multi-agent/scripts/check-graph-status.js' to correct '/root/agents/scripts/claude-startup-check.js'. The check-graph-status.js script checks Neo4j/Redis/TaskMaster which are not relevant to Stand Up Sydney platform. The correct claude-startup-check.js performs Knowledge Graph status, MCP configuration verification, database connectivity, and critical system health checks specific to this platform.",
+  "date": "2025-09-16",
+  "timestamp": "2025-09-16T18:02:49.401Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": "Corrected startup script path from incorrect '/root/.claude-multi-agent/scripts/check-graph-status.js' to correct '/root/agents/scripts/claude-startup-check.js'. The check-graph-status.js script checks Neo4j/Redis/TaskMaster which are not relevant to Stand Up Sydney platform. The correct claude-startup-check.js performs Knowledge Graph status, MCP configuration verification, database connectivity, and critical system health checks specific to this platform.",
+  "success": true,
+  "related_files": [],
+  "tags": [
+    "error",
+    "database",
+    "config",
+    "test",
+    "mcp"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

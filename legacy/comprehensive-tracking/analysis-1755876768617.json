@@ -1,0 +1,51 @@
+{
+  "task": {
+    "title": "Backup Files Security Risk",
+    "description": "High security risk: Multiple .env.backup-* files contain full credential sets creating expanded attack surface. Backup files expose sensitive environment variables without secure backup strategy. No documented secure backup procedures.",
+    "severity": "high"
+  },
+  "timestamp": "2025-08-22T15:32:47.659Z",
+  "stages": {
+    "compliance": {
+      "status": "compliant"
+    },
+    "knowledge_graph": {
+      "entries_found": 43,
+      "linear_issues_found": 12,
+      "warnings": 2
+    },
+    "duplicate_detection": {
+      "probability": 0,
+      "recommendation": {
+        "action": "PROCEED",
+        "message": "No significant duplicates detected. Safe to proceed.",
+        "confidence": "low"
+      },
+      "warnings": 0
+    },
+    "problem_registry": {
+      "matches_found": 0,
+      "resolved_matches": 0
+    }
+  },
+  "decision": {
+    "action": "REVIEW_KG",
+    "confidence": "medium",
+    "reasons": [
+      "Similar resolved issues in Knowledge Graph"
+    ],
+    "blocking_issues": []
+  },
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "action": "Review Knowledge Graph entries",
+      "reason": "Similar issues found in Knowledge Graph",
+      "next_steps": [
+        "Study previous attempts",
+        "Learn from past approaches"
+      ]
+    }
+  ],
+  "processing_time_ms": 958
+}

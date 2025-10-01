@@ -1,0 +1,1479 @@
+{
+  "name": "Humanitix → Supabase — Full Historical (Inline Pagination + Waits + Retries + Upserts)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "5d54d4b3-1808-44e7-b18b-7cb24d299205",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -80,
+        192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "104744d6-a003-40d9-84d3-6aca887bd1c6",
+              "name": "page",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9f91a4b8-82f3-4a12-be39-346f77316407",
+      "name": "Init Events Page",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        96,
+        160
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json[\"page\"]}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee4815dc-f238-4c32-8127-f327f643c5b9",
+      "name": "Fetch Events (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        576,
+        176
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 4000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uLfBC8aVXqgfKrfF",
+          "name": "Humanitix API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const e=i.json; return { json: {\n  source:'humanitix', source_id: e.id||e.eventId||e.reference,\n  title: e.title||e.name||null, description: e.description||null,\n  hero_image_url: e.imageUrl||null, status:(e.status||'published').toLowerCase(),\n  raw: e, updated_at: e.updatedAt||e.lastModifiedAt||new Date().toISOString()\n}};});"
+      },
+      "id": "4eab80fc-0905-4a9f-8d23-87ce52615cc7",
+      "name": "Map Events → Supabase rows",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        784,
+        -192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events?on_conflict=source_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c470d8cb-f5d1-43a2-a4be-4d81ed7f5579",
+      "name": "Upsert Events → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1040,
+        -192
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const out=[]; for (const it of $items('Fetch Events (page)')){ const e=it.json||{};\nconst eventId=e.id||e.eventId||e.reference; const dates=Array.isArray(e.dates)?e.dates:[];\nfor (const d of dates){ out.push({ json: { source:'humanitix', source_id: d.id||d.dateId,\n  event_source_id: eventId, starts_at: d.startDateTime||d.start||d.startsAt||null,\n  venue_name: d.venueName||e.venueName||null, capacity: Number(d.capacity ?? e.capacity ?? 0) || null,\n  ticket_url: d.ticketUrl||e.ticketUrl||null, status:(d.status||'scheduled').toLowerCase(),\n  raw:{event:e,date:d}, updated_at: d.updatedAt||e.updatedAt||new Date().toISOString() } }); } }\nreturn out;"
+      },
+      "id": "35781878-3719-4d6a-9bee-2ae7763ecd95",
+      "name": "Flatten events[].dates[] → sessions",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        784,
+        -16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sessions?on_conflict=source_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fbd32613-4b35-4fcf-a8eb-2c3f86e8121d",
+      "name": "Upsert Sessions → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1024,
+        -16
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cb1b6e45-66dd-4162-a44f-9164b1520ead",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9ec28216-8c45-4c18-ad8c-01bc675dafd6",
+      "name": "More Event Pages? (>=100)",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        992,
+        192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { page: ($items('Init Events Page')[0].json.page || 1) + 1 } }];"
+      },
+      "id": "72837149-4efc-4e86-b4c3-a29815d9e012",
+      "name": "Inc Events Page",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1216,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "functionCode": "return $items('Fetch Events (page)').map(ev=>({ json: { eventId: ev.json.id||ev.json.eventId||ev.json.reference } }));"
+      },
+      "id": "eed0120e-7914-4266-8060-3e2970c1b1b0",
+      "name": "Make Event Items (this page)",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        848,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "2d973e18-7f4c-4e65-b3c7-19b83f2b95c2",
+      "name": "For Each Event",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1616,
+        -160
+      ],
+      "typeVersion": 3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{'https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?key=eq.humanitix:orders:' + $json.eventId + '&select=value'}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "9a140b37-7bbc-4660-8ed3-ed05bb47ba4a",
+      "name": "Get Orders Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2064,
+        -96
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{'https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?key=eq.humanitix:tickets:' + $json.eventId + '&select=value'}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "7699356d-f02f-46d1-90bd-dce27ba94d19",
+      "name": "Get Tickets Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2080,
+        -288
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const pick=v=> (Array.isArray(v.body) && v.body[0] && v.body[0].value) ? v.body[0].value : '2000-01-01T00:00:00Z';\nreturn [{ json: { eventId: $items('For Each Event')[0].json.eventId,\n                  ordersCursor: pick($items('Get Orders Cursor')[0]),\n                  ticketsCursor: pick($items('Get Tickets Cursor')[0]) } }];"
+      },
+      "id": "bae80748-8407-4665-bd0a-f04bd451fd19",
+      "name": "Seed Cursors (2000-01-01)",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        2336,
+        -192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b6ffa80-36f6-4a72-bf30-a2caefc6f9ed",
+              "name": "page",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "687869e3-4c3d-46b2-b0a7-587369558aaa",
+              "name": "eventId",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.eventId}}",
+              "type": "string"
+            },
+            {
+              "id": "7bd50aad-5667-4df6-8926-032ad01d4363",
+              "name": "ordersCursor",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.ordersCursor}}",
+              "type": "string"
+            },
+            {
+              "id": "206a8d79-6114-45cc-a011-212d8de4429c",
+              "name": "maxUpdated",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.ordersCursor}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a0c8e1ec-8424-4ff6-90a7-3c55abaa09a0",
+      "name": "Init Orders Page/Max",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2560,
+        -192
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{'https://api.humanitix.com/v1/events/' + $json.eventId + '/orders'}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json[\"page\"]}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "updatedSince",
+              "value": "={{$json[\"ordersCursor\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "646ef3b6-50ff-4578-bf3c-fb7dec5180dc",
+      "name": "Fetch Orders (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2960,
+        -80
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uLfBC8aVXqgfKrfF",
+          "name": "Humanitix API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "c49cdaaf-dfd1-475d-86e3-29a3d656e74f",
+      "name": "Wait (orders)",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        3552,
+        -48
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "1b1424a6-0747-4710-8dd5-f1217957e0df"
+    },
+    {
+      "parameters": {
+        "functionCode": "const parseDob=(raw)=>{ if(!raw) return null; const m=String(raw).trim().match(/^(\\d{1,2})[\\/\\-.](\\d{1,2})[\\/\\-.](\\d{2}|\\d{4})$/); if(!m) return null; let [_,d,mo,y]=m; d=+d; mo=+mo; y=+y; if(y<100) y+=(y>=30?1900:2000); if(y<1900||y>new Date().getFullYear()) return null; const dim=new Date(y,mo,0).getDate(); if(d<1||d>dim||mo<1||mo>12) return null; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; };\nconst ageBand=(iso)=>{ if(!iso) return null; const t=new Date(); const [y,m,d]=iso.split('-').map(Number); let a=t.getFullYear()-y; const mm=t.getMonth()+1, dd=t.getDate(); if(mm<m||(mm===m&&dd<d)) a--; if(a<13||a>120) return null; if(a<=17) return '13-17'; if(a<=24) return '18-24'; if(a<=34) return '25-34'; if(a<=44) return '35-44'; if(a<=54) return '45-54'; if(a<=64) return '55-64'; return '65+'; };\nconst bag=o=>o?.additionalFields?.details||{}; const pick=(b,...keys)=>{ for (const k of Object.keys(b)){ const low=k.toLowerCase(); if(keys.map(x=>x.toLowerCase()).includes(low)) return b[k]; } return null; };\nconst evId=$items('Init Orders Page/Max')[0].json.eventId;\nreturn items.map(it=>{ const o=it.json; const b=bag(o);\n  const dobIso=parseDob(pick(b,'Date of birth','DOB','Birthday'));\n  const country=(pick(b,'Country')||'AU').toUpperCase();\n  const line1=pick(b,'Street address','Address','Address Line 1')||null;\n  const line2=pick(b,'Address Line 2','Unit','Apartment')||null;\n  const suburb=pick(b,'Suburb','Town','Town/City','City')||null;\n  const city=pick(b,'City','Town','Town/City')||suburb||null;\n  const state=pick(b,'State','Region','County')||null;\n  const postcode=pick(b,'Post code','Postcode','Postal code','ZIP')||null;\n  const email=(o.email||o.purchaserEmail||'').trim().toLowerCase()||null;\n  const phone=(o.mobile||o.phone||'').replace(/\\D/g,'')||null;\n  const fn=(o.firstName||o.purchaserFirstName||'').trim()||null;\n  const ln=(o.lastName||o.purchaserLastName||'').trim()||null;\n  return { json: { customer:{ email, phone, fn, ln, dob:dobIso, age_band:ageBand(dobIso), address_line1:line1, address_line2:line2, suburb, city, state, postcode, country },\n                   order:{ source:'humanitix', source_id:o.id||o.orderId||o.reference, event_source_id:o.eventId||evId, session_source_id:o.sessionId||o.eventDateId||null,\n                           order_reference:o.reference||null, status:o.status||null, currency:o.currency||'AUD',\n                           total_cents: Math.round(Number(o.total||o.totalCents||0)),\n                           subtotal_cents: Math.round(Number(o.subtotal||o.subtotalCents||0)),\n                           discounts_cents: Math.round(Number(o.discounts||o.discountsCents||0)),\n                           gross_sales_cents: Math.round(Number(o.grossSales||o.grossSalesCents||0)),\n                           net_sales_cents: Math.round(Number(o.netSales||o.netSalesCents||0)),\n                           email, first_name:fn, last_name:ln, mobile:phone,\n                           ordered_at:o.createdAt||o.orderDate||null,\n                           updated_at:o.updatedAt||o.lastModifiedAt||o.createdAt||new Date().toISOString(),\n                           purchase_totals:o.purchaseTotals||null, fee_breakdown:o.feeBreakdown||null,\n                           additional_fields:o.additionalFields||null, raw:o } } }; });"
+      },
+      "id": "a6c69adc-2428-4fad-8f2d-3987ca3c313c",
+      "name": "Normalize Orders (DOB + Address)",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        3696,
+        256
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers?on_conflict=email",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91a4374e-5529-467d-8539-d48d8e580ddc",
+      "name": "Upsert Customers → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3920,
+        -384
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/orders?on_conflict=source_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fce4727d-e133-445e-a1a3-6fccafe05bbb",
+      "name": "Upsert Orders → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3952,
+        -176
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "let max = $items('Init Orders Page/Max')[0].json.maxUpdated;\nfor (const it of $items('Normalize Orders (DOB + Address)')){\n  const u = it.json.order.updated_at; if (u && (!max || new Date(u) > new Date(max))) max = u;\n}\nreturn [{ json: { eventId: $items('Init Orders Page/Max')[0].json.eventId, page: $items('Init Orders Page/Max')[0].json.page, maxUpdated: max, ordersCursor: $items('Init Orders Page/Max')[0].json.ordersCursor } }];"
+      },
+      "id": "02170a37-2506-42ff-8692-dcb44a3219ae",
+      "name": "Update Orders MaxUpdated",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        4336,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.count}}",
+              "operation": "largerEqual",
+              "value2": 100
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18dc2ce8-ae99-4828-a468-3d47bb1bfd60",
+      "name": "More Order Pages? (>=100)",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4320,
+        192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "functionCode": "const p=($items('Init Orders Page/Max')[0].json.page||1)+1; return [{ json: { page: p, eventId: $items('Init Orders Page/Max')[0].json.eventId, maxUpdated: $items('Update Orders MaxUpdated')[0].json.maxUpdated, ordersCursor: $items('Init Orders Page/Max')[0].json.ordersCursor } }];"
+      },
+      "id": "926ef878-dcc5-4d7b-8d94-7f01e74d0292",
+      "name": "Inc Orders Page",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        4528,
+        192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9e70e602-562f-4045-8306-de8e020f26cf",
+      "name": "Reset Orders Pager Context",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4672,
+        688
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?on_conflict=key",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "10b03c7d-7a93-499d-af32-4d1c02f62891",
+      "name": "Update Orders Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        4720,
+        -144
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4f290105-e9fa-4cf2-9d3b-9ef01a67817b",
+              "name": "page",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "70251504-3798-46dc-a5ed-d0ba32d0fb78",
+              "name": "eventID",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.eventId}}",
+              "type": "string"
+            },
+            {
+              "id": "8246c2b4-4c03-4506-b8d8-29abf67588b5",
+              "name": "ticketsCursor",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.ticketsCursor}}",
+              "type": "string"
+            },
+            {
+              "id": "ce7a67ee-d542-4068-8333-25666e3b46ff",
+              "name": "maxUpdated",
+              "value": "={{$item(0).$node[\"Seed Cursors (2000-01-01)\"].json.ticketsCursor}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3db54de-8d00-477c-8b10-885b86fe9d7a",
+      "name": "Init Tickets Page/Max",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2496,
+        192
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{'https://api.humanitix.com/v1/events/' + $json.eventId + '/tickets'}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json[\"page\"]}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "updatedSince",
+              "value": "={{$json[\"ticketsCursor\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a740f2b3-e0bc-4430-9f0f-8975493f2407",
+      "name": "Fetch Tickets (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2960,
+        320
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uLfBC8aVXqgfKrfF",
+          "name": "Humanitix API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "550c9bee-b10a-422d-abd9-4a43e6e19ad3",
+      "name": "Wait (tickets)",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        3248,
+        608
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "ff37920a-6633-4568-95da-27b1980378f4"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i=>{ const t=i.json; return { json: {\n  source:'humanitix', source_id: t.id||t.ticketId, order_source_id: t.orderId||t.parentOrderId,\n  session_source_id: t.sessionId||t.eventDateId||null, ticket_type_name: t.ticketTypeName||t.type||null,\n  price_cents: Math.round(Number(t.price||t.priceCents||0)), net_price_cents: Math.round(Number(t.netPrice||t.netPriceCents||0)),\n  taxes_cents: Math.round(Number(t.taxes||t.taxesCents||0)), fee_cents: Math.round(Number(t.fee||t.feeCents||0)),\n  status: t.status||null, checked_in: !!(t.checkedIn||t.isCheckedIn), check_in_status: t.checkInStatus||null,\n  check_in_date: t.checkInDate||null, check_in_history: t.checkInHistory||null, seating_seat: t.seat||null,\n  seating_table: t.table||null, seating_section: t.section||null, barcode: t.barcode||null,\n  created_at: t.createdAt||null, updated_at: t.updatedAt||t.lastModifiedAt||t.createdAt||new Date().toISOString(),\n  additional_fields: t.additionalFields||null, raw: t } }; });"
+      },
+      "id": "090dacca-6b12-4319-849b-3c64de4da9ed",
+      "name": "Map Tickets → Supabase rows",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        3664,
+        880
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/tickets?on_conflict=source_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7f7f1c58-c938-45a5-929e-d790ac21ffdd",
+      "name": "Upsert Tickets → Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3952,
+        32
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "let max = $items('Init Tickets Page/Max')[0].json.maxUpdated;\nfor (const it of $items('Map Tickets → Supabase rows')){\n  const u = it.json.updated_at; if (u && (!max || new Date(u) > new Date(max))) max = u;\n}\nreturn [{ json: { eventId: $items('Init Tickets Page/Max')[0].json.eventId, page: $items('Init Tickets Page/Max')[0].json.page, maxUpdated: max, ticketsCursor: $items('Init Tickets Page/Max')[0].json.ticketsCursor } }];"
+      },
+      "id": "0a6bb22d-3230-47a4-b790-e2bbe533f4ea",
+      "name": "Update Tickets MaxUpdated",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        3904,
+        912
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.count}}",
+              "operation": "largerEqual",
+              "value2": 100
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d1e78ca-0246-46c8-8384-a627dccf3ecb",
+      "name": "More Ticket Pages? (>=100)",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4320,
+        368
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "functionCode": "const p=($items('Init Tickets Page/Max')[0].json.page||1)+1; return [{ json: { page: p, eventId: $items('Init Tickets Page/Max')[0].json.eventId, maxUpdated: $items('Update Tickets MaxUpdated')[0].json.maxUpdated, ticketsCursor: $items('Init Tickets Page/Max')[0].json.ticketsCursor } }];"
+      },
+      "id": "39f90886-ddf8-495a-b14c-900a488ed034",
+      "name": "Inc Tickets Page",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        4528,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7d7bebc2-9867-400a-9db7-b9aca9ec0696",
+      "name": "Reset Tickets Pager Context",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4752,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sync_state?on_conflict=key",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "20ade684-e76b-46db-9a9a-421d6b27d5be",
+      "name": "Update Tickets Cursor (per event)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        4720,
+        112
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": null,
+          "name": "Supabase API"
+        },
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "19fec502-33e7-480b-a7ce-257e815f98c6",
+      "name": "Next Event",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        4928,
+        288
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $items(\"Fetch Events (page)\")[0].json;\nconst list = resp.events ?? resp.data ?? resp.items ?? [];\nreturn [{ json: { count: list.length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        192
+      ],
+      "id": "9deba7f6-defd-46bb-ac68-097d6c9b15ac",
+      "name": "Count Events (this page)1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $items(\"Fetch Orders (page)\")[0].json;\nconst list = resp.orders ?? resp.data ?? resp.items ?? [];\nreturn [{ json: { count: list.length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4016,
+        256
+      ],
+      "id": "1ba2ed47-5d87-45c2-8825-927dc69f3847",
+      "name": "Count Orders (this page)"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        224
+      ],
+      "id": "c66a6e86-eb47-456a-96eb-db5d4072176d",
+      "name": "Wait",
+      "webhookId": "dabf3202-279c-4adf-bcb5-66641546495e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $items(\"Fetch Tickets (page)\")[0].json;\nconst list = resp.tickets ?? resp.data ?? resp.items ?? [];\nreturn [{ json: { count: list.length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4128,
+        576
+      ],
+      "id": "ca027952-2ebc-41a9-a198-17f8abaf9546",
+      "name": "Count Tickets (this page)1"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        -224
+      ],
+      "id": "56cb372b-8940-4d7c-ba2e-46f2d737400b",
+      "name": "Wait (between events)",
+      "webhookId": "91538707-3ab6-49ca-a349-3fb4cbbc2985"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        528
+      ],
+      "id": "d8e672f1-47e2-4ec9-9139-505cb0b4214a",
+      "name": "Wait1",
+      "webhookId": "ae396898-cf7b-4b80-b838-5eb3bff89dc3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        128
+      ],
+      "id": "babfbedd-b5e7-45b1-bbbd-ad6bf4f5eb40",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        -192
+      ],
+      "id": "b897ff9e-3a14-41a9-90a1-215b1672383e",
+      "name": "Wait2",
+      "webhookId": "48aac730-e2c2-44d7-9fd1-9fae85c2dc5f"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2672,
+        192
+      ],
+      "id": "d9c1d9bb-329f-4268-b9de-9384424bfe4c",
+      "name": "Wait3",
+      "webhookId": "abd9510d-22b5-45bb-832e-42149f2852e4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Init Events Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Events Page": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Events (page)": {
+      "main": [
+        [
+          {
+            "node": "Map Events → Supabase rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Flatten events[].dates[] → sessions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Make Event Items (this page)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count Events (this page)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Events → Supabase rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten events[].dates[] → sessions": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions → Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "More Event Pages? (>=100)": {
+      "main": [
+        [
+          {
+            "node": "Inc Events Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Inc Events Page": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Event Items (this page)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Each Event": {
+      "main": [
+        [
+          {
+            "node": "Wait (between events)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Orders Cursor": {
+      "main": [
+        [
+          {
+            "node": "Seed Cursors (2000-01-01)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tickets Cursor": {
+      "main": [
+        [
+          {
+            "node": "Seed Cursors (2000-01-01)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Cursors (2000-01-01)": {
+      "main": [
+        [
+          {
+            "node": "Init Orders Page/Max",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Init Tickets Page/Max",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Orders Page/Max": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Orders (page)": {
+      "main": [
+        [
+          {
+            "node": "Wait (orders)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Normalize Orders (DOB + Address)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count Orders (this page)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "More Order Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (orders)": {
+      "main": [
+        [
+          {
+            "node": "Count Orders (this page)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "More Order Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Orders (DOB + Address)": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customers → Supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert Orders → Supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Orders MaxUpdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "More Order Pages? (>=100)": {
+      "main": [
+        [
+          {
+            "node": "Inc Orders Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Orders Cursor (per event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inc Orders Page": {
+      "main": [
+        [
+          {
+            "node": "Reset Orders Pager Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Orders Pager Context": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Orders Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Next Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Tickets Page/Max": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tickets (page)": {
+      "main": [
+        [
+          {
+            "node": "Wait (tickets)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Map Tickets → Supabase rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count Tickets (this page)1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "More Ticket Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (tickets)": {
+      "main": [
+        [
+          {
+            "node": "Count Tickets (this page)1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "More Ticket Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Tickets → Supabase rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets → Supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Tickets MaxUpdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "More Ticket Pages? (>=100)": {
+      "main": [
+        [
+          {
+            "node": "Inc Tickets Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Tickets Cursor (per event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inc Tickets Page": {
+      "main": [
+        [
+          {
+            "node": "Reset Tickets Pager Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Tickets Pager Context": {
+      "main": [
+        [
+          {
+            "node": "Fetch Tickets (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tickets Cursor (per event)": {
+      "main": [
+        [
+          {
+            "node": "Next Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Event": {
+      "main": [
+        [
+          {
+            "node": "For Each Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Events (this page)1": {
+      "main": [
+        [
+          {
+            "node": "More Event Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Orders (this page)": {
+      "main": [
+        [
+          {
+            "node": "More Order Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Tickets (this page)1": {
+      "main": [
+        [
+          {
+            "node": "More Ticket Pages? (>=100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (between events)": {
+      "main": [
+        [
+          {
+            "node": "Get Orders Cursor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Tickets Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "For Each Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Fetch Tickets (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d436b1cf-be4f-42c9-9046-978b4bfa178c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f7982260359ec38ac1c22ac6f7afe7d220775ffc19f83939f161a55b37bcebf7"
+  },
+  "id": "qHz58v7un15G932g",
+  "tags": []
+}

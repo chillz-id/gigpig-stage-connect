@@ -6,7 +6,6 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 
 // Load the orders data
 const ordersPath = './docs/humanitix-all-orders.json';
@@ -62,30 +61,30 @@ function analyzeFinancialStructures() {
     // Process each order
     allOrders.forEach(order => {
         const totals = order.totals || order.purchaseTotals || {};
-        
+
         // Order status tracking
         analysis.orderStatuses[order.status] = (analysis.orderStatuses[order.status] || 0) + 1;
         analysis.financialStatuses[order.financialStatus] = (analysis.financialStatuses[order.financialStatus] || 0) + 1;
-        
+
         // Payment method tracking
         const paymentMethod = order.paymentGateway || 'unknown';
         analysis.paymentMethods[paymentMethod] = (analysis.paymentMethods[paymentMethod] || 0) + 1;
-        
+
         // Currency tracking
         analysis.currencies[order.currency] = (analysis.currencies[order.currency] || 0) + 1;
-        
+
         // Fee structure analysis
         ['humanitixFee', 'bookingFee', 'passedOnFee', 'absorbedFee', 'amexFee', 'zipFee'].forEach(feeType => {
             const feeAmount = totals[feeType] || 0;
             const feeData = analysis.feeStructures[feeType];
-            
+
             if (feeAmount > 0) {
                 feeData.min = Math.min(feeData.min, feeAmount);
                 feeData.max = Math.max(feeData.max, feeAmount);
                 feeData.total += feeAmount;
             }
         });
-        
+
         // Revenue metrics
         analysis.revenueMetrics.totalSubtotal += totals.subtotal || 0;
         analysis.revenueMetrics.totalGrossSales += totals.grossSales || 0;
@@ -95,26 +94,26 @@ function analyzeFinancialStructures() {
         analysis.revenueMetrics.totalRefunds += totals.refunds || 0;
         analysis.revenueMetrics.totalDonations += (totals.donation || 0) + (totals.clientDonation || 0);
         analysis.revenueMetrics.totalRebates += totals.rebates || 0;
-        
+
         // Discount analysis
         if (totals.discounts > 0) {
             analysis.discountPatterns[totals.discounts] = (analysis.discountPatterns[totals.discounts] || 0) + 1;
         }
-        
+
         // Refund analysis
         if (totals.refunds > 0) {
             analysis.refundPatterns[totals.refunds] = (analysis.refundPatterns[totals.refunds] || 0) + 1;
         }
-        
+
         // Tax analysis
         analysis.taxAnalysis.totalTaxes += totals.totalTaxes || 0;
         analysis.taxAnalysis.bookingTaxes += totals.bookingTaxes || 0;
         analysis.taxAnalysis.passedOnTaxes += totals.passedOnTaxes || 0;
-        
+
         // Partner revenue calculation
         const partnerShare = calculatePartnerRevenue(totals);
         analysis.partnerRevenue.totalPartnerShare += partnerShare;
-        
+
         // Per-event partner revenue
         if (!analysis.partnerRevenue.partnerRevenueByEvent[order.eventId]) {
             analysis.partnerRevenue.partnerRevenueByEvent[order.eventId] = {
@@ -124,13 +123,13 @@ function analyzeFinancialStructures() {
                 averageOrderValue: 0
             };
         }
-        
+
         const eventData = analysis.partnerRevenue.partnerRevenueByEvent[order.eventId];
         eventData.totalRevenue += partnerShare;
         eventData.totalOrders += 1;
         eventData.averageOrderValue = eventData.totalRevenue / eventData.totalOrders;
     });
-    
+
     // Calculate averages
     Object.keys(analysis.feeStructures).forEach(feeType => {
         const feeData = analysis.feeStructures[feeType];
@@ -143,9 +142,9 @@ function analyzeFinancialStructures() {
             feeData.max = 0;
         }
     });
-    
+
     analysis.partnerRevenue.averagePartnerShare = analysis.partnerRevenue.totalPartnerShare / allOrders.length;
-    
+
     return analysis;
 }
 
@@ -156,7 +155,7 @@ function calculatePartnerRevenue(totals) {
     const refunds = totals.refunds || 0;
     const passedOnFee = totals.passedOnFee || 0;
     const absorbedFee = totals.absorbedFee || 0;
-    
+
     // Partner gets: subtotal - discounts - refunds - passed on fees
     // Absorbed fees are covered by Humanitix, not the partner
     return subtotal - discounts - refunds - passedOnFee;
@@ -182,34 +181,34 @@ function analyzeTransactionPatterns() {
             refunded: 0
         }
     };
-    
+
     const orderValues = [];
-    
+
     allOrders.forEach(order => {
         const total = order.totals?.total || order.purchaseTotals?.total || 0;
         orderValues.push(total);
-        
+
         // Order value distribution
         const range = getOrderValueRange(total);
         patterns.orderValueDistribution[range] = (patterns.orderValueDistribution[range] || 0) + 1;
-        
+
         // Completion rates
         patterns.completionRates[order.status] = (patterns.completionRates[order.status] || 0) + 1;
-        
+
         // Payment success
         patterns.paymentSuccess[order.financialStatus] = (patterns.paymentSuccess[order.financialStatus] || 0) + 1;
     });
-    
+
     // Calculate averages
     patterns.averageOrderValue = orderValues.reduce((sum, val) => sum + val, 0) / orderValues.length;
-    
+
     // Calculate median
     const sortedValues = orderValues.sort((a, b) => a - b);
     const mid = Math.floor(sortedValues.length / 2);
     patterns.medianOrderValue = sortedValues.length % 2 === 0 
         ? (sortedValues[mid - 1] + sortedValues[mid]) / 2 
         : sortedValues[mid];
-    
+
     return patterns;
 }
 
@@ -236,15 +235,15 @@ function analyzeFeeAbsorption() {
             noAbsorption: 0
         }
     };
-    
+
     allOrders.forEach(order => {
         const totals = order.totals || order.purchaseTotals || {};
         const absorbed = totals.absorbedFee || 0;
         const passedOn = totals.passedOnFee || 0;
-        
+
         absorption.totalAbsorbed += absorbed;
         absorption.totalPassedOn += passedOn;
-        
+
         // Per-event absorption
         if (!absorption.absorptionByEvent[order.eventId]) {
             absorption.absorptionByEvent[order.eventId] = {
@@ -254,12 +253,12 @@ function analyzeFeeAbsorption() {
                 orderCount: 0
             };
         }
-        
+
         const eventData = absorption.absorptionByEvent[order.eventId];
         eventData.totalAbsorbed += absorbed;
         eventData.totalPassedOn += passedOn;
         eventData.orderCount += 1;
-        
+
         // Absorption strategies
         if (absorbed > 0 && passedOn === 0) {
             absorption.feeAbsorptionStrategies.fullAbsorption += 1;
@@ -269,9 +268,9 @@ function analyzeFeeAbsorption() {
             absorption.feeAbsorptionStrategies.noAbsorption += 1;
         }
     });
-    
+
     absorption.absorptionRate = absorption.totalAbsorbed / (absorption.totalAbsorbed + absorption.totalPassedOn);
-    
+
     return absorption;
 }
 
@@ -280,10 +279,10 @@ function generateSampleInvoiceData() {
     // Find an event with orders
     const eventWithOrders = allOrders.find(o => o.eventId);
     if (!eventWithOrders) return null;
-    
+
     const sampleEventId = eventWithOrders.eventId;
     const eventOrders = allOrders.filter(o => o.eventId === sampleEventId);
-    
+
     const invoiceData = {
         eventId: sampleEventId,
         eventName: eventWithOrders.eventName,
@@ -325,7 +324,7 @@ function generateSampleInvoiceData() {
             };
         })
     };
-    
+
     // Calculate summary
     invoiceData.orderBreakdown.forEach(order => {
         invoiceData.summary.totalGrossSales += order.subtotal;
@@ -335,9 +334,9 @@ function generateSampleInvoiceData() {
         invoiceData.summary.totalRefunds += order.refunds;
         invoiceData.summary.partnerShare += order.partnerShare;
     });
-    
+
     invoiceData.summary.humanitixShare = invoiceData.summary.totalFees;
-    
+
     return invoiceData;
 }
 

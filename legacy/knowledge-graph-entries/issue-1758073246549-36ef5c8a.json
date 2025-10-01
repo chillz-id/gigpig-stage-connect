@@ -1,0 +1,19 @@
+{
+  "id": "issue-1758073246549-36ef5c8a",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "Order ID Shows Long MongoDB ID Instead of Customer Code",
+  "description": "Workflow displays long MongoDB ID (686cf02c25fff6460b2e7893) in Order ID field instead of customer-friendly orderName (9Q8QX2LW). This confuses staff and customers who recognize the short codes from Humanitix.",
+  "date": "2025-09-17",
+  "timestamp": "2025-09-17T01:40:46.549Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Fixed by changing Order ID field from 'orderId' to 'order.orderName || orderId' in toNotionProperties function. This displays customer-friendly codes like 9Q8QX2LW while keeping internal matching with long IDs. Updated workflow saved at /tmp/fixed-workflow-dates.json includes both date and order ID fixes.",
+    "successful": true,
+    "timestamp": "2025-09-17T01:40:53.130Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": []
+}

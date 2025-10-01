@@ -1,0 +1,17 @@
+{
+  "id": "issue-1755876114830-639c7d2e",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Missing Python Dependencies for Environment Loading",
+  "description": "Python scripts in /opt/standup-sydney-mcp/ required python-dotenv package to load environment variables from .env files. Scripts failed with import errors until dotenv was installed. This pattern repeated across multiple scripts indicating systematic missing dependency.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:21:54.831Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "error"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "detection_id": "detection-1755874828500-40c045ff",
+  "task": {
+    "task_title": "Test comprehensive tracking system integration",
+    "task_description": "Testing all components work together",
+    "task_severity": "medium",
+    "detection_id": "detection-1755874828500-40c045ff",
+    "timestamp": "2025-08-22T15:00:32.283Z"
+  },
+  "results": {
+    "exact_matches": [],
+    "high_similarity": [],
+    "pattern_matches": [],
+    "temporal_clusters": [],
+    "solution_exists": [],
+    "semantic_similarity": []
+  },
+  "duplicate_probability": 0,
+  "warnings": [],
+  "processing_time_ms": 3837,
+  "total_problems_analyzed": 59,
+  "recommendation": {
+    "action": "PROCEED",
+    "message": "No significant duplicates detected. Safe to proceed.",
+    "confidence": "low"
+  }
+}

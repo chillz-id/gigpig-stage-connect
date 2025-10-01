@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-27T14:50:56.439Z",
+  "task": "Humanitix venue data missing",
+  "checked_sources": [
+    "knowledge_graph",
+    "linear_issues",
+    "taskmaster"
+  ],
+  "findings_count": {
+    "kg_entries": 44,
+    "linear_issues": 10,
+    "tasks": 0,
+    "warnings": 2
+  },
+  "compliance_status": "checked"
+}

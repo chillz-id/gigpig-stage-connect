@@ -1,0 +1,177 @@
+{
+  "name": "Humanitix Complete Paginated Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [120, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events?page=1&pageSize=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "htx_ot4Ps1kNJIz8FhSfW7y8NKAVrC2AiZI8DQKs5Vvt"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http1",
+      "name": "Get All Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const events = $input.all()[0].json.events || [];\nconst results = [];\n\nfor (const event of events) {\n  results.push({\n    json: {\n      source: 'humanitix',\n      source_id: event._id,\n      name: event.name,\n      description: event.description,\n      start_date: event.startDate,\n      end_date: event.endDate,\n      timezone: event.timezone,\n      status: event.status,\n      location: event.location,\n      currency: event.currency,\n      raw: event\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "code1",
+      "name": "Transform Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events_htx",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "http2",
+      "name": "Upsert Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all orders for all events with pagination\nconst events = $('Transform Events').all();\nconst allOrders = [];\n\nfor (const eventItem of events) {\n  const eventId = eventItem.json.source_id;\n  let page = 1;\n  let hasMore = true;\n  \n  while (hasMore) {\n    try {\n      // Make HTTP request for this page\n      const response = await $request({\n        method: 'GET',\n        url: `https://api.humanitix.com/v1/events/${eventId}/orders?page=${page}&pageSize=100`,\n        headers: {\n          'X-API-Key': 'htx_ot4Ps1kNJIz8FhSfW7y8NKAVrC2AiZI8DQKs5Vvt'\n        }\n      });\n      \n      if (response.orders && response.orders.length > 0) {\n        for (const order of response.orders) {\n          allOrders.push({\n            json: {\n              source: 'humanitix',\n              source_id: order._id,\n              event_source_id: eventId,\n              session_source_id: order.eventDateId,\n              event_date_id: order.eventDateId,\n              status: order.status,\n              financial_status: order.financialStatus,\n              first_name: order.firstName,\n              last_name: order.lastName,\n              purchaser_email: order.email,\n              mobile: order.mobile,\n              currency: order.currency,\n              total_cents: order.totals?.total ? Math.round(order.totals.total * 100) : null,\n              taxes_cents: order.totals?.totalTaxes ? Math.round(order.totals.totalTaxes * 100) : null,\n              discount_cents: order.totals?.discounts ? Math.round(order.totals.discounts * 100) : null,\n              fees_cents: order.totals?.bookingFee ? Math.round(order.totals.bookingFee * 100) : null,\n              net_sales_cents: order.totals?.netSales ? Math.round(order.totals.netSales * 100) : null,\n              gross_sales_cents: order.totals?.grossSales ? Math.round(order.totals.grossSales * 100) : null,\n              humanitix_fee_cents: order.totals?.humanitixFee ? Math.round(order.totals.humanitixFee * 100) : null,\n              booking_fee_cents: order.totals?.bookingFee ? Math.round(order.totals.bookingFee * 100) : null,\n              created_at: order.createdAt,\n              updated_at: order.updatedAt,\n              raw: order\n            }\n          });\n        }\n        \n        // Check if we should continue pagination\n        if (response.orders.length < 100) {\n          hasMore = false;\n        } else {\n          page++;\n        }\n      } else {\n        hasMore = false;\n      }\n    } catch (error) {\n      console.error(`Error fetching orders for event ${eventId}, page ${page}:`, error.message);\n      hasMore = false;\n    }\n  }\n}\n\nconsole.log(`Total orders collected: ${allOrders.length}`);\nreturn allOrders;"
+      },
+      "id": "code2",
+      "name": "Get All Orders Paginated",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/orders_htx",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "http4",
+      "name": "Upsert All Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 400]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Events": {
+      "main": [
+        [
+          {
+            "node": "Transform Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Events": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get All Orders Paginated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Orders Paginated": {
+      "main": [
+        [
+          {
+            "node": "Upsert All Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "paginated-version",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "paginated-sync",
+  "tags": []
+}

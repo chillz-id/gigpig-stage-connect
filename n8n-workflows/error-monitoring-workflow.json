@@ -1,0 +1,305 @@
+{
+  "name": "Error Monitoring - Knowledge Graph to Linear Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "error-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "error-webhook",
+      "name": "Error Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "severity-check",
+              "leftValue": "{{ $json.severity }}",
+              "rightValue": "medium",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "severity-high-check", 
+              "leftValue": "{{ $json.severity }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "severity-critical-check",
+              "leftValue": "{{ $json.severity }}",
+              "rightValue": "critical", 
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "severity-filter",
+      "name": "Filter by Severity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linear.app/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "{{ $env.LINEAR_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "mutation CreateIssue($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id title description state { name } priority assignee { name } createdAt } } }"
+            },
+            {
+              "name": "variables",
+              "value": "{ \"input\": { \"title\": \"[{{ $json.severity.toUpperCase() }}] {{ $json.title }}\", \"description\": \"**Error Type:** {{ $json.error_type }}\\n**Severity:** {{ $json.severity }}\\n**Component:** {{ $json.component }}\\n\\n**Description:**\\n{{ $json.description }}\\n\\n**Stack Trace:**\\n```\\n{{ $json.stack_trace }}\\n```\\n\\n**Additional Context:**\\n{{ $json.context }}\\n\\n**Knowledge Graph ID:** {{ $json.kg_id }}\\n**Timestamp:** {{ $json.timestamp }}\", \"teamId\": \"{{ $env.LINEAR_TEAM_ID }}\", \"priority\": {{ $json.severity === 'critical' ? '1' : ($json.severity === 'high' ? '2' : '3') }}, \"labelIds\": [\"{{ $env.LINEAR_ERROR_LABEL_ID }}\"] } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-linear-issue",
+      "name": "Create Linear Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": ":warning: **{{ $json.severity.toUpperCase() }} ERROR DETECTED**\\n\\n**Issue:** {{ $json.title }}\\n**Component:** {{ $json.component }}\\n**Time:** {{ $json.timestamp }}\\n\\n**Linear Issue:** {{ $('create-linear-issue').item.json.data.issueCreate.issue.id }}\\n\\n**Error:** {{ $json.description.substring(0, 200) }}..."
+            },
+            {
+              "name": "channel",
+              "value": "#alerts"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "slack-alert",
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/error_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type", 
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "error_type",
+              "value": "{{ $json.error_type }}"
+            },
+            {
+              "name": "severity",
+              "value": "{{ $json.severity }}"
+            },
+            {
+              "name": "title",
+              "value": "{{ $json.title }}"
+            },
+            {
+              "name": "description",
+              "value": "{{ $json.description }}"
+            },
+            {
+              "name": "component",
+              "value": "{{ $json.component }}"
+            },
+            {
+              "name": "stack_trace",
+              "value": "{{ $json.stack_trace }}"
+            },
+            {
+              "name": "context",
+              "value": "{{ $json.context }}"
+            },
+            {
+              "name": "kg_id",
+              "value": "{{ $json.kg_id }}"
+            },
+            {
+              "name": "linear_issue_id",
+              "value": "{{ $('create-linear-issue').item.json.data.issueCreate.issue.id }}"
+            },
+            {
+              "name": "processed_at",
+              "value": "{{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-error-to-db",
+      "name": "Log Error to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"status\": \"processed\", \"linear_issue_id\": \"{{ $('create-linear-issue').item.json.data.issueCreate.issue.id }}\", \"message\": \"Error logged and issue created successfully\" }",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "error-webhook": {
+      "main": [
+        [
+          {
+            "node": "severity-filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "severity-filter": {
+      "main": [
+        [
+          {
+            "node": "create-linear-issue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "slack-alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-linear-issue": {
+      "main": [
+        [
+          {
+            "node": "log-error-to-db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "slack-alert": {
+      "main": [
+        [
+          {
+            "node": "log-error-to-db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-error-to-db": {
+      "main": [
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "error-monitoring-001"
+  },
+  "id": "error-monitoring",
+  "tags": [
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "monitoring",
+      "name": "monitoring"
+    },
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "errors",
+      "name": "errors"
+    }
+  ]
+}

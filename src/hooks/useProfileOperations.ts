@@ -99,7 +99,7 @@ export const useProfileOperations = () => {
       // Updating user profile
       
       // If updating name, also generate/update profile slug if not already set
-      let finalUpdates = { ...updates };
+      const finalUpdates = { ...updates };
       if (updates.name) {
         // Check if user already has a profile_slug
         const { data: currentProfile } = await supabase

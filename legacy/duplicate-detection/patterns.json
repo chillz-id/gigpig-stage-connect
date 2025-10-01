@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-08-22T15:32:48.614Z",
+  "patterns": {
+    "test comprehensive tracking system integration testing all components work together": {
+      "keywords": [
+        "test comprehensive tracking system integration testing all components work together"
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:00:32.337Z"
+    },
+    "es module commonjs configuration check for module setup issues": {
+      "keywords": [
+        "es module commonjs configuration check for module setup issues"
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:16:04.526Z"
+    },
+    "hardcoded supabase api key security vulnerability critical security issue: hardcoded supabase public api key exposed in /root/agents/src/integrations/supabase/client.ts source code. this creates api key exposure risk and potential security breach. immediate fix required to move to environment variables.": {
+      "keywords": [
+        "hardcoded supabase api key security vulnerability critical security issue: hardcoded supabase public api key exposed in /root/agents/src/integrations/supabase/client.ts source code. this creates api key exposure risk and potential security breach. immediate fix required to move to environment variables."
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:32:39.758Z"
+    },
+    "xss vulnerability in chart component medium security risk: usage of dangerouslysetinnerhtml in /root/agents/src/components/ui/chart.tsx creates cross-site scripting attack vector. must replace with safe alternatives or implement proper input sanitization.": {
+      "keywords": [
+        "xss vulnerability in chart component medium security risk: usage of dangerouslysetinnerhtml in /root/agents/src/components/ui/chart.tsx creates cross-site scripting attack vector. must replace with safe alternatives or implement proper input sanitization."
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:32:42.165Z"
+    },
+    "massive credential exposure across 100+ files critical security crisis: hardcoded credentials exposed across 100+ files including n8n api keys, humanitix keys, notion tokens, supabase service keys, firecrawl keys in python scripts, n8n workflows, frontend js, and json templates. requires comprehensive credential audit and centralized management system implementation.": {
+      "keywords": [
+        "massive credential exposure across 100+ files critical security crisis: hardcoded credentials exposed across 100+ files including n8n api keys, humanitix keys, notion tokens, supabase service keys, firecrawl keys in python scripts, n8n workflows, frontend js, and json templates. requires comprehensive credential audit and centralized management system implementation."
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:32:45.907Z"
+    },
+    "backup files security risk high security risk: multiple .env.backup-* files contain full credential sets creating expanded attack surface. backup files expose sensitive environment variables without secure backup strategy. no documented secure backup procedures.": {
+      "keywords": [
+        "backup files security risk high security risk: multiple .env.backup-* files contain full credential sets creating expanded attack surface. backup files expose sensitive environment variables without secure backup strategy. no documented secure backup procedures."
+      ],
+      "count": 1,
+      "related_problems": [],
+      "first_seen": "2025-08-22T15:32:48.614Z"
+    }
+  },
+  "recurring_issues": {},
+  "solution_patterns": {},
+  "temporal_clusters": {}
+}

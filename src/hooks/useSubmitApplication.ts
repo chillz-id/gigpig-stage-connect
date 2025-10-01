@@ -104,10 +104,16 @@ export const useSubmitApplication = () => {
             .eq('id', user?.id)
             .single();
 
+          const userId = user?.id;
+          if (!userId) {
+            console.warn('Skipping promoter notification: missing authenticated user id');
+            return;
+          }
+
           if (comedianData) {
             await notificationService.notifyApplicationSubmitted(
               eventData.promoter_id,
-              user?.id!,
+              userId,
               data.event_id,
               eventData.title,
               comedianData.name,

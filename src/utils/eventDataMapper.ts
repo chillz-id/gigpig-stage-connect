@@ -21,6 +21,7 @@ export const prepareEventData = (
     event_date: eventDateTime.toISOString(),
     start_time: formData.time,
     end_time: formData.endTime || null,
+    doors_time: formData.doorsTime || null,
     type: finalShowType,
     description: formData.description,
     requirements: formData.requirements.join('\n'),

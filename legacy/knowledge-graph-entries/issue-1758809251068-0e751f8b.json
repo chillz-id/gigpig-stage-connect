@@ -1,0 +1,19 @@
+{
+  "id": "issue-1758809251068-0e751f8b",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "MCP Server Status Summary 2025-09-25",
+  "description": "Comprehensive MCP server testing results: WORKING (8/13): Filesystem, Supabase, GitHub, Context7, Magic UI, Metricool, Notion (fixed), Wix. FAILED (5/13): Brave Search (SUBSCRIPTION_TOKEN_INVALID), Xero (OAuth required), N8N (connection failed), Slack (connection failed), Task Master (connection failed). Success rate 62%. Token replacement solution from environment variables was highly effective for authentication issues.",
+  "date": "2025-09-25",
+  "timestamp": "2025-09-25T14:07:31.068Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "authentication",
+    "github",
+    "fix"
+  ]
+}

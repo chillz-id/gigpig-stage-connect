@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,11 +63,7 @@ const XeroIntegration = () => {
   const [syncFrequency, setSyncFrequency] = useState('daily');
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadXeroData();
-  }, []);
-
-  const loadXeroData = async () => {
+  const loadXeroData = useCallback(async () => {
     setLoading(true);
     try {
       // Mock data - in real implementation, fetch from your backend
@@ -157,7 +153,11 @@ const XeroIntegration = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadXeroData();
+  }, [loadXeroData]);
 
   const connectToXero = async () => {
     setLoading(true);

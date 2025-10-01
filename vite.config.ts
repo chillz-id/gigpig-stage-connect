@@ -46,12 +46,17 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tabs'],
-          'query-vendor': ['@tanstack/react-query', '@supabase/supabase-js'],
-          'utils': ['date-fns', 'clsx', 'tailwind-merge'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'react-core': ['react', 'react-dom'],
+          'react-router': ['react-router-dom'],
+          'ui-core': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          'ui-forms': ['@radix-ui/react-select', '@radix-ui/react-checkbox'],
+          'data-fetching': ['@tanstack/react-query', '@supabase/supabase-js'],
+          'form-validation': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'date-utils': ['date-fns'],
           'editor': ['@tiptap/react', '@tiptap/starter-kit'],
+          'utils': ['clsx', 'tailwind-merge', 'lucide-react'],
+          'charts': ['recharts'],
+          'pdf': ['jspdf', 'jspdf-autotable', 'html2canvas'],
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
@@ -66,7 +71,12 @@ export default defineConfig(({ mode }) => ({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: [
+      'react',
+      'react-dom',
+      '@tanstack/react-query',
+      '@supabase/supabase-js'
+    ]
   },
   // Asset optimization
   assetsInclude: ['**/*.webp', '**/*.avif'],

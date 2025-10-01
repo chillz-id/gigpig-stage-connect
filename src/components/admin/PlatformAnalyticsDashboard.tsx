@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,7 +68,7 @@ const PlatformAnalyticsDashboard: React.FC = () => {
     avgTicketPrice: 0
   });
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -197,7 +197,7 @@ const PlatformAnalyticsDashboard: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [eventFilter, timeRange, toast]);
 
   const handleExportData = () => {
     const exportData = events.map(event => ({
@@ -224,7 +224,7 @@ const PlatformAnalyticsDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [timeRange, eventFilter]);
+  }, [fetchAnalyticsData]);
 
   if (loading) {
     return (

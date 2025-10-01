@@ -1,0 +1,53 @@
+{
+  "name": "Humanitix Complete Code Node Sync N8N Request",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0a1b2c3d-4e5f-6789-abcd-ef1234567890",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Complete Humanitix to Supabase sync using n8n's built-in $request function\nconst HUMANITIX_API_KEY = 'htx_ot4Ps1kNJIz8FhSfW7y8NKAVrC2AiZI8DQKs5Vvt';\nconst SUPABASE_URL = 'https://pdikjpfulhhpqpxzpgtu.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE';\n\nconst results = {\n  events: { processed: 0, skipped: 0, errors: 0 },\n  sessions: { processed: 0, skipped: 0, errors: 0 },\n  orders: { processed: 0, skipped: 0, errors: 0 },\n  tickets: { processed: 0, skipped: 0, errors: 0 }\n};\n\n// Helper function to check if record exists using n8n's $request\nasync function checkExists(table, sourceId) {\n  try {\n    const response = await $request({\n      url: `${SUPABASE_URL}/rest/v1/${table}?source_id=eq.${sourceId}&select=source_id`,\n      method: 'GET',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json'\n      }\n    });\n    return Array.isArray(response) && response.length > 0;\n  } catch (error) {\n    console.error(`Error checking existence for ${table}:`, error.message);\n    return false;\n  }\n}\n\n// Helper function to insert records using n8n's $request\nasync function insertRecords(table, records) {\n  if (records.length === 0) return;\n  \n  try {\n    await $request({\n      url: `${SUPABASE_URL}/rest/v1/${table}`,\n      method: 'POST',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: records\n    });\n    console.log(`Inserted ${records.length} records into ${table}`);\n  } catch (error) {\n    console.error(`Failed to insert ${table}:`, error.message);\n    throw error;\n  }\n}\n\n// Fetch Events using n8n's $request\nconsole.log('Fetching events...');\nconst eventsResponse = await $request({\n  url: 'https://api.humanitix.com/v1/events?page=1&pageSize=100',\n  method: 'GET',\n  headers: { 'X-API-Key': HUMANITIX_API_KEY }\n});\nconst eventsData = eventsResponse;\n\nconst eventsToInsert = [];\nconst sessionsToInsert = [];\n\nfor (const event of eventsData.events) {\n  try {\n    // Check if event exists\n    if (await checkExists('events_htx', event._id)) {\n      results.events.skipped++;\n      continue;\n    }\n    \n    // Prepare event record\n    eventsToInsert.push({\n      source: 'humanitix',\n      source_id: event._id,\n      name: event.name,\n      description: event.description,\n      start_date: event.startDate,\n      end_date: event.endDate,\n      timezone: event.timezone,\n      status: event.status,\n      location: event.location,\n      currency: event.currency,\n      raw: event,\n      ingested_at: new Date().toISOString()\n    });\n    \n    // Process sessions (event dates)\n    if (event.dates && Array.isArray(event.dates)) {\n      for (const session of event.dates) {\n        if (!(await checkExists('sessions_htx', session._id))) {\n          sessionsToInsert.push({\n            source: 'humanitix',\n            source_id: session._id,\n            event_source_id: event._id,\n            start_date: session.startDate,\n            end_date: session.endDate,\n            timezone: session.timezone,\n            status: session.status,\n            raw: session,\n            ingested_at: new Date().toISOString()\n          });\n        }\n      }\n    }\n    \n    results.events.processed++;\n  } catch (error) {\n    console.error(`Error processing event ${event._id}:`, error);\n    results.events.errors++;\n  }\n}\n\n// Insert events and sessions\nif (eventsToInsert.length > 0) {\n  await insertRecords('events_htx', eventsToInsert);\n}\nif (sessionsToInsert.length > 0) {\n  await insertRecords('sessions_htx', sessionsToInsert);\n  results.sessions.processed = sessionsToInsert.length;\n}\n\n// Process first event's orders as a test\nif (eventsData.events.length > 0) {\n  const event = eventsData.events[0];\n  console.log(`Processing orders for event: ${event.name}`);\n  \n  try {\n    const ordersResponse = await $request({\n      url: `https://api.humanitix.com/v1/events/${event._id}/orders?page=1&pageSize=10`,\n      method: 'GET',\n      headers: { 'X-API-Key': HUMANITIX_API_KEY }\n    });\n    const ordersData = ordersResponse;\n    \n    const ordersToInsert = [];\n    \n    if (ordersData.orders) {\n      for (const order of ordersData.orders.slice(0, 3)) { // Limit to 3 orders for testing\n        try {\n          // Check if order exists\n          if (await checkExists('orders_htx', order._id)) {\n            results.orders.skipped++;\n            continue;\n          }\n          \n          // Prepare order record with key fields\n          const orderRecord = {\n            source: 'humanitix',\n            source_id: order._id,\n            event_source_id: event._id,\n            session_source_id: order.eventDateId,\n            event_date_id: order.eventDateId,\n            order_reference: order._id,\n            status: order.status,\n            first_name: order.firstName,\n            last_name: order.lastName,\n            purchaser_email: order.email,\n            currency: order.currency,\n            total_cents: order.totals?.total ? Math.round(order.totals.total * 100) : null,\n            taxes_cents: order.totals?.totalTaxes ? Math.round(order.totals.totalTaxes * 100) : null,\n            raw: order,\n            created_at: order.createdAt,\n            ingested_at: new Date().toISOString()\n          };\n          \n          ordersToInsert.push(orderRecord);\n          results.orders.processed++;\n          \n        } catch (orderError) {\n          console.error(`Error processing order ${order._id}:`, orderError);\n          results.orders.errors++;\n        }\n      }\n    }\n    \n    // Insert orders for this event\n    if (ordersToInsert.length > 0) {\n      await insertRecords('orders_htx', ordersToInsert);\n    }\n    \n  } catch (eventError) {\n    console.error(`Error processing orders for event ${event._id}:`, eventError);\n  }\n}\n\nconsole.log('Sync completed!', results);\nreturn [{ json: results }];"
+      },
+      "id": "1b9a3b7c-8d4e-4f5g-9h1i-2j3k4l5m6n7o",
+      "name": "Complete Humanitix Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        240
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Complete Humanitix Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12345678-1234-1234-1234-123456789014",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "87654323",
+  "tags": []
+}

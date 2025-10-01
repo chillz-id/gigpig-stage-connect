@@ -1,0 +1,22 @@
+{
+  "id": "solution-1755901889508-fad1cf2f",
+  "type": "solution",
+  "severity": "medium",
+  "title": "Solution: Humanitix N8N Workflow Complete Data Mapping Error",
+  "description": "Successfully resolved all data mapping issues in Humanitix → Notion N8N workflow. Fixed: (1) getWorkflowStaticData error by removing dependency and using environment variables, (2) incorrect quantity calculation by properly summing ticket quantities instead of counting array length, (3) missing event context by passing complete event data to order transformation, (4) incomplete Notion property mapping by adding comprehensive field mapping for event names, dates, ticket types, order dates, venue select field, financial data, and customer details, (5) venue address vs select field by updating to use venue select field as requested. Workflow qBhVJVRabXV8vwr6 now active and will automatically fix all existing incomplete Notion entries while maintaining complete data for new orders.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T22:31:29.508Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": "Successfully resolved all data mapping issues in Humanitix → Notion N8N workflow. Fixed: (1) getWorkflowStaticData error by removing dependency and using environment variables, (2) incorrect quantity calculation by properly summing ticket quantities instead of counting array length, (3) missing event context by passing complete event data to order transformation, (4) incomplete Notion property mapping by adding comprehensive field mapping for event names, dates, ticket types, order dates, venue select field, financial data, and customer details, (5) venue address vs select field by updating to use venue select field as requested. Workflow qBhVJVRabXV8vwr6 now active and will automatically fix all existing incomplete Notion entries while maintaining complete data for new orders.",
+  "success": true,
+  "related_files": [],
+  "tags": [
+    "error",
+    "api",
+    "config",
+    "typescript"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

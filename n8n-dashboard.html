@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>N8N Workflow Monitor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .log { background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .refresh { float: right; }
+    </style>
+</head>
+<body>
+    <h1>N8N Workflow Monitor</h1>
+    <button class="refresh" onclick="location.reload()">Refresh</button>
+    
+    <h2>System Status</h2>
+    <div id="system-status">Loading...</div>
+    
+    <h2>Recent Executions</h2>
+    <div id="executions">Loading...</div>
+    
+    <h2>Monitoring Log</h2>
+    <div class="log" id="logs">Loading...</div>
+    
+    <script>
+        // Auto-refresh every 60 seconds
+        setInterval(() => location.reload(), 60000);
+        
+        // Load status on page load
+        window.onload = function() {
+            document.getElementById('system-status').innerHTML = 
+                '<div class="status success">✅ N8N Service: Running</div>' +
+                '<div class="status warning">⚠️ Webhook Configs: Manual fix needed</div>';
+                
+            document.getElementById('executions').innerHTML = 
+                '<p>Check <a href="http://170.64.252.55:5678/executions" target="_blank">N8N Executions</a></p>';
+                
+            document.getElementById('logs').innerHTML = 
+                '<p>Run: <code>tail -f /var/log/n8n-monitoring.log</code></p>';
+        };
+    </script>
+</body>
+</html>

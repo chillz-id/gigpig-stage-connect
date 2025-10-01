@@ -1,0 +1,14 @@
+{
+  "id": "issue-1758044973669-019da9bd",
+  "type": "issue",
+  "severity": "CRITICAL",
+  "title": "N8N Workflow Auto-Reconciliation Danger",
+  "description": "CRITICAL LESSON: N8N auto-reconciliation nodes are EXTREMELY DANGEROUS. They can CREATE records when they should UPDATE, corrupting production data. Specific issues: 1) Used invalid merge mode 'waitForAll' instead of 'append' 2) Added untested filters that return zero results 3) Auto-recon created duplicates instead of updating 4) Used fallback values (quantity=1) without validation 5) No testing before production deployment. RULE: NEVER use auto-reconciliation in production without extensive testing and safeguards.",
+  "date": "2025-09-16",
+  "timestamp": "2025-09-16T17:49:33.669Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": []
+}

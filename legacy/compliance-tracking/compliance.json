@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-08-22T14:58:24.158Z",
+  "total_sessions": 0,
+  "compliant_sessions": 0,
+  "violation_types": {
+    "no_kg_check": 0,
+    "late_kg_check": 0,
+    "critical_task_no_check": 0,
+    "no_issue_logging": 0,
+    "no_solution_logging": 0
+  },
+  "compliance_rate": 0,
+  "trends": {
+    "daily": {},
+    "weekly": {}
+  }
+}

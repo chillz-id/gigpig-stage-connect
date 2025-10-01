@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755898384552-72b70aae",
+  "type": "issue",
+  "severity": "low",
+  "title": "Test Helper Script",
+  "description": "Testing the log-issue helper script functionality",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T21:33:04.552Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": "Successfully validated helper script functionality",
+  "related_files": [],
+  "tags": [
+    "test"
+  ],
+  "linear_issue_id": null,
+  "cross_references": [],
+  "solution_timestamp": "2025-08-22T21:33:10.201Z",
+  "solution_successful": true
+}

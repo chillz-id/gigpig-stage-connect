@@ -1,0 +1,24 @@
+{
+  "id": "issue-1755891065463-8443fbc0",
+  "type": "issue",
+  "severity": "medium",
+  "title": "N8N API Workflow Creation Error",
+  "description": "During N8N Humanitix workflow creation, N8N API rejected workflow deployment with error 'request/body must NOT have additional properties'. Root cause: Extra metadata fields in workflow JSON including staticData: null, meta: null, pinData: {}, versionId: null, triggerCount: 0, tags: []. N8N API validation requires clean workflow structure without these optional metadata fields. Required multiple deployment attempts and debugging to identify cause.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T19:31:05.464Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully resolved by creating clean workflow versions without extra metadata properties. Removed staticData, meta, pinData, versionId, triggerCount, and tags fields from workflow JSON. Created workflow-1-clean.json and workflow-2-clean.json files with only essential workflow structure (name, nodes, connections, settings). Clean workflows deployed successfully to N8N with IDs CK9JWj9aapFu26lH and XQ8bFr8gSIOQjWC5.",
+    "successful": true,
+    "timestamp": "2025-08-22T19:31:17.684Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "api",
+    "error"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

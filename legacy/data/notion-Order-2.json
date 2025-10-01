@@ -1,0 +1,135 @@
+{
+  "parent": {
+    "database_id": "2794745b-8cbe-811d-ae4f-fe88f3295973"
+  },
+  "properties": {
+    "Order ID": {
+      "title": [
+        {
+          "text": {
+            "content": "2XEDMYHH"
+          }
+        }
+      ]
+    },
+    "Event ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "689d8a3c9e771b6de8e3bc0e"
+          }
+        }
+      ]
+    },
+    "Event Date ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "68b1105b18ce5ec96340ddce"
+          }
+        }
+      ]
+    },
+    "First Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Sarah"
+          }
+        }
+      ]
+    },
+    "Last Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Melville"
+          }
+        }
+      ]
+    },
+    "Email": {
+      "email": "sarahmelville868@gmail.com"
+    },
+    "Phone": {
+      "phone_number": "0402579676"
+    },
+    "Status": {
+      "select": {
+        "name": "complete"
+      }
+    },
+    "Financial Status": {
+      "select": {
+        "name": "paid"
+      }
+    },
+    "Payment Gateway": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "braintree"
+          }
+        }
+      ]
+    },
+    "Currency": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AUD"
+          }
+        }
+      ]
+    },
+    "Subtotal": {
+      "number": 54
+    },
+    "Total Amount": {
+      "number": 58.08
+    },
+    "Total Taxes": {
+      "number": 5.08
+    },
+    "Humanitix Fee": {
+      "number": 4.08
+    },
+    "Net Sales": {
+      "number": 54
+    },
+    "Gross Sales": {
+      "number": 58.08
+    },
+    "Created Date": {
+      "date": {
+        "start": "2025-09-19T23:00:19.835Z"
+      }
+    },
+    "Completed Date": {
+      "date": {
+        "start": "2025-09-19T23:02:04.550Z"
+      }
+    },
+    "Location": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AU"
+          }
+        }
+      ]
+    },
+    "Sales Channel": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "online"
+          }
+        }
+      ]
+    },
+    "Mailing List Opt In": {
+      "checkbox": false
+    }
+  }
+}

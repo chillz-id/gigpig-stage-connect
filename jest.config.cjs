@@ -27,6 +27,12 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testTimeout: 30000, // 30 seconds for Puppeteer tests
+  testTimeout: 10000, // 10 seconds (reduced from 30)
+  maxWorkers: "50%", // Use 50% of available workers
   verbose: true,
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/tests/helpers/",
+    "smoke.test.ts"
+  ],
 };

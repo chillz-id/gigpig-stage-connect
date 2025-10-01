@@ -11,8 +11,9 @@ console.log('🔍 Verifying MCP Configuration Readiness');
 console.log('='.repeat(50));
 
 try {
-  // Read MCP configuration
-  const mcpConfig = JSON.parse(readFileSync('.mcp.json', 'utf8'));
+  // Read MCP configuration - use absolute path to work from any directory
+  const mcpPath = import.meta.dirname ? `${import.meta.dirname}/.mcp.json` : '/root/agents/.mcp.json';
+  const mcpConfig = JSON.parse(readFileSync(mcpPath, 'utf8'));
   
   let placeholderCount = 0;
   let workingTokens = 0;

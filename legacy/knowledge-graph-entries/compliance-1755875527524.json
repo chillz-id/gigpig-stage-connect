@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-22T15:12:07.524Z",
+  "task": "session mistakes documentation",
+  "checked_sources": [
+    "knowledge_graph",
+    "linear_issues",
+    "taskmaster"
+  ],
+  "findings_count": {
+    "kg_entries": 6,
+    "linear_issues": 3,
+    "tasks": 0,
+    "warnings": 2
+  },
+  "compliance_status": "checked"
+}

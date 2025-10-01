@@ -1,0 +1,2 @@
+#!/bin/bash
+node /root/.claude-multi-agent/scripts/enhanced-claude-graph-integration.js log-solution "$1" "$2" "${3:-true}"

@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755876088895-f6e0e283",
+  "type": "issue",
+  "severity": "critical",
+  "title": "Critical Security Vulnerability: Massive Hardcoded API Key Exposure",
+  "description": "Discovered 100+ files across the platform containing hardcoded API keys including N8N API keys, Humanitix API keys, Notion tokens, Supabase service keys, Firecrawl keys, and other sensitive credentials. Files affected included Python scripts in /opt/standup-sydney-mcp/, N8N workflow configurations, frontend JavaScript files, and JSON templates. This represents a critical security vulnerability with potential for credential compromise.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:21:28.895Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "api",
+    "security",
+    "credentials"
+  ]
+}

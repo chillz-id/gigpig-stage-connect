@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755955199338-b032ab26",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Didn't Verify Notion Database Schema Before Initial Fix",
+  "description": "Started fixing the workflow based on assumptions about which fields existed in Notion database instead of using Notion MCP to verify the actual schema first. This led to incomplete fixes and continued errors.",
+  "date": "2025-08-23",
+  "timestamp": "2025-08-23T13:19:59.342Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error",
+    "database",
+    "mcp"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

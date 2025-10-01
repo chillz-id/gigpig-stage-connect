@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-08-22T15:00:17.827Z",
+  "problems": {},
+  "correlations": {},
+  "metadata": {
+    "total_problems": 0,
+    "sources": [
+      "knowledge_graph",
+      "linear",
+      "taskmaster"
+    ],
+    "status_counts": {}
+  }
+}

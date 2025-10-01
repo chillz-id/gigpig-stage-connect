@@ -1,0 +1,139 @@
+{
+  "name": "Humanitix → Notion (Orders Upsert, Tickets-accurate Quantity)",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 2,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "Cron",
+      "name": "Cron (every 2 min)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine sync window\nconst now = new Date();\nconst backfillStart = $env.HUMANITIX_BACKFILL_START; // e.g. \"2024-01-01\"\nconst reprocessMinutes = Number($env.REPROCESS_MINUTES || 10); // small rolling window for corrections\n\nlet lastSyncISO;\nlet mode = 'Delta';\n\nif (backfillStart) {\n  mode = 'Historical';\n  lastSyncISO = new Date(backfillStart).toISOString();\n} else {\n  lastSyncISO = new Date(now.getTime() - reprocessMinutes*60*1000).toISOString();\n}\n\nreturn [{\n  lastSyncISO,\n  nowISO: now.toISOString(),\n  mode\n}];\n"
+      },
+      "id": "InitMode",
+      "name": "Init Sync Mode",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// HUMANITIX → ORDERS + TICKETS (accurate quantities) → map to Notion props\nconst API = 'https://api.humanitix.com/v1';\nconst KEY = $env.HUMANITIX_API_KEY;\nif (!KEY) throw new Error('HUMANITIX_API_KEY env var not set');\nconst headers = { 'x-api-key': KEY };\n\nconst lastSyncISO = $node['Init Sync Mode'].json.lastSyncISO;\nconst mode = $node['Init Sync Mode'].json.mode;\nconst extraPastPages = Number($env.HUMANITIX_PAST_EVENT_PAGES || 2);\n\nasync function fetchEventsFull(inFutureOnly, pageStart=1, pageLimit=9999) {\n  const list = [];\n  let page = pageStart;\n  while (true) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${API}/events`,\n      qs: { inFutureOnly, page, pageSize: 100 },\n      headers, json: true,\n    });\n    const arr = resp?.events || [];\n    list.push(...arr);\n    if (!resp?.pageSize || !resp?.total || page * resp.pageSize >= resp.total) break;\n    page++;\n    if (page > pageLimit) break;\n  }\n  // de-dup by _id\n  const seen = new Set();\n  return list.filter(e => (seen.has(e._id) ? false : (seen.add(e._id), true)));\n}\n\nasync function fetchAllEvents() {\n  if (mode === 'Historical') {\n    return await fetchEventsFull.call(this, false);\n  }\n  const fut = await fetchEventsFull.call(this, true);\n  // also include a small slice of past pages for edits/refunds\n  const past = await fetchEventsFull.call(this, false, 1, Math.max(0, extraPastPages));\n  const combined = [...fut, ...past];\n  const seen = new Set();\n  return combined.filter(e => (seen.has(e._id) ? false : (seen.add(e._id), true)));\n}\n\nasync function fetchOrdersForEvent(eventId) {\n  const all = [];\n  let page = 1;\n  while (true) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${API}/events/${eventId}/orders`,\n      qs: { since: lastSyncISO, page, pageSize: 100 },\n      headers, json: true,\n    });\n    all.push(...(resp?.orders || []));\n    if (!resp?.pageSize || !resp?.total || page * resp.pageSize >= resp.total) break;\n    page++;\n  }\n  return all;\n}\n\nasync function fetchTicketsForEvent(eventId) {\n  const all = [];\n  let page = 1;\n  while (true) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${API}/events/${eventId}/tickets`,\n      qs: { since: lastSyncISO, page, pageSize: 100, status: 'complete' }, // exclude cancelled\n      headers, json: true,\n    });\n    all.push(...(resp?.tickets || []));\n    if (!resp?.pageSize || !resp?.total || page * resp.pageSize >= resp.total) break;\n    page++;\n  }\n  return all;\n}\n\nfunction summariseTicketsByOrder(tickets) {\n  const map = new Map();\n  for (const t of tickets) {\n    const oid = t.orderId || t.order_id || t.order || '';\n    if (!oid) continue;\n    const typeName = t.ticketTypeName || t.ticketType?.name || t.type?.name || t.name || 'General';\n    if (!map.has(oid)) map.set(oid, { total: 0, byType: new Map() });\n    const agg = map.get(oid);\n    agg.total += 1; // each ticket row is one seat\n    agg.byType.set(typeName, (agg.byType.get(typeName) || 0) + 1);\n  }\n  return map;\n}\n\nfunction toNotionProperties(order, event, ticketSummary) {\n  const orderId = order._id || order.id || '';\n  const firstName = order.firstName || order.buyer?.firstName || order.customer?.firstName || '';\n  const lastName  = order.lastName  || order.buyer?.lastName  || order.customer?.lastName  || '';\n  const name = `${firstName} ${lastName}`.trim() || 'Anonymous';\n  const email = order.email || order.buyer?.email || order.customer?.email || null;\n  const phone = order.mobile || order.phone || order.buyer?.mobile || order.buyer?.phone || order.customer?.phone || null;\n\n  const eventName = event?.name || event?.title || order.event?.name || 'Unknown Event';\n  const eventId   = event?._id || event?.id || order.eventId || '';\n\n  const summary = ticketSummary || { total: 0, byType: new Map() };\n  const ticketTypesText = [...summary.byType.entries()]\n    .map(([n, qty]) => qty > 1 ? `${n} (${qty})` : n)\n    .join(', ') || 'General';\n\n  const grossSales = Number(order.totals?.grossSales || order.purchaseTotals?.grossSales || order.total || order.amount || 0);\n  const netSales   = Number(order.totals?.netSales   || order.purchaseTotals?.netSales   || order.netAmount || grossSales);\n  const paymentStatus = order.paymentStatus || order.payment?.status || 'paid';\n\n  const props = {\n    \"Name\": { \"title\": [ { \"text\": { \"content\": name } } ] },\n    \"Event Name\": { \"rich_text\": [ { \"text\": { \"content\": eventName } } ] },\n    \"Order ID\": { \"rich_text\": [ { \"text\": { \"content\": orderId } } ] },\n    \"Quantity\": { \"number\": summary.total },\n    \"Ticket Type\": { \"rich_text\": [ { \"text\": { \"content\": ticketTypesText } } ] },\n    \"Total Amount\": { \"number\": grossSales },\n    \"Net Sales\": { \"number\": netSales },\n    \"Payment Status\": { \"rich_text\": [ { \"text\": { \"content\": paymentStatus } } ] },\n    \"Ticketing Partner\": { \"select\": { \"name\": \"Humanitix\" } },\n    \"Updated At\": { \"date\": { \"start\": new Date().toISOString() } }\n  };\n  if (email) props[\"Email\"] = { \"email\": email };\n  if (phone) props[\"Mobile\"] = { \"phone_number\": phone };\n  if (eventId) props[\"Event ID\"] = { \"rich_text\": [ { \"text\": { \"content\": eventId } } ] };\n  const orderCreatedDate = order.createdAt || order.created || order.purchaseDate || null;\n  if (orderCreatedDate) props[\"Order Date\"] = { \"date\": { \"start\": orderCreatedDate } };\n  const eventStartDate = event?.startDate || event?.startDateTime || event?.date || event?.dates?.[0]?.startDate || null;\n  if (eventStartDate) props[\"Event Date & Time\"] = { \"date\": { \"start\": eventStartDate } };\n  const discountCode = order.discounts?.discountCode?.code || order.discount?.code || order.promocode || '';\n  if (discountCode) props[\"Discount Code\"] = { \"rich_text\": [ { \"text\": { \"content\": discountCode } } ] };\n  const discountAmount = Number(order.discounts?.discountCode?.discountAmount || order.discount?.amount || order.totals?.discounts || 0);\n  if (discountAmount > 0) props[\"Discount Amount\"] = { \"number\": discountAmount };\n\n  return { props, orderId };\n}\n\nconst events = await fetchAllEvents.call(this);\nconst out = [];\n\nfor (const event of events) {\n  const [tickets, orders] = await Promise.all([\n    fetchTicketsForEvent.call(this, event._id),\n    fetchOrdersForEvent.call(this, event._id),\n  ]);\n  const byOrder = summariseTicketsByOrder(tickets);\n\n  for (const order of orders) {\n    const oid = order._id || order.id || '';\n    const summary = byOrder.get(oid) || { total: 0, byType: new Map() };\n    const notionData = toNotionProperties(order, event, summary);\n    out.push({ json: notionData });\n  }\n}\n\nreturn out;\n"
+      },
+      "id": "FetchTransform",
+      "name": "Fetch & Transform (Events + Orders + Tickets)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Upsert into Notion by 'Order ID' (unique)\nconst DB_ID = $env.NOTION_DB_ATTENDEES;\nconst TOKEN = $env.NOTION_API_KEY;\nif (!DB_ID) throw new Error('NOTION_DB_ATTENDEES env var not set');\nif (!TOKEN) throw new Error('NOTION_API_KEY env var not set');\n\nconst headers = {\n  Authorization: `Bearer ${TOKEN}`,\n  'Notion-Version': '2022-06-28',\n  'Content-Type': 'application/json'\n};\n\nfunction sleep(ms){ return new Promise(r => setTimeout(r, ms)); }\n\nconst results = [];\nlet created = 0, updated = 0, errors = 0;\n\nfor (const item of items) {\n  const { props, orderId } = item.json;\n  if (!orderId) continue;\n\n  try {\n    // Query for existing order by Order ID\n    const queryBody = { filter: { property: 'Order ID', rich_text: { equals: orderId } } };\n    const query = await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://api.notion.com/v1/databases/${DB_ID}/query`,\n      headers, body: queryBody, json: true,\n    });\n\n    if (Array.isArray(query.results) && query.results.length > 0) {\n      const pageId = query.results[0].id;\n      await this.helpers.httpRequest({\n        method: 'PATCH',\n        url: `https://api.notion.com/v1/pages/${pageId}`,\n        headers, body: { properties: props }, json: true,\n      });\n      results.push({ json: { action: 'updated', pageId, orderId } });\n      updated++;\n    } else {\n      const createdPage = await this.helpers.httpRequest({\n        method: 'POST',\n        url: 'https://api.notion.com/v1/pages',\n        headers, body: { parent: { database_id: DB_ID }, properties: props }, json: true,\n      });\n      results.push({ json: { action: 'created', pageId: createdPage.id, orderId } });\n      created++;\n    }\n\n    await sleep(Number($env.NOTION_WRITE_DELAY_MS || 800));\n  } catch (error) {\n    console.error('Notion upsert error:', error.message);\n    errors++;\n    results.push({ json: { action: 'error', orderId, error: error.message } });\n  }\n}\n\nreturn results;\n"
+      },
+      "id": "UpsertNotion",
+      "name": "Upsert to Notion (Query/Update/Create)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const processed = $input.all();\nconst created = processed.filter(p => p.json.action === 'created').length;\nconst updated = processed.filter(p => p.json.action === 'updated').length;\nconst errors  = processed.filter(p => p.json.action === 'error').length;\n\nreturn [{\n  timestamp: new Date().toISOString(),\n  ordersProcessed: processed.length,\n  created, updated, errors,\n  mode: $node['Init Sync Mode'].json.mode,\n  since: $node['Init Sync Mode'].json.lastSyncISO\n}];\n"
+      },
+      "id": "Summary",
+      "name": "Sync Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -48
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron (every 2 min)": {
+      "main": [
+        [
+          {
+            "node": "Init Sync Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Sync Mode": {
+      "main": [
+        [
+          {
+            "node": "Fetch & Transform (Events + Orders + Tickets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch & Transform (Events + Orders + Tickets)": {
+      "main": [
+        [
+          {
+            "node": "Upsert to Notion (Query/Update/Create)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert to Notion (Query/Update/Create)": {
+      "main": [
+        [
+          {
+            "node": "Sync Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": null,
+  "meta": {
+    "instanceId": "auto-generated-2025-09-16T18:16:35.362781"
+  },
+  "id": "HumanitixToNotion-TicketsAccurate",
+  "tags": [
+    "humanitix",
+    "notion",
+    "orders",
+    "upsert",
+    "quantity-fix"
+  ]
+}

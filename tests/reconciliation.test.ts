@@ -1,6 +1,19 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ticketReconciliationService } from '@/services/ticketReconciliationService';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_RECONCILIATION_CONFIG } from '@/services/ticketReconciliation/config';
+import { findDuplicateSales } from '@/services/ticketReconciliation/dataFetchers';
+import { detectDiscrepancies } from '@/services/ticketReconciliation/discrepancyDetection';
+import { resolveDiscrepancies } from '@/services/ticketReconciliation/discrepancyResolution';
+import * as persistence from '@/services/ticketReconciliation/persistence';
+import {
+  LocalSale,
+  PlatformSale,
+  ReconciliationDiscrepancy,
+  ReconciliationReport,
+} from '@/services/ticketReconciliation/types';
+
+const persistenceMocks = persistence as jest.Mocked<typeof persistence>;
 
 // Mock Supabase
 jest.mock('@/integrations/supabase/client', () => ({
@@ -26,14 +39,29 @@ jest.mock('@/integrations/supabase/client', () => ({
 // Mock API services
 jest.mock('@/services/humanitixApiService', () => ({
   humanitixApiService: {
-    getAllOrdersForEvent: jest.fn(),
+    getOrders: jest.fn(),
   },
 }));
 
 jest.mock('@/services/eventbriteApiService', () => ({
   eventbriteApiService: {
-    getAllOrdersForEvent: jest.fn(),
+    getEventOrders: jest.fn(),
   },
+}));
+
+jest.mock('@/services/ticketReconciliation/persistence', () => ({
+  persistReport: jest.fn(),
+  updateDiscrepancyRecord: jest.fn(),
+  insertPlatformSale: jest.fn(),
+  updateSaleAmount: jest.fn(),
+  logReconciliationAction: jest.fn(),
+  updateEventHealthStatus: jest.fn(),
+  createReconciliationAlertNotification: jest.fn(),
+  fetchReconciliationHistory: jest.fn(),
+  fetchUnresolvedDiscrepancies: jest.fn(),
+  fetchRecentReports: jest.fn(),
+  markDiscrepancyResolved: jest.fn(),
+  applyManualAdjustmentMutation: jest.fn(),
 }));
 
 describe('Ticket Reconciliation Service', () => {
@@ -116,76 +144,90 @@ describe('Ticket Reconciliation Service', () => {
 
   describe('findDiscrepancies', () => {
     it('should detect missing sales', async () => {
-      const localSales = [
+      const localSales: LocalSale[] = [
         {
           id: 'local-1',
+          event_id: mockEventId,
           platform_order_id: 'order-1',
           total_amount: 50,
           customer_email: 'test@example.com',
+          purchase_date: new Date().toISOString(),
         },
       ];
 
-      const platformSales = [
+      const platformSales: PlatformSale[] = [
         {
           orderId: 'order-1',
           totalAmount: 50,
           customerEmail: 'test@example.com',
+          purchaseDate: new Date().toISOString(),
         },
         {
           orderId: 'order-2',
           totalAmount: 75,
           customerEmail: 'test2@example.com',
+          purchaseDate: new Date().toISOString(),
         },
       ];
 
-      const discrepancies = await (ticketReconciliationService as any).findDiscrepancies(
-        mockEventId,
-        mockPlatform,
+      const discrepancies = detectDiscrepancies({
+        eventId: mockEventId,
+        platform: mockPlatform,
         localSales,
-        platformSales
-      );
+        platformSales,
+        config: DEFAULT_RECONCILIATION_CONFIG,
+      });
 
       expect(discrepancies).toHaveLength(1);
-      expect(discrepancies[0].type).toBe('missing_sale');
-      expect(discrepancies[0].platformData.orderId).toBe('order-2');
+      const first = discrepancies[0];
+      expect(first).toBeDefined();
+      expect(first!.type).toBe('missing_sale');
+      expect(first!.platformData?.orderId).toBe('order-2');
     });
 
     it('should detect amount mismatches', async () => {
-      const localSales = [
+      const localSales: LocalSale[] = [
         {
           id: 'local-1',
+          event_id: mockEventId,
           platform_order_id: 'order-1',
           total_amount: 50,
           customer_email: 'test@example.com',
+          purchase_date: new Date().toISOString(),
         },
       ];
 
-      const platformSales = [
+      const platformSales: PlatformSale[] = [
         {
           orderId: 'order-1',
           totalAmount: 75, // Different amount
           customerEmail: 'test@example.com',
+          purchaseDate: new Date().toISOString(),
         },
       ];
 
-      const discrepancies = await (ticketReconciliationService as any).findDiscrepancies(
-        mockEventId,
-        mockPlatform,
+      const discrepancies = detectDiscrepancies({
+        eventId: mockEventId,
+        platform: mockPlatform,
         localSales,
-        platformSales
-      );
+        platformSales,
+        config: DEFAULT_RECONCILIATION_CONFIG,
+      });
 
       expect(discrepancies).toHaveLength(1);
-      expect(discrepancies[0].type).toBe('amount_mismatch');
-      expect(discrepancies[0].difference.localValue).toBe(50);
-      expect(discrepancies[0].difference.platformValue).toBe(75);
+      const first = discrepancies[0];
+      expect(first).toBeDefined();
+      expect(first!.type).toBe('amount_mismatch');
+      expect(first!.difference?.localValue).toBe(50);
+      expect(first!.difference?.platformValue).toBe(75);
     });
 
     it('should detect duplicate sales', async () => {
       const now = new Date();
-      const localSales = [
+      const localSales: LocalSale[] = [
         {
           id: 'local-1',
+          event_id: mockEventId,
           platform_order_id: 'order-1',
           total_amount: 50,
           customer_email: 'test@example.com',
@@ -193,6 +235,7 @@ describe('Ticket Reconciliation Service', () => {
         },
         {
           id: 'local-2',
+          event_id: mockEventId,
           platform_order_id: 'order-2',
           total_amount: 50,
           customer_email: 'test@example.com',
@@ -200,21 +243,24 @@ describe('Ticket Reconciliation Service', () => {
         },
       ];
 
-      const duplicates = await (ticketReconciliationService as any).findDuplicateSales(localSales);
+      const duplicates = findDuplicateSales(
+        localSales,
+        DEFAULT_RECONCILIATION_CONFIG.duplicateTimeWindow
+      );
 
       expect(duplicates).toHaveLength(1);
-      expect(duplicates[0].id).toBe('local-2');
+      expect(duplicates[0]?.id).toBe('local-2');
     });
   });
 
-  describe('resolveDiscrepancy', () => {
+  describe('resolveDiscrepancies', () => {
     it('should auto-import missing sales', async () => {
-      const discrepancy = {
+      const discrepancy: ReconciliationDiscrepancy = {
         id: 'disc-1',
         eventId: mockEventId,
         platform: mockPlatform,
-        type: 'missing_sale' as const,
-        severity: 'high' as const,
+        type: 'missing_sale',
+        severity: 'high',
         platformData: {
           orderId: 'order-123',
           customerName: 'John Doe',
@@ -228,28 +274,37 @@ describe('Ticket Reconciliation Service', () => {
       };
 
       // Mock successful insert
-      const mockInsertResponse = { data: null, error: null };
-      const mockFrom = jest.fn(() => ({
-        insert: jest.fn(() => mockInsertResponse),
-      }));
-      (supabase.from as jest.Mock).mockImplementation(mockFrom);
+      persistenceMocks.insertPlatformSale.mockResolvedValueOnce();
+      persistenceMocks.updateDiscrepancyRecord.mockResolvedValueOnce();
+      persistenceMocks.logReconciliationAction.mockResolvedValueOnce();
 
-      const resolved = await (ticketReconciliationService as any).resolveDiscrepancy(discrepancy);
+      const resolved = await resolveDiscrepancies([
+        discrepancy,
+      ], DEFAULT_RECONCILIATION_CONFIG);
 
-      expect(resolved).toBe(true);
-      // Note: resolution and resolvedAt are set on the discrepancy object during processing
+      expect(resolved).toBe(1);
+      expect(persistenceMocks.insertPlatformSale).toHaveBeenCalledWith(
+        mockEventId,
+        mockPlatform,
+        discrepancy.platformData!,
+        expect.objectContaining({ reconciliation_import: true })
+      );
     });
 
     it('should auto-correct small amount differences', async () => {
-      const discrepancy = {
+      const discrepancy: ReconciliationDiscrepancy = {
         id: 'disc-1',
         eventId: mockEventId,
         platform: mockPlatform,
-        type: 'amount_mismatch' as const,
-        severity: 'low' as const,
+        type: 'amount_mismatch',
+        severity: 'low',
         localData: {
           id: 'sale-123',
+          event_id: mockEventId,
+          platform_order_id: 'order-1',
           total_amount: 49.99,
+          customer_email: 'test@example.com',
+          purchase_date: new Date().toISOString(),
         },
         difference: {
           field: 'total_amount',
@@ -259,60 +314,61 @@ describe('Ticket Reconciliation Service', () => {
         detectedAt: new Date().toISOString(),
       };
 
-      // Mock successful update
-      const mockUpdateResponse = { data: null, error: null };
-      const mockFrom = jest.fn(() => ({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => mockUpdateResponse),
-        })),
-      }));
-      (supabase.from as jest.Mock).mockImplementation(mockFrom);
+      persistenceMocks.updateSaleAmount.mockResolvedValueOnce();
+      persistenceMocks.updateDiscrepancyRecord.mockResolvedValueOnce();
+      persistenceMocks.logReconciliationAction.mockResolvedValueOnce();
 
-      const resolved = await (ticketReconciliationService as any).resolveDiscrepancy(discrepancy);
+      const resolved = await resolveDiscrepancies([
+        discrepancy,
+      ], DEFAULT_RECONCILIATION_CONFIG);
 
-      expect(resolved).toBe(true);
-      // Note: resolution is set on the discrepancy object during processing
+      expect(resolved).toBe(1);
+      expect(persistenceMocks.updateSaleAmount).toHaveBeenCalledWith(
+        'sale-123',
+        50,
+        expect.objectContaining({ reconciliation_corrected: true })
+      );
     });
   });
 
   describe('getReconciliationStats', () => {
     it('should calculate reconciliation statistics', async () => {
-      const mockReports = [
+      const mockReports: ReconciliationReport[] = [
         {
           id: 'report-1',
-          event_id: mockEventId,
-          discrepancies_found: 5,
-          discrepancies_resolved: 4,
-          sync_health: 'warning',
-          start_time: new Date().toISOString(),
+          eventId: mockEventId,
+          discrepanciesFound: 5,
+          discrepanciesResolved: 4,
+          syncHealth: 'warning',
+          startTime: new Date().toISOString(),
+          endTime: new Date().toISOString(),
+          status: 'completed',
+          totalLocalSales: 10,
+          totalPlatformSales: 10,
+          totalLocalRevenue: 500,
+          totalPlatformRevenue: 500,
+          details: [],
           platform: 'humanitix',
         },
         {
           id: 'report-2',
-          event_id: mockEventId,
-          discrepancies_found: 2,
-          discrepancies_resolved: 2,
-          sync_health: 'healthy',
-          start_time: new Date().toISOString(),
+          eventId: mockEventId,
+          discrepanciesFound: 2,
+          discrepanciesResolved: 2,
+          syncHealth: 'healthy',
+          startTime: new Date().toISOString(),
+          endTime: new Date().toISOString(),
+          status: 'completed',
+          totalLocalSales: 8,
+          totalPlatformSales: 8,
+          totalLocalRevenue: 400,
+          totalPlatformRevenue: 400,
+          details: [],
           platform: 'eventbrite',
         },
       ];
 
-      const mockSupabaseResponse = {
-        data: mockReports,
-        error: null,
-      };
-
-      const mockFrom = jest.fn(() => ({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            order: jest.fn(() => ({
-              limit: jest.fn(() => mockSupabaseResponse),
-            })),
-          })),
-        })),
-      }));
-      (supabase.from as jest.Mock).mockImplementation(mockFrom);
+      persistenceMocks.fetchRecentReports.mockResolvedValueOnce(mockReports);
 
       const stats = await ticketReconciliationService.getReconciliationStats(mockEventId);
 
@@ -330,14 +386,7 @@ describe('Ticket Reconciliation Service', () => {
       const resolution = 'ignored';
       const notes = 'Reviewed and deemed acceptable';
 
-      // Mock successful update
-      const mockUpdateResponse = { data: null, error: null };
-      const mockFrom = jest.fn(() => ({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => mockUpdateResponse),
-        })),
-      }));
-      (supabase.from as jest.Mock).mockImplementation(mockFrom);
+      persistenceMocks.markDiscrepancyResolved.mockResolvedValueOnce();
 
       await expect(
         ticketReconciliationService.manuallyResolveDiscrepancy(
@@ -346,6 +395,12 @@ describe('Ticket Reconciliation Service', () => {
           notes
         )
       ).resolves.not.toThrow();
+
+      expect(persistenceMocks.markDiscrepancyResolved).toHaveBeenCalledWith(
+        discrepancyId,
+        resolution,
+        notes
+      );
     });
   });
 
@@ -364,12 +419,8 @@ describe('Ticket Reconciliation Service', () => {
         reason: 'Cash payment at door',
       };
 
-      // Mock successful insert
-      const mockInsertResponse = { data: null, error: null };
-      const mockFrom = jest.fn(() => ({
-        insert: jest.fn(() => mockInsertResponse),
-      }));
-      (supabase.from as jest.Mock).mockImplementation(mockFrom);
+      persistenceMocks.logReconciliationAction.mockResolvedValueOnce();
+      persistenceMocks.applyManualAdjustmentMutation.mockResolvedValueOnce();
 
       await expect(
         ticketReconciliationService.createManualAdjustment(
@@ -378,6 +429,13 @@ describe('Ticket Reconciliation Service', () => {
           adjustment
         )
       ).resolves.not.toThrow();
+
+      expect(persistenceMocks.logReconciliationAction).toHaveBeenCalled();
+      expect(persistenceMocks.applyManualAdjustmentMutation).toHaveBeenCalledWith(
+        mockEventId,
+        mockPlatform,
+        adjustment
+      );
     });
   });
 });

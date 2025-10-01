@@ -1,0 +1,232 @@
+{
+  "name": "Webhook Processing - Humanitix/Eventbrite Orders",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "humanitix-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Humanitix Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "event-type-check",
+              "leftValue": "{{ $json.event_type }}",
+              "rightValue": "order.created",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "event-filter",
+      "name": "Filter Order Events",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_id",
+              "value": "{{ $json.event.id }}"
+            },
+            {
+              "name": "customer_email",
+              "value": "{{ $json.customer.email }}"
+            },
+            {
+              "name": "customer_name",
+              "value": "{{ $json.customer.name }}"
+            },
+            {
+              "name": "order_total",
+              "value": "{{ $json.order.total }}"
+            },
+            {
+              "name": "tickets_purchased",
+              "value": "{{ $json.order.tickets }}"
+            },
+            {
+              "name": "external_order_id",
+              "value": "{{ $json.order.id }}"
+            },
+            {
+              "name": "source_platform",
+              "value": "humanitix"
+            },
+            {
+              "name": "webhook_received_at",
+              "value": "{{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "save-to-supabase",
+      "name": "Save Order to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "🎫 New Order: {{ $json.customer.name }} purchased {{ $json.order.tickets }} tickets for {{ $json.event.name }} (Total: ${{ $json.order.total }})"
+            },
+            {
+              "name": "channel",
+              "value": "#bookings"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"status\": \"success\", \"message\": \"Order processed successfully\", \"order_id\": \"{{ $('save-to-supabase').item.json.id }}\" }",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "event-filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "event-filter": {
+      "main": [
+        [
+          {
+            "node": "save-to-supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "slack-notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-to-supabase": {
+      "main": [
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "slack-notification": {
+      "main": [
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "webhook-processing-001"
+  },
+  "id": "webhook-processing",
+  "tags": [
+    {
+      "createdAt": "2025-09-09T22:30:00Z",
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "automation",
+      "name": "automation"
+    },
+    {
+      "createdAt": "2025-09-09T22:30:00Z", 
+      "updatedAt": "2025-09-09T22:30:00Z",
+      "id": "webhooks",
+      "name": "webhooks"
+    }
+  ]
+}

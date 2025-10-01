@@ -1,0 +1,128 @@
+{
+  "database_schema_analysis": {
+    "timestamp": "2025-08-21T18:46:00Z",
+    "supabase_project": "pdikjpfulhhpqpxzpgtu",
+    "analysis_type": "comprehensive_database_audit",
+    "status": "CRITICAL_ISSUES_FOUND",
+    
+    "critical_findings": {
+      "profile_system": {
+        "status": "EMPTY_DATA",
+        "severity": "HIGH",
+        "description": "No data in profiles table despite table existence",
+        "impact": "User authentication and profile features non-functional",
+        "requires_investigation": true
+      },
+      "schema_mismatches": {
+        "status": "SIGNIFICANT_MISMATCHES",
+        "severity": "HIGH",
+        "events_table": {
+          "missing_columns": ["date", "venue_name", "organizer_id"],
+          "unexpected_columns": ["event_date", "venue", "promoter_id"],
+          "impact": "Frontend-backend field mapping failures"
+        }
+      },
+      "foreign_key_relationships": {
+        "status": "BROKEN",
+        "severity": "CRITICAL",
+        "failures": [
+          "events -> profiles relationship not found",
+          "applications -> events ambiguous relationships",
+          "event_spots -> profiles relationship not found"
+        ]
+      }
+    },
+
+    "migration_analysis": {
+      "total_migrations": 79,
+      "migration_status": "EXTENSIVE_BUT_UNCOORDINATED",
+      "recent_migrations": [
+        "20250114_profile_analytics_system.sql",
+        "20250114_add_sitemap_metadata.sql", 
+        "20250113_invoice_templates.sql",
+        "20250113_create_invoice_email_logs.sql"
+      ],
+      "concerns": [
+        "Many migrations with sequential timestamps suggest manual/repeated fixes",
+        "Profile system foundation fix suggests previous catastrophic failure",
+        "Invoice system has multiple repair attempts"
+      ]
+    },
+
+    "table_inventory": {
+      "core_tables_status": {
+        "profiles": { "exists": true, "has_data": false, "status": "EMPTY" },
+        "events": { "exists": true, "has_data": false, "status": "SCHEMA_MISMATCH" },
+        "applications": { "exists": true, "has_data": false, "status": "EMPTY" },
+        "event_spots": { "exists": true, "has_data": false, "status": "EMPTY" }
+      },
+      "supporting_tables_status": {
+        "invoices": { "exists": true, "status": "OK" },
+        "invoice_items": { "exists": true, "status": "OK" },
+        "invoice_payment_links": { "exists": true, "status": "OK" },
+        "vouches": { "exists": true, "status": "OK" },
+        "notifications": { "exists": true, "status": "OK" },
+        "comedian_media": { "exists": true, "status": "OK" },
+        "organizations": { "exists": true, "status": "OK" },
+        "agencies": { "exists": true, "status": "OK" },
+        "tasks": { "exists": true, "status": "OK" },
+        "task_templates": { "exists": true, "status": "OK" },
+        "tours": { "exists": true, "status": "OK" },
+        "customization_settings": { "exists": true, "status": "OK" },
+        "error_logs": { "exists": true, "status": "OK" },
+        "xero_integrations": { "exists": true, "status": "OK" }
+      },
+      "missing_tables": [
+        "notification_templates",
+        "event_requirements", 
+        "agency_members",
+        "agency_clients",
+        "tour_dates",
+        "navigation_preferences",
+        "payment_links"
+      ]
+    },
+
+    "rls_security_assessment": {
+      "status": "CONFIGURED_BUT_UNTESTED",
+      "concern": "RLS policies exist but cannot be tested due to empty tables",
+      "profile_policies": [
+        "Users can view their own profile",
+        "Users can update their own profile"
+      ],
+      "analytics_policies": [
+        "Profile owners can view their analytics",
+        "Allow analytics tracking",
+        "Allow engagement tracking"
+      ]
+    },
+
+    "data_integrity": {
+      "status": "POOR",
+      "issues": [
+        "Zero profiles despite authentication system",
+        "No test data in core tables",
+        "Foreign key relationships untestable due to empty tables"
+      ]
+    },
+
+    "recommendations": {
+      "immediate_actions": [
+        "Investigate why profiles table is empty despite auth trigger",
+        "Fix schema mismatches between frontend expectations and database reality",
+        "Populate core tables with test data for development",
+        "Verify auth trigger is properly creating profiles"
+      ],
+      "schema_fixes": [
+        "Align events table columns with frontend schemas",
+        "Fix foreign key relationships for proper joins",
+        "Create missing tables or remove references to them"
+      ],
+      "data_population": [
+        "Create sample profiles for testing",
+        "Add sample events and applications",
+        "Verify RLS policies work with actual data"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755876475164-95902ea8",
+  "type": "issue",
+  "severity": "low",
+  "title": "N8N API Header Format Confusion",
+  "description": "Initial N8N API authentication failed due to incorrect header format assumption. Documentation was unclear about exact header format - needed to use 'X-N8N-API-KEY' instead of 'Authorization: Bearer'. This caused initial 401 errors and required troubleshooting time.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:27:55.164Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "authentication",
+    "api",
+    "error"
+  ]
+}

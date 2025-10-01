@@ -1,0 +1,22 @@
+{
+  "id": "issue-1757733721631-c1188dc2",
+  "type": "issue",
+  "severity": "Critical",
+  "title": "MCP Tool Configuration Critical Information",
+  "description": "MCP tools in Claude Code are accessed directly by name without prefixes. Configuration must be in /root/.config/Claude/claude_desktop_config.json. Environment variables should use ${VARIABLE_NAME} references. Supabase requires Personal Access Token (sbp_*) not Service Key.",
+  "date": "2025-09-13",
+  "timestamp": "2025-09-13T03:22:01.632Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Documented correct MCP tool access: Tools are called directly by name (e.g., list_tables, execute_sql) without mcp__ prefix. Configuration location: /root/.config/Claude/claude_desktop_config.json. Must use environment variable references not hardcoded keys. Supabase needs Personal Access Token.",
+    "successful": true,
+    "timestamp": "2025-09-13T03:22:07.006Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "fix"
+  ]
+}

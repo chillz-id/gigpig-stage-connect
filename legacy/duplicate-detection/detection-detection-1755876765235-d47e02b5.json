@@ -1,0 +1,27 @@
+{
+  "detection_id": "detection-1755876765235-d47e02b5",
+  "task": {
+    "task_title": "Massive Credential Exposure Across 100+ Files",
+    "task_description": "Critical security crisis: Hardcoded credentials exposed across 100+ files including N8N API keys, Humanitix keys, Notion tokens, Supabase service keys, Firecrawl keys in Python scripts, N8N workflows, frontend JS, and JSON templates. Requires comprehensive credential audit and centralized management system implementation.",
+    "task_severity": "critical",
+    "detection_id": "detection-1755876765235-d47e02b5",
+    "timestamp": "2025-08-22T15:32:45.569Z"
+  },
+  "results": {
+    "exact_matches": [],
+    "high_similarity": [],
+    "pattern_matches": [],
+    "temporal_clusters": [],
+    "solution_exists": [],
+    "semantic_similarity": []
+  },
+  "duplicate_probability": 0,
+  "warnings": [],
+  "processing_time_ms": 672,
+  "total_problems_analyzed": 92,
+  "recommendation": {
+    "action": "PROCEED",
+    "message": "No significant duplicates detected. Safe to proceed.",
+    "confidence": "low"
+  }
+}

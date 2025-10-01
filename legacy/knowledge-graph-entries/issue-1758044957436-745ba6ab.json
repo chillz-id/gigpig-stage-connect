@@ -1,0 +1,23 @@
+{
+  "id": "issue-1758044957436-745ba6ab",
+  "type": "issue",
+  "severity": "CRITICAL",
+  "title": "Database Corruption - Quantity Set to 1",
+  "description": "CATASTROPHIC: Database Accuracy Monitor workflow corrupted hundreds/thousands of Notion records by setting quantities to 1. Caused by: 1) Invalid N8N merge mode 'waitForAll' 2) Untested filter 'Ticketing Partner=Humanitix' returning zero results 3) Auto-reconciliation creating duplicates with quantity fallback to 1 4) Not testing before production 5) Multiple failed fix attempts. ALL monitoring workflows DISABLED. Requires backup restore or manual quantity recovery from Humanitix API.",
+  "date": "2025-09-16",
+  "timestamp": "2025-09-16T17:49:17.437Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully deployed user-provided fixed N8N workflow that uses tickets endpoint for accurate quantities (each ticket = 1 seat) instead of order quantities. Workflow now upserts by Order ID with backfill mode enabled from 2024-01-01 to fix historical data. Multiple successful executions confirmed via N8N logs showing workflow running every 2 minutes. This replaces the broken Database Accuracy Monitor that was corrupting Notion records.",
+    "successful": true,
+    "timestamp": "2025-09-16T18:42:15.548Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "database",
+    "api",
+    "fix"
+  ]
+}

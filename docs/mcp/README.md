@@ -92,16 +92,10 @@ All MCP servers are configured in `/root/agents/.mcp.json`
 
 ### Using an MCP Tool
 
-Most MCP tools are available with the prefix `mcp__[server-name]__[tool-name]`. For example:
-
-```javascript
-// Supabase query
-await mcp__supabase__execute_sql({
-  query: "SELECT * FROM profiles WHERE role = 'comedian'"
+[CORRECT MCP USAGE PATTERN TO BE DOCUMENTED]
 });
 
-// GitHub issue creation
-await mcp__github__create_issue({
+[MORE EXAMPLES TO BE ADDED WITH CORRECT PATTERN]
   owner: "standupsydney",
   repo: "platform",
   title: "New feature request",

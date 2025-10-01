@@ -1,0 +1,206 @@
+{
+  "analysis_date": "2025-08-21T18:37:00Z",
+  "analysis_type": "Component Inventory",
+  "summary": {
+    "total_components": 379,
+    "total_directories": 33,
+    "shadcn_ui_components": 65,
+    "custom_components": 314
+  },
+  "directory_breakdown": {
+    "root_level": {
+      "count": 77,
+      "description": "Main application components in root directory",
+      "examples": ["Navigation.tsx", "Footer.tsx", "EventDetails.tsx", "CreateEventButton.tsx"]
+    },
+    "ui": {
+      "count": 65,
+      "description": "shadcn/ui base components library",
+      "key_components": ["button.tsx", "card.tsx", "dialog.tsx", "form.tsx", "table.tsx"],
+      "custom_ui_extensions": ["OptimizedImage.tsx", "OptimizedAvatar.tsx", "MediaGallery.tsx"]
+    },
+    "admin": {
+      "count": 31,
+      "description": "Administrative dashboard and management components",
+      "subdirectories": ["analytics", "design-system", "event-detail", "financial", "ticket-sales"],
+      "key_components": ["AnalyticsDashboard.tsx", "EventManagement.tsx", "FinancialDashboard.tsx"]
+    },
+    "auth": {
+      "count": 3,
+      "description": "Authentication components",
+      "components": ["SignInForm.tsx", "GoogleSignInButton.tsx", "AuthLayout.tsx"]
+    },
+    "comedian": {
+      "count": 4,
+      "description": "Comedian-specific dashboard components",
+      "components": ["SpotConfirmationCard.tsx", "PendingConfirmationsSection.tsx", "BookingRequestsSection.tsx", "ApplicationsListSection.tsx"]
+    },
+    "comedian-profile": {
+      "count": 20,
+      "description": "Comedian profile and portfolio components",
+      "subdirectories": ["accomplishments"],
+      "key_components": ["ComedianBio.tsx", "ComedianMediaGallery.tsx", "ComedianAvailabilityCalendar.tsx", "ComedianStats.tsx"]
+    },
+    "events": {
+      "count": 13,
+      "description": "Event management and display components",
+      "key_components": ["EventPreview.tsx", "EventApplicationForm.tsx", "SpotAssignmentManager.tsx", "ValidationFeedback.tsx", "AutoSaveStatus.tsx"]
+    },
+    "invoice": {
+      "count": 13,
+      "description": "Invoice management system components",
+      "subdirectories": ["templates"],
+      "key_components": ["InvoicePreview.tsx", "InvoicePDFTemplate.tsx", "TemplateManager.tsx", "PaymentHistory.tsx"]
+    },
+    "analytics": {
+      "count": 6,
+      "description": "Analytics and reporting components",
+      "components": ["AnalyticsDashboard.tsx", "AnalyticsChart.tsx", "TrafficSources.tsx", "EngagementMetrics.tsx", "RealtimeViewers.tsx", "DeviceBreakdown.tsx"]
+    },
+    "pwa": {
+      "count": 6,
+      "description": "Progressive Web App components",
+      "components": ["PWAInstaller.tsx", "OfflineIndicator.tsx", "ServiceWorkerStatus.tsx", "NotificationPrompt.tsx", "InstallPrompt.tsx", "UpdateNotification.tsx"]
+    }
+  },
+  "component_patterns": {
+    "naming_conventions": {
+      "pattern": "PascalCase for components, camelCase for utilities",
+      "examples": {
+        "good": ["EventDetails.tsx", "ComedianProfile.tsx", "useEventData.ts"],
+        "inconsistent": []
+      }
+    },
+    "file_organization": {
+      "pattern": "Domain-driven directories with logical grouping",
+      "strengths": [
+        "Clear separation of concerns (admin/, comedian/, events/)",
+        "UI components isolated in ui/ directory",
+        "Feature-specific subdirectories"
+      ],
+      "improvement_opportunities": [
+        "Some root-level components could be organized into feature directories",
+        "Consider grouping related components that span multiple features"
+      ]
+    },
+    "component_size": {
+      "analysis": "Components range from simple UI elements to complex feature modules",
+      "large_components": [
+        "CreateEventFormEnhanced.tsx",
+        "AnalyticsDashboard.tsx", 
+        "EventSpotManager.tsx"
+      ],
+      "refactoring_candidates": [
+        "Navigation.tsx could be split into mobile/desktop variants",
+        "Dashboard.tsx contains multiple concerns that could be separated"
+      ]
+    }
+  },
+  "architecture_patterns": {
+    "composition_patterns": {
+      "compound_components": [
+        "EventRequirementsSection with sub-components",
+        "CustomRecurrencePicker with CalendarSection and SelectedDatesList",
+        "Invoice system with templates and customizers"
+      ],
+      "container_presenter": [
+        "Many hooks provide data, components handle presentation",
+        "Clear separation between business logic and UI"
+      ]
+    },
+    "reusability_score": {
+      "highly_reusable": 45,
+      "moderately_reusable": 127,
+      "single_use": 207,
+      "assessment": "Good balance, many components are appropriately specific to their domain"
+    }
+  },
+  "dependency_analysis": {
+    "external_dependencies": {
+      "ui_framework": "@radix-ui components via shadcn/ui",
+      "icons": "lucide-react (consistent icon system)",
+      "forms": "react-hook-form with Zod validation",
+      "dates": "date-fns for date manipulation",
+      "charts": "recharts for data visualization"
+    },
+    "internal_dependencies": {
+      "circular_dependencies": "None detected",
+      "deep_import_chains": "Generally well-structured, max 3-4 levels deep",
+      "shared_utilities": "Good use of @/lib/utils and @/hooks"
+    }
+  },
+  "performance_considerations": {
+    "lazy_loading": {
+      "implemented": "Yes, in App.tsx for route-level components",
+      "opportunity": "Could extend to large dashboard components"
+    },
+    "code_splitting": {
+      "current_approach": "Route-based splitting in App.tsx",
+      "potential_improvements": [
+        "Component-level splitting for admin dashboard",
+        "Feature-based chunks for large components"
+      ]
+    },
+    "bundle_impact": {
+      "large_components": [
+        "Admin analytics dashboard with charts",
+        "Event management with complex forms",
+        "Invoice system with PDF generation"
+      ]
+    }
+  },
+  "quality_indicators": {
+    "typescript_usage": "100% TypeScript coverage",
+    "prop_interfaces": "Consistent use of TypeScript interfaces",
+    "error_boundaries": "Implemented at component and route levels",
+    "accessibility": "Good ARIA usage, keyboard navigation support",
+    "testing_readiness": "Components structured for testing with clear props and separation of concerns"
+  },
+  "unused_components": {
+    "potentially_unused": [
+      "InvoiceList.deprecated.tsx",
+      "Invoices.deprecated.tsx",
+      "Several .example.tsx files that may be development artifacts"
+    ],
+    "deprecated_files": [
+      "InvoiceList.deprecated.tsx",
+      "Invoices.deprecated.tsx"
+    ]
+  },
+  "duplicate_patterns": {
+    "similar_components": [
+      {
+        "pattern": "Card-based layouts",
+        "components": ["ComedianCard.tsx", "PhotographerCard.tsx", "FeaturedEventCard.tsx"],
+        "consolidation_opportunity": "Could create generic ProfileCard component"
+      },
+      {
+        "pattern": "Navigation components",
+        "components": ["Navigation.tsx", "MobileNavigation.tsx", "DockNavigation.tsx"],
+        "status": "Appropriately separated by use case"
+      },
+      {
+        "pattern": "Form validation feedback",
+        "components": "Multiple components have inline validation - good pattern consistency"
+      }
+    ]
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Remove deprecated .deprecated.tsx files",
+      "Clean up .example.tsx development files",
+      "Consider consolidating similar card components"
+    ],
+    "architectural_improvements": [
+      "Implement component-level lazy loading for admin dashboard",
+      "Create shared ProfileCard component for user display patterns",
+      "Consider extracting common form patterns into reusable components"
+    ],
+    "maintainability": [
+      "All components follow consistent patterns",
+      "Good separation of concerns",
+      "TypeScript usage is excellent",
+      "Component organization is logical and scalable"
+    ]
+  }
+}

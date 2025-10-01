@@ -8,6 +8,10 @@
 
 There are several ways of editing your application.
 
+## Contributor Guide
+
+Review the detailed workflow and expectations in [Repository Guidelines](./AGENTS.md) before opening a pull request.
+
 **Use Lovable**
 
 Simply visit the [Lovable Project](https://lovable.dev/projects/c0b6f33c-d554-4a66-9699-ae183a77abc9) and start prompting.

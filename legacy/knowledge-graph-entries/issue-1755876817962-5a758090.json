@@ -1,0 +1,18 @@
+{
+  "id": "issue-1755876817962-5a758090",
+  "type": "issue",
+  "severity": "high",
+  "title": "Railway Deployment Port Conflict Crisis June 29 2025",
+  "description": "High deployment failure: 15+ commits attempting to fix Railway deployment port conflicts between code-server and Vite. Root cause: Environment variable configuration issues and conflicting port assignments. Caused extended downtime and deployment instability. Prevention: Standardize port configuration management and implement deployment validation steps. Use infrastructure as code to prevent configuration drift.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:33:37.962Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "fix"
+  ],
+  "linear_issue_id": "BACKEND-51",
+  "cross_references": []
+}

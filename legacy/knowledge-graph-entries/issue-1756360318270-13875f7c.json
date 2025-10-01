@@ -1,0 +1,16 @@
+{
+  "id": "issue-1756360318270-13875f7c",
+  "type": "issue",
+  "severity": "low",
+  "title": "Solution: Ticket Data Enrichment Incomplete - Missing Order Contact",
+  "description": "Solution attempt: Implemented ticket enrichment logic to propagate order email/mobile to individual ticket records. Created order data lookup during ticket sync. Validation shows 100% of processed tickets now have Order Email and Order Mobile fields populated.",
+  "date": "2025-08-28",
+  "timestamp": "2025-08-28T05:51:58.270Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": null,
+  "cross_references": []
+}

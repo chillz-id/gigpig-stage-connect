@@ -1,0 +1,369 @@
+{
+  "analysis_date": "2025-08-21T18:37:00Z", 
+  "analysis_type": "Cleanup and Refactoring Opportunities",
+  "summary": {
+    "deprecated_files": 2,
+    "example_files": 3,
+    "todo_items": "15+ identified",
+    "console_statements": 71,
+    "overall_code_health": "Good - minimal technical debt"
+  },
+  "immediate_cleanup_opportunities": {
+    "deprecated_files": {
+      "files_to_remove": [
+        "/root/agents/src/components/InvoiceList.deprecated.tsx",
+        "/root/agents/src/pages/Invoices.deprecated.tsx"
+      ],
+      "impact": "Low risk - files are clearly marked as deprecated",
+      "action": "Safe to delete these files as they're no longer used"
+    },
+    "development_artifacts": {
+      "example_files": [
+        "/root/agents/src/components/events/ApplicationDialog.example.tsx",
+        "/root/agents/src/components/events/AutoSaveStatus.stories.tsx"
+      ],
+      "recommendation": "Keep if used for development/documentation, remove if unused",
+      "impact": "No runtime impact but affects bundle size in development"
+    },
+    "console_statements": {
+      "count": 71,
+      "categories": {
+        "error_logging": "Legitimate error logging (keep)",
+        "debug_statements": "Development debug logs (review for removal)",
+        "info_logging": "Informational logging (evaluate necessity)"
+      },
+      "recommendation": "Audit console statements for production readiness"
+    }
+  },
+  "code_duplication_opportunities": {
+    "similar_components": [
+      {
+        "pattern": "Card-based user displays",
+        "components": [
+          "ComedianCard.tsx",
+          "PhotographerCard.tsx"
+        ],
+        "consolidation_opportunity": "Create generic ProfileCard<T> component",
+        "effort": "Medium",
+        "benefit": "Reduced code duplication, easier maintenance"
+      },
+      {
+        "pattern": "Navigation components",
+        "components": [
+          "Navigation.tsx", 
+          "MobileNavigation.tsx",
+          "DockNavigation.tsx"
+        ],
+        "assessment": "Appropriately separated - different use cases",
+        "action": "No consolidation needed"
+      },
+      {
+        "pattern": "Form validation patterns",
+        "description": "Similar validation logic across multiple forms",
+        "opportunity": "Extract common validation utilities",
+        "effort": "Low",
+        "benefit": "Consistent validation behavior"
+      }
+    ],
+    "hook_consolidation": [
+      {
+        "pattern": "Event-related hooks",
+        "hooks": [
+          "useEventData.ts",
+          "useEvents.ts"
+        ],
+        "opportunity": "Consider consolidating overlapping functionality",
+        "effort": "High",
+        "risk": "High - extensive refactoring required"
+      },
+      {
+        "pattern": "Comedian data hooks",
+        "hooks": [
+          "useComedians.ts (2 files)",
+          "useComedianProfile.ts"
+        ],
+        "opportunity": "Consolidate duplicate useComedians.ts files",
+        "effort": "Low",
+        "benefit": "Eliminate confusion from duplicate files"
+      }
+    ]
+  },
+  "architectural_refactoring_opportunities": {
+    "large_components": [
+      {
+        "component": "Dashboard.tsx",
+        "size": "~400 lines",
+        "complexity": "High - multiple user roles, different layouts",
+        "refactoring_opportunity": {
+          "approach": "Split by user role (ComedianDashboard, PromoterDashboard, AdminDashboard)",
+          "effort": "Medium",
+          "benefit": "Improved maintainability, easier testing"
+        }
+      },
+      {
+        "component": "Navigation.tsx", 
+        "size": "~190 lines",
+        "complexity": "Medium - desktop/mobile logic mixed",
+        "refactoring_opportunity": {
+          "approach": "Already has mobile navigation separated, consider further role-based splitting",
+          "effort": "Low",
+          "benefit": "Cleaner component logic"
+        }
+      },
+      {
+        "component": "CreateEventFormEnhanced.tsx",
+        "complexity": "High - complex form with multiple sections",
+        "refactoring_opportunity": {
+          "approach": "Split into form section components",
+          "effort": "Medium", 
+          "benefit": "Easier testing, better code organization"
+        }
+      }
+    ],
+    "service_layer_opportunities": [
+      {
+        "area": "API Services",
+        "current_state": "Mix of inline API calls and service functions",
+        "opportunity": "Standardize on service layer pattern throughout",
+        "effort": "Medium",
+        "benefit": "Better testability, consistent error handling"
+      },
+      {
+        "area": "Business Logic",
+        "current_state": "Business logic well-separated in hooks and services",
+        "opportunity": "Consider domain-driven service organization",
+        "effort": "Low", 
+        "benefit": "Better code organization as app scales"
+      }
+    ]
+  },
+  "performance_refactoring": {
+    "bundle_splitting": {
+      "current_state": "Good route-level splitting, manual vendor chunks",
+      "opportunities": [
+        {
+          "area": "Admin Dashboard",
+          "description": "Heavy admin components could be split further",
+          "implementation": "Component-level lazy loading",
+          "effort": "Low"
+        },
+        {
+          "area": "Chart Components",
+          "description": "Analytics charts are heavy dependencies",
+          "implementation": "Lazy load chart library",
+          "effort": "Low"
+        }
+      ]
+    },
+    "render_optimization": [
+      {
+        "area": "Large Lists",
+        "current_issue": "Some lists render all items at once",
+        "solution": "Implement virtual scrolling for large datasets",
+        "effort": "Medium",
+        "impact": "Performance improvement for large data sets"
+      },
+      {
+        "area": "Form Components",
+        "current_issue": "Complex forms re-render frequently", 
+        "solution": "Better memoization and field-level optimization",
+        "effort": "Low",
+        "impact": "Improved form performance"
+      }
+    ]
+  },
+  "type_safety_improvements": {
+    "current_state": "Excellent TypeScript coverage",
+    "opportunities": [
+      {
+        "area": "API Response Types",
+        "description": "Some API responses use generic types",
+        "improvement": "Generate types from database schema",
+        "effort": "Low",
+        "benefit": "Better type safety for API responses"
+      },
+      {
+        "area": "Event Handlers",
+        "description": "Some event handlers have loose typing",
+        "improvement": "Stricter event handler types",
+        "effort": "Low",
+        "benefit": "Better IDE support and error catching"
+      }
+    ]
+  },
+  "accessibility_improvements": {
+    "current_state": "Good accessibility with ARIA labels and keyboard support",
+    "opportunities": [
+      {
+        "area": "Focus Management",
+        "description": "Modal and navigation focus management could be enhanced",
+        "improvement": "Implement focus trap utilities",
+        "effort": "Low",
+        "benefit": "Better screen reader and keyboard navigation experience"
+      },
+      {
+        "area": "Color Contrast",
+        "description": "Some theme combinations may have marginal contrast",
+        "improvement": "Audit and improve color contrast ratios",
+        "effort": "Low",
+        "benefit": "Better accessibility compliance"
+      }
+    ]
+  },
+  "testing_preparedness": {
+    "current_testability": "Components are well-structured for testing",
+    "test_setup": "Jest and React Testing Library configured",
+    "opportunities": [
+      {
+        "area": "Hook Testing",
+        "description": "Custom hooks would benefit from dedicated tests",
+        "effort": "Medium",
+        "benefit": "Better confidence in business logic"
+      },
+      {
+        "area": "Integration Tests", 
+        "description": "Critical user flows need integration testing",
+        "effort": "High",
+        "benefit": "Catch integration issues before production"
+      },
+      {
+        "area": "Visual Regression Testing",
+        "description": "UI consistency could be tested with visual regression",
+        "effort": "Medium",
+        "benefit": "Catch visual breaking changes"
+      }
+    ]
+  },
+  "technical_debt_assessment": {
+    "todo_items": [
+      {
+        "category": "API Implementation",
+        "items": [
+          "useComedianStats.ts - Replace mock data with actual API",
+          "xeroService.ts - Implement invoice creation",
+          "invoiceService.ts - Implement actual Xero API calls"
+        ],
+        "priority": "Medium",
+        "effort": "Backend integration required"
+      },
+      {
+        "category": "Feature Completion",
+        "items": [
+          "Footer.tsx - Newsletter subscription",
+          "Webhook signature verification",
+          "Overdue notification system"
+        ],
+        "priority": "Low", 
+        "effort": "Various"
+      }
+    ],
+    "overall_debt_level": "Low - Most TODOs are feature additions rather than fixes"
+  },
+  "maintenance_improvements": {
+    "documentation": {
+      "current_state": "Good inline documentation in complex components",
+      "opportunities": [
+        "Component API documentation with examples",
+        "Hook usage patterns documentation", 
+        "Architecture decision records"
+      ]
+    },
+    "code_organization": {
+      "current_state": "Well-organized with clear patterns",
+      "opportunities": [
+        "Consistent file naming across all directories",
+        "Component prop interface standardization",
+        "Service interface standardization"
+      ]
+    }
+  },
+  "security_hardening": {
+    "current_state": "Good security practices with CSRF protection and input validation",
+    "opportunities": [
+      {
+        "area": "Content Security Policy",
+        "description": "Implement CSP headers for additional security",
+        "effort": "Low",
+        "benefit": "XSS protection enhancement"
+      },
+      {
+        "area": "Input Sanitization",
+        "description": "Additional input sanitization for rich text content",
+        "effort": "Low",
+        "benefit": "Enhanced security for user-generated content"
+      }
+    ]
+  },
+  "prioritized_action_plan": {
+    "immediate_actions": [
+      {
+        "action": "Remove deprecated files",
+        "files": ["InvoiceList.deprecated.tsx", "Invoices.deprecated.tsx"],
+        "effort": "5 minutes",
+        "risk": "None"
+      },
+      {
+        "action": "Consolidate duplicate useComedians.ts files",
+        "effort": "30 minutes",
+        "risk": "Low"
+      },
+      {
+        "action": "Audit console statements for production",
+        "effort": "2 hours",
+        "risk": "None"
+      }
+    ],
+    "short_term_improvements": [
+      {
+        "action": "Create generic ProfileCard component",
+        "effort": "4 hours",
+        "benefit": "Reduced duplication, easier maintenance"
+      },
+      {
+        "action": "Implement component-level lazy loading for admin",
+        "effort": "2 hours", 
+        "benefit": "Better performance"
+      },
+      {
+        "action": "Add focus management utilities",
+        "effort": "3 hours",
+        "benefit": "Better accessibility"
+      }
+    ],
+    "long_term_considerations": [
+      {
+        "action": "Split Dashboard component by user role",
+        "effort": "1-2 days",
+        "benefit": "Better maintainability, testing"
+      },
+      {
+        "action": "Implement comprehensive testing strategy",
+        "effort": "1-2 weeks",
+        "benefit": "Higher code quality, fewer bugs"
+      },
+      {
+        "action": "Complete TODO items with backend integration",
+        "effort": "Varies",
+        "benefit": "Feature completion"
+      }
+    ]
+  },
+  "recommendations": {
+    "immediate_wins": [
+      "Clean up deprecated files and console statements",
+      "Consolidate duplicate files",
+      "Create generic ProfileCard component"
+    ],
+    "architectural_improvements": [
+      "Implement component-level lazy loading",
+      "Add focus management for accessibility", 
+      "Consider Dashboard component splitting"
+    ],
+    "long_term_strategy": [
+      "Develop comprehensive testing strategy",
+      "Complete backend integration TODOs",
+      "Implement visual regression testing"
+    ],
+    "overall_assessment": "The codebase is in excellent condition with minimal technical debt. Most opportunities are enhancements rather than fixes. The architecture is sound and ready for continued development."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755955171564-f024ca24",
+  "type": "issue",
+  "severity": "high",
+  "title": "Failed to Check Humanitix API Documentation for Quantity Field",
+  "description": "Made assumptions about how Humanitix returns ticket quantities without checking the actual OpenAPI specification at /root/HUMANITIXopenapi.yaml. The workflow assumes order.tickets array exists with ticket.quantity fields, but the API spec shows Order has totals.tickets as a number, not an array. This caused incorrect quantity calculations.",
+  "date": "2025-08-23",
+  "timestamp": "2025-08-23T13:19:31.565Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error",
+    "api",
+    "test"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

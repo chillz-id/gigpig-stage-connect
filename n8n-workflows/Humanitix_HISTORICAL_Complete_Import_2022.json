@@ -1,0 +1,582 @@
+{
+  "name": "Humanitix HISTORICAL Import (Jan 1, 2022 to Now) - Events → Orders/Tickets → Sessions",
+  "active": false,
+  "meta": {
+    "instanceId": "f14ac3e70e6969cd4e65be40e7a6dd93b54d5a3ed05b18e5e06e61b3c5f6f689"
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger (Historical Import)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_HUMANITIX_API_KEY"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 1000
+          }
+        }
+      },
+      "id": "fetch-events",
+      "name": "Fetch Events (Since 2022-01-01)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [400, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "split-events-batch",
+      "name": "Split Events Into Batches (10)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [600, 400]
+    },
+    {
+      "parameters": {
+        "amount": 500,
+        "unit": "milliseconds"
+      },
+      "id": "minimal-delay",
+      "name": "Minimal Delay (500ms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Events and store for later use\nconst events = $input.all()[0].json.events || [];\nconst processedEvents = [];\n\nfor (const event of events) {\n  // Process Event - map to events_htx schema\n  const eventData = {\n    type: 'event',\n    source: 'humanitix',\n    source_id: event._id,\n    name: event.name,\n    slug: event.slug,\n    description: event.description,\n    location: event.location,\n    currency: event.currency,\n    status: event.status || 'active',\n    public: event.public,\n    published: event.published,\n    suspendedsale: event.suspendSales,\n    markedassoldout: event.markedAsSoldOut,\n    startdate: event.startDate,\n    enddate: event.endDate,\n    timezone: event.timezone,\n    totalcapacity: event.totalCapacity,\n    organiserid: event.organiserId,\n    userid: event.userId,\n    classification: event.classification,\n    tags: event.tagIds || [],\n    eventlocation: event.eventLocation,\n    dates: event.dates || [],\n    updated_at: event.updatedAt,\n    raw: event,\n    title: event.name,\n    hero_image_url: event.featureImage?.url || null,\n    details: event.description,\n    published_at: event.publishedAt,\n    promoter_id: event.organiserId,\n    updated_at_api: new Date().toISOString()\n  };\n  \n  processedEvents.push(eventData);\n}\n\nreturn processedEvents;"
+      },
+      "id": "process-events",
+      "name": "Process Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events_htx",
+        "sendQuery": false,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "upsert-events",
+      "name": "Upsert Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1200, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare event IDs for Orders/Tickets fetching\nconst events = $input.all();\nconst eventIds = events.map(event => ({\n  eventId: event.json.source_id,\n  eventName: event.json.name\n}));\n\nreturn eventIds;"
+      },
+      "id": "prepare-events-for-orders",
+      "name": "Prepare Events for Orders/Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-events-for-orders",
+      "name": "Split Events for Orders (5)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1600, 400]
+    },
+    {
+      "parameters": {
+        "amount": 500,
+        "unit": "milliseconds"
+      },
+      "id": "delay-before-orders",
+      "name": "Delay Before Orders (500ms)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1800, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{$json.eventId}}/orders",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_HUMANITIX_API_KEY"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "fetch-orders",
+      "name": "Fetch Orders (All Sessions)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{$json.eventId}}/tickets",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "since",
+              "value": "2022-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_HUMANITIX_API_KEY"
+            }
+          ]
+        },
+        "options": {
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "fetch-tickets",
+      "name": "Fetch Tickets (All Sessions)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2000, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Orders and extract unique eventDateIds for Sessions\nconst orders = $input.first().json.orders || [];\nconst contextData = $('prepare-events-for-orders').item.json;\nconst processedOrders = [];\nconst eventDateIds = new Set();\n\n// DOB parsing function\nconst parseDob = (raw) => {\n  if (!raw) return null;\n  const m = String(raw).trim().match(/^(\\d{1,2})[\\/-\\.](\\d{1,2})[\\/-\\.](\\d{2}|\\d{4})$/);\n  if (!m) return null;\n  let [, d, mo, y] = m;\n  d = parseInt(d);\n  mo = parseInt(mo);\n  y = parseInt(y);\n  if (y < 100) y += 2000;\n  if (y < 1900 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;\n  return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;\n};\n\nfor (const order of orders) {\n  // Collect unique eventDateIds for Sessions creation\n  if (order.eventDateId) {\n    eventDateIds.add(order.eventDateId);\n  }\n  \n  const orderData = {\n    type: 'order',\n    source: 'humanitix',\n    source_id: order._id,\n    event_source_id: order.eventId || contextData.eventId,\n    session_source_id: order.eventDateId,\n    order_reference: order.reference || order._id,\n    status: order.status,\n    total_cents: order.totals?.total ? Math.round(order.totals.total * 100) : 0,\n    net_sales_cents: order.totals?.netSales ? Math.round(order.totals.netSales * 100) : 0,\n    fees_cents: order.totals?.fees ? Math.round(order.totals.fees * 100) : 0,\n    tax_cents: order.totals?.tax ? Math.round(order.totals.tax * 100) : 0,\n    discount_cents: order.totals?.discount ? Math.round(order.totals.discount * 100) : 0,\n    purchaser_email: order.email,\n    purchaser_name: `${order.firstName || ''} ${order.lastName || ''}`.trim(),\n    ordered_at: order.completedAt || order.createdAt,\n    updated_at: order.updatedAt,\n    additional_fields: order.additionalFields,\n    raw: order,\n    ingested_at: new Date().toISOString(),\n    updated_at_api: new Date().toISOString(),\n    eventDateIds: Array.from(eventDateIds)  // Pass along discovered eventDateIds\n  };\n  \n  processedOrders.push(orderData);\n}\n\n// Add the discovered eventDateIds to the first order for Sessions processing\nif (processedOrders.length > 0) {\n  processedOrders[0].discoveredEventDateIds = Array.from(eventDateIds);\n  processedOrders[0].contextEventId = contextData.eventId;\n}\n\nreturn processedOrders;"
+      },
+      "id": "process-orders",
+      "name": "Process Orders & Extract Session IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Tickets\nconst tickets = $input.first().json.tickets || [];\nconst contextData = $('prepare-events-for-orders').item.json;\nconst processedTickets = [];\n\nfor (const ticket of tickets) {\n  const ticketData = {\n    type: 'ticket',\n    source: 'humanitix',\n    source_id: ticket._id,\n    order_source_id: ticket.orderId,\n    session_source_id: ticket.eventDateId,\n    ticket_type_name: ticket.ticketTypeName,\n    price_cents: ticket.price ? Math.round(ticket.price * 100) : 0,\n    status: ticket.status,\n    checked_in: ticket.checkIn?.checkedIn || false,\n    check_in_status: ticket.checkIn?.status || null,\n    check_in_date: ticket.checkIn?.checkedInAt || null,\n    barcode: ticket.qrCodeData || ticket.customScanningCode,\n    updated_at: ticket.updatedAt,\n    raw: ticket,\n    ingested_at: new Date().toISOString(),\n    updated_at_api: new Date().toISOString()\n  };\n  \n  processedTickets.push(ticketData);\n}\n\nreturn processedTickets;"
+      },
+      "id": "process-tickets",
+      "name": "Process Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/orders_htx",
+        "sendQuery": false,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "upsert-orders",
+      "name": "Upsert Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2400, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/tickets_htx",
+        "sendQuery": false,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "upsert-tickets",
+      "name": "Upsert Tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2400, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create Sessions from discovered eventDateIds in Orders\nconst orders = $input.all();\nconst processedSessions = [];\n\n// Get the first order that has the discovered eventDateIds\nconst orderWithEventDateIds = orders.find(order => order.json.discoveredEventDateIds);\n\nif (orderWithEventDateIds) {\n  const eventDateIds = orderWithEventDateIds.json.discoveredEventDateIds;\n  const eventId = orderWithEventDateIds.json.contextEventId;\n  \n  // Create a session for each unique eventDateId discovered in orders\n  for (const eventDateId of eventDateIds) {\n    const sessionData = {\n      source: 'humanitix',\n      source_id: eventDateId,\n      event_source_id: eventId,\n      starts_at: null,  // We don't have this from orders, will be null for now\n      venue_name: null, // We don't have this from orders, will be null for now\n      status: 'active', // Assume active since there were orders\n      updated_at: new Date().toISOString(),\n      raw: { eventDateId: eventDateId, derivedFromOrders: true },\n      updated_at_api: new Date().toISOString()\n    };\n    \n    processedSessions.push(sessionData);\n  }\n}\n\nreturn processedSessions;"
+      },
+      "id": "create-sessions-from-orders",
+      "name": "Create Sessions from Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2600, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/sessions_htx",
+        "sendQuery": false,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1MzU2NjYsImV4cCI6MjA0OTExMTY2Nn0.tqb2Xg15LMKX8FrKVWfMD0L5Dh6E7X7f0oPbnZSRczs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "upsert-sessions",
+      "name": "Upsert Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2800, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger (Historical Import)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events (Since 2022-01-01)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Events (Since 2022-01-01)": {
+      "main": [
+        [
+          {
+            "node": "Split Events Into Batches (10)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Events Into Batches (10)": {
+      "main": [
+        [
+          {
+            "node": "Minimal Delay (500ms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minimal Delay (500ms)": {
+      "main": [
+        [
+          {
+            "node": "Process Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Events": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Events": {
+      "main": [
+        [
+          {
+            "node": "Prepare Events for Orders/Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Events for Orders/Tickets": {
+      "main": [
+        [
+          {
+            "node": "Split Events for Orders (5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Events for Orders (5)": {
+      "main": [
+        [
+          {
+            "node": "Delay Before Orders (500ms)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delay Before Orders (500ms)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders (All Sessions)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Tickets (All Sessions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Orders (All Sessions)": {
+      "main": [
+        [
+          {
+            "node": "Process Orders & Extract Session IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tickets (All Sessions)": {
+      "main": [
+        [
+          {
+            "node": "Process Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Orders & Extract Session IDs": {
+      "main": [
+        [
+          {
+            "node": "Upsert Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Tickets": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Orders": {
+      "main": [
+        [
+          {
+            "node": "Create Sessions from Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Tickets": {
+      "main": [
+        [
+          {
+            "node": "Create Sessions from Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sessions from Orders": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

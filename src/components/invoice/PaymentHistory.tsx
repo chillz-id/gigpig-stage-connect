@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,11 +37,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadPaymentHistory();
-  }, [invoiceId]);
-
-  const loadPaymentHistory = async () => {
+  const loadPaymentHistory = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -60,7 +56,11 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [invoiceId]);
+
+  useEffect(() => {
+    loadPaymentHistory();
+  }, [invoiceId, loadPaymentHistory]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

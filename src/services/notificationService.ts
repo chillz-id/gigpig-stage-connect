@@ -1,1234 +1,379 @@
-// Unified Notification Service - Cross-system notifications and real-time updates
+// Refactored Notification Service - Orchestrates specialized notification services
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { 
-  createSpotAssignmentEmail, 
-  createSpotDeadlineEmail, 
-  createSpotConfirmationEmail, 
-  createSpotDeclinedEmail,
-  getEmailTemplateMetadata,
-  EmailTemplateData
-} from '@/templates/email';
+import { notificationManager } from './notifications/NotificationManager';
+import { emailNotificationService } from './notifications/EmailNotificationService';
+import { pushNotificationService } from './notifications/PushNotificationService';
+import { spotNotificationService } from './notifications/SpotNotificationService';
+import type { NotificationType } from './notifications/NotificationManager';
 
-export type NotificationType = 
-  | 'tour_created' 
-  | 'tour_updated' 
-  | 'tour_cancelled'
-  | 'collaboration_invite' 
-  | 'collaboration_accepted' 
-  | 'collaboration_declined'
-  | 'task_assigned' 
-  | 'task_due_soon' 
-  | 'task_overdue'
-  | 'task_completed'
-  | 'flight_delayed' 
-  | 'flight_cancelled' 
-  | 'flight_boarding'
-  | 'event_booking' 
-  | 'event_cancelled'
-  | 'payment_received' 
-  | 'payment_due'
-  | 'system_update'
-  | 'general'
-  | 'spot_assigned'
-  | 'spot_confirmation_deadline'
-  | 'spot_confirmed'
-  | 'spot_declined'
-  | 'spot_cancelled'
-  | 'spot_reminder'
-  | 'application_submitted'
-  | 'application_accepted'
-  | 'application_rejected'
-  | 'application_withdrawn';
+// Re-export types for backwards compatibility
+export type {
+  NotificationType,
+  NotificationPriority,
+  Notification,
+  CreateNotificationRequest,
+  NotificationPreferences
+} from './notifications/NotificationManager';
 
-export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  priority: NotificationPriority;
-  data?: Record<string, any>;
-  is_read: boolean;
-  action_url?: string;
-  action_label?: string;
-  expires_at?: string;
-  created_at: string;
-  read_at?: string;
-}
-
-export interface CreateNotificationRequest {
-  user_id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  priority?: NotificationPriority;
-  data?: Record<string, any>;
-  action_url?: string;
-  action_label?: string;
-  expires_at?: string;
-}
-
-export interface NotificationPreferences {
-  user_id: string;
-  email_notifications: boolean;
-  push_notifications: boolean;
-  sms_notifications: boolean;
-  notification_types: {
-    [K in NotificationType]?: {
-      enabled: boolean;
-      email: boolean;
-      push: boolean;
-      sms: boolean;
-    };
-  };
-}
-
-class NotificationService {
-  private subscribers: Map<string, Set<(notification: Notification) => void>> = new Map();
-  private realtimeChannel: any = null;
-
+/**
+ * Refactored Notification Service - Orchestrates specialized notification services
+ * 
+ * This service maintains the original API while delegating to specialized services:
+ * - NotificationManager: Core notification CRUD and real-time subscriptions
+ * - EmailNotificationService: Email templates and sending
+ * - PushNotificationService: Browser and mobile push notifications
+ * - SpotNotificationService: Spot assignment and confirmation workflows
+ */
+class RefactoredNotificationService {
   constructor() {
-    this.initializeRealtimeSubscription();
-  }
-
-  // =====================================
-  // REAL-TIME SUBSCRIPTIONS
-  // =====================================
-
-  private initializeRealtimeSubscription() {
-    this.realtimeChannel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          this.handleRealtimeNotification(payload.new as Notification);
-        }
-      )
-      .subscribe();
-  }
-
-  private handleRealtimeNotification(notification: Notification) {
-    // Notify subscribers
-    const userSubscribers = this.subscribers.get(notification.user_id);
-    if (userSubscribers) {
-      userSubscribers.forEach(callback => callback(notification));
-    }
-
-    // Show toast notification
-    this.showToastNotification(notification);
-
-    // Handle browser push notifications
-    this.sendPushNotification(notification);
-  }
-
-  subscribe(userId: string, callback: (notification: Notification) => void): () => void {
-    if (!this.subscribers.has(userId)) {
-      this.subscribers.set(userId, new Set());
-    }
-    this.subscribers.get(userId)!.add(callback);
-
-    // Return unsubscribe function
-    return () => {
-      const userSubscribers = this.subscribers.get(userId);
-      if (userSubscribers) {
-        userSubscribers.delete(callback);
-        if (userSubscribers.size === 0) {
-          this.subscribers.delete(userId);
-        }
-      }
-    };
-  }
-
-  // =====================================
-  // NOTIFICATION MANAGEMENT
-  // =====================================
-
-  async createNotification(request: CreateNotificationRequest): Promise<Notification> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert([{
-        ...request,
-        priority: request.priority || 'medium',
-        read: false
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  async getNotifications(
-    userId: string, 
-    options: {
-      unread_only?: boolean;
-      types?: NotificationType[];
-      limit?: number;
-      offset?: number;
-    } = {}
-  ): Promise<{ notifications: Notification[]; total: number }> {
-    let query = supabase
-      .from('notifications')
-      .select('*', { count: 'exact' })
-      .eq('user_id', userId);
-
-    if (options.unread_only) {
-      query = query.eq('is_read', false);
-    }
-
-    if (options.types?.length) {
-      query = query.in('type', options.types);
-    }
-
-    query = query.order('created_at', { ascending: false });
-
-    if (options.limit) {
-      const offset = options.offset || 0;
-      query = query.range(offset, offset + options.limit - 1);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) throw error;
-
-    return {
-      notifications: data || [],
-      total: count || 0
-    };
-  }
-
-  async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({
-        read: true,
-        read_at: new Date().toISOString()
-      })
-      .eq('id', notificationId);
-
-    if (error) throw error;
-  }
-
-  async markAllAsRead(userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({
-        read: true,
-        read_at: new Date().toISOString()
-      })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (error) throw error;
-  }
-
-  async deleteNotification(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId);
-
-    if (error) throw error;
-  }
-
-  async getUnreadCount(userId: string): Promise<number> {
-    const { count, error } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (error) throw error;
-    return count || 0;
-  }
-
-  // =====================================
-  // BULK NOTIFICATION CREATION
-  // =====================================
-
-  async createBulkNotifications(requests: CreateNotificationRequest[]): Promise<Notification[]> {
-    const notifications = requests.map(request => ({
-      ...request,
-      priority: request.priority || 'medium',
-      read: false
-    }));
-
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert(notifications)
-      .select();
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async notifyTourCollaborators(
-    tourId: string, 
-    type: NotificationType,
-    title: string,
-    message: string,
-    data?: Record<string, any>
-  ): Promise<void> {
-    try {
-      // Get tour collaborators
-      const { data: collaborators, error } = await supabase
-        .from('tour_collaborations')
-        .select('collaborator_id')
-        .eq('tour_id', tourId)
-        .eq('status', 'active');
-
-      if (error) throw error;
-
-      if (collaborators?.length) {
-        const notifications = collaborators.map(c => ({
-          user_id: c.collaborator_id,
-          type,
-          title,
-          message,
-          priority: 'medium' as NotificationPriority,
-          data: { tour_id: tourId, ...data }
-        }));
-
-        await this.createBulkNotifications(notifications);
-      }
-    } catch (error) {
-      console.error('Failed to notify tour collaborators:', error);
-    }
-  }
-
-  async notifyTaskAssignees(
-    taskIds: string[],
-    type: NotificationType,
-    title: string,
-    message: string
-  ): Promise<void> {
-    try {
-      // Get task assignees
-      const { data: tasks, error } = await supabase
-        .from('tasks')
-        .select('id, assignee_id')
-        .in('id', taskIds)
-        .not('assignee_id', 'is', null);
-
-      if (error) throw error;
-
-      if (tasks?.length) {
-        const notifications = tasks.map(task => ({
-          user_id: task.assignee_id!,
-          type,
-          title,
-          message,
-          priority: 'high' as NotificationPriority,
-          data: { task_id: task.id }
-        }));
-
-        await this.createBulkNotifications(notifications);
-      }
-    } catch (error) {
-      console.error('Failed to notify task assignees:', error);
-    }
-  }
-
-  // =====================================
-  // TOAST NOTIFICATIONS
-  // =====================================
-
-  private showToastNotification(notification: Notification) {
-    const variant = this.getToastVariant(notification.priority);
-    
-    toast({
-      title: notification.title,
-      description: notification.message,
-      variant
+    notificationManager.configureHandlers({
+      toast: pushNotificationService.showToastNotification.bind(pushNotificationService),
+      push: pushNotificationService.sendGenericNotification.bind(pushNotificationService)
     });
   }
 
-  private getToastVariant(priority: NotificationPriority): 'default' | 'destructive' {
-    return priority === 'urgent' ? 'destructive' : 'default';
+  // =====================================
+  // CORE NOTIFICATION MANAGEMENT (delegated to NotificationManager)
+  // =====================================
+
+  subscribe = notificationManager.subscribe.bind(notificationManager);
+  createNotification = notificationManager.createNotification.bind(notificationManager);
+  getNotifications = notificationManager.getNotifications.bind(notificationManager);
+  markAsRead = notificationManager.markAsRead.bind(notificationManager);
+  markAllAsRead = notificationManager.markAllAsRead.bind(notificationManager);
+  deleteNotification = notificationManager.deleteNotification.bind(notificationManager);
+  getUnreadCount = notificationManager.getUnreadCount.bind(notificationManager);
+  createBulkNotifications = notificationManager.createBulkNotifications.bind(notificationManager);
+  getNotificationPreferences = notificationManager.getNotificationPreferences.bind(notificationManager);
+  updateNotificationPreferences = notificationManager.updateNotificationPreferences.bind(notificationManager);
+
+  // =====================================
+  // TOAST NOTIFICATIONS (delegated to PushNotificationService)
+  // =====================================
+
+  showToast(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info'): void {
+    // Convert to notification format for consistency
+    const notification = {
+      id: '',
+      user_id: '',
+      type: 'general' as const,
+      title: type.charAt(0).toUpperCase() + type.slice(1),
+      message,
+      priority: 'medium' as const,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+
+    pushNotificationService.showToastNotification(notification);
+  }
+
+  showSuccess(message: string): void {
+    this.showToast(message, 'success');
+  }
+
+  showError(message: string): void {
+    this.showToast(message, 'error');
+  }
+
+  showWarning(message: string): void {
+    this.showToast(message, 'warning');
+  }
+
+  showInfo(message: string): void {
+    this.showToast(message, 'info');
   }
 
   // =====================================
-  // PUSH NOTIFICATIONS
+  // PUSH NOTIFICATIONS (delegated to PushNotificationService)
   // =====================================
 
-  private async sendPushNotification(notification: Notification) {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(notification.title, {
-        body: notification.message,
-        icon: '/icon-192x192.png',
-        badge: '/icon-72x72.png',
-        tag: notification.id,
-        data: {
-          url: notification.action_url,
-          notificationId: notification.id
-        },
-        actions: notification.action_url ? [{
-          action: 'view',
-          title: notification.action_label || 'View'
-        }] : undefined
-      });
-    } catch (error) {
-      console.error('Failed to send push notification:', error);
-    }
-  }
-
-  async requestNotificationPermission(): Promise<NotificationPermission> {
-    if (!('Notification' in window)) {
-      return 'denied';
-    }
-
-    const permission = await Notification.requestPermission();
-    return permission;
-  }
+  requestPushPermission = pushNotificationService.requestPermission.bind(pushNotificationService);
+  isPushSupported = pushNotificationService.isSupported.bind(pushNotificationService);
+  getPushPermissionStatus = pushNotificationService.getPermissionStatus.bind(pushNotificationService);
 
   // =====================================
-  // NOTIFICATION PREFERENCES
+  // CLEANUP OPERATIONS (delegated to NotificationManager)
   // =====================================
 
-  async getNotificationPreferences(userId: string): Promise<NotificationPreferences | null> {
-    const { data, error } = await supabase
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
-    }
-
-    return data;
-  }
-
-  async updateNotificationPreferences(
-    userId: string, 
-    preferences: Partial<NotificationPreferences>
-  ): Promise<NotificationPreferences> {
-    const { data, error } = await supabase
-      .from('notification_preferences')
-      .upsert({
-        user_id: userId,
-        ...preferences
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
+  cleanupExpiredNotifications = notificationManager.cleanupExpiredNotifications.bind(notificationManager);
+  cleanupOldNotifications = notificationManager.cleanupOldNotifications.bind(notificationManager);
 
   // =====================================
-  // CLEANUP AND MAINTENANCE
+  // DOMAIN-SPECIFIC NOTIFICATIONS
   // =====================================
 
-  async cleanupExpiredNotifications(): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .not('expires_at', 'is', null)
-      .lt('expires_at', new Date().toISOString());
-
-    if (error) throw error;
-  }
-
-  async cleanupOldNotifications(daysToKeep: number = 30): Promise<void> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('is_read', true)
-      .lt('created_at', cutoffDate.toISOString());
-
-    if (error) throw error;
-  }
-
-  // =====================================
-  // PREDEFINED NOTIFICATION CREATORS
-  // =====================================
-
+  // Tour Notifications
   async notifyTourCreated(tourId: string, tourName: string, managerId: string): Promise<void> {
     await this.createNotification({
       user_id: managerId,
       type: 'tour_created',
       title: 'Tour Created Successfully',
-      message: `Your tour "${tourName}" has been created and is ready for planning.`,
+      message: `Your tour "${tourName}" has been created`,
       priority: 'medium',
-      data: { tour_id: tourId },
+      data: { tourId, tourName },
       action_url: `/tours/${tourId}`,
       action_label: 'View Tour'
     });
   }
 
   async notifyCollaborationInvite(
-    collaboratorId: string, 
-    tourId: string, 
-    tourName: string, 
-    role: string
+    tourId: string,
+    tourName: string,
+    requesterId: string,
+    collaboratorId: string,
+    message: string
   ): Promise<void> {
     await this.createNotification({
       user_id: collaboratorId,
       type: 'collaboration_invite',
-      title: 'Tour Collaboration Invitation',
-      message: `You've been invited to collaborate on "${tourName}" as a ${role}.`,
+      title: 'Tour Collaboration Invite',
+      message: `You've been invited to collaborate on "${tourName}": ${message}`,
       priority: 'high',
-      data: { tour_id: tourId, role },
-      action_url: `/tours/${tourId}/collaborations`,
-      action_label: 'View Invitation'
+      data: { tourId, tourName, requesterId },
+      action_url: `/tours/${tourId}/collaboration`,
+      action_label: 'View Invite'
     });
   }
 
+  // Task Notifications
   async notifyTaskDueSoon(userId: string, taskId: string, taskTitle: string, dueDate: string): Promise<void> {
     await this.createNotification({
       user_id: userId,
       type: 'task_due_soon',
       title: 'Task Due Soon',
-      message: `"${taskTitle}" is due on ${new Date(dueDate).toLocaleDateString()}.`,
-      priority: 'medium',
-      data: { task_id: taskId },
+      message: `"${taskTitle}" is due on ${dueDate}`,
+      priority: 'high',
+      data: { taskId, taskTitle, dueDate },
       action_url: `/tasks/${taskId}`,
       action_label: 'View Task'
     });
   }
 
+  // Flight Notifications
   async notifyFlightDelay(
-    userId: string, 
-    flightNumber: string, 
-    newDepartureTime: string,
-    delay: number
+    userId: string,
+    flightNumber: string,
+    route: string,
+    delayDuration: string,
+    newTime: string
   ): Promise<void> {
     await this.createNotification({
       user_id: userId,
       type: 'flight_delayed',
       title: 'Flight Delayed',
-      message: `Flight ${flightNumber} is delayed by ${delay} minutes. New departure: ${new Date(newDepartureTime).toLocaleString()}.`,
+      message: `Flight ${flightNumber} (${route}) is delayed by ${delayDuration}. New time: ${newTime}`,
       priority: 'urgent',
-      data: { flight_number: flightNumber, delay },
+      data: { flightNumber, route, delayDuration, newTime },
       action_url: '/flights',
-      action_label: 'View Flights'
+      action_label: 'View Flight Details'
     });
   }
 
   // =====================================
-  // EMAIL NOTIFICATION SENDING
+  // SPOT NOTIFICATIONS (delegated to SpotNotificationService)
   // =====================================
 
-  private async sendEmailNotification(emailData: EmailTemplateData): Promise<void> {
-    try {
-      // In a real implementation, this would integrate with an email service
-      // like SendGrid, Mailgun, or AWS SES. For now, we'll use Supabase Edge Functions
-      const { data, error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: emailData.to,
-          subject: emailData.subject,
-          html: emailData.html,
-          text: emailData.text
-        }
-      });
-
-      if (error) {
-        console.error('Failed to send email:', error);
-        throw error;
-      }
-
-      console.log('Email sent successfully:', data);
-    } catch (error) {
-      console.error('Email sending failed:', error);
-      // Don't throw here to avoid breaking the notification flow
-      // The in-app notification will still be sent
-    }
-  }
+  notifySpotAssigned = spotNotificationService.notifySpotAssigned.bind(spotNotificationService);
+  notifySpotConfirmationDeadline = spotNotificationService.notifySpotConfirmationDeadline.bind(spotNotificationService);
+  notifySpotConfirmed = spotNotificationService.notifySpotConfirmed.bind(spotNotificationService);
+  notifySpotDeclined = spotNotificationService.notifySpotDeclined.bind(spotNotificationService);
+  notifySpotCancelled = spotNotificationService.notifySpotCancelled.bind(spotNotificationService);
+  notifySpotReminder = spotNotificationService.notifySpotReminder.bind(spotNotificationService);
+  notifyMultipleSpotAssignments = spotNotificationService.notifyMultipleSpotAssignments.bind(spotNotificationService);
+  notifyEventLineupComplete = spotNotificationService.notifyEventLineupComplete.bind(spotNotificationService);
 
   // =====================================
-  // SPOT NOTIFICATION CREATORS
+  // APPLICATION NOTIFICATIONS
   // =====================================
 
-  async notifySpotAssigned(
-    comedianId: string,
+  async notifyApplicationSubmitted(
+    userId: string,
     eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string,
-    venue: string,
-    confirmationDeadline: string,
-    options?: {
-      comedianEmail?: string;
-      comedianName?: string;
-      address?: string;
-      promoterName?: string;
-      promoterEmail?: string;
-      performanceDuration?: string;
-      specialInstructions?: string;
-    }
+    eventName: string,
+    applicationId: string
   ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const formattedTime = new Date(eventDate).toLocaleTimeString('en-AU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const deadlineDate = new Date(confirmationDeadline).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    // Create in-app notification
     await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_assigned',
-      title: `Spot Assigned: ${eventTitle}`,
-      message: `Congratulations! You've been assigned a ${spotType} spot at ${venue} on ${formattedDate} at ${formattedTime}. Please confirm your availability by ${deadlineDate}.`,
-      priority: 'high',
-      data: {
-        event_id: eventId,
-        spot_type: spotType,
-        venue,
-        event_date: eventDate,
-        confirmation_deadline: confirmationDeadline
-      },
-      action_url: `/events/${eventId}/spot-confirmation`,
-      action_label: 'Confirm Spot',
-      expires_at: confirmationDeadline
-    });
-
-    // Send email notification if email details are provided
-    if (options?.comedianEmail && options?.comedianName) {
-      try {
-        const emailData = createSpotAssignmentEmail({
-          comedianName: options.comedianName,
-          comedianEmail: options.comedianEmail,
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue,
-          address: options.address || venue,
-          spotType,
-          confirmationDeadline,
-          confirmationUrl: `${window.location.origin}/events/${eventId}/spot-confirmation`,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          promoterName: options.promoterName || 'Event Promoter',
-          promoterEmail: options.promoterEmail || 'promoter@standupsyney.com',
-          performanceDuration: options.performanceDuration,
-          specialInstructions: options.specialInstructions
-        });
-
-        await this.sendEmailNotification(emailData);
-      } catch (error) {
-        console.error('Failed to send spot assignment email:', error);
-      }
-    }
-  }
-
-  async notifySpotConfirmationDeadline(
-    comedianId: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    venue: string,
-    hoursRemaining: number,
-    options?: {
-      comedianEmail?: string;
-      comedianName?: string;
-      address?: string;
-      promoterName?: string;
-      promoterEmail?: string;
-      spotType?: string;
-    }
-  ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const urgency = hoursRemaining <= 2 ? 'URGENT' : 'Reminder';
-    const priority: NotificationPriority = hoursRemaining <= 2 ? 'urgent' : 'high';
-
-    // Create in-app notification
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_confirmation_deadline',
-      title: `${urgency}: Spot Confirmation Required`,
-      message: `Your spot at ${eventTitle} (${venue}) on ${formattedDate} needs confirmation within ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}.`,
-      priority,
-      data: {
-        event_id: eventId,
-        venue,
-        event_date: eventDate,
-        hours_remaining: hoursRemaining
-      },
-      action_url: `/events/${eventId}/spot-confirmation`,
-      action_label: 'Confirm Now'
-    });
-
-    // Send email notification if email details are provided
-    if (options?.comedianEmail && options?.comedianName) {
-      try {
-        const emailData = createSpotDeadlineEmail({
-          comedianName: options.comedianName,
-          comedianEmail: options.comedianEmail,
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue,
-          address: options.address || venue,
-          spotType: options.spotType || 'spot',
-          hoursRemaining,
-          confirmationUrl: `${window.location.origin}/events/${eventId}/spot-confirmation`,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          promoterName: options.promoterName || 'Event Promoter',
-          promoterEmail: options.promoterEmail || 'promoter@standupsyney.com'
-        });
-
-        await this.sendEmailNotification(emailData);
-      } catch (error) {
-        console.error('Failed to send spot deadline email:', error);
-      }
-    }
-  }
-
-  async notifySpotConfirmed(
-    promoterId: string,
-    comedianId: string,
-    comedianName: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string,
-    options?: {
-      comedianEmail?: string;
-      promoterName?: string;
-      promoterEmail?: string;
-      venue?: string;
-      address?: string;
-      performanceDuration?: string;
-      arrivalTime?: string;
-      soundCheckTime?: string;
-      additionalInfo?: string;
-    }
-  ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    // Notify promoter
-    await this.createNotification({
-      user_id: promoterId,
-      type: 'spot_confirmed',
-      title: 'Spot Confirmed',
-      message: `${comedianName} has confirmed their ${spotType} spot for ${eventTitle} on ${formattedDate}.`,
+      user_id: userId,
+      type: 'application_submitted',
+      title: 'Application Submitted',
+      message: `Your application for "${eventName}" has been submitted`,
       priority: 'medium',
-      data: {
-        event_id: eventId,
-        comedian_id: comedianId,
-        comedian_name: comedianName,
-        spot_type: spotType,
-        event_date: eventDate
-      },
-      action_url: `/events/${eventId}/lineup`,
-      action_label: 'View Lineup'
+      data: { eventId, eventName, applicationId },
+      action_url: `/applications/${applicationId}`,
+      action_label: 'View Application'
     });
-
-    // Notify comedian (confirmation)
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_confirmed',
-      title: 'Spot Confirmation Received',
-      message: `Thank you for confirming your ${spotType} spot for ${eventTitle} on ${formattedDate}. You're all set!`,
-      priority: 'medium',
-      data: {
-        event_id: eventId,
-        spot_type: spotType,
-        event_date: eventDate
-      },
-      action_url: `/events/${eventId}`,
-      action_label: 'View Event'
-    });
-
-    // Send email notifications if email details are provided
-    if (options?.promoterEmail && options?.promoterName) {
-      try {
-        // Email to promoter
-        const promoterEmailData = createSpotConfirmationEmail({
-          comedianName,
-          comedianEmail: options.comedianEmail || 'comedian@standupsyney.com',
-          promoterName: options.promoterName,
-          promoterEmail: options.promoterEmail,
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue: options.venue || 'Event Venue',
-          address: options.address || options.venue || 'Event Venue',
-          spotType,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          lineupUrl: `${window.location.origin}/events/${eventId}/lineup`,
-          performanceDuration: options.performanceDuration,
-          arrivalTime: options.arrivalTime,
-          soundCheckTime: options.soundCheckTime,
-          additionalInfo: options.additionalInfo,
-          isPromoterEmail: true
-        });
-
-        await this.sendEmailNotification(promoterEmailData);
-      } catch (error) {
-        console.error('Failed to send spot confirmation email to promoter:', error);
-      }
-    }
-
-    if (options?.comedianEmail) {
-      try {
-        // Email to comedian
-        const comedianEmailData = createSpotConfirmationEmail({
-          comedianName,
-          comedianEmail: options.comedianEmail,
-          promoterName: options.promoterName || 'Event Promoter',
-          promoterEmail: options.promoterEmail || 'promoter@standupsyney.com',
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue: options.venue || 'Event Venue',
-          address: options.address || options.venue || 'Event Venue',
-          spotType,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          lineupUrl: `${window.location.origin}/events/${eventId}/lineup`,
-          performanceDuration: options.performanceDuration,
-          arrivalTime: options.arrivalTime,
-          soundCheckTime: options.soundCheckTime,
-          additionalInfo: options.additionalInfo,
-          isPromoterEmail: false
-        });
-
-        await this.sendEmailNotification(comedianEmailData);
-      } catch (error) {
-        console.error('Failed to send spot confirmation email to comedian:', error);
-      }
-    }
   }
 
-  async notifySpotDeclined(
-    promoterId: string,
-    comedianId: string,
-    comedianName: string,
+  async notifyApplicationAccepted(
+    userId: string,
     eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string,
-    reason?: string,
-    options?: {
-      comedianEmail?: string;
-      promoterName?: string;
-      promoterEmail?: string;
-      venue?: string;
-      address?: string;
-    }
+    eventName: string,
+    applicationId: string
   ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const reasonText = reason ? ` Reason: ${reason}` : '';
-
-    // Notify promoter
     await this.createNotification({
-      user_id: promoterId,
-      type: 'spot_declined',
-      title: 'Spot Declined',
-      message: `${comedianName} has declined their ${spotType} spot for ${eventTitle} on ${formattedDate}.${reasonText}`,
+      user_id: userId,
+      type: 'application_accepted',
+      title: 'Application Accepted!',
+      message: `Congratulations! Your application for "${eventName}" has been accepted`,
       priority: 'high',
-      data: {
-        event_id: eventId,
-        comedian_id: comedianId,
-        comedian_name: comedianName,
-        spot_type: spotType,
-        event_date: eventDate,
-        reason
-      },
-      action_url: `/events/${eventId}/applications`,
-      action_label: 'Find Replacement'
-    });
-
-    // Notify comedian (acknowledgment)
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_declined',
-      title: 'Spot Declined',
-      message: `You have declined the ${spotType} spot for ${eventTitle} on ${formattedDate}. Thank you for letting us know.`,
-      priority: 'low',
-      data: {
-        event_id: eventId,
-        spot_type: spotType,
-        event_date: eventDate
-      },
-      action_url: `/events`,
-      action_label: 'Browse Events'
-    });
-
-    // Send email notifications if email details are provided
-    if (options?.promoterEmail && options?.promoterName) {
-      try {
-        // Email to promoter
-        const promoterEmailData = createSpotDeclinedEmail({
-          comedianName,
-          comedianEmail: options.comedianEmail || 'comedian@standupsyney.com',
-          promoterName: options.promoterName,
-          promoterEmail: options.promoterEmail,
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue: options.venue || 'Event Venue',
-          address: options.address || options.venue || 'Event Venue',
-          spotType,
-          reason,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          applicationsUrl: `${window.location.origin}/events/${eventId}/applications`,
-          eventsUrl: `${window.location.origin}/events`,
-          isPromoterEmail: true
-        });
-
-        await this.sendEmailNotification(promoterEmailData);
-      } catch (error) {
-        console.error('Failed to send spot declined email to promoter:', error);
-      }
-    }
-
-    if (options?.comedianEmail) {
-      try {
-        // Email to comedian
-        const comedianEmailData = createSpotDeclinedEmail({
-          comedianName,
-          comedianEmail: options.comedianEmail,
-          promoterName: options.promoterName || 'Event Promoter',
-          promoterEmail: options.promoterEmail || 'promoter@standupsyney.com',
-          eventTitle,
-          eventDate,
-          eventTime: eventDate,
-          venue: options.venue || 'Event Venue',
-          address: options.address || options.venue || 'Event Venue',
-          spotType,
-          reason,
-          eventUrl: `${window.location.origin}/events/${eventId}`,
-          applicationsUrl: `${window.location.origin}/events/${eventId}/applications`,
-          eventsUrl: `${window.location.origin}/events`,
-          isPromoterEmail: false
-        });
-
-        await this.sendEmailNotification(comedianEmailData);
-      } catch (error) {
-        console.error('Failed to send spot declined email to comedian:', error);
-      }
-    }
-  }
-
-  async notifySpotCancelled(
-    comedianId: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string,
-    reason?: string
-  ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const reasonText = reason ? ` Reason: ${reason}` : '';
-
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_cancelled',
-      title: 'Spot Cancelled',
-      message: `Your ${spotType} spot for ${eventTitle} on ${formattedDate} has been cancelled.${reasonText}`,
-      priority: 'high',
-      data: {
-        event_id: eventId,
-        spot_type: spotType,
-        event_date: eventDate,
-        reason
-      },
-      action_url: `/events`,
-      action_label: 'Browse Events'
-    });
-  }
-
-  async notifySpotReminder(
-    comedianId: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string,
-    venue: string,
-    address: string,
-    daysUntil: number
-  ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const formattedTime = new Date(eventDate).toLocaleTimeString('en-AU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const timeText = daysUntil === 0 ? 'today' : 
-                    daysUntil === 1 ? 'tomorrow' : 
-                    `in ${daysUntil} days`;
-
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'spot_reminder',
-      title: `Upcoming Show: ${eventTitle}`,
-      message: `Reminder: You have a ${spotType} spot ${timeText} at ${venue} (${address}) on ${formattedDate} at ${formattedTime}.`,
-      priority: daysUntil === 0 ? 'urgent' : daysUntil === 1 ? 'high' : 'medium',
-      data: {
-        event_id: eventId,
-        spot_type: spotType,
-        venue,
-        address,
-        event_date: eventDate,
-        days_until: daysUntil
-      },
+      data: { eventId, eventName, applicationId },
       action_url: `/events/${eventId}`,
       action_label: 'View Event Details'
     });
   }
 
-  // =====================================
-  // BULK SPOT NOTIFICATIONS
-  // =====================================
-
-  async notifyMultipleSpotAssignments(
-    assignments: Array<{
-      comedianId: string;
-      eventId: string;
-      eventTitle: string;
-      eventDate: string;
-      spotType: string;
-      venue: string;
-      confirmationDeadline: string;
-    }>
-  ): Promise<void> {
-    const notifications = assignments.map(assignment => {
-      const formattedDate = new Date(assignment.eventDate).toLocaleDateString('en-AU', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      const formattedTime = new Date(assignment.eventDate).toLocaleTimeString('en-AU', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      const deadlineDate = new Date(assignment.confirmationDeadline).toLocaleDateString('en-AU', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      return {
-        user_id: assignment.comedianId,
-        type: 'spot_assigned' as NotificationType,
-        title: `Spot Assigned: ${assignment.eventTitle}`,
-        message: `Congratulations! You've been assigned a ${assignment.spotType} spot at ${assignment.venue} on ${formattedDate} at ${formattedTime}. Please confirm your availability by ${deadlineDate}.`,
-        priority: 'high' as NotificationPriority,
-        data: {
-          event_id: assignment.eventId,
-          spot_type: assignment.spotType,
-          venue: assignment.venue,
-          event_date: assignment.eventDate,
-          confirmation_deadline: assignment.confirmationDeadline
-        },
-        action_url: `/events/${assignment.eventId}/spot-confirmation`,
-        action_label: 'Confirm Spot',
-        expires_at: assignment.confirmationDeadline
-      };
-    });
-
-    await this.createBulkNotifications(notifications);
-  }
-
-  async notifyEventLineupComplete(
-    promoterId: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    totalSpots: number,
-    confirmedSpots: number
-  ): Promise<void> {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const isComplete = confirmedSpots === totalSpots;
-    const title = isComplete ? 'Event Lineup Complete' : 'Event Lineup Update';
-    const message = isComplete 
-      ? `All ${totalSpots} spots for ${eventTitle} on ${formattedDate} have been confirmed. Your lineup is complete!`
-      : `${confirmedSpots} of ${totalSpots} spots confirmed for ${eventTitle} on ${formattedDate}.`;
-
-    await this.createNotification({
-      user_id: promoterId,
-      type: isComplete ? 'spot_confirmed' : 'spot_reminder',
-      title,
-      message,
-      priority: isComplete ? 'medium' : 'low',
-      data: {
-        event_id: eventId,
-        event_date: eventDate,
-        total_spots: totalSpots,
-        confirmed_spots: confirmedSpots,
-        lineup_complete: isComplete
-      },
-      action_url: `/events/${eventId}/lineup`,
-      action_label: 'View Lineup'
-    });
-  }
-
-  // =====================================
-  // APPLICATION STATUS NOTIFICATIONS
-  // =====================================
-  async notifyApplicationSubmitted(
-    promoterId: string,
-    comedianId: string,
-    eventId: string,
-    eventTitle: string,
-    comedianName: string,
-    eventDate: string
-  ): Promise<void> {
-    await this.createNotification({
-      user_id: promoterId,
-      type: 'application_submitted',
-      title: 'New Application Received',
-      message: `${comedianName} has applied to perform at "${eventTitle}".`,
-      priority: 'medium',
-      data: {
-        event_id: eventId,
-        comedian_id: comedianId,
-        event_title: eventTitle,
-        comedian_name: comedianName,
-        event_date: eventDate
-      },
-      action_url: `/events/${eventId}/applications`,
-      action_label: 'Review Application'
-    });
-  }
-
-  async notifyApplicationAccepted(
-    comedianId: string,
-    eventId: string,
-    eventTitle: string,
-    eventDate: string,
-    spotType: string
-  ): Promise<void> {
-    await this.createNotification({
-      user_id: comedianId,
-      type: 'application_accepted',
-      title: 'Application Accepted!',
-      message: `Your application to perform at "${eventTitle}" has been accepted for a ${spotType} spot.`,
-      priority: 'high',
-      data: {
-        event_id: eventId,
-        event_title: eventTitle,
-        event_date: eventDate,
-        spot_type: spotType
-      },
-      action_url: `/events/${eventId}`,
-      action_label: 'View Event'
-    });
-  }
-
   async notifyApplicationRejected(
-    comedianId: string,
+    userId: string,
     eventId: string,
-    eventTitle: string,
-    eventDate: string
+    eventName: string,
+    applicationId: string,
+    feedback?: string
   ): Promise<void> {
     await this.createNotification({
-      user_id: comedianId,
+      user_id: userId,
       type: 'application_rejected',
       title: 'Application Update',
-      message: `Your application for "${eventTitle}" was not selected this time.`,
+      message: `Your application for "${eventName}" was not selected${feedback ? ': ' + feedback : ''}`,
       priority: 'medium',
-      data: {
-        event_id: eventId,
-        event_title: eventTitle,
-        event_date: eventDate
-      },
-      action_url: `/events`,
-      action_label: 'Browse Events'
+      data: { eventId, eventName, applicationId, feedback },
+      action_url: '/events',
+      action_label: 'Browse Other Events'
     });
   }
 
   async notifyApplicationWithdrawn(
-    promoterId: string,
+    userId: string,
     eventId: string,
-    eventTitle: string,
-    comedianName: string
+    eventName: string,
+    applicationId: string
   ): Promise<void> {
     await this.createNotification({
-      user_id: promoterId,
+      user_id: userId,
       type: 'application_withdrawn',
       title: 'Application Withdrawn',
-      message: `${comedianName} has withdrawn their application for "${eventTitle}".`,
+      message: `Your application for "${eventName}" has been withdrawn`,
       priority: 'low',
-      data: {
-        event_id: eventId,
-        event_title: eventTitle,
-        comedian_name: comedianName
-      },
-      action_url: `/events/${eventId}/applications`,
-      action_label: 'View Applications'
+      data: { eventId, eventName, applicationId },
+      action_url: '/events',
+      action_label: 'Browse Events'
     });
   }
 
-  // Cleanup on service destruction
-  destroy() {
-    if (this.realtimeChannel) {
-      supabase.removeChannel(this.realtimeChannel);
+  // =====================================
+  // BULK NOTIFICATION OPERATIONS
+  // =====================================
+
+  async notifyTourCollaborators(
+    tourId: string,
+    tourName: string,
+    message: string,
+    excludeUserId?: string,
+    notificationType: NotificationType = 'tour_updated'
+  ): Promise<void> {
+    const { data: collaborators, error } = await supabase
+      .from('tour_collaborations')
+      .select('collaborator_id')
+      .eq('tour_id', tourId)
+      .eq('status', 'active');
+
+    if (error) {
+      console.error('Failed to fetch tour collaborators:', error);
+      throw error;
     }
-    this.subscribers.clear();
+
+    const notifications = (collaborators || [])
+      .map(({ collaborator_id }) => collaborator_id)
+      .filter((collaboratorId): collaboratorId is string => Boolean(collaboratorId) && collaboratorId !== excludeUserId)
+      .map(userId => ({
+        user_id: userId,
+        type: notificationType,
+        title: `Update for ${tourName}`,
+        message,
+        priority: 'medium' as const,
+        data: {
+          tourId,
+          tourName
+        },
+        action_url: `/tours/${tourId}`,
+        action_label: 'View Tour'
+      }));
+
+    if (!notifications.length) {
+      return;
+    }
+
+    await this.createBulkNotifications(notifications);
+  }
+
+  async notifyTaskAssignees(
+    taskId: string,
+    taskTitle: string,
+    assignerName: string,
+    dueDate: string
+  ): Promise<void> {
+    const { data: task, error } = await supabase
+      .from('tasks')
+      .select('assignee_id')
+      .eq('id', taskId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to fetch task assignee:', error);
+      throw error;
+    }
+
+    const assigneeId = task?.assignee_id;
+    if (!assigneeId) {
+      return;
+    }
+
+    await this.createNotification({
+      user_id: assigneeId,
+      type: 'task_assigned',
+      title: 'Task Assigned',
+      message: `${assignerName} assigned you "${taskTitle}" due ${dueDate}`,
+      priority: 'high',
+      data: { taskId, taskTitle, dueDate },
+      action_url: `/tasks/${taskId}`,
+      action_label: 'View Task'
+    });
+  }
+
+  // =====================================
+  // EMAIL NOTIFICATIONS (delegated to EmailNotificationService)
+  // =====================================
+
+  // Direct access to email service methods
+  get email() {
+    return emailNotificationService;
+  }
+
+  // =====================================
+  // UTILITY METHODS
+  // =====================================
+
+  async getNotificationsByType(userId: string, type: string): Promise<any[]> {
+    const { notifications } = await this.getNotifications(userId, { type: type as any });
+    return notifications;
+  }
+
+  async getUnreadNotificationsByPriority(userId: string, priority: string): Promise<any[]> {
+    const { notifications } = await this.getNotifications(userId, {
+      isRead: false,
+      priority: priority as any
+    });
+    return notifications;
+  }
+
+  // =====================================
+  // CLEANUP
+  // =====================================
+
+  destroy(): void {
+    notificationManager.destroy();
   }
 }
 
-export const notificationService = new NotificationService();
+// Export the refactored service with the same interface
+export const notificationService = new RefactoredNotificationService();
+export default RefactoredNotificationService;

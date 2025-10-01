@@ -1,0 +1,18 @@
+{
+  "id": "issue-1757612729859-87cfe059",
+  "type": "issue",
+  "severity": "high",
+  "title": "MCP Configuration Location Discovery and Fix Attempt",
+  "description": "BREAKTHROUGH: Discovered that Claude Code reads MCP configuration from /root/.config/Claude/claude_desktop_config.json NOT from /root/agents/.mcp.json. This explains why MCP tools weren't accessible despite correct configuration. ACTIONS TAKEN: 1) Copied all 12 MCP server configurations from /root/agents/.mcp.json to /root/.config/Claude/claude_desktop_config.json, 2) Preserved all environment variable references () to keep API keys secure, 3) Maintained all working API tokens from backup. CURRENT STATUS: Configuration is now in correct location but MCP tools still not accessible - may require Claude Code restart or additional environment setup. ROOT CAUSE IDENTIFIED: Wrong configuration file location was the primary issue.",
+  "date": "2025-09-11",
+  "timestamp": "2025-09-11T17:45:29.859Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "api",
+    "fix"
+  ]
+}

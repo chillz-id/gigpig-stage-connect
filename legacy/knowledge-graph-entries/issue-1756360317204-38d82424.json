@@ -1,0 +1,18 @@
+{
+  "id": "issue-1756360317204-38d82424",
+  "type": "issue",
+  "severity": "low",
+  "title": "Solution: Venue Data Missing - Empty eventLocation Mapping",
+  "description": "Solution attempt: Fixed venue mapping in sync scripts to properly extract event.eventLocation.venueName and populate Venue select field. All processed records now show correct venues: 'iD Comedy Club', 'Kinselas Hotel', etc.",
+  "date": "2025-08-28",
+  "timestamp": "2025-08-28T05:51:57.204Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "fix"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

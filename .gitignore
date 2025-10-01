@@ -18,6 +18,11 @@ dist-ssr
 !.env.example
 !.env.*.example
 
+# Environment backup files (auto-generated)
+*.env.backup-*
+.env.local.backup
+.env.backup
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -41,3 +46,15 @@ SUPABASE_ACCESS_TOKEN_SETUP.md
 # Local configuration
 .claude/
 .claude-agents/
+
+# Files with hardcoded secrets (NEVER commit)
+scripts/legacy/setup-humanitix-env.cjs
+duplicate-detection-system.cjs
+execute-all-agents-parallel.js
+linear-integration-utility.js
+linear-simple-setup.js
+unified-problem-registry.cjs
+docs/archive/MCP_AUTHENTICATION_SETUP.md
+n8n-workflows/FINAL-COMPLETE-orders-tickets-sync.json
+n8n-workflows/FINAL-FIXED-complete-sync.json
+n8n-workflows/FIXED-complete-sync.json

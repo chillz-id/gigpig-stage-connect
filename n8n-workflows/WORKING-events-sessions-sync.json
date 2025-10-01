@@ -1,0 +1,226 @@
+{
+  "name": "WORKING: Events + Sessions Sync (Fixed Field Types)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger - Every 15 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "GET Events from Humanitix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse events from Humanitix API - PRESERVE ALL RAW DATA\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response structures\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\nconsole.log(`Processing ${events.length} events`);\n\n// Return each event with ALL original data preserved\nreturn events.map(event => ({\n  json: {\n    // PRESERVE ALL ORIGINAL FIELDS - NO CONVERSIONS\n    event_id: event._id || event.event_id,\n    location: event.location,\n    currency: event.currency,\n    name: event.name,\n    description: event.description,\n    slug: event.slug,\n    user_id: event.userId,\n    organiser_id: event.organiserId,\n    tag_ids: JSON.stringify(event.tagIds || []),\n    classification_type: event.classification?.type,\n    classification_category: event.classification?.category,\n    classification_subcategory: event.classification?.subcategory,\n    public: event.public,\n    published: event.published,\n    suspend_sales: event.suspendSales,\n    marked_sold_out: event.markedAsSoldOut,\n    start_date: event.startDate,\n    end_date: event.endDate,\n    timezone: event.timezone,\n    dates: JSON.stringify(event.dates || []),\n    total_capacity: event.totalCapacity,\n    event_location_type: event.eventLocation?.type,\n    event_location_venue_name: event.eventLocation?.venueName,\n    event_location_address: event.eventLocation?.address,\n    event_location_lat_lng: JSON.stringify(event.eventLocation?.latLng || []),\n    event_location_address_components: JSON.stringify(event.eventLocation?.addressComponents || []),\n    event_location_place_id: event.eventLocation?.placeId,\n    event_location_map_url: event.eventLocation?.mapUrl,\n    event_location_city: event.eventLocation?.city,\n    event_location_region: event.eventLocation?.region,\n    event_location_country: event.eventLocation?.country,\n    ticket_types: JSON.stringify(event.ticketTypes || []),\n    packaged_tickets: JSON.stringify(event.packagedTickets || []),\n    additional_questions: JSON.stringify(event.additionalQuestions || []),\n    banner_image_url: event.bannerImage?.url,\n    payment_options: JSON.stringify(event.paymentOptions || {}),\n    refund_policy: event.paymentOptions?.refundSettings?.refundPolicy,\n    accessibility: JSON.stringify(event.accessibility || {}),\n    affiliate_codes: JSON.stringify(event.affiliateCodes || []),\n    pricing_minimum_price: event.pricing?.minimumPrice,\n    pricing_maximum_price: event.pricing?.maximumPrice,\n    keywords: JSON.stringify(event.keywords || []),\n    artists: JSON.stringify(event.artists || []),\n    created_at: event.createdAt,\n    updated_at: event.updatedAt,\n    published_at: event.publishedAt,\n    url: event.url,\n    api_source: \"Humanitix\",\n    sync_timestamp: new Date().toISOString(),\n    // RAW EVENT FOR SESSION EXTRACTION\n    raw_event: event\n  }\n}));"
+      },
+      "id": "parse-events",
+      "name": "Parse Events (Preserve All Data)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2794745b-8cbe-8112-9ce0-dc2229da701c",
+          "mode": "id"
+        },
+        "title": "={{$json.name}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {"key": "Event ID", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_id}}"}}]},
+            {"key": "Name", "richTextValue": [{"type": "text", "text": {"content": "={{$json.name || 'Unnamed Event'}}"}}]},
+            {"key": "Description", "richTextValue": [{"type": "text", "text": {"content": "={{$json.description || ''}}"}}]},
+            {"key": "Start Date", "dateValue": "={{$json.start_date}}"},
+            {"key": "End Date", "dateValue": "={{$json.end_date}}"},
+            {"key": "Timezone", "richTextValue": [{"type": "text", "text": {"content": "={{$json.timezone || ''}}"}}]},
+            {"key": "Currency", "selectValue": "={{$json.currency}}"},
+            {"key": "Location", "selectValue": "={{$json.location}}"},
+            {"key": "Venue Name", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_location_venue_name || ''}}"}}]},
+            {"key": "Address", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_location_address || ''}}"}}]},
+            {"key": "City", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_location_city || ''}}"}}]},
+            {"key": "Region", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_location_region || ''}}"}}]},
+            {"key": "Country", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_location_country || ''}}"}}]},
+            {"key": "Total Capacity", "numberValue": "={{$json.total_capacity}}"},
+            {"key": "Ticket Types", "richTextValue": [{"type": "text", "text": {"content": "={{$json.ticket_types || ''}}"}}]},
+            {"key": "Minimum Price", "numberValue": "={{$json.pricing_minimum_price}}"},
+            {"key": "Maximum Price", "numberValue": "={{$json.pricing_maximum_price}}"},
+            {"key": "URL", "urlValue": "={{$json.url}}"},
+            {"key": "Created Date", "dateValue": "={{$json.created_at}}"},
+            {"key": "Updated At", "dateValue": "={{$json.updated_at}}"},
+            {"key": "Published", "checkboxValue": "={{$json.published}}"},
+            {"key": "Public", "checkboxValue": "={{$json.public}}"},
+            {"key": "Suspend Sales", "checkboxValue": "={{$json.suspend_sales}}"},
+            {"key": "Marked As Sold Out", "checkboxValue": "={{$json.marked_sold_out}}"}
+          ]
+        }
+      },
+      "id": "create-event",
+      "name": "Create Event in Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "credentials": {
+        "notionApi": {
+          "id": "n2TBZCnpzOxSU5Wk",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Sessions from Event Dates Array\nconst results = [];\n\n$input.all().forEach(item => {\n  const event = item.json;\n  const rawEvent = event.raw_event;\n  \n  // Extract sessions from dates array\n  const dates = rawEvent.dates || [];\n  \n  console.log(`Event ${event.name}: ${dates.length} sessions found`);\n  \n  if (dates.length > 0) {\n    // Multi-session event - create session records\n    dates.forEach((session, index) => {\n      results.push({\n        json: {\n          session_id: `${event.event_id}-session-${index + 1}`,\n          event_id: event.event_id,\n          event_name: event.name,\n          session_name: `${event.name} - Session ${index + 1}`,\n          start_date: session.startDate,\n          end_date: session.endDate,\n          timezone: event.timezone,\n          currency: event.currency,\n          location: event.location,\n          venue_name: event.event_location_venue_name,\n          address: event.event_location_address,\n          city: event.event_location_city,\n          region: event.event_location_region,\n          country: event.event_location_country,\n          capacity: session.capacity || event.total_capacity,\n          ticket_types: event.ticket_types,\n          url: event.url,\n          api_source: 'Humanitix',\n          sync_timestamp: new Date().toISOString(),\n          raw_session: JSON.stringify(session)\n        }\n      });\n    });\n  } else {\n    // Single session event - create one session record\n    results.push({\n      json: {\n        session_id: `${event.event_id}-session-1`,\n        event_id: event.event_id,\n        event_name: event.name,\n        session_name: event.name,\n        start_date: event.start_date,\n        end_date: event.end_date,\n        timezone: event.timezone,\n        currency: event.currency,\n        location: event.location,\n        venue_name: event.event_location_venue_name,\n        address: event.event_location_address,\n        city: event.event_location_city,\n        region: event.event_location_region,\n        country: event.event_location_country,\n        capacity: event.total_capacity,\n        ticket_types: event.ticket_types,\n        url: event.url,\n        api_source: 'Humanitix',\n        sync_timestamp: new Date().toISOString(),\n        raw_session: '{}'\n      }\n    });\n  }\n});\n\nconsole.log(`Total sessions to create: ${results.length}`);\nreturn results;"
+      },
+      "id": "extract-sessions",
+      "name": "Extract Sessions from Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2794745b-8cbe-81b8-b290-c4d552eb0c0f",
+          "mode": "id"
+        },
+        "title": "={{$json.session_name}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {"key": "Session ID", "richTextValue": [{"type": "text", "text": {"content": "={{$json.session_id}}"}}]},
+            {"key": "Event ID", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_id}}"}}]},
+            {"key": "Event Name", "richTextValue": [{"type": "text", "text": {"content": "={{$json.event_name}}"}}]},
+            {"key": "Session Name", "richTextValue": [{"type": "text", "text": {"content": "={{$json.session_name}}"}}]},
+            {"key": "Start Date", "dateValue": "={{$json.start_date}}"},
+            {"key": "End Date", "dateValue": "={{$json.end_date}}"},
+            {"key": "Timezone", "richTextValue": [{"type": "text", "text": {"content": "={{$json.timezone || ''}}"}}]},
+            {"key": "Currency", "selectValue": "={{$json.currency}}"},
+            {"key": "Location", "selectValue": "={{$json.location}}"},
+            {"key": "Venue Name", "richTextValue": [{"type": "text", "text": {"content": "={{$json.venue_name || ''}}"}}]},
+            {"key": "Venue Address", "richTextValue": [{"type": "text", "text": {"content": "={{$json.address || ''}}"}}]},
+            {"key": "Venue Capacity", "numberValue": "={{$json.capacity}}"},
+            {"key": "Date Status", "selectValue": "Scheduled"}
+          ]
+        }
+      },
+      "id": "create-sessions",
+      "name": "Create Sessions in Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1340, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "n2TBZCnpzOxSU5Wk",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - Every 15 Min": {
+      "main": [
+        [
+          {
+            "node": "GET Events from Humanitix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Events from Humanitix": {
+      "main": [
+        [
+          {
+            "node": "Parse Events (Preserve All Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Events (Preserve All Data)": {
+      "main": [
+        [
+          {
+            "node": "Create Event in Notion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sessions from Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Event in Notion": {
+      "main": [
+        [
+
+        ]
+      ]
+    },
+    "Extract Sessions from Events": {
+      "main": [
+        [
+          {
+            "node": "Create Sessions in Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Australia/Sydney"
+  }
+}

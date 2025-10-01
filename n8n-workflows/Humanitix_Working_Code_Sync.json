@@ -1,0 +1,53 @@
+{
+  "name": "Humanitix Working Code Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0a1b2c3d-4e5f-6789-abcd-ef1234567890",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Working Humanitix to Supabase sync using native Node.js modules\nconst https = require('https');\nconst http = require('http');\nconst url = require('url');\n\nconst HUMANITIX_API_KEY = 'htx_ot4Ps1kNJIz8FhSfW7y8NKAVrC2AiZI8DQKs5Vvt';\nconst SUPABASE_URL = 'https://pdikjpfulhhpqpxzpgtu.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE';\n\nconst results = {\n  events: { processed: 0, skipped: 0, errors: 0 },\n  orders: { processed: 0, skipped: 0, errors: 0 }\n};\n\n// Helper function to make HTTP requests\nfunction makeRequest(options, postData = null) {\n  return new Promise((resolve, reject) => {\n    const parsedUrl = url.parse(options.url);\n    const requestLib = parsedUrl.protocol === 'https:' ? https : http;\n    \n    const reqOptions = {\n      hostname: parsedUrl.hostname,\n      port: parsedUrl.port,\n      path: parsedUrl.path,\n      method: options.method || 'GET',\n      headers: options.headers || {}\n    };\n    \n    if (postData) {\n      reqOptions.headers['Content-Length'] = Buffer.byteLength(postData);\n    }\n    \n    const req = requestLib.request(reqOptions, (res) => {\n      let data = '';\n      res.on('data', (chunk) => data += chunk);\n      res.on('end', () => {\n        try {\n          const parsed = JSON.parse(data);\n          resolve(parsed);\n        } catch (e) {\n          resolve(data);\n        }\n      });\n    });\n    \n    req.on('error', reject);\n    \n    if (postData) {\n      req.write(postData);\n    }\n    \n    req.end();\n  });\n}\n\n// Check if record exists\nasync function checkExists(table, sourceId) {\n  try {\n    const response = await makeRequest({\n      url: `${SUPABASE_URL}/rest/v1/${table}?source_id=eq.${sourceId}&select=source_id`,\n      method: 'GET',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json'\n      }\n    });\n    return Array.isArray(response) && response.length > 0;\n  } catch (error) {\n    console.error(`Error checking existence for ${table}:`, error.message);\n    return false;\n  }\n}\n\n// Insert records to Supabase\nasync function insertRecords(table, records) {\n  if (records.length === 0) return;\n  \n  try {\n    await makeRequest({\n      url: `${SUPABASE_URL}/rest/v1/${table}`,\n      method: 'POST',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      }\n    }, JSON.stringify(records));\n    console.log(`Inserted ${records.length} records into ${table}`);\n  } catch (error) {\n    console.error(`Failed to insert ${table}:`, error.message);\n    throw error;\n  }\n}\n\n// Main sync process\nconsole.log('Starting Humanitix sync...');\n\n// Fetch Events\nconst eventsResponse = await makeRequest({\n  url: 'https://api.humanitix.com/v1/events?page=1&pageSize=10',\n  method: 'GET',\n  headers: { 'X-API-Key': HUMANITIX_API_KEY }\n});\n\nconst eventsToInsert = [];\nconst ordersToInsert = [];\n\nif (eventsResponse.events) {\n  for (const event of eventsResponse.events.slice(0, 2)) { // Process 2 events\n    try {\n      // Check if event exists\n      if (await checkExists('events_htx', event._id)) {\n        results.events.skipped++;\n        console.log(`Event ${event.name} already exists, skipping`);\n        continue;\n      }\n      \n      // Prepare event record\n      eventsToInsert.push({\n        source: 'humanitix',\n        source_id: event._id,\n        name: event.name,\n        description: event.description,\n        start_date: event.startDate,\n        end_date: event.endDate,\n        timezone: event.timezone,\n        status: event.status,\n        location: event.location,\n        currency: event.currency,\n        raw: event,\n        ingested_at: new Date().toISOString()\n      });\n      \n      results.events.processed++;\n      console.log(`Prepared event: ${event.name}`);\n      \n      // Fetch orders for this event\n      try {\n        const ordersResponse = await makeRequest({\n          url: `https://api.humanitix.com/v1/events/${event._id}/orders?page=1&pageSize=5`,\n          method: 'GET',\n          headers: { 'X-API-Key': HUMANITIX_API_KEY }\n        });\n        \n        if (ordersResponse.orders) {\n          for (const order of ordersResponse.orders.slice(0, 3)) { // Process 3 orders per event\n            try {\n              // Check if order exists\n              if (await checkExists('orders_htx', order._id)) {\n                results.orders.skipped++;\n                continue;\n              }\n              \n              // Prepare order record\n              ordersToInsert.push({\n                source: 'humanitix',\n                source_id: order._id,\n                event_source_id: event._id,\n                event_date_id: order.eventDateId,\n                status: order.status,\n                first_name: order.firstName,\n                last_name: order.lastName,\n                purchaser_email: order.email,\n                currency: order.currency,\n                total_cents: order.totals?.total ? Math.round(order.totals.total * 100) : null,\n                taxes_cents: order.totals?.totalTaxes ? Math.round(order.totals.totalTaxes * 100) : null,\n                raw: order,\n                created_at: order.createdAt,\n                ingested_at: new Date().toISOString()\n              });\n              \n              results.orders.processed++;\n              \n            } catch (orderError) {\n              console.error(`Error processing order ${order._id}:`, orderError.message);\n              results.orders.errors++;\n            }\n          }\n        }\n      } catch (orderFetchError) {\n        console.error(`Error fetching orders for event ${event._id}:`, orderFetchError.message);\n      }\n      \n    } catch (eventError) {\n      console.error(`Error processing event ${event._id}:`, eventError.message);\n      results.events.errors++;\n    }\n  }\n}\n\n// Insert all records\nif (eventsToInsert.length > 0) {\n  await insertRecords('events_htx', eventsToInsert);\n  console.log(`Events inserted: ${eventsToInsert.length}`);\n}\n\nif (ordersToInsert.length > 0) {\n  await insertRecords('orders_htx', ordersToInsert);\n  console.log(`Orders inserted: ${ordersToInsert.length}`);\n}\n\nconsole.log('Sync completed!', results);\nreturn [{ json: results }];"
+      },
+      "id": "1b9a3b7c-8d4e-4f5g-9h1i-2j3k4l5m6n7o",
+      "name": "Humanitix Sync Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        240
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Humanitix Sync Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12345678-1234-1234-1234-123456789015",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "87654324",
+  "tags": []
+}

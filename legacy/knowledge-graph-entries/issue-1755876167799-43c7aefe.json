@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755876167799-43c7aefe",
+  "type": "issue",
+  "severity": "critical",
+  "title": "MCP Configuration File Security Risk",
+  "description": "The MCP configuration file (.mcp.json) contained hardcoded API keys for multiple services including GitHub, Notion, Slack, and others. This created a centralized security vulnerability where all service credentials were exposed in a single configuration file.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:22:47.799Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "github",
+    "api",
+    "security",
+    "credentials"
+  ]
+}

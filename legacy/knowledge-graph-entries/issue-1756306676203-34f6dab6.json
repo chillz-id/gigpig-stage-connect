@@ -1,0 +1,25 @@
+{
+  "id": "issue-1756306676203-34f6dab6",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "Notion Database Schema Design Rationale and Field Mapping Strategy",
+  "description": "Need comprehensive documentation of Notion database schema design decisions and field mapping rationale for Humanitix integration. This includes: 1) 3-Database Architecture Rationale - why separate Events, Attendees, and Tickets databases instead of single denormalized structure, relationship design between databases, data normalization decisions, 2) Field Mapping Strategy - API field to Notion property type mappings (text to rich_text, numbers to number, dates to date, enums to select), complex nested data flattening strategies, handling of optional vs required fields, 3) Database Schema Specifications - Events DB (25c4745b-8cbe-81e1-9188-d946340bd993) with venue/pricing/classification fields, Attendees DB (1374745b-8cbe-804b-87a2-ec93b3385e01) with customer/order data, Tickets DB (25c4745b-8cbe-8181-950b-c5d04a77e2c6) with individual ticket records and fee rebate calculations, 4) Relationship Design - how databases connect through Event ID, Order ID, cross-referencing strategies, 5) Formula Fields - computed fields for quantity calculations using fee rebate data, financial aggregations. Critical for future schema modifications and understanding data model design principles.",
+  "date": "2025-08-27",
+  "timestamp": "2025-08-27T14:57:56.203Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Documented comprehensive Notion database schema design: 3-DATABASE ARCHITECTURE RATIONALE - Separated Events/Attendees/Tickets for data normalization and query efficiency. Events DB stores event metadata (venue, pricing, dates), Attendees DB stores customer/order info, Tickets DB stores individual ticket records with relations. This prevents data duplication and supports independent querying. FIELD MAPPING STRATEGY - API to Notion mappings: text → rich_text arrays with content objects, numbers → number properties, dates → date objects with ISO strings, enums → select properties with name objects. Nested data flattened: eventLocation.venueName → Venue Name rich_text, totalsV2.fees.rebate.totalFee.total.afterTax → Fee Rebate number. DATABASE SPECIFICATIONS - Events (25c4745b-8cbe-81e1-9188-d946340bd993): Name/Event ID/Venue/Pricing/Classification fields, Attendees (1374745b-8cbe-804b-87a2-ec93b3385e01): Customer/Order/Financial data, Tickets (25c4745b-8cbe-8181-950b-c5d04a77e2c6): Individual tickets with fee rebate and relations. RELATIONSHIP DESIGN - Event ID connects all databases, Order ID links Attendees to Tickets, supports cross-database queries and aggregations. FORMULA FIELDS - Fee rebate enables quantity calculations ( per ticket), financial totals aggregate across related records. Schema supports full comedy platform event management with detailed financial tracking.",
+    "successful": true,
+    "timestamp": "2025-08-27T14:58:07.510Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "database",
+    "api",
+    "integration"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

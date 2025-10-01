@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755898265316-96551d9a",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Transform Orders Returns emptyResult Instead of Empty Array",
+  "description": "Transform Orders node had logic flaw: when events have no orders, it returned [{json: {emptyResult: true}}] instead of empty array []. This caused workflow to continue processing the emptyResult object through Check Order Duplicates and IF New Order nodes, creating incorrect data flow and preventing processing of subsequent events with actual orders.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T21:31:05.316Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Fixed by changing Transform Orders return statement from 'return [{json: {message: 'No orders processed', ordersProcessed: 0, emptyResult: true}}]' to 'return []' when no orders found. This allows workflow to continue processing subsequent events instead of stopping at first empty event. Also added try-catch blocks around individual order processing to prevent single order failures from stopping entire workflow. Changes deployed to N8N workflow XQ8bFr8gSIOQjWC5.",
+    "successful": true,
+    "timestamp": "2025-08-22T21:31:19.597Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [],
+  "filename": "issue-1755898265316-96551d9a.json"
+}

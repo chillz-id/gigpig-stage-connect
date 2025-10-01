@@ -1,5 +1,4 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthOperations } from '@/hooks/useAuthOperations';
@@ -210,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile, fetchRoles]);
 
   const signIn = async (email: string, password: string) => {
     // Processing sign in

@@ -1,0 +1,19 @@
+{
+  "id": "issue-1756360319318-1b3a4d27",
+  "type": "issue",
+  "severity": "high",
+  "title": "Humanitix-Notion Database Current State Analysis",
+  "description": "Comprehensive analysis of 300 Attendees records revealed: 164 duplicates (54.7%), 170 records with no enhanced data (56.7%), 63 partially enhanced (21.0%), 67 fully enhanced (22.3%). Database needs major cleanup before production use. Critical fields populated inconsistently across records.",
+  "date": "2025-08-28",
+  "timestamp": "2025-08-28T05:51:59.319Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "duplicate"
+  ],
+  "linear_issue_id": "BACKEND-57",
+  "cross_references": []
+}

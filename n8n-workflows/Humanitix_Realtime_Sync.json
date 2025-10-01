@@ -1,0 +1,80 @@
+{
+  "name": "Humanitix Real-time Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [120, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Real-time Humanitix sync - gets only NEW data since last run\nconst HUMANITIX_API_KEY = 'e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2';\nconst SUPABASE_URL = 'https://pdikjpfulhhpqpxzpgtu.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE';\n\nconst results = {\n  events: { processed: 0, skipped: 0, errors: 0 },\n  orders: { processed: 0, skipped: 0, errors: 0 },\n  sessions: { processed: 0, skipped: 0, errors: 0 }\n};\n\n// Get last sync time (15 minutes ago)\nconst lastSyncTime = new Date(Date.now() - 15 * 60 * 1000).toISOString();\nconsole.log(`🔄 Syncing data since: ${lastSyncTime}`);\n\n// Get existing order IDs to avoid duplicates\nconst existingOrdersResponse = await $request({\n  url: `${SUPABASE_URL}/rest/v1/orders_htx?select=source_id`,\n  method: 'GET',\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json'\n  }\n});\n\nconst existingOrderIds = new Set(existingOrdersResponse.map(order => order.source_id));\nconsole.log(`📊 Found ${existingOrderIds.size} existing orders`);\n\n// Get existing event IDs\nconst existingEventsResponse = await $request({\n  url: `${SUPABASE_URL}/rest/v1/events_htx?select=source_id`,\n  method: 'GET',\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json'\n  }\n});\n\nconst existingEventIds = new Set(existingEventsResponse.map(event => event.source_id));\n\n// Fetch events from Humanitix\nconst eventsResponse = await $request({\n  url: 'https://api.humanitix.com/v1/events?page=1&pageSize=100',\n  method: 'GET',\n  headers: { 'X-API-Key': HUMANITIX_API_KEY }\n});\n\nconst eventsToInsert = [];\nconst ordersToInsert = [];\nconst sessionsToInsert = [];\n\nif (eventsResponse.events) {\n  for (const event of eventsResponse.events) {\n    // Process new events\n    if (!existingEventIds.has(event._id)) {\n      eventsToInsert.push({\n        source: 'humanitix',\n        source_id: event._id,\n        name: event.name,\n        description: event.description,\n        start_date: event.startDate,\n        end_date: event.endDate,\n        timezone: event.timezone,\n        status: event.status,\n        location: event.location,\n        currency: event.currency,\n        raw: event,\n        ingested_at: new Date().toISOString()\n      });\n      results.events.processed++;\n    } else {\n      results.events.skipped++;\n    }\n\n    // Process sessions (event dates)\n    if (event.dates && Array.isArray(event.dates)) {\n      for (const session of event.dates) {\n        sessionsToInsert.push({\n          source: 'humanitix',\n          source_id: session._id,\n          event_source_id: event._id,\n          starts_at: session.startDate,\n          ends_at: session.endDate,\n          status: session.status,\n          ingested_at: new Date().toISOString()\n        });\n        results.sessions.processed++;\n      }\n    }\n\n    // Check for new orders (only fetch if event has recent activity)\n    try {\n      const ordersResponse = await $request({\n        url: `https://api.humanitix.com/v1/events/${event._id}/orders?page=1&pageSize=100`,\n        method: 'GET',\n        headers: { 'X-API-Key': HUMANITIX_API_KEY }\n      });\n\n      if (ordersResponse.orders) {\n        for (const order of ordersResponse.orders) {\n          // Skip if order already exists\n          if (existingOrderIds.has(order._id)) {\n            results.orders.skipped++;\n            continue;\n          }\n\n          // Check if order is recent (created/updated in last 24 hours)\n          const orderDate = new Date(order.updatedAt || order.createdAt);\n          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);\n\n          if (orderDate > oneDayAgo) {\n            ordersToInsert.push({\n              source: 'humanitix',\n              source_id: order._id,\n              event_source_id: event._id,\n              session_source_id: order.eventDateId,\n              order_reference: order._id,\n              status: order.status,\n              total_cents: order.totals?.total ? Math.round(order.totals.total * 100) : null,\n              net_sales_cents: order.totals?.netSales ? Math.round(order.totals.netSales * 100) : null,\n              fees_cents: order.totals?.bookingFee ? Math.round(order.totals.bookingFee * 100) : null,\n              tax_cents: order.totals?.totalTaxes ? Math.round(order.totals.totalTaxes * 100) : null,\n              discount_cents: order.totals?.discounts ? Math.round(order.totals.discounts * 100) : null,\n              purchaser_email: order.email,\n              purchaser_name: `${order.firstName} ${order.lastName}`,\n              ordered_at: order.createdAt,\n              ingested_at: new Date().toISOString()\n            });\n            results.orders.processed++;\n          }\n        }\n      }\n    } catch (orderError) {\n      console.error(`Error fetching orders for event ${event._id}:`, orderError.message);\n      results.orders.errors++;\n    }\n  }\n}\n\n// Insert new data in batches\nif (eventsToInsert.length > 0) {\n  await $request({\n    url: `${SUPABASE_URL}/rest/v1/events_htx`,\n    method: 'POST',\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': `Bearer ${SUPABASE_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal'\n    },\n    body: eventsToInsert\n  });\n  console.log(`✅ Inserted ${eventsToInsert.length} new events`);\n}\n\nif (sessionsToInsert.length > 0) {\n  await $request({\n    url: `${SUPABASE_URL}/rest/v1/sessions_htx`,\n    method: 'POST', \n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': `Bearer ${SUPABASE_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal'\n    },\n    body: sessionsToInsert\n  });\n  console.log(`✅ Inserted ${sessionsToInsert.length} new sessions`);\n}\n\nif (ordersToInsert.length > 0) {\n  // Insert orders in smaller batches to avoid timeout\n  const batchSize = 50;\n  for (let i = 0; i < ordersToInsert.length; i += batchSize) {\n    const batch = ordersToInsert.slice(i, i + batchSize);\n    await $request({\n      url: `${SUPABASE_URL}/rest/v1/orders_htx`,\n      method: 'POST',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: batch\n    });\n    console.log(`✅ Inserted batch ${Math.floor(i/batchSize) + 1}: ${batch.length} orders`);\n  }\n}\n\nconsole.log('🎉 Real-time sync completed!', results);\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    results: results,\n    summary: `Events: ${results.events.processed} new, ${results.events.skipped} existing | Orders: ${results.orders.processed} new, ${results.orders.skipped} existing | Sessions: ${results.sessions.processed} processed`\n  }\n}];"
+      },
+      "id": "realtime-sync",
+      "name": "Incremental Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "url": "=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"✅ Humanitix Sync Complete\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Humanitix Real-time Sync Results*\\n{{ $json.summary }}\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Timestamp:*\\n{{ $json.timestamp }}\"\n        },\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Total New Records:*\\n{{ $json.results.events.processed + $json.results.orders.processed }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "slack-notify",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,\n      "position": [520, 240]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Incremental Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incremental Sync": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "realtime-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "humanitix-realtime-sync",
+  "tags": ["realtime", "humanitix", "sync"]
+}

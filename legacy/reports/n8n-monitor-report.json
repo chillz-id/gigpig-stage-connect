@@ -1,0 +1,112 @@
+{
+  "timestamp": "2025-09-10T20:02:39.175Z",
+  "monitoringVersion": "1.0.0",
+  "checks": {
+    "health": {
+      "status": "healthy",
+      "timestamp": "2025-09-10T20:02:39.200Z",
+      "response": {
+        "status": "ok"
+      }
+    },
+    "processes": {
+      "docker": "running",
+      "pm2": "running",
+      "port": "listening",
+      "timestamp": "2025-09-10T20:02:39.964Z"
+    },
+    "workflows": {
+      "timestamp": "2025-09-10T20:02:40.013Z",
+      "totalWorkflows": 11,
+      "workflowFiles": [
+        {
+          "name": "Competitor Monitoring - Web Scraping with Apify",
+          "file": "competitor-monitoring-workflow.json",
+          "size": 11202,
+          "modified": "2025-09-09T22:23:50.930Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Content Generation - AI Content Creation",
+          "file": "content-generation-workflow.json",
+          "size": 5392,
+          "modified": "2025-09-09T23:26:43.374Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Database Sync - Multi-Platform Data Synchronization",
+          "file": "database-sync-workflow.json",
+          "size": 9657,
+          "modified": "2025-09-09T23:27:19.828Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Error Monitoring - Knowledge Graph to Linear Sync",
+          "file": "error-monitoring-workflow.json",
+          "size": 8699,
+          "modified": "2025-09-09T22:23:02.070Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "flight-monitoring-workflows",
+          "file": "flight-monitoring-workflows.json",
+          "size": 28422,
+          "modified": "2025-08-21T14:38:37.955Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Google Auth Recovery & User Onboarding",
+          "file": "google-auth-recovery-workflow.json",
+          "size": 10293,
+          "modified": "2025-08-21T14:38:37.958Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Humanitix to Brevo Customer Sync",
+          "file": "humanitix-brevo-sync.json",
+          "size": 13956,
+          "modified": "2025-08-21T14:38:37.953Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Humanitix Event Sync to Stand Up Sydney",
+          "file": "humanitix-event-sync.json",
+          "size": 7755,
+          "modified": "2025-08-21T14:38:37.945Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Multi-Platform Real-Time Ticket Sync",
+          "file": "multi-platform-ticket-sync.json",
+          "size": 13913,
+          "modified": "2025-08-21T14:38:37.948Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Social Media Automation - Metricool Integration",
+          "file": "social-media-automation-workflow.json",
+          "size": 9615,
+          "modified": "2025-09-09T22:22:29.519Z",
+          "status": "file_exists"
+        },
+        {
+          "name": "Webhook Processing - Humanitix/Eventbrite Orders",
+          "file": "webhook-processing-workflow.json",
+          "size": 5784,
+          "modified": "2025-09-09T22:21:47.786Z",
+          "status": "file_exists"
+        }
+      ],
+      "recommendations": [
+        "✅ All expected workflow files present"
+      ]
+    }
+  },
+  "overallStatus": {
+    "score": 100,
+    "health": "good",
+    "service": "good",
+    "workflows": "good",
+    "grade": "A"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "issue-1758686296968-45881e38",
+  "type": "issue",
+  "severity": "high",
+  "title": "Humanitix Data Extraction Structure Incorrect",
+  "description": "When extracting Humanitix events, assistant initially created one row per event with multi-date data in JSON format in Notes field. User requirement was clear: each date session should be its own row with all 47 fields as separate properties, not JSON in Notes.",
+  "date": "2025-09-24",
+  "timestamp": "2025-09-24T03:58:16.969Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": []
+}

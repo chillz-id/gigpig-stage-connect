@@ -84,7 +84,7 @@ export const EventScheduling: React.FC<EventSchedulingProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <Label htmlFor="date">Event Date *</Label>
             <Controller
@@ -103,6 +103,26 @@ export const EventScheduling: React.FC<EventSchedulingProps> = ({
             {errors.date && (
               <p className="text-red-400 text-sm mt-1">{errors.date.message}</p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="doorsTime">Doors Time</Label>
+            <Controller
+              name="doorsTime"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    {...field}
+                    id="doorsTime"
+                    type="time"
+                    className="bg-white/10 border-white/20 text-white pl-10"
+                    placeholder="Optional"
+                  />
+                </div>
+              )}
+            />
           </div>
 
           <div>

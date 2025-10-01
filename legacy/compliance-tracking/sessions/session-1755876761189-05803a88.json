@@ -1,0 +1,39 @@
+{
+  "id": "session-1755876761189-05803a88",
+  "start_time": "2025-08-22T15:32:41.190Z",
+  "interactions": 2,
+  "kg_checks": [
+    {
+      "interaction": 1,
+      "timestamp": "2025-08-22T15:32:41.534Z",
+      "query": "XSS Vulnerability in Chart Component",
+      "results_count": 46,
+      "linear_results_count": 12,
+      "warnings_count": 2,
+      "compliance_met": true
+    }
+  ],
+  "issue_logs": [],
+  "solution_logs": [],
+  "compliance_status": "compliant",
+  "violations": [],
+  "interaction_log": [
+    {
+      "number": 1,
+      "type": "task_analysis_start",
+      "description": "XSS Vulnerability in Chart Component",
+      "timestamp": "2025-08-22T15:32:41.195Z",
+      "data": {}
+    },
+    {
+      "number": 2,
+      "type": "kg_check",
+      "description": "Checked KG for: \"XSS Vulnerability in Chart Component\"",
+      "timestamp": "2025-08-22T15:32:41.534Z",
+      "data": {
+        "results_count": 46,
+        "warnings_count": 2
+      }
+    }
+  ]
+}

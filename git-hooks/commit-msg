@@ -1,0 +1,14 @@
+#!/bin/bash
+# Linear integration - auto-link commits to issues
+commit_msg_file=$1
+commit_msg=$(cat $commit_msg_file)
+
+# Extract issue number from branch name
+branch=$(git branch --show-current)
+issue_num=$(echo $branch | grep -o 'SUS-[0-9]\{3\}')
+
+if [[ -n $issue_num && ! $commit_msg =~ ^$issue_num: ]]; then
+  # Prepend issue number to commit message
+  echo "$issue_num: $commit_msg" > $commit_msg_file
+  echo "✅ Linked commit to Linear issue $issue_num"
+fi

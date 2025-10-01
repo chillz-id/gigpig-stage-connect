@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-22T15:32:41.533Z",
+  "task": "XSS Vulnerability in Chart Component Medium security risk: Usage of dangerouslySetInnerHTML in /root/agents/src/components/ui/chart.tsx creates cross-site scripting attack vector. Must replace with safe alternatives or implement proper input sanitization.",
+  "checked_sources": [
+    "knowledge_graph",
+    "linear_issues",
+    "taskmaster"
+  ],
+  "findings_count": {
+    "kg_entries": 46,
+    "linear_issues": 12,
+    "tasks": 0,
+    "warnings": 2
+  },
+  "compliance_status": "checked"
+}

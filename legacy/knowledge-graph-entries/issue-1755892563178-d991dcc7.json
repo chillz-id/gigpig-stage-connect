@@ -1,0 +1,25 @@
+{
+  "id": "issue-1755892563178-d991dcc7",
+  "type": "issue",
+  "severity": "medium",
+  "title": "N8N Environment Variable Access Concern",
+  "description": "N8N workflows use {{ $env.HUMANITIX_API_KEY }} with authentication: 'none' and manual header configuration. This approach relies on N8N having access to system environment variables. While credentials are configured in N8N UI, the workflows don't reference them directly. Need to verify if environment variable access is working correctly or if credential configuration should be used instead.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T19:56:03.178Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Verified working correctly. N8N workflows successfully access $env.HUMANITIX_API_KEY through manual header configuration with authentication: 'none'. Latest workflow execution (541) at 20:00:28 showed successful API calls to Humanitix /v1/events and /v1/events/{id}/orders endpoints. Environment variable access functioning properly.",
+    "successful": true,
+    "timestamp": "2025-08-22T20:04:39.085Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "authentication",
+    "api",
+    "credentials"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

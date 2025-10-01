@@ -1,0 +1,27 @@
+{
+  "detection_id": "detection-1755876767981-13389c06",
+  "task": {
+    "task_title": "Backup Files Security Risk",
+    "task_description": "High security risk: Multiple .env.backup-* files contain full credential sets creating expanded attack surface. Backup files expose sensitive environment variables without secure backup strategy. No documented secure backup procedures.",
+    "task_severity": "high",
+    "detection_id": "detection-1755876767981-13389c06",
+    "timestamp": "2025-08-22T15:32:48.396Z"
+  },
+  "results": {
+    "exact_matches": [],
+    "high_similarity": [],
+    "pattern_matches": [],
+    "temporal_clusters": [],
+    "solution_exists": [],
+    "semantic_similarity": []
+  },
+  "duplicate_probability": 0,
+  "warnings": [],
+  "processing_time_ms": 634,
+  "total_problems_analyzed": 92,
+  "recommendation": {
+    "action": "PROCEED",
+    "message": "No significant duplicates detected. Safe to proceed.",
+    "confidence": "low"
+  }
+}

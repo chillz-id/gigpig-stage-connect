@@ -1,0 +1,140 @@
+{
+  "name": "Humanitix Orders → Ticket Sales (Order Level)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "Get Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse events from Humanitix API\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response structures\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\nconsole.log(`Found ${events.length} events`);\n\n// Return each event for processing orders\nreturn events.map(event => ({ json: event }));"
+      },
+      "id": "parse-events",
+      "name": "Parse Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.humanitix.com/v1/events/{{ $json._id || $json.id }}/orders",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.HUMANITIX_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-orders",
+      "name": "Get Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform orders to Ticket Sales format (ORDER LEVEL - not per ticket)\nconst orderResponse = $input.all()[0].json;\nconst eventInfo = $('Parse Events').item.json;\nconst transformedOrders = [];\n\n// Extract orders from response\nlet orders = [];\nif (orderResponse.orders && Array.isArray(orderResponse.orders)) {\n  orders = orderResponse.orders;\n} else if (orderResponse.data && Array.isArray(orderResponse.data)) {\n  orders = orderResponse.data;\n} else if (Array.isArray(orderResponse)) {\n  orders = orderResponse;\n}\n\nconst eventName = eventInfo.name || eventInfo.title || 'Unknown Event';\nconsole.log(`Processing ${orders.length} orders for event: ${eventName}`);\n\nfor (const order of orders) {\n  // Basic order info\n  const orderId = order._id || order.id || order.orderName || '';\n  const buyerInfo = order.buyer || {};\n  const customerName = `${order.firstName || buyerInfo.firstName || ''} ${order.lastName || buyerInfo.lastName || ''}`.trim() || 'Unknown';\n  const customerEmail = order.email || buyerInfo.email || '';\n  const customerPhone = order.phone || buyerInfo.phone || '';\n  \n  // Ticket information (summarized for the order)\n  const tickets = order.tickets || [];\n  let ticketTypes = [];\n  let totalQuantity = 0;\n  \n  for (const ticket of tickets) {\n    const ticketType = ticket.ticketType || ticket.type || {};\n    const typeName = ticketType.name || ticket.name || 'General';\n    const quantity = parseInt(ticket.quantity) || 1;\n    \n    ticketTypes.push(`${typeName} (${quantity})`);\n    totalQuantity += quantity;\n  }\n  \n  const ticketTypesText = ticketTypes.length > 0 ? ticketTypes.join(', ') : 'General';\n  \n  // Financial calculations\n  const finance = order.finance || {};\n  const subtotal = parseFloat(finance.subtotal || order.subtotal || order.amount || 0);\n  const platformFee = parseFloat(finance.platformFee || order.platformFee || 0);\n  const bookingFee = parseFloat(finance.bookingFee || order.bookingFee || 0);\n  const processingFee = parseFloat(finance.processingFee || order.processingFee || 0);\n  const totalFees = platformFee + bookingFee + processingFee;\n  const totalAmount = parseFloat(finance.total || order.total || subtotal + totalFees);\n  const netRevenue = subtotal - totalFees;\n  const partnerShare = netRevenue * 0.743; // 74.3% partner share\n  \n  // Dates\n  const purchaseDate = order.createdAt || order.purchaseDate || new Date().toISOString();\n  const eventDate = eventInfo.startDate || eventInfo.date || eventInfo.dates?.[0]?.startDate || null;\n  \n  // Venue info  \n  const venue = eventInfo.venue?.name || eventInfo.location?.name || eventInfo.location || '';\n  \n  // Status\n  const orderStatus = (order.status || 'complete').charAt(0).toUpperCase() + (order.status || 'complete').slice(1);\n  const currency = order.currency || eventInfo.currency || 'AUD';\n  \n  const orderEntry = {\n    orderId: orderId,\n    properties: {\n      \"Event Name\": {\n        title: [{ text: { content: eventName } }]\n      },\n      \"Customer Name\": {\n        rich_text: [{ text: { content: customerName } }]\n      },\n      \"Customer Email\": {\n        email: customerEmail || 'no-email@example.com'\n      },\n      \"Order ID\": {\n        rich_text: [{ text: { content: orderId } }]\n      },\n      \"Platform\": {\n        select: { name: \"Humanitix\" }\n      },\n      \"Ticket Types\": {\n        rich_text: [{ text: { content: ticketTypesText } }]\n      },\n      \"Quantity\": {\n        number: totalQuantity\n      },\n      \"Subtotal\": {\n        number: subtotal\n      },\n      \"Platform Fee\": {\n        number: platformFee\n      },\n      \"Booking Fee\": {\n        number: bookingFee\n      },\n      \"Processing Fee\": {\n        number: processingFee\n      },\n      \"Total Fees\": {\n        number: totalFees\n      },\n      \"Amount\": {\n        number: totalAmount\n      },\n      \"Net Revenue\": {\n        number: netRevenue\n      },\n      \"Partner Share\": {\n        number: parseFloat(partnerShare.toFixed(2))\n      },\n      \"Partner Percentage\": {\n        number: 0.743\n      },\n      \"Partner Deal Type\": {\n        select: { name: \"80% minus fees\" }\n      },\n      \"Order Status\": {\n        select: { name: orderStatus }\n      },\n      \"Status\": {\n        select: { name: \"Paid\" }\n      },\n      \"Currency\": {\n        select: { name: currency }\n      },\n      \"Purchase Date\": {\n        date: { start: purchaseDate }\n      },\n      \"Last Sync\": {\n        date: { start: new Date().toISOString() }\n      },\n      \"Data Source\": {\n        select: { name: \"Humanitix API\" }\n      },\n      \"Notes\": {\n        rich_text: [{ text: { content: `Order-level entry for ${totalQuantity} ticket(s). Event: ${eventName}` } }]\n      }\n    }\n  };\n  \n  // Add optional fields\n  if (eventDate) {\n    orderEntry.properties[\"Event Date\"] = {\n      date: { start: eventDate }\n    };\n  }\n  \n  if (venue) {\n    orderEntry.properties[\"Venue\"] = {\n      rich_text: [{ text: { content: venue } }]\n    };\n  }\n  \n  if (customerPhone) {\n    orderEntry.properties[\"Customer Phone\"] = {\n      phone_number: customerPhone\n    };\n  }\n  \n  transformedOrders.push(orderEntry);\n}\n\nconsole.log(`Transformed ${transformedOrders.length} orders`);\nreturn transformedOrders.map(order => ({ json: order }));"
+      },
+      "id": "transform-orders",
+      "name": "Transform Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "2304745b-8cbe-81cd-9483-d7acc2377bd6",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Order ID",
+              "condition": "equals",
+              "value": "={{ $json.orderId }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "id": "check-order-duplicates",
+      "name": "Check Order Duplicates",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },\n          "conditions": [\n            {\n              "leftValue": "={{ $json.results ? $json.results.length : 0 }}",\n              "rightValue": 0,\n              "operator": {\n                "type": "number",\n                "operation": "equals"\n              }\n            }\n          ],\n          "combinator": "and"\n        },\n        "options": {}\n      },\n      "id": "if-new-order",\n      "name": "IF New Order",\n      "type": "n8n-nodes-base.if",\n      "typeVersion": 2,\n      "position": [1560, 300]\n    },\n    {\n      "parameters": {\n        "resource": "databasePage",\n        "operation": "create",\n        "databaseId": "2304745b-8cbe-81cd-9483-d7acc2377bd6",\n        "properties": "={{ $('Transform Orders').item.json.properties }}",\n        "options": {}\n      },\n      "id": "create-order-entry",\n      "name": "Create Order Entry",\n      "type": "n8n-nodes-base.notion",\n      "typeVersion": 2.2,\n      "position": [1780, 260]\n    },\n    {\n      "parameters": {\n        "jsCode": "// Summary of sync operation\\nconst processedCount = $input.all().length;\\n\\nreturn [{\\n  json: {\\n    timestamp: new Date().toISOString(),\\n    message: `Order sync completed`,\\n    ordersProcessed: processedCount,\\n    status: 'success',\\n    workflow: 'Orders to Ticket Sales'\\n  }\\n}];"\n      },\n      "id": "summary",\n      "name": "Summary",\n      "type": "n8n-nodes-base.code",\n      "typeVersion": 2,\n      "position": [2000, 300]\n    }\n  ],\n  "connections": {\n    "Schedule Trigger": {\n      "main": [\n        [\n          {\n            "node": "Get Events",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Get Events": {\n      "main": [\n        [\n          {\n            "node": "Parse Events",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Parse Events": {\n      "main": [\n        [\n          {\n            "node": "Get Orders",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Get Orders": {\n      "main": [\n        [\n          {\n            "node": "Transform Orders",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Transform Orders": {\n      "main": [\n        [\n          {\n            "node": "Check Order Duplicates",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Check Order Duplicates": {\n      "main": [\n        [\n          {\n            "node": "IF New Order",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "IF New Order": {\n      "main": [\n        [\n          {\n            "node": "Create Order Entry",\n            "type": "main",\n            "index": 0\n          }\n        ],\n        [\n          {\n            "node": "Summary",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Create Order Entry": {\n      "main": [\n        [\n          {\n            "node": "Summary",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    }\n  },\n  "settings": {\n    "executionOrder": "v1",\n    "saveDataErrorExecution": "all",\n    "saveDataSuccessExecution": "all",\n    "saveExecutionProgress": true,\n    "executionTimeout": 300\n  },\n  "staticData": null,\n  "meta": null,\n  "pinData": {},\n  "versionId": null,\n  "triggerCount": 0,\n  "tags": []\n}

@@ -1,0 +1,17 @@
+{
+  "id": "issue-1757555430606-1e2bb1c3",
+  "type": "issue",
+  "severity": "low",
+  "title": "Solution: Database migration execution status",
+  "description": "Solution attempt: Attempted to execute doors_time column migration via multiple API approaches. Confirmed that Supabase REST API does not support DDL operations (ALTER TABLE, CREATE INDEX). Attempted: 1) Supabase client with rpc, 2) Direct REST API calls, 3) Admin endpoint (404). Schema check shows start_time and end_time columns exist, but doors_time is missing. Manual execution via Supabase SQL Editor remains the only viable option for DDL operations.",
+  "date": "2025-09-11",
+  "timestamp": "2025-09-11T01:50:30.606Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "api"
+  ]
+}

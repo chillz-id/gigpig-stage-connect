@@ -1,0 +1,21 @@
+{
+  "id": "issue-1755886937645-1f9b2df6",
+  "type": "issue",
+  "severity": "low",
+  "title": "Old Config Backup File Accumulation",
+  "description": "Low maintenance issue: Multiple old configuration backup files accumulated without cleanup procedures - '.claude.json.backup' (101KB), '.env.production.backup', and '.ssh/known_hosts.old'. Root cause: Backup files created during system updates and configuration changes without lifecycle management or cleanup procedures. While not critical, these files clutter the system and can cause confusion about active configurations. Prevention: Implement backup file lifecycle management with automatic cleanup of old config backups while preserving essential backup files like .env.local.backup.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T18:22:17.646Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Successfully resolved old config backup file accumulation issue. Removed old configuration backup files: '.claude.json.backup' (101KB), '.env.production.backup', and '.ssh/known_hosts.old'. Preserved essential backup file '.env.local.backup' which contains working credentials needed for system recovery. System functionality maintained while removing unnecessary backup file clutter. Established understanding of which backup files are essential vs disposable.",
+    "successful": true,
+    "timestamp": "2025-08-22T18:22:17.927Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": null,
+  "cross_references": []
+}

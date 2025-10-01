@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { humanitixApiService } from './humanitixApiService';
+import { eventbriteApiService } from './eventbriteApiService';
 
 interface WebhookPayload {
   platform: string;
@@ -75,38 +76,24 @@ class WebhookProcessorService {
    */
   private async processEventbriteWebhook(payload: WebhookPayload) {
     const { data } = payload;
-    
+
     // Validate required data
-    if (!data?.api_url) {
+    if (!data?.config?.endpoint_url) {
       throw new Error('Invalid Eventbrite webhook payload');
     }
 
-    // Extract event ID from API URL
-    const eventIdMatch = data.api_url.match(/\/events\/(\d+)\//);
-    if (!eventIdMatch) {
-      throw new Error('Could not extract event ID from Eventbrite API URL');
+    try {
+      // Use the Eventbrite API service to process the webhook
+      const result = await eventbriteApiService.processWebhook(data);
+
+      return {
+        success: true,
+        message: result.message
+      };
+    } catch (error) {
+      console.error('Error processing Eventbrite webhook:', error);
+      throw error;
     }
-
-    const eventbriteEventId = eventIdMatch[1];
-
-    // Find the local event
-    const { data: ticketPlatform, error: platformError } = await supabase
-      .from('ticket_platforms')
-      .select('event_id, platform_config')
-      .eq('platform', 'eventbrite')
-      .eq('external_event_id', eventbriteEventId)
-      .single();
-
-    if (platformError || !ticketPlatform) {
-      throw new Error(`No local event found for Eventbrite event ${eventbriteEventId}`);
-    }
-
-    // For Eventbrite, we would need to fetch the order details from their API
-    // This is a simplified version
-    return { 
-      success: true, 
-      message: 'Eventbrite webhook received. Full processing requires API integration.' 
-    };
   }
 
   /**

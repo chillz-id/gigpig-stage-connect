@@ -1,0 +1,151 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-08-22T15:16:04.528Z",
+  "warnings": [
+    {
+      "detection_id": "detection-1755875763783-15994e09",
+      "timestamp": "2025-08-22T15:16:04.451Z",
+      "warning": {
+        "type": "temporal_cluster",
+        "severity": "medium",
+        "message": "TEMPORAL CLUSTER: Part of recent problem cluster",
+        "action": "Consider if this is a recurring issue",
+        "clusters": [
+          {
+            "window": "24_hours",
+            "total_problems": 63,
+            "similar_problems": 1,
+            "confidence": 0.015873015873015872,
+            "match_type": "temporal_cluster",
+            "details": "1 similar problems in last 24 hours",
+            "problems": [
+              {
+                "id": "issue-1755875465795-cd203499",
+                "title": "ES Module vs CommonJS Configuration Errors",
+                "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                "severity": "high",
+                "status": "open",
+                "created": "2025-08-22T15:11:05.795Z",
+                "updated": "2025-08-22T15:11:05.795Z",
+                "tags": [
+                  "error"
+                ],
+                "solution": null,
+                "raw_data": {
+                  "id": "issue-1755875465795-cd203499",
+                  "type": "issue",
+                  "severity": "high",
+                  "title": "ES Module vs CommonJS Configuration Errors",
+                  "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                  "date": "2025-08-22",
+                  "timestamp": "2025-08-22T15:11:05.795Z",
+                  "status": "open",
+                  "investigation_time": null,
+                  "solution": null,
+                  "related_files": [],
+                  "tags": [
+                    "error"
+                  ],
+                  "linear_issue_id": null,
+                  "cross_references": []
+                },
+                "source": "knowledge_graph"
+              }
+            ]
+          },
+          {
+            "window": "7_days",
+            "total_problems": 63,
+            "similar_problems": 1,
+            "confidence": 0.015873015873015872,
+            "match_type": "temporal_cluster",
+            "details": "1 similar problems in last 7 days",
+            "problems": [
+              {
+                "id": "issue-1755875465795-cd203499",
+                "title": "ES Module vs CommonJS Configuration Errors",
+                "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                "severity": "high",
+                "status": "open",
+                "created": "2025-08-22T15:11:05.795Z",
+                "updated": "2025-08-22T15:11:05.795Z",
+                "tags": [
+                  "error"
+                ],
+                "solution": null,
+                "raw_data": {
+                  "id": "issue-1755875465795-cd203499",
+                  "type": "issue",
+                  "severity": "high",
+                  "title": "ES Module vs CommonJS Configuration Errors",
+                  "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                  "date": "2025-08-22",
+                  "timestamp": "2025-08-22T15:11:05.795Z",
+                  "status": "open",
+                  "investigation_time": null,
+                  "solution": null,
+                  "related_files": [],
+                  "tags": [
+                    "error"
+                  ],
+                  "linear_issue_id": null,
+                  "cross_references": []
+                },
+                "source": "knowledge_graph"
+              }
+            ]
+          },
+          {
+            "window": "30_days",
+            "total_problems": 63,
+            "similar_problems": 1,
+            "confidence": 0.015873015873015872,
+            "match_type": "temporal_cluster",
+            "details": "1 similar problems in last 30 days",
+            "problems": [
+              {
+                "id": "issue-1755875465795-cd203499",
+                "title": "ES Module vs CommonJS Configuration Errors",
+                "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                "severity": "high",
+                "status": "open",
+                "created": "2025-08-22T15:11:05.795Z",
+                "updated": "2025-08-22T15:11:05.795Z",
+                "tags": [
+                  "error"
+                ],
+                "solution": null,
+                "raw_data": {
+                  "id": "issue-1755875465795-cd203499",
+                  "type": "issue",
+                  "severity": "high",
+                  "title": "ES Module vs CommonJS Configuration Errors",
+                  "description": "Technical mistake: Created Node.js files using require() statements that failed to run due to package.json 'type': 'module' setting. Root cause: Didn't account for project's ES module configuration affecting CommonJS require() statements, leading to ReferenceError: require is not defined errors. This caused comprehensive tracking system components to fail on execution. Solution applied: Renamed problematic JavaScript files to .cjs extension and updated all references in helper scripts. Updated imports appropriately for module system. Prevention: Always check package.json module configuration before creating Node.js scripts. Verify module system compatibility during development. Test scripts immediately after creation to catch module issues early.",
+                  "date": "2025-08-22",
+                  "timestamp": "2025-08-22T15:11:05.795Z",
+                  "status": "open",
+                  "investigation_time": null,
+                  "solution": null,
+                  "related_files": [],
+                  "tags": [
+                    "error"
+                  ],
+                  "linear_issue_id": null,
+                  "cross_references": []
+                },
+                "source": "knowledge_graph"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "warning_types": {
+    "exact_duplicate": 0,
+    "high_similarity": 0,
+    "pattern_match": 0,
+    "temporal_cluster": 1,
+    "solution_exists": 0
+  }
+}

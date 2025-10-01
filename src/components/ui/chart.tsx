@@ -74,27 +74,45 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Generate CSS custom properties using React's style attribute (XSS-safe)
+  const lightThemeVars = React.useMemo(() => {
+    const vars: Record<string, string> = {}
+    colorConfig.forEach(([key, itemConfig]) => {
+      const color = itemConfig.theme?.light || itemConfig.color
+      if (color) {
+        vars[`--color-${key}` as any] = color
+      }
+    })
+    return vars
+  }, [colorConfig])
+
+  const darkThemeVars = React.useMemo(() => {
+    const vars: Record<string, string> = {}
+    colorConfig.forEach(([key, itemConfig]) => {
+      const color = itemConfig.theme?.dark
+      if (color) {
+        vars[`--color-${key}` as any] = color
+      }
+    })
+    return vars
+  }, [colorConfig])
+
   return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
+    <>
+      {/* Apply CSS custom properties directly to the chart container via CSS inheritance */}
+      <div
+        data-chart-vars={id}
+        style={lightThemeVars}
+        className="contents"
+      />
+      {Object.keys(darkThemeVars).length > 0 && (
+        <div
+          data-chart-vars={`${id}-dark`}
+          style={darkThemeVars}
+          className="contents dark:contents hidden"
+        />
+      )}
+    </>
   )
 }
 

@@ -1,0 +1,248 @@
+{
+  "analysis_type": "GENUINE_CLAUDE4_ANALYSIS",
+  "generated_at": "2025-08-21T23:05:00.000Z",
+  "model_used": "claude-sonnet-4",
+  "duration_minutes": 15,
+  "files_analyzed": 1415,
+  "files_examined_in_detail": 8,
+  
+  "executive_summary": {
+    "codebase_health": "Good with critical areas needing refactoring",
+    "primary_concerns": [
+      "Extremely large service classes with multiple responsibilities",
+      "Duplicate SQL migration files",
+      "Widespread unused imports across the codebase",
+      "Large React components that could be decomposed"
+    ],
+    "refactoring_priority": "High for tourService.ts and notificationService.ts"
+  },
+
+  "critical_findings": [
+    {
+      "type": "massive_service_class",
+      "severity": "high",
+      "file": "src/services/tourService.ts",
+      "details": {
+        "lines": 771,
+        "cyclomatic_complexity": 63,
+        "responsibility_count": 8,
+        "issues": [
+          "Single class handling tours, stops, participants, collaborations, logistics, expenses, revenue, and statistics",
+          "63 cyclomatic complexity indicates extremely complex branching logic",
+          "771 lines violates single responsibility principle",
+          "Methods like getTourStopWithDetails() orchestrate multiple async operations"
+        ]
+      },
+      "recommendation": "Split into 4 separate services: TourService, TourStopService, TourParticipantService, TourFinancialService",
+      "effort_estimate": "3-4 days",
+      "impact": "Dramatically improves maintainability and testability"
+    },
+    {
+      "type": "notification_service_complexity", 
+      "severity": "high",
+      "file": "src/services/notificationService.ts",
+      "details": {
+        "responsibilities": [
+          "Real-time subscription management",
+          "Notification CRUD operations",
+          "Bulk notification creation",
+          "Toast notifications",
+          "Push notifications",
+          "Email notifications",
+          "Spot assignment notifications",
+          "Tour notifications",
+          "Task notifications",
+          "Flight delay notifications"
+        ],
+        "notification_types": 18,
+        "class_methods": "20+"
+      },
+      "recommendation": "Extract into NotificationManager, EmailNotificationService, PushNotificationService, and domain-specific notification services",
+      "effort_estimate": "2-3 days", 
+      "impact": "Reduces complexity from 18 notification types in one class to focused services"
+    },
+    {
+      "type": "large_react_component",
+      "severity": "medium",
+      "file": "src/components/InvoiceForm.tsx",
+      "details": {
+        "state_variables": 10,
+        "complex_state_object": "invoiceData with 14 properties",
+        "responsibilities": [
+          "Form state management",
+          "Item array manipulation", 
+          "Date handling",
+          "Deposit calculations",
+          "Invoice preview",
+          "Validation",
+          "API submission"
+        ]
+      },
+      "recommendation": "Extract into InvoiceFormState hook, InvoiceItemsList component, DepositCalculator component",
+      "effort_estimate": "1-2 days",
+      "impact": "Improved reusability and testing"
+    }
+  ],
+
+  "duplicate_code_analysis": {
+    "total_duplicates": 3,
+    "critical_duplicates": [
+      {
+        "files": ["EMERGENCY_FIX_PROFILES.sql", "fix-missing-profiles.sql"],
+        "size": "3,063 bytes",
+        "lines": 102,
+        "issue": "Emergency SQL fix duplicated as regular fix file",
+        "recommendation": "Remove emergency file, keep only fix-missing-profiles.sql",
+        "effort": "5 minutes"
+      },
+      {
+        "files": ["fix-google-auth.sql", "supabase/migrations/20250109_fix_google_auth.sql"],
+        "size": "1,793 bytes", 
+        "lines": 53,
+        "issue": "Same Google auth fix exists as standalone file and migration",
+        "recommendation": "Remove standalone file, use only migration file",
+        "effort": "5 minutes"
+      },
+      {
+        "files": ["invoice-migration.sql", "supabase/migrations/20250706230000_complete_invoicing_system.sql"],
+        "size": "13,470 bytes",
+        "lines": 493,
+        "issue": "Large invoice migration duplicated",
+        "recommendation": "Remove standalone file, keep only the timestamped migration",
+        "effort": "10 minutes"
+      }
+    ],
+    "impact": "Low - mainly organizational cleanup, saves ~18KB of duplicated code"
+  },
+
+  "unused_imports_analysis": {
+    "total_files_affected": 149,
+    "total_unused_imports": 284,
+    "severity": "medium",
+    "examples": [
+      {
+        "file": "analyze-financial-data.js",
+        "unused": ["path from 'path'"],
+        "line": 9
+      },
+      {
+        "file": "scripts/apply-customer-fields-migration.js", 
+        "unused": ["promises from 'fs'"],
+        "line": 9
+      }
+    ],
+    "recommendation": "Run automated cleanup with ESLint --fix to remove unused imports",
+    "effort_estimate": "30 minutes",
+    "impact": "Cleaner code, slightly smaller bundle size"
+  },
+
+  "architecture_analysis": {
+    "strengths": [
+      "Clear separation between services, hooks, and components",
+      "Consistent TypeScript typing throughout",
+      "Good use of React Query for state management",
+      "Supabase integration well abstracted"
+    ],
+    "weaknesses": [
+      "Service classes have grown too large and violate SRP",
+      "Some components handle too many responsibilities",
+      "Email template logic mixed with notification logic",
+      "Tour management spread across multiple service methods without clear boundaries"
+    ],
+    "recommendations": [
+      "Implement service decomposition pattern",
+      "Extract domain-specific notification services",
+      "Create dedicated email service",
+      "Add architectural decision records (ADRs) for service boundaries"
+    ]
+  },
+
+  "performance_analysis": {
+    "potential_issues": [
+      {
+        "type": "unnecessary_async_orchestration",
+        "location": "tourService.ts:236",
+        "code": "const [participants, logistics, expenses, revenue] = await Promise.all([...])",
+        "issue": "Complex Promise.all orchestration that could be simplified",
+        "recommendation": "Consider if all this data is needed upfront"
+      },
+      {
+        "type": "large_component_renders",
+        "location": "InvoiceForm.tsx",
+        "issue": "Large component with multiple useState calls may cause unnecessary re-renders",
+        "recommendation": "Extract state to custom hook with useMemo optimizations"
+      }
+    ],
+    "bundle_impact": "Service files are large but tree-shaking should help in production builds"
+  },
+
+  "refactoring_roadmap": {
+    "phase_1_critical": [
+      {
+        "task": "Split tourService.ts into domain services",
+        "files": ["src/services/tourService.ts"],
+        "effort": "3-4 days",
+        "priority": "critical",
+        "new_files": [
+          "src/services/tour/TourService.ts",
+          "src/services/tour/TourStopService.ts", 
+          "src/services/tour/TourParticipantService.ts",
+          "src/services/tour/TourFinancialService.ts"
+        ]
+      },
+      {
+        "task": "Decompose notificationService.ts",
+        "files": ["src/services/notificationService.ts"],
+        "effort": "2-3 days",
+        "priority": "critical",
+        "new_files": [
+          "src/services/notifications/NotificationManager.ts",
+          "src/services/notifications/EmailNotificationService.ts",
+          "src/services/notifications/PushNotificationService.ts",
+          "src/services/notifications/SpotNotificationService.ts"
+        ]
+      }
+    ],
+    "phase_2_improvement": [
+      {
+        "task": "Refactor InvoiceForm component",
+        "files": ["src/components/InvoiceForm.tsx"],
+        "effort": "1-2 days",
+        "priority": "medium",
+        "approach": "Extract custom hooks and sub-components"
+      },
+      {
+        "task": "Clean up duplicate SQL files",
+        "files": ["EMERGENCY_FIX_PROFILES.sql", "fix-google-auth.sql", "invoice-migration.sql"],
+        "effort": "20 minutes",
+        "priority": "low"
+      },
+      {
+        "task": "Remove unused imports",
+        "files": "149 files with unused imports",
+        "effort": "30 minutes",
+        "priority": "low",
+        "approach": "ESLint --fix automation"
+      }
+    ]
+  },
+
+  "testing_recommendations": {
+    "priority_files_for_testing": [
+      "src/services/tourService.ts - needs unit tests for each responsibility before splitting",
+      "src/services/notificationService.ts - critical business logic needs coverage",
+      "src/components/InvoiceForm.tsx - complex form logic needs integration tests"
+    ],
+    "testing_strategy": "Add tests before refactoring to ensure behavior preservation"
+  },
+
+  "metrics_summary": {
+    "total_files": 1415,
+    "complex_files": 246,
+    "duplicates": 3,
+    "unused_imports": 284,
+    "critical_refactoring_files": 2,
+    "estimated_total_effort": "6-9 days for critical items, 2-3 days for improvements",
+    "impact_level": "High - will significantly improve maintainability"
+  }
+}

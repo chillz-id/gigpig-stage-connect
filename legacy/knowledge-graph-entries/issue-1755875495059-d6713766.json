@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755875495059-d6713766",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Incomplete File Reference Updates After Renaming",
+  "description": "Process mistake: When renaming JavaScript files to .cjs extension to fix module issues, didn't initially update all helper script references comprehensively. Root cause: Performed file renames without systematic search and replace across all dependent files, leading to broken script execution when helper commands tried to call renamed files. This caused system-status and other helper commands to fail. Solution applied: Updated all helper scripts (system-status, analyze-task, check-duplicates) to reference correct .cjs file extensions. Prevention: File renames require comprehensive dependency updates across entire system. Use systematic search for file references before renaming. Create a checklist for file rename operations that includes updating all dependents.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:11:35.059Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "fix",
+    "duplicate"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

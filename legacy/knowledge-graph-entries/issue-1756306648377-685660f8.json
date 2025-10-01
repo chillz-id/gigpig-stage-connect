@@ -1,0 +1,22 @@
+{
+  "id": "issue-1756306648377-685660f8",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "Humanitix Technical Architecture Patterns and Design Principles",
+  "description": "Need comprehensive documentation of technical architecture patterns discovered during Humanitix integration implementation. This includes: 1) API Integration Patterns - 3-endpoint strategy (/v1/events, /v1/events/{id}/orders, /v1/events/{id}/tickets), nested data navigation patterns, defensive programming for complex API responses, 2) Database Design Patterns - 3-database Notion architecture with proper relations, field mapping strategies from API to Notion properties, data transformation patterns for different data types, 3) Error Handling Patterns - rate limiting strategies (0.3s between API calls), retry mechanisms for failed requests, graceful degradation for partial failures, 4) Security Patterns - API key management in production environments, credential isolation between systems, secure token handling, 5) Performance Optimization - pagination handling for large datasets, memory management for bulk operations, rate limiting compliance with API providers. Essential for establishing coding standards and architectural guidelines for future integrations.",
+  "date": "2025-08-27",
+  "timestamp": "2025-08-27T14:57:28.377Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "api",
+    "error",
+    "integration",
+    "security"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

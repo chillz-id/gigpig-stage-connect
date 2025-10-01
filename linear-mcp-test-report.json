@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-08-22T00:04:51.119Z",
+  "environment": "Claude Code Environment",
+  "results": {
+    "directApiAccess": true,
+    "mcpToolsAccessible": false,
+    "availableOperations": [
+      "mcp__linear__createIssue",
+      "mcp__linear__updateIssue",
+      "mcp__linear__getIssue",
+      "mcp__linear__searchIssues",
+      "mcp__linear__createComment",
+      "mcp__linear__getTeams",
+      "mcp__linear__getProjects",
+      "mcp__linear__createProject",
+      "mcp__linear__getLabels",
+      "mcp__linear__createLabel",
+      "mcp__linear__getWorkflow",
+      "mcp__linear__assignIssue"
+    ],
+    "limitations": [],
+    "recommendations": [
+      "Use Direct GraphQL API for Linear operations",
+      "Expected MCP tools documented for future use",
+      "Create Linear integration utility functions",
+      "Implement error handling and retry logic"
+    ]
+  },
+  "summary": {
+    "directApiWorking": true,
+    "mcpConfigured": true,
+    "recommendedApproach": "Direct GraphQL API"
+  }
+}

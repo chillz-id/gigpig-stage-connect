@@ -1,0 +1,23 @@
+{
+  "id": "issue-1755886654797-20b7d7b2",
+  "type": "issue",
+  "severity": "high",
+  "title": "Google OAuth Integration Blocked by Invalid Request Error",
+  "description": "Google OAuth 2.0 flow fails with 'Error 400: invalid_request' showing 'Missing required parameter: scope' and 'Access blocked: authorisation error'. Even after resolving scope parameter issues, the OAuth callback returns 'Not Found' preventing successful authentication. Google's OAuth policy requires trusted SSL certificates which are provided via Nginx proxy with self-signed cert, but callback endpoint registration appears to be the primary blocker.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T18:17:34.797Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "DNS misconfiguration was root cause. Domain harrys.standupsydney.com was resolving to AWS CloudFront instead of our server (170.64.129.59). Once DNS A record is updated to correct IP, OAuth callback endpoints will be accessible and Google OAuth will function properly.",
+    "successful": true,
+    "timestamp": "2025-08-22T18:25:43.087Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "authentication",
+    "error",
+    "integration"
+  ]
+}

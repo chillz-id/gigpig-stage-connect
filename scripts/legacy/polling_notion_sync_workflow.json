@@ -1,0 +1,311 @@
+[
+  {
+    "createdAt": "2025-08-22T07:38:15.816Z",
+    "updatedAt": "2025-08-22T07:38:15.816Z",
+    "id": "PollingNotionSync",
+    "name": "Humanitix Polling Sync to Notion (Every 3 Minutes)",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "value": 3
+              }
+            ]
+          }
+        },
+        "id": "polling-trigger",
+        "name": "Every 3 Minutes",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Initialize polling session\nconst now = new Date();\nconst lastRunKey = 'lastHumanitixSync';\n\n// Get last sync time (default to 10 minutes ago for first run)\nlet lastSyncTime = new Date(now.getTime() - (10 * 60 * 1000)); // 10 minutes ago\n\n// Try to get actual last run time from workflow static data\ntry {\n  // Ensure staticData object exists before accessing it\n  if (!$workflow.staticData) {\n    $workflow.staticData = {};\n  }\n  \n  const lastRun = $workflow.staticData[lastRunKey];\n  if (lastRun) {\n    lastSyncTime = new Date(lastRun);\n  }\n} catch (e) {\n  console.log('First run - checking last 10 minutes');\n  // Ensure staticData exists even if there was an error\n  if (!$workflow.staticData) {\n    $workflow.staticData = {};\n  }\n}\n\n// Update last sync time for next run (with safe assignment)\ntry {\n  if (!$workflow.staticData) {\n    $workflow.staticData = {};\n  }\n  $workflow.staticData[lastRunKey] = now.toISOString();\n} catch (e) {\n  console.error('Error saving sync time:', e.message);\n}\n\nconsole.log(`🔍 Checking for orders since: ${lastSyncTime.toISOString()}`);\nconsole.log(`📅 Current time: ${now.toISOString()}`);\n\nreturn [{\n  json: {\n    lastSyncTime: lastSyncTime.toISOString(),\n    currentTime: now.toISOString()\n  }\n}];"
+        },
+        "id": "init-polling",
+        "name": "Initialize Polling",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.humanitix.com/v1/events",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "page",
+                "value": "1"
+              },
+              {
+                "name": "pageSize",
+                "value": "50"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "{{HUMANITIX_API_KEY}}"
+              }
+            ]
+          }
+        },
+        "id": "fetch-events",
+        "name": "Fetch Recent Events",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          680,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Filter events to only check recent/active ones\nconst eventsResponse = $input.first().json;\nconst lastSyncTime = new Date($('Initialize Polling').first().json.lastSyncTime);\nconst events = eventsResponse.events || [];\n\nconsole.log(`📋 Processing ${events.length} events from API`);\n\n// Filter to recent/upcoming events (reduce API calls)\nconst recentEvents = events.filter(event => {\n  const eventDate = new Date(event.startDate);\n  const now = new Date();\n  const daysDiff = (eventDate - now) / (1000 * 60 * 60 * 24);\n  \n  // Include events from last 7 days to next 60 days\n  return daysDiff >= -7 && daysDiff <= 60;\n});\n\nconsole.log(`🎯 Filtered to ${recentEvents.length} recent/upcoming events`);\n\nreturn recentEvents.map(event => ({\n  json: {\n    eventId: event._id,\n    eventName: event.name,\n    eventDate: event.startDate,\n    lastSyncTime: lastSyncTime.toISOString()\n  }\n}));"
+        },
+        "id": "filter-events",
+        "name": "Filter Recent Events",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          900,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.humanitix.com/v1/events/{{ $json.eventId }}/orders",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "page",
+                "value": "1"
+              },
+              {
+                "name": "pageSize",
+                "value": "20"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "{{HUMANITIX_API_KEY}}"
+              }
+            ]
+          }
+        },
+        "id": "fetch-orders",
+        "name": "Fetch Event Orders",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          1120,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Simplified attendee filtering - no complex indexing\nconst ordersResponse = $input.first().json;\nconst orders = ordersResponse.orders || [];\n\n// Get the event data from the previous node (safely)\nconst eventData = $('Filter Recent Events').first().json;\nconst lastSyncTime = new Date(eventData.lastSyncTime);\n\nconsole.log(`🔍 Event: ${eventData.eventName} - ${orders.length} total orders`);\n\n// Find new orders since last sync\nconst newOrders = orders.filter(order => {\n  const orderCreatedTime = new Date(order.createdAt);\n  return orderCreatedTime > lastSyncTime;\n});\n\nif (newOrders.length > 0) {\n  console.log(`🚨 Found ${newOrders.length} NEW attendees since last sync!`);\n  \n  // Return all new attendees with event data\n  return newOrders.map(order => ({\n    json: {\n      orderData: order,\n      eventData: {\n        _id: eventData.eventId,\n        name: eventData.eventName,\n        startDate: eventData.eventDate\n      }\n    }\n  }));\n} else {\n  console.log(`✅ No new attendees for ${eventData.eventName}`);\n  return [];\n}"
+        },
+        "id": "filter-new-orders",
+        "name": "Filter New Orders",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1340,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Transform order for Notion with CORRECT FINANCIAL FIELDS\nconst { orderData, eventData } = $json;\n\nconsole.log(`🔄 Processing new order: ${orderData.firstName} ${orderData.lastName} (${orderData._id})`);\n\ntry {\n  const orderId = orderData._id || 'unknown-' + Date.now();\n  const eventId = eventData._id || 'unknown-event';\n  \n  // Safe customer name extraction\n  let customerName = 'Anonymous';\n  try {\n    const firstName = orderData.firstName || '';\n    const lastName = orderData.lastName || '';\n    customerName = `${firstName} ${lastName}`.trim() || 'Anonymous';\n  } catch (e) {\n    customerName = 'Anonymous';\n  }\n  \n  const email = orderData.email || \"no-email@example.com\";\n  const phone = orderData.mobile || orderData.phone || null;\n  \n  // CORRECT FINANCIAL FIELDS - Use proper data sources\n  let grossSales = 0;\n  let netSales = 0;\n  let discountAmount = 0;\n  let discountCode = '';\n  \n  try {\n    // Use grossSales for Total Amount (original price before discount)\n    grossSales = parseFloat(orderData.totals?.grossSales || orderData.purchaseTotals?.grossSales || 0);\n    if (isNaN(grossSales)) grossSales = 0;\n    \n    // Use netSales for Net Sales (amount after discount)\n    netSales = parseFloat(orderData.totals?.netSales || orderData.purchaseTotals?.netSales || 0);\n    if (isNaN(netSales)) netSales = 0;\n    \n    // Extract discount information\n    discountCode = orderData.discounts?.discountCode?.code || '';\n    discountAmount = parseFloat(orderData.discounts?.discountCode?.discountAmount || orderData.totals?.discounts || 0);\n    if (isNaN(discountAmount)) discountAmount = 0;\n    \n    console.log(`💰 Financial - Gross: ${grossSales}, Net: ${netSales}, Discount: ${discountCode} (${discountAmount})`);\n    \n  } catch (e) {\n    console.error('⚠️ Error extracting financial data:', e.message);\n  }\n  \n  // Safe date extraction\n  let eventDate = new Date().toISOString();\n  try {\n    eventDate = eventData.startDate || new Date().toISOString();\n  } catch (e) {\n    eventDate = new Date().toISOString();\n  }\n  \n  let orderDate = new Date().toISOString();\n  try {\n    orderDate = orderData.completedAt || orderData.createdAt || new Date().toISOString();\n  } catch (e) {\n    orderDate = new Date().toISOString();\n  }\n  \n  const status = orderData.status || orderData.financialStatus || \"completed\";\n  const ticketTypes = 'General Admission';\n  const eventName = eventData.name || 'Unknown Event';\n  \n  // Create the Notion entry with CORRECT field mappings\n  const notionEntry = {\n    parent: {\n      database_id: '1374745b-8cbe-804b-87a2-ec93b3385e01'\n    },\n    properties: {\n      \"Name\": {\n        title: [{ text: { content: customerName } }]\n      },\n      \"Email\": {\n        email: email\n      },\n      \"Event Name\": {\n        rich_text: [{ text: { content: eventName } }]\n      },\n      \"Event ID\": {\n        rich_text: [{ text: { content: eventId } }]\n      },\n      \"Event Date & Time\": {\n        date: { start: eventDate }\n      },\n      \"Order ID\": {\n        rich_text: [{ text: { content: orderId } }]\n      },\n      // FIXED: Use gross sales for Total Amount (original price)\n      \"Total Amount\": {\n        number: grossSales\n      },\n      // NEW: Add Net Sales field\n      \"Net Sales\": {\n        number: netSales\n      },\n      // NEW: Add Discount Code field\n      \"Discount Code\": {\n        rich_text: [{ text: { content: discountCode } }]\n      },\n      // NEW: Add Discount Amount field\n      \"Discount Amount\": {\n        number: discountAmount\n      },\n      \"Quantity\": {\n        number: 1\n      },\n      \"Ticket Type\": {\n        rich_text: [{ text: { content: ticketTypes } }]\n      },\n      \"Payment Status\": {\n        rich_text: [{ text: { content: status } }]\n      },\n      \"Order Date\": {\n        date: { start: orderDate }\n      },\n      \"Ticketing Partner\": {\n        select: { name: \"Humanitix\" }\n      },\n      \"Created At\": {\n        date: { start: new Date().toISOString() }\n      },\n      \"Updated At\": {\n        date: { start: new Date().toISOString() }\n      }\n    }\n  };\n  \n  // Add phone if available\n  if (phone) {\n    notionEntry.properties[\"Mobile\"] = {\n      phone_number: phone\n    };\n  }\n  \n  console.log(`✅ Notion entry prepared for: ${customerName} (Gross: $${grossSales}, Net: $${netSales})`);\n  return [{ json: notionEntry }];\n  \n} catch (error) {\n  console.error('❌ Error in transform:', error.message);\n  return [];\n}"
+        },
+        "id": "transform-for-notion",
+        "name": "Transform for Notion",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1560,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/pages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{NOTION_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContentType": "json",
+          "jsonBody": "={{ $json }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "create-notion-entry",
+        "name": "Create Notion Entry",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          1780,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Log the polling sync result - FIXED VERSION\nconst response = $json;\n\n// Simplified approach - just log based on response\nif (response.id) {\n  console.log(`✅ POLLING SYNC SUCCESS → Notion`);\n  console.log(`   Notion ID: ${response.id}`);\n  console.log(`   Response: Created new attendee record`);\n  \n  return [{\n    json: {\n      success: true,\n      notionId: response.id,\n      timestamp: new Date().toISOString(),\n      source: 'polling-sync'\n    }\n  }];\n} else {\n  console.error(`❌ POLLING SYNC FAILED`);\n  console.error('Response:', JSON.stringify(response, null, 2));\n  \n  return [{\n    json: {\n      success: false,\n      error: response,\n      timestamp: new Date().toISOString(),\n      source: 'polling-sync'\n    }\n  }];\n}"
+        },
+        "id": "log-sync-result",
+        "name": "Log Sync Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2000,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Every 3 Minutes": {
+        "main": [
+          [
+            {
+              "node": "Initialize Polling",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Initialize Polling": {
+        "main": [
+          [
+            {
+              "node": "Fetch Recent Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Recent Events": {
+        "main": [
+          [
+            {
+              "node": "Filter Recent Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Recent Events": {
+        "main": [
+          [
+            {
+              "node": "Fetch Event Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Event Orders": {
+        "main": [
+          [
+            {
+              "node": "Filter New Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter New Orders": {
+        "main": [
+          [
+            {
+              "node": "Transform for Notion",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transform for Notion": {
+        "main": [
+          [
+            {
+              "node": "Create Notion Entry",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Notion Entry": {
+        "main": [
+          [
+            {
+              "node": "Log Sync Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": {},
+    "meta": {
+      "instanceId": "e3a1c1c4e2a4f1b2c3d4e5f6a7b8c9d0"
+    },
+    "pinData": {},
+    "versionId": "polling-notion-sync-v1",
+    "triggerCount": 0,
+    "tags": []
+  }
+]

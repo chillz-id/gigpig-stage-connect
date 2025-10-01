@@ -1,0 +1,676 @@
+#!/usr/bin/env node
+/**
+ * N8N Debugging Monitoring System
+ * Continuous monitoring with 30-second polling intervals
+ * Tracks specific workflow ID: XQ8bFr8gSIOQjWC5
+ * Auto-logs findings to Knowledge Graph
+ * 
+ * Features:
+ * - Real-time workflow execution monitoring
+ * - Node-level execution progress tracking  
+ * - Automatic Knowledge Graph integration
+ * - Transform Orders → Check Order Duplicates failure detection
+ * - Performance metrics and timing analysis
+ * - Background service capability
+ */
+
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+
+// Handle __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import Knowledge Graph integration (CommonJS module)
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const ClaudeGraphIntegration = require('/root/.claude-multi-agent/scripts/claude-graph-integration.js');
+
+class N8NDebugMonitor {
+  constructor() {
+    // N8N Configuration
+    this.apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWYzNjQ3ZC1hMTQzLTQ3MzctOWI3Yi0zMDVkNGM4ZmE4NTYiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzU1Nzg5NjQ4fQ.jIPgXdpfgkUOa4We46nfaN-NgaHh4TbQIjGcwU5K57I';
+    this.baseUrl = 'http://localhost:5678/api/v1';
+    this.targetWorkflowId = 'XQ8bFr8gSIOQjWC5';
+    
+    // Monitoring Configuration
+    this.pollingInterval = 30000; // 30 seconds
+    this.isMonitoring = false;
+    this.executionHistory = new Map();
+    this.nodeFailurePatterns = new Map();
+    
+    // Knowledge Graph Integration
+    this.kg = new ClaudeGraphIntegration();
+    
+    // API Headers
+    this.headers = {
+      'X-N8N-API-KEY': this.apiKey,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    
+    // Critical failure patterns to monitor
+    this.criticalPatterns = [
+      'Transform Orders → Check Order Duplicates',
+      'Connection timeout',
+      'Database error',
+      'HTTP 500',
+      'Webhook failed',
+      'Supabase error',
+      'Authentication failed'
+    ];
+    
+    console.log('🔍 N8N Debug Monitor initialized');
+    console.log(`📊 Target Workflow: ${this.targetWorkflowId}`);
+    console.log(`⏰ Polling Interval: ${this.pollingInterval/1000}s`);
+  }
+
+  /**
+   * Core API request wrapper with comprehensive error handling
+   */
+  async apiRequest(endpoint, options = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const config = {
+      method: 'GET',
+      headers: this.headers,
+      ...options
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error(`❌ API Request failed [${config.method} ${endpoint}]:`, error.message);
+      
+      // Log API errors to Knowledge Graph
+      await this.kg.logIssue(
+        `N8N API Error: ${endpoint}`,
+        `API request failed: ${error.message}`,
+        'high'
+      );
+      
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get workflow details and current status
+   */
+  async getWorkflowStatus() {
+    console.log(`🔄 Checking workflow status: ${this.targetWorkflowId}`);
+    
+    const result = await this.apiRequest(`/workflows/${this.targetWorkflowId}`);
+    
+    if (!result.success) {
+      console.error('❌ Failed to get workflow status:', result.error);
+      return null;
+    }
+    
+    const workflow = result.data;
+    console.log(`📋 Workflow: ${workflow.name} | Active: ${workflow.active ? '✅' : '❌'}`);
+    
+    return {
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
+      updatedAt: workflow.updatedAt,
+      nodeCount: workflow.nodes?.length || 0,
+      nodes: workflow.nodes || []
+    };
+  }
+
+  /**
+   * Get recent executions for the target workflow
+   */
+  async getExecutions(limit = 20) {
+    console.log(`📊 Fetching executions for workflow: ${this.targetWorkflowId}`);
+    
+    const result = await this.apiRequest(`/executions?workflowId=${this.targetWorkflowId}&limit=${limit}`);
+    
+    if (!result.success) {
+      console.error('❌ Failed to get executions:', result.error);
+      return [];
+    }
+    
+    const executions = result.data.data || [];
+    console.log(`📈 Found ${executions.length} executions`);
+    
+    return executions.map(exec => ({
+      id: exec.id,
+      workflowId: exec.workflowId,
+      mode: exec.mode,
+      status: exec.status,
+      startedAt: exec.startedAt,
+      stoppedAt: exec.stoppedAt,
+      duration: exec.stoppedAt && exec.startedAt ? 
+        new Date(exec.stoppedAt) - new Date(exec.startedAt) : null,
+      waitTill: exec.waitTill
+    }));
+  }
+
+  /**
+   * Get detailed execution information including node-level data
+   */
+  async getExecutionDetails(executionId) {
+    console.log(`🔍 Getting execution details: ${executionId}`);
+    
+    const result = await this.apiRequest(`/executions/${executionId}`);
+    
+    if (!result.success) {
+      console.error('❌ Failed to get execution details:', result.error);
+      return null;
+    }
+    
+    const execution = result.data;
+    const nodeData = execution.data?.resultData?.runData || {};
+    
+    // Analyze node execution
+    const nodeAnalysis = {};
+    for (const [nodeName, nodeExecution] of Object.entries(nodeData)) {
+      const nodeRuns = nodeExecution || [];
+      const lastRun = nodeRuns[nodeRuns.length - 1];
+      
+      nodeAnalysis[nodeName] = {
+        executed: nodeRuns.length > 0,
+        runs: nodeRuns.length,
+        lastStatus: lastRun?.error ? 'failed' : 'success',
+        error: lastRun?.error || null,
+        executionTime: lastRun?.executionTime || null,
+        data: lastRun?.data || null
+      };
+    }
+    
+    return {
+      id: execution.id,
+      status: execution.status,
+      mode: execution.mode,
+      startedAt: execution.startedAt,
+      stoppedAt: execution.stoppedAt,
+      duration: execution.stoppedAt && execution.startedAt ? 
+        new Date(execution.stoppedAt) - new Date(execution.startedAt) : null,
+      nodes: nodeAnalysis,
+      error: execution.data?.resultData?.error || null
+    };
+  }
+
+  /**
+   * Analyze execution for critical failure patterns
+   */
+  analyzeExecution(executionDetails) {
+    const issues = [];
+    const patterns = [];
+    
+    // Check for Transform Orders → Check Order Duplicates failure
+    if (executionDetails.nodes) {
+      for (const [nodeName, nodeData] of Object.entries(executionDetails.nodes)) {
+        if (nodeName.includes('Transform Orders') && nodeData.lastStatus === 'failed') {
+          issues.push({
+            type: 'critical_node_failure',
+            node: nodeName,
+            error: nodeData.error,
+            pattern: 'Transform Orders → Check Order Duplicates failure point'
+          });
+          patterns.push('Transform Orders → Check Order Duplicates');
+        }
+        
+        if (nodeData.error) {
+          const errorMsg = JSON.stringify(nodeData.error).toLowerCase();
+          
+          // Check for critical patterns in error messages
+          this.criticalPatterns.forEach(pattern => {
+            if (errorMsg.includes(pattern.toLowerCase())) {
+              issues.push({
+                type: 'critical_pattern',
+                node: nodeName,
+                error: nodeData.error,
+                pattern: pattern
+              });
+              patterns.push(pattern);
+            }
+          });
+        }
+      }
+    }
+    
+    // Check overall execution status
+    if (executionDetails.status === 'failed' || executionDetails.status === 'error') {
+      issues.push({
+        type: 'execution_failure',
+        status: executionDetails.status,
+        error: executionDetails.error,
+        duration: executionDetails.duration
+      });
+    }
+    
+    return { issues, patterns };
+  }
+
+  /**
+   * Track execution status changes and detect new failures
+   */
+  async trackExecutionChanges(executions) {
+    const newFailures = [];
+    const statusChanges = [];
+    
+    for (const execution of executions) {
+      const prevStatus = this.executionHistory.get(execution.id);
+      
+      if (prevStatus && prevStatus !== execution.status) {
+        statusChanges.push({
+          id: execution.id,
+          from: prevStatus,
+          to: execution.status,
+          timestamp: new Date().toISOString()
+        });
+        
+        console.log(`🔄 Status change: ${execution.id} | ${prevStatus} → ${execution.status}`);
+      }
+      
+      // Track new failures
+      if (execution.status === 'failed' && prevStatus !== 'failed') {
+        newFailures.push(execution);
+        console.log(`🚨 New failure detected: ${execution.id}`);
+      }
+      
+      // Update history
+      this.executionHistory.set(execution.id, execution.status);
+    }
+    
+    return { newFailures, statusChanges };
+  }
+
+  /**
+   * Log critical findings to Knowledge Graph
+   */
+  async logToKnowledgeGraph(executionDetails, analysis) {
+    if (analysis.issues.length === 0) return;
+    
+    const timestamp = new Date().toISOString();
+    const issueTitle = `N8N Workflow Failure: ${this.targetWorkflowId}`;
+    
+    let description = `Execution ${executionDetails.id} failed with ${analysis.issues.length} issues:\n\n`;
+    
+    analysis.issues.forEach((issue, index) => {
+      description += `${index + 1}. ${issue.type}: ${issue.pattern || 'General failure'}\n`;
+      if (issue.node) description += `   Node: ${issue.node}\n`;
+      if (issue.error) description += `   Error: ${JSON.stringify(issue.error, null, 2)}\n`;
+      description += '\n';
+    });
+    
+    description += `Execution Details:\n`;
+    description += `- ID: ${executionDetails.id}\n`;
+    description += `- Status: ${executionDetails.status}\n`;
+    description += `- Duration: ${executionDetails.duration}ms\n`;
+    description += `- Started: ${executionDetails.startedAt}\n`;
+    description += `- Stopped: ${executionDetails.stoppedAt}\n`;
+    
+    // Determine severity based on patterns
+    let severity = 'medium';
+    if (analysis.patterns.includes('Transform Orders → Check Order Duplicates')) {
+      severity = 'critical';
+    } else if (analysis.patterns.some(p => ['Database error', 'HTTP 500', 'Supabase error'].includes(p))) {
+      severity = 'high';
+    }
+    
+    try {
+      await this.kg.logIssue(issueTitle, description, severity);
+      console.log(`📝 Logged issue to Knowledge Graph: ${severity} severity`);
+    } catch (error) {
+      console.error('❌ Failed to log to Knowledge Graph:', error.message);
+    }
+  }
+
+  /**
+   * Update node failure pattern tracking
+   */
+  updateFailurePatterns(analysis) {
+    analysis.patterns.forEach(pattern => {
+      const current = this.nodeFailurePatterns.get(pattern) || 0;
+      this.nodeFailurePatterns.set(pattern, current + 1);
+    });
+  }
+
+  /**
+   * Generate monitoring summary report
+   */
+  generateSummaryReport() {
+    const timestamp = new Date().toISOString();
+    const totalExecutions = this.executionHistory.size;
+    
+    console.log('\n📊 MONITORING SUMMARY REPORT');
+    console.log('='.repeat(50));
+    console.log(`Timestamp: ${timestamp}`);
+    console.log(`Target Workflow: ${this.targetWorkflowId}`);
+    console.log(`Total Executions Tracked: ${totalExecutions}`);
+    console.log(`Polling Interval: ${this.pollingInterval/1000}s`);
+    
+    if (this.nodeFailurePatterns.size > 0) {
+      console.log('\n🚨 Failure Patterns Detected:');
+      for (const [pattern, count] of this.nodeFailurePatterns.entries()) {
+        console.log(`  • ${pattern}: ${count} occurrences`);
+      }
+    } else {
+      console.log('\n✅ No failure patterns detected');
+    }
+    
+    console.log('='.repeat(50));
+  }
+
+  /**
+   * Single monitoring cycle
+   */
+  async runMonitoringCycle() {
+    try {
+      console.log(`\n🔄 Starting monitoring cycle: ${new Date().toISOString()}`);
+      
+      // Get workflow status
+      const workflowStatus = await this.getWorkflowStatus();
+      if (!workflowStatus) {
+        console.log('⚠️  Workflow not accessible, skipping cycle');
+        return;
+      }
+      
+      // Check if workflow is active
+      if (!workflowStatus.active) {
+        console.log('⚠️  Workflow is inactive');
+        await this.kg.logIssue(
+          'N8N Workflow Inactive',
+          `Workflow ${this.targetWorkflowId} (${workflowStatus.name}) is not active`,
+          'medium'
+        );
+      }
+      
+      // Get recent executions
+      const executions = await this.getExecutions(10);
+      if (executions.length === 0) {
+        console.log('📭 No executions found');
+        return;
+      }
+      
+      // Track status changes
+      const { newFailures, statusChanges } = await this.trackExecutionChanges(executions);
+      
+      if (statusChanges.length > 0) {
+        console.log(`📈 Detected ${statusChanges.length} status changes`);
+      }
+      
+      // Analyze new failures in detail
+      for (const failure of newFailures) {
+        console.log(`🔍 Analyzing failure: ${failure.id}`);
+        
+        const executionDetails = await this.getExecutionDetails(failure.id);
+        if (!executionDetails) continue;
+        
+        const analysis = this.analyzeExecution(executionDetails);
+        
+        if (analysis.issues.length > 0) {
+          console.log(`🚨 Found ${analysis.issues.length} issues in execution ${failure.id}`);
+          
+          // Log to Knowledge Graph
+          await this.logToKnowledgeGraph(executionDetails, analysis);
+          
+          // Update failure patterns
+          this.updateFailurePatterns(analysis);
+        }
+      }
+      
+      // Show recent execution summary
+      if (executions.length > 0) {
+        const latest = executions[0];
+        console.log(`📊 Latest execution: ${latest.id} | Status: ${latest.status} | Duration: ${latest.duration || 'N/A'}ms`);
+      }
+      
+    } catch (error) {
+      console.error('💥 Error in monitoring cycle:', error.message);
+      
+      await this.kg.logIssue(
+        'N8N Monitor Cycle Error',
+        `Monitoring cycle failed: ${error.message}\nStack: ${error.stack}`,
+        'high'
+      );
+    }
+  }
+
+  /**
+   * Start continuous monitoring
+   */
+  async startMonitoring() {
+    if (this.isMonitoring) {
+      console.log('⚠️  Monitoring is already running');
+      return;
+    }
+    
+    this.isMonitoring = true;
+    console.log('🚀 Starting N8N Debug Monitor');
+    console.log(`🎯 Monitoring workflow: ${this.targetWorkflowId}`);
+    console.log(`⏰ Polling every ${this.pollingInterval/1000} seconds`);
+    
+    // Log startup to Knowledge Graph
+    await this.kg.logIssue(
+      'N8N Monitor Started',
+      `Started monitoring workflow ${this.targetWorkflowId} with ${this.pollingInterval/1000}s intervals`,
+      'low'
+    );
+    
+    // Initial cycle
+    await this.runMonitoringCycle();
+    
+    // Set up continuous monitoring
+    this.monitoringInterval = setInterval(async () => {
+      if (this.isMonitoring) {
+        await this.runMonitoringCycle();
+      }
+    }, this.pollingInterval);
+    
+    console.log('✅ Monitoring started successfully');
+  }
+
+  /**
+   * Stop monitoring
+   */
+  async stopMonitoring() {
+    if (!this.isMonitoring) {
+      console.log('⚠️  Monitoring is not running');
+      return;
+    }
+    
+    this.isMonitoring = false;
+    
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+    
+    // Generate final report
+    this.generateSummaryReport();
+    
+    // Log shutdown to Knowledge Graph
+    await this.kg.logIssue(
+      'N8N Monitor Stopped',
+      `Stopped monitoring workflow ${this.targetWorkflowId}. Total executions tracked: ${this.executionHistory.size}`,
+      'low'
+    );
+    
+    console.log('🛑 Monitoring stopped');
+  }
+
+  /**
+   * Manual analysis of specific execution
+   */
+  async analyzeExecution(executionId) {
+    console.log(`🔍 Manual analysis of execution: ${executionId}`);
+    
+    const executionDetails = await this.getExecutionDetails(executionId);
+    if (!executionDetails) {
+      console.log('❌ Could not retrieve execution details');
+      return;
+    }
+    
+    const analysis = this.analyzeExecution(executionDetails);
+    
+    console.log('\n📊 EXECUTION ANALYSIS REPORT');
+    console.log('='.repeat(40));
+    console.log(`Execution ID: ${executionDetails.id}`);
+    console.log(`Status: ${executionDetails.status}`);
+    console.log(`Duration: ${executionDetails.duration}ms`);
+    console.log(`Issues Found: ${analysis.issues.length}`);
+    
+    if (analysis.issues.length > 0) {
+      console.log('\n🚨 Issues:');
+      analysis.issues.forEach((issue, index) => {
+        console.log(`  ${index + 1}. ${issue.type}: ${issue.pattern || 'General'}`);
+        if (issue.node) console.log(`     Node: ${issue.node}`);
+        if (issue.error) console.log(`     Error: ${JSON.stringify(issue.error, null, 2)}`);
+      });
+      
+      // Log to Knowledge Graph
+      await this.logToKnowledgeGraph(executionDetails, analysis);
+    } else {
+      console.log('\n✅ No issues detected');
+    }
+    
+    console.log('='.repeat(40));
+    
+    return analysis;
+  }
+
+  /**
+   * Get current monitoring status
+   */
+  getStatus() {
+    return {
+      isMonitoring: this.isMonitoring,
+      targetWorkflow: this.targetWorkflowId,
+      pollingInterval: this.pollingInterval,
+      executionsTracked: this.executionHistory.size,
+      failurePatterns: Object.fromEntries(this.nodeFailurePatterns),
+      uptime: this.isMonitoring ? Date.now() - this.startTime : 0
+    };
+  }
+}
+
+// CLI Interface
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const monitor = new N8NDebugMonitor();
+  const command = process.argv[2];
+  
+  // Handle process termination gracefully
+  process.on('SIGINT', async () => {
+    console.log('\n🛑 Received SIGINT, stopping monitor...');
+    await monitor.stopMonitoring();
+    process.exit(0);
+  });
+  
+  process.on('SIGTERM', async () => {
+    console.log('\n🛑 Received SIGTERM, stopping monitor...');
+    await monitor.stopMonitoring();
+    process.exit(0);
+  });
+
+  switch (command) {
+    case 'start':
+      monitor.startTime = Date.now();
+      monitor.startMonitoring().catch(error => {
+        console.error('💥 Failed to start monitoring:', error.message);
+        process.exit(1);
+      });
+      break;
+      
+    case 'status':
+      monitor.getWorkflowStatus().then(status => {
+        if (status) {
+          console.log('📊 Workflow Status:', JSON.stringify(status, null, 2));
+        }
+        process.exit(0);
+      });
+      break;
+      
+    case 'executions':
+      const limit = parseInt(process.argv[3]) || 10;
+      monitor.getExecutions(limit).then(executions => {
+        console.log(`📈 Recent Executions (${executions.length}):`);
+        executions.forEach(exec => {
+          console.log(`  ${exec.id} | ${exec.status} | ${exec.duration || 'N/A'}ms | ${exec.startedAt}`);
+        });
+        process.exit(0);
+      });
+      break;
+      
+    case 'analyze':
+      const executionId = process.argv[3];
+      if (!executionId) {
+        console.error('❌ Usage: node n8n-debugging-monitor.js analyze <execution-id>');
+        process.exit(1);
+      }
+      monitor.analyzeExecution(executionId).then(() => {
+        process.exit(0);
+      });
+      break;
+      
+    case 'background':
+      // Run as background service (daemon mode)
+      console.log('🌙 Starting in background mode...');
+      monitor.startTime = Date.now();
+      monitor.startMonitoring().catch(error => {
+        console.error('💥 Background monitoring failed:', error.message);
+        process.exit(1);
+      });
+      
+      // Keep process alive
+      setInterval(() => {
+        if (!monitor.isMonitoring) {
+          console.log('🛑 Monitor stopped, exiting...');
+          process.exit(0);
+        }
+      }, 5000);
+      break;
+      
+    default:
+      console.log(`
+🎭 N8N Debugging Monitor - Stand Up Sydney
+=========================================
+
+Monitor workflow ID: XQ8bFr8gSIOQjWC5
+Polling interval: 30 seconds
+Auto-logs to Knowledge Graph
+
+Usage: node n8n-debugging-monitor.js <command>
+
+Commands:
+  start                    - Start interactive monitoring
+  background              - Start as background service  
+  status                  - Check workflow status
+  executions [limit]      - Show recent executions (default: 10)
+  analyze <execution-id>  - Analyze specific execution
+
+Examples:
+  node n8n-debugging-monitor.js start
+  node n8n-debugging-monitor.js background &
+  node n8n-debugging-monitor.js executions 20
+  node n8n-debugging-monitor.js analyze 12345
+
+Features:
+  • Real-time execution monitoring
+  • Transform Orders → Check Order Duplicates failure detection
+  • Node-level execution progress tracking
+  • Automatic Knowledge Graph logging
+  • Performance metrics and timing analysis
+  • Background service capability with graceful shutdown
+
+Press Ctrl+C to stop monitoring gracefully.
+`);
+      process.exit(1);
+  }
+}
+
+export default N8NDebugMonitor;

@@ -1,0 +1,17 @@
+{
+  "id": "issue-1755899879781-b08a5fa6",
+  "type": "issue",
+  "severity": "high",
+  "title": "N8N API Error: /workflows",
+  "description": "API request failed: fetch failed",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T21:57:59.782Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "api",
+    "error"
+  ]
+}

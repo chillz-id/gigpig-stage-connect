@@ -1,0 +1,14 @@
+{
+  "id": "issue-1755899972687-7b866891",
+  "type": "issue",
+  "severity": "low",
+  "title": "N8N Monitor Started",
+  "description": "Started monitoring workflow XQ8bFr8gSIOQjWC5 with 30s intervals",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T21:59:32.687Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": []
+}

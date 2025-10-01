@@ -1,9 +1,18 @@
 // Service Worker for Stand Up Sydney PWA
 // Provides offline functionality, caching, and push notifications
+// Enhanced with advanced caching strategies and background sync
 
-const CACHE_NAME = 'standup-sydney-v1.0.0';
-const STATIC_CACHE = 'standup-sydney-static-v1.0.0';
-const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.0.0';
+const CACHE_NAME = 'standup-sydney-v1.1.0';
+const STATIC_CACHE = 'standup-sydney-static-v1.1.0';
+const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.1.0';
+
+// Cache strategies by resource type
+const CACHE_STRATEGIES = {
+  pages: 'NetworkFirst',
+  api: 'NetworkFirst', 
+  static: 'CacheFirst',
+  images: 'CacheFirst'
+};
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -426,5 +435,78 @@ async function syncContent() {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', event => {
+  if (event.tag === 'background-sync') {
+    event.waitUntil(syncOfflineActions());
+  }
+});
+
+// Sync offline actions when connectivity is restored
+async function syncOfflineActions() {
+  try {
+    // Sync any offline form submissions stored in IndexedDB
+    console.log('Service Worker: Syncing offline actions...');
+    
+    // Example: Sync event applications submitted offline
+    const offlineActions = await getOfflineActions();
+    for (const action of offlineActions) {
+      try {
+        await fetch(action.url, {
+          method: action.method,
+          headers: action.headers,
+          body: action.body
+        });
+        // Remove from offline storage after successful sync
+        await removeOfflineAction(action.id);
+      } catch (error) {
+        console.error('Failed to sync action:', action, error);
+      }
+    }
+  } catch (error) {
+    console.error('Background sync failed:', error);
+  }
+}
+
+// Push notifications for real-time updates
+self.addEventListener('push', event => {
+  if (event.data) {
+    const data = event.data.json();
+    event.waitUntil(
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/idcomedytrasnparent_steph.png',
+        badge: '/icon-192x192.png',
+        tag: data.tag || 'standup-sydney-notification',
+        requireInteraction: data.requireInteraction || false,
+        actions: data.actions || [],
+        data: data.data || {}
+      })
+    );
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  
+  if (event.action === 'view_application') {
+    // Open application page
+    event.waitUntil(
+      clients.openWindow('/applications/' + event.notification.data.applicationId)
+    );
+  } else if (event.action === 'view_event') {
+    // Open event page
+    event.waitUntil(
+      clients.openWindow('/events/' + event.notification.data.eventId)
+    );
+  } else {
+    // Default action - open the app
+    event.waitUntil(
+      clients.openWindow('/')
+    );
   }
 });

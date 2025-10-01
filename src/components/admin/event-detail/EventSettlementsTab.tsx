@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ const EventSettlementsTab: React.FC<EventSettlementsTabProps> = ({ eventId }) =>
   });
   const [eventStatus, setEventStatus] = useState('pending');
 
-  const fetchSettlementData = async () => {
+  const fetchSettlementData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -143,11 +143,11 @@ const EventSettlementsTab: React.FC<EventSettlementsTabProps> = ({ eventId }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, toast]);
 
   useEffect(() => {
     fetchSettlementData();
-  }, [eventId]);
+  }, [eventId, fetchSettlementData]);
 
   const updateSettlementStatus = async (newStatus: string) => {
     try {

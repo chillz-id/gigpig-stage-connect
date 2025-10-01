@@ -1,0 +1,545 @@
+{
+  "analysis_type": "REAL_CLAUDE4_ANALYSIS",
+  "generated_at": "2025-08-21T22:52:59.775Z",
+  "model_used": "claude-3-5-sonnet-20241022",
+  "duration_minutes": 0,
+  "files_analyzed": 15,
+  "duplication_analysis": {
+    "analysis_type": "Code Duplication Analysis",
+    "error": "Claude API Error: Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+    "summary": "Analysis failed due to API error"
+  },
+  "complexity_analysis": {
+    "analysis_type": "Component Complexity Assessment",
+    "error": "Claude API Error: Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+    "summary": "Analysis failed due to API error"
+  },
+  "performance_analysis": {
+    "analysis_type": "Performance Optimization Review",
+    "error": "Claude API Error: Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+    "summary": "Analysis failed due to API error"
+  },
+  "architecture_analysis": {
+    "analysis_type": "Architecture Review",
+    "error": "Claude API Error: Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+    "summary": "Analysis failed due to API error"
+  },
+  "base_analysis": {
+    "analysis_type": "GENUINE_CODEBASE_ANALYSIS",
+    "generated_at": "2025-08-21T22:50:10.545Z",
+    "duration_minutes": 0,
+    "total_files": 1415,
+    "file_statistics": {
+      "total_files": 1415,
+      "by_extension": {
+        ".md": 248,
+        ".json": 88,
+        ".sql": 139,
+        ".js": 192,
+        ".html": 5,
+        ".ts": 298,
+        ".css": 2,
+        ".tsx": 443
+      },
+      "largest_files": [
+        {
+          "path": "docs/humanitix-all-orders.json",
+          "size": 1975533,
+          "lines": 71298
+        },
+        {
+          "path": "docs/customer-tracking-export.json",
+          "size": 731277,
+          "lines": 22103
+        },
+        {
+          "path": "package-lock.json",
+          "size": 626172,
+          "lines": 16828
+        },
+        {
+          "path": "test-results/html-report/index.html",
+          "size": 462201,
+          "lines": 81
+        },
+        {
+          "path": "real-analysis-report.json",
+          "size": 202124,
+          "lines": 5965
+        },
+        {
+          "path": "docs/humanitix-events-data.json",
+          "size": 98241,
+          "lines": 2758
+        },
+        {
+          "path": "src/integrations/supabase/types.ts",
+          "size": 55911,
+          "lines": 1870
+        },
+        {
+          "path": ".agent-comms/task-queue/frontend-TASK_1751584733584.md",
+          "size": 53445,
+          "lines": 12
+        },
+        {
+          "path": "public/agency-system-complete.sql",
+          "size": 44487,
+          "lines": 1306
+        },
+        {
+          "path": "agency-system-complete.sql",
+          "size": 44485,
+          "lines": 1304
+        }
+      ]
+    },
+    "duplicate_analysis": {
+      "total_duplicates": 3,
+      "duplicates": [
+        {
+          "hash": "2fb6ac584c626199291625ec288c6a82",
+          "files": [
+            "EMERGENCY_FIX_PROFILES.sql",
+            "fix-missing-profiles.sql"
+          ],
+          "size": 3063,
+          "lines": 102
+        },
+        {
+          "hash": "93e05b6c88ddec399eb589b08d21009f",
+          "files": [
+            "fix-google-auth.sql",
+            "supabase/migrations/20250109_fix_google_auth.sql"
+          ],
+          "size": 1793,
+          "lines": 53
+        },
+        {
+          "hash": "c11c63a72438981cf164f7d10fd5d059",
+          "files": [
+            "invoice-migration.sql",
+            "supabase/migrations/20250706230000_complete_invoicing_system.sql"
+          ],
+          "size": 13470,
+          "lines": 493
+        }
+      ]
+    },
+    "complexity_analysis": {
+      "total_complex_files": 246,
+      "most_complex": [
+        {
+          "path": "src/services/tourService.ts",
+          "lines": 771,
+          "size": 19930,
+          "functions": 1,
+          "cyclomaticComplexity": 63,
+          "classes": 1,
+          "imports": 2,
+          "complexity_score": 33
+        },
+        {
+          "path": "test-invoice-system-e2e.js",
+          "lines": 927,
+          "size": 28972,
+          "functions": 9,
+          "cyclomaticComplexity": 53,
+          "classes": 0,
+          "imports": 5,
+          "complexity_score": 32
+        },
+        {
+          "path": "src/services/ticketReconciliationService.ts",
+          "lines": 791,
+          "size": 24244,
+          "functions": 1,
+          "cyclomaticComplexity": 49,
+          "classes": 1,
+          "imports": 4,
+          "complexity_score": 28
+        },
+        {
+          "path": "src/services/taskService.ts",
+          "lines": 681,
+          "size": 18983,
+          "functions": 4,
+          "cyclomaticComplexity": 49,
+          "classes": 0,
+          "imports": 2,
+          "complexity_score": 27
+        },
+        {
+          "path": "src/services/agencyService.ts",
+          "lines": 564,
+          "size": 15959,
+          "functions": 3,
+          "cyclomaticComplexity": 49,
+          "classes": 0,
+          "imports": 2,
+          "complexity_score": 26
+        },
+        {
+          "path": "src/services/notificationService.ts",
+          "lines": 1234,
+          "size": 36271,
+          "functions": 2,
+          "cyclomaticComplexity": 34,
+          "classes": 1,
+          "imports": 3,
+          "complexity_score": 26
+        },
+        {
+          "path": "real-comprehensive-analysis-coordinator.js",
+          "lines": 669,
+          "size": 24436,
+          "functions": 3,
+          "cyclomaticComplexity": 44,
+          "classes": 1,
+          "imports": 3,
+          "complexity_score": 25
+        },
+        {
+          "path": "real-file-analysis-engine.js",
+          "lines": 624,
+          "size": 19196,
+          "functions": 9,
+          "cyclomaticComplexity": 42,
+          "classes": 1,
+          "imports": 5,
+          "complexity_score": 25
+        },
+        {
+          "path": "src/utils/eventValidation.enhanced.ts",
+          "lines": 351,
+          "size": 11211,
+          "functions": 6,
+          "cyclomaticComplexity": 48,
+          "classes": 0,
+          "imports": 3,
+          "complexity_score": 24
+        },
+        {
+          "path": "public/sw.js",
+          "lines": 430,
+          "size": 11582,
+          "functions": 9,
+          "cyclomaticComplexity": 39,
+          "classes": 0,
+          "imports": 0,
+          "complexity_score": 22
+        }
+      ],
+      "average_complexity": 11
+    },
+    "unused_imports": {
+      "total_files_with_unused": 149,
+      "total_unused_imports": 284,
+      "files": [
+        {
+          "path": "analyze-financial-data.js",
+          "unusedImports": [
+            {
+              "item": "path",
+              "module": "path",
+              "line": 9
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "apply-event-migration.js",
+          "unusedImports": [
+            {
+              "item": "readFileSync",
+              "module": "fs",
+              "line": 4
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/apply-customer-fields-migration.js",
+          "unusedImports": [
+            {
+              "item": "promises",
+              "module": "fs",
+              "line": 9
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/apply-customers-migration.js",
+          "unusedImports": [
+            {
+              "item": "promises",
+              "module": "fs",
+              "line": 9
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/complete-enhanced-deployment.js",
+          "unusedImports": [
+            {
+              "item": "promises",
+              "module": "fs",
+              "line": 9
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/humanitix-event-analysis.js",
+          "unusedImports": [
+            {
+              "item": "promisify",
+              "module": "util",
+              "line": 11
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/migrate-customers-to-brevo.js",
+          "unusedImports": [
+            {
+              "item": "promises",
+              "module": "fs",
+              "line": 12
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "scripts/n8n-automation.js",
+          "unusedImports": [
+            {
+              "item": "execSync",
+              "module": "child_process",
+              "line": 8
+            },
+            {
+              "item": "readFileSync",
+              "module": "fs",
+              "line": 9
+            },
+            {
+              "item": "writeFileSync",
+              "module": "fs",
+              "line": 9
+            }
+          ],
+          "count": 3
+        },
+        {
+          "path": "simple-mcp-client.js",
+          "unusedImports": [
+            {
+              "item": "spawn",
+              "module": "child_process",
+              "line": 8
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/App.tsx",
+          "unusedImports": [
+            {
+              "item": "BrowserRouter",
+              "module": "react-router-dom",
+              "line": 2
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/ApplicationForm.tsx",
+          "unusedImports": [
+            {
+              "item": "useNavigate",
+              "module": "react-router-dom",
+              "line": 2
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/BrandingCustomization.tsx",
+          "unusedImports": [
+            {
+              "item": "Badge",
+              "module": "@/components/ui/badge",
+              "line": 8
+            },
+            {
+              "item": "Avatar",
+              "module": "@/components/ui/avatar",
+              "line": 9
+            },
+            {
+              "item": "AvatarFallback",
+              "module": "@/components/ui/avatar",
+              "line": 9
+            },
+            {
+              "item": "AvatarImage",
+              "module": "@/components/ui/avatar",
+              "line": 9
+            }
+          ],
+          "count": 4
+        },
+        {
+          "path": "src/components/CalendarSync.tsx",
+          "unusedImports": [
+            {
+              "item": "useEffect",
+              "module": "react",
+              "line": 2
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/CalendarView.tsx",
+          "unusedImports": [
+            {
+              "item": "Badge",
+              "module": "@/components/ui/badge",
+              "line": 4
+            },
+            {
+              "item": "MapPin",
+              "module": "lucide-react",
+              "line": 5
+            },
+            {
+              "item": "Clock",
+              "module": "lucide-react",
+              "line": 5
+            },
+            {
+              "item": "Users",
+              "module": "lucide-react",
+              "line": 5
+            },
+            {
+              "item": "Star",
+              "module": "lucide-react",
+              "line": 5
+            },
+            {
+              "item": "Heart",
+              "module": "lucide-react",
+              "line": 5
+            }
+          ],
+          "count": 6
+        },
+        {
+          "path": "src/components/CardCalendar.tsx",
+          "unusedImports": [
+            {
+              "item": "Badge",
+              "module": "@/components/ui/badge",
+              "line": 4
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/CommissionSplitManager.tsx",
+          "unusedImports": [
+            {
+              "item": "usePayments",
+              "module": "../hooks/usePayments",
+              "line": 10
+            },
+            {
+              "item": "Plus",
+              "module": "lucide-react",
+              "line": 14
+            }
+          ],
+          "count": 2
+        },
+        {
+          "path": "src/components/ConnectionRequest.tsx",
+          "unusedImports": [
+            {
+              "item": "MessageCircle",
+              "module": "lucide-react",
+              "line": 8
+            },
+            {
+              "item": "UserCheck",
+              "module": "lucide-react",
+              "line": 8
+            },
+            {
+              "item": "UserX",
+              "module": "lucide-react",
+              "line": 8
+            },
+            {
+              "item": "Shield",
+              "module": "lucide-react",
+              "line": 8
+            },
+            {
+              "item": "AlertTriangle",
+              "module": "lucide-react",
+              "line": 8
+            }
+          ],
+          "count": 5
+        },
+        {
+          "path": "src/components/ContactSettings.tsx",
+          "unusedImports": [
+            {
+              "item": "EyeOff",
+              "module": "lucide-react",
+              "line": 10
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/CustomRecurrencePicker.tsx",
+          "unusedImports": [
+            {
+              "item": "Calendar",
+              "module": "lucide-react",
+              "line": 4
+            }
+          ],
+          "count": 1
+        },
+        {
+          "path": "src/components/DockNavigation.tsx",
+          "unusedImports": [
+            {
+              "item": "Button",
+              "module": "@/components/ui/button",
+              "line": 7
+            }
+          ],
+          "count": 1
+        }
+      ]
+    },
+    "bundle_analysis": {
+      "success": false,
+      "error": "Command failed: npm run build\nx Build failed in 8.28s\nerror during build:\n[vite]: Rollup failed to resolve import \"zod\" from \"/root/agents/src/hooks/useCreateEventForm.ts\".\nThis is most likely unintended because it can break your application at runtime.\nIf you do want to externalize this module explicitly add it to\n`build.rollupOptions.external`\n    at viteWarn (file:///root/agents/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65839:17)\n    at onwarn (file:///root/agents/node_modules/@vitejs/plugin-react-swc/index.mjs:109:9)\n    at onRollupWarning (file:///root/agents/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65869:5)\n    at onwarn (file:///root/agents/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65534:7)\n    at file:///root/agents/node_modules/rollup/dist/es/shared/node-entry.js:19393:13\n    at Object.logger [as onLog] (file:///root/agents/node_modules/rollup/dist/es/shared/node-entry.js:21119:9)\n    at ModuleLoader.handleInvalidResolvedId (file:///root/agents/node_modules/rollup/dist/es/shared/node-entry.js:20008:26)\n    at file:///root/agents/node_modules/rollup/dist/es/shared/node-entry.js:19966:26\n"
+    },
+    "test_coverage": {
+      "success": false,
+      "error": "Command failed: jest --coverage\n/bin/sh: 1: jest: not found\n"
+    }
+  }
+}

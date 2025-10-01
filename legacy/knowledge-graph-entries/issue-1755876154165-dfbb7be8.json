@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876154165-dfbb7be8",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Docker Container Environment Variable Loading Delays",
+  "description": "Docker containers (particularly N8N) required restart to pick up updated environment variables from .env files. This caused initial authentication failures until containers were restarted with proper environment variable loading.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:22:34.165Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "authentication"
+  ]
+}

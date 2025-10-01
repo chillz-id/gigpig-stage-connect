@@ -309,6 +309,7 @@ export interface EventFormData {
   date: string;
   time: string;
   endTime: string;
+  doorsTime?: string;
   type: string;
   spots: number;
   description: string;

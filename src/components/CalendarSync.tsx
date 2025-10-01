@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,6 @@ import { Calendar, Clock, AlertTriangle, CheckCircle, ExternalLink } from 'lucid
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
 interface CalendarEvent {
   id: string;
   title: string;
@@ -18,20 +17,17 @@ interface CalendarEvent {
   status: 'confirmed' | 'pending' | 'conflict';
   calendar_sync_status?: string;
 }
-
 interface CalendarIntegration {
   id: string;
   provider: string;
   is_active: boolean;
   settings?: any;
 }
-
 export const CalendarSync: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [autoSync, setAutoSync] = useState(true);
   const [conflictAlerts, setConflictAlerts] = useState(true);
-
   // Fetch calendar integrations
   const { data: integrations = [] } = useQuery({
     queryKey: ['calendar-integrations'],
@@ -40,12 +36,10 @@ export const CalendarSync: React.FC = () => {
         .from('calendar_integrations')
         .select('*')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-      
       if (error) throw error;
       return data as CalendarIntegration[];
     }
   });
-
   // Fetch calendar events
   const { data: events = [] } = useQuery({
     queryKey: ['calendar-events'],
@@ -55,17 +49,14 @@ export const CalendarSync: React.FC = () => {
         .select('*')
         .eq('comedian_id', (await supabase.auth.getUser()).data.user?.id)
         .order('event_date', { ascending: true });
-      
       if (error) throw error;
       return data as CalendarEvent[];
     }
   });
-
   const connectCalendarMutation = useMutation({
     mutationFn: async ({ provider }: { provider: string }) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('calendar_integrations')
         .insert({
@@ -75,7 +66,6 @@ export const CalendarSync: React.FC = () => {
         })
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },
@@ -87,20 +77,17 @@ export const CalendarSync: React.FC = () => {
       });
     }
   });
-
   const syncEventsMutation = useMutation({
     mutationFn: async () => {
       // In a real implementation, this would sync with external calendar APIs
       // For now, we'll just update the sync status
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('User not authenticated');
-
       const { error } = await supabase
         .from('calendar_events')
         .update({ calendar_sync_status: 'synced' })
         .eq('comedian_id', user.data.user.id)
         .eq('status', 'confirmed');
-
       if (error) throw error;
     },
     onSuccess: () => {
@@ -111,14 +98,12 @@ export const CalendarSync: React.FC = () => {
       });
     }
   });
-
   const resolveConflictMutation = useMutation({
     mutationFn: async (eventId: string) => {
       const { error } = await supabase
         .from('calendar_events')
         .update({ status: 'confirmed' })
         .eq('id', eventId);
-
       if (error) throw error;
     },
     onSuccess: () => {
@@ -129,33 +114,26 @@ export const CalendarSync: React.FC = () => {
       });
     }
   });
-
   const isGoogleCalendarConnected = integrations.some(i => i.provider === 'google' && i.is_active);
   const isAppleCalendarConnected = integrations.some(i => i.provider === 'apple' && i.is_active);
-
   const handleConnectGoogleCalendar = () => {
     connectCalendarMutation.mutate({ provider: 'google' });
   };
-
   const handleConnectAppleCalendar = () => {
     connectCalendarMutation.mutate({ provider: 'apple' });
   };
-
   const handleSyncNow = () => {
     toast({
       title: "Calendar Sync",
       description: "Syncing your confirmed events with your calendar...",
     });
-    
     setTimeout(() => {
       syncEventsMutation.mutate();
     }, 2000);
   };
-
   const handleResolveConflict = (eventId: string) => {
     resolveConflictMutation.mutate(eventId);
   };
-
   return (
     <div className="space-y-6">
       <Card className="professional-card">
@@ -193,7 +171,6 @@ export const CalendarSync: React.FC = () => {
                   {isGoogleCalendarConnected ? 'Connected' : 'Connect'}
                 </Button>
               </div>
-
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-500 rounded flex items-center justify-center">
@@ -216,7 +193,6 @@ export const CalendarSync: React.FC = () => {
               </div>
             </div>
           </div>
-
           {/* Sync Settings */}
           <div className="space-y-4">
             <h3 className="font-semibold">Sync Settings</h3>
@@ -233,7 +209,6 @@ export const CalendarSync: React.FC = () => {
                   onCheckedChange={setAutoSync}
                 />
               </div>
-
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Conflict alerts</p>
@@ -248,7 +223,6 @@ export const CalendarSync: React.FC = () => {
               </div>
             </div>
           </div>
-
           {/* Manual Sync */}
           <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
             <div>
@@ -266,7 +240,6 @@ export const CalendarSync: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Upcoming Events */}
       <Card className="professional-card">
         <CardHeader>
@@ -314,7 +287,6 @@ export const CalendarSync: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
                 {event.status === 'conflict' && (
                   <Alert className="mt-3">
                     <AlertTriangle className="h-4 w-4" />
@@ -343,4 +315,4 @@ export const CalendarSync: React.FC = () => {
       </Card>
     </div>
   );
-};
+};

@@ -1,0 +1,17 @@
+{
+  "id": "issue-1755876147345-cf804f54",
+  "type": "issue",
+  "severity": "medium",
+  "title": "External API Testing Validation Challenges",
+  "description": "During credential system validation, encountered challenges testing external APIs including Google Maps API, OpenAI API, and WIX API. Some APIs required specific header configurations (like WIX requiring wix-site-id header), while others had rate limiting or authentication complexities that made comprehensive testing difficult.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:22:27.347Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "authentication",
+    "api"
+  ]
+}

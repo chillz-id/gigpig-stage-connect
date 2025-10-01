@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ interface ApplicationFormProps {
   onSubmit: (data: ApplicationFormData) => void;
   isSubmitting?: boolean;
 }
-
 
 export function ApplicationForm({
   open,
@@ -80,7 +79,7 @@ export function ApplicationForm({
               Complete this form to submit your application for this event.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             {/* Message Field */}
             <div className="grid gap-2">

@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876848220-d61695f8",
+  "type": "issue",
+  "severity": "critical",
+  "title": "Knowledge Graph Protocol Violations",
+  "description": "Critical process failure: Mandatory startup checks not being executed leading to sessions proceeding without historical context and causing repeated mistakes. Evidence shows failed claude-startup-check.js execution and missing knowledge graph queries before actions. Root cause: Non-compliance with mandatory Knowledge Graph workflow. Prevention: Enforce mandatory startup check compliance through automated validation. Implement session-level compliance tracking.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:34:08.220Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [],
+  "linear_issue_id": "BACKEND-53",
+  "cross_references": []
+}

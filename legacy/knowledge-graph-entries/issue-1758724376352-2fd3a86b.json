@@ -1,0 +1,21 @@
+{
+  "id": "issue-1758724376352-2fd3a86b",
+  "type": "issue",
+  "severity": "high",
+  "title": "Notion MCP HTTP vs Command Configuration Mismatch",
+  "description": "Notion MCP is configured as HTTP server at https://mcp.notion.com/mcp but documentation shows it should use npx @notionhq/notion-mcp-server@latest command format. Also enableAllProjectMcpServers is not set to true in Claude config.",
+  "date": "2025-09-24",
+  "timestamp": "2025-09-24T14:32:56.352Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "CRITICAL DISCOVERY: Claude Code stores MCP servers in a GLOBAL top-level mcpServers property in /root/.claude.json, NOT in project-specific configurations. The current global mcpServers is null, which is why no MCP tools are accessible. Solution: Copy entire mcpServers object from /root/agents/.mcp.json to top-level of /root/.claude.json. Notion DOES use HTTP format (along with Context7 and Wix) - the documentation showing command format is outdated.",
+    "successful": true,
+    "timestamp": "2025-09-24T14:34:28.375Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "mcp"
+  ]
+}

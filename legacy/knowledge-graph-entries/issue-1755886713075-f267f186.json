@@ -1,0 +1,23 @@
+{
+  "id": "issue-1755886713075-f267f186",
+  "type": "issue",
+  "severity": "high",
+  "title": "N8N REST API Endpoints Not Accessible",
+  "description": "All N8N REST API endpoints return 404 Not Found, including /rest/credentials and /api/v1/credentials. This suggests the REST API layer isn't properly exposed or configured. N8N shows OAuth callback URL in interface but the underlying REST infrastructure appears non-functional. May require specific N8N configuration or database initialization to enable REST API access.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T18:18:33.075Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "DNS misconfiguration identified as root cause. Domain harrys.standupsydney.com resolves to AWS CloudFront IPs instead of our DigitalOcean server (170.64.129.59). N8N REST API works locally, Nginx config is correct. Solution: Update DNS A record to point to 170.64.129.59 to restore REST API accessibility.",
+    "successful": true,
+    "timestamp": "2025-08-22T18:25:48.917Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "database",
+    "api",
+    "credentials"
+  ]
+}

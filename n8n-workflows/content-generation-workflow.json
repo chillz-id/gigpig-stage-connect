@@ -1,0 +1,144 @@
+{
+  "name": "Content Generation - AI Content Creation",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Supabase Event Trigger",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "position": [240, 300],
+      "parameters": {
+        "tableName": "events",
+        "events": ["INSERT", "UPDATE"],
+        "credentials": {
+          "supabaseApi": "supabase-credentials"
+        }
+      }
+    },
+    {
+      "id": "check-content",
+      "name": "Check Content Exists",
+      "type": "n8n-nodes-base.if",
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "={{ $json.record.description }}",
+            "rightValue": "",
+            "operation": "isEmpty"
+          }
+        }
+      }
+    },
+    {
+      "id": "generate-content",
+      "name": "Generate AI Content",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 220],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const eventData = $input.all()[0].json.record;\nconst eventName = eventData.name || 'Comedy Event';\nconst eventDate = eventData.date || new Date().toISOString();\nconst venue = eventData.venue || 'Comedy Venue';\n\n// Generate content using AI (placeholder - would integrate with OpenAI/Anthropic)\nconst generatedContent = {\n  description: `Join us for an amazing night of comedy at ${eventName}! This exciting event will take place on ${new Date(eventDate).toLocaleDateString()} at ${venue}. Get ready for non-stop laughs and entertainment from talented comedians.`,\n  socialMediaPost: `🎭 Don't miss ${eventName} at ${venue}! 🎪\\n\\nDate: ${new Date(eventDate).toLocaleDateString()}\\nTickets available now!\\n\\n#Comedy #StandUp #Entertainment #${venue.replace(/\\s+/g, '')}`,\n  emailSubject: `Last Chance: ${eventName} - Book Your Tickets Now!`,\n  emailContent: `Dear Comedy Lover,\\n\\nWe're excited to remind you about our upcoming event: ${eventName}!\\n\\nWhen: ${new Date(eventDate).toLocaleDateString()}\\nWhere: ${venue}\\n\\nDon't miss out on this incredible night of entertainment. Our lineup features some of the best comedians in the business, guaranteed to deliver an unforgettable experience.\\n\\nSecure your tickets now and join us for a night of laughter!\\n\\nBest regards,\\nThe Stand Up Sydney Team`,\n  eventId: eventData.id,\n  status: 'generated',\n  generatedAt: new Date().toISOString()\n};\n\nreturn [{ json: generatedContent }];"
+      }
+    },
+    {
+      "id": "review-queue",
+      "name": "Add to Review Queue",
+      "type": "n8n-nodes-base.supabase",
+      "position": [900, 220],
+      "parameters": {
+        "operation": "insert",
+        "tableName": "content_review_queue",
+        "records": {
+          "event_id": "={{ $json.eventId }}",
+          "content_type": "ai_generated",
+          "description": "={{ $json.description }}",
+          "social_media_post": "={{ $json.socialMediaPost }}",
+          "email_subject": "={{ $json.emailSubject }}",
+          "email_content": "={{ $json.emailContent }}",
+          "status": "pending_review",
+          "generated_at": "={{ $json.generatedAt }}"
+        }
+      }
+    },
+    {
+      "id": "notify-slack",
+      "name": "Notify Review Team",
+      "type": "n8n-nodes-base.slack",
+      "position": [1120, 220],
+      "parameters": {
+        "operation": "postMessage",
+        "channel": "#content-review",
+        "text": "🤖 New AI-generated content ready for review:\\n\\nEvent: {{ $('Supabase Event Trigger').item.json.record.name }}\\nDate: {{ $('Supabase Event Trigger').item.json.record.date }}\\n\\nPlease review and approve in the content review queue.",
+        "credentials": {
+          "slackApi": "slack-credentials"
+        }
+      }
+    },
+    {
+      "id": "existing-content",
+      "name": "Log Skip Reason",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 380],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const eventData = $input.all()[0].json.record;\n\nconst logEntry = {\n  eventId: eventData.id,\n  action: 'skipped',\n  reason: 'content_already_exists',\n  timestamp: new Date().toISOString(),\n  existingDescription: eventData.description\n};\n\nconsole.log('Content generation skipped - content already exists for event:', eventData.id);\n\nreturn [{ json: logEntry }];"
+      }
+    }
+  ],
+  "connections": {
+    "Supabase Event Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Content Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Content Exists": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Skip Reason",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Content": {
+      "main": [
+        [
+          {
+            "node": "Add to Review Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Review Queue": {
+      "main": [
+        [
+          {
+            "node": "Notify Review Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "issue-1757783864951-26a78b19",
+  "type": "issue",
+  "severity": "low",
+  "title": "Solution: N8N Memory Exhaustion Workflow Failures",
+  "description": "Solution attempt: Fixed N8N workflows that stopped executing since August 2024 due to JavaScript heap memory exhaustion. Root cause: 8000+ execution records accumulated. Solution: 1) Increased /run tmpfs from 795MB to 2GB via /etc/fstab, 2) Started N8N with NODE_OPTIONS max-old-space-size=2048, 3) Enabled execution pruning with EXECUTIONS_DATA_PRUNE=true and 7-day retention, 4) Set EXECUTIONS_DATA_SAVE_ON_SUCCESS=none to reduce memory usage, 5) Enabled DB_SQLITE_VACUUM_ON_STARTUP=true for cleanup. Fixed GET/POST webhook confusion - Humanitix uses API polling (cron schedule), not webhooks. N8N now running stable with 380MB memory usage, API responding, Humanitix → Notion/Brevo sync restored.",
+  "date": "2025-09-13",
+  "timestamp": "2025-09-13T17:17:44.951Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "api",
+    "fix"
+  ]
+}

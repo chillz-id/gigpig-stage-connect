@@ -74,18 +74,20 @@ export const PaymentGatewaySettings: React.FC = () => {
   // Initialize form data from gateway settings
   React.useEffect(() => {
     if (gatewaySettings) {
-      const newFormData = { ...formData };
-      
-      gatewaySettings.forEach(setting => {
-        newFormData[setting.gatewayName] = {
-          isEnabled: setting.isEnabled,
-          isDefault: setting.isDefault,
-          configuration: setting.configuration || {},
-          credentials: setting.credentials || {}
-        };
+      setFormData(prev => {
+        const next = { ...prev };
+
+        gatewaySettings.forEach(setting => {
+          next[setting.gatewayName as PaymentGateway] = {
+            isEnabled: setting.isEnabled,
+            isDefault: setting.isDefault,
+            configuration: setting.configuration || {},
+            credentials: setting.credentials || {}
+          };
+        });
+
+        return next;
       });
-      
-      setFormData(newFormData);
     }
   }, [gatewaySettings]);
 

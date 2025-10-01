@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755876197598-de57c026",
+  "type": "issue",
+  "severity": "low",
+  "title": "SOLUTION: N8N API Authentication Fixed",
+  "description": "Fixed N8N API 401 errors by using correct header format 'X-N8N-API-KEY' instead of Authorization Bearer. Also established procedure to restart N8N Docker container after environment variable updates to ensure proper credential loading. Verified API connection works with curl testing.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:23:17.598Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "authentication",
+    "api",
+    "error",
+    "fix"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876502936-9e8f4863",
+  "type": "issue",
+  "severity": "low",
+  "title": "Incomplete Error Context in Agent Reports",
+  "description": "When agents reported completion, some didn't include enough context about what specific files were processed or what exact changes were made. Future parallel agent tasks should require more detailed reporting including file counts, specific changes made, and any edge cases encountered.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:28:22.936Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "name": "Database Sync - Multi-Platform Data Synchronization",
+  "active": false,
+  "nodes": [
+    {
+      "id": "scheduler",
+      "name": "Sync Scheduler",
+      "type": "n8n-nodes-base.cron",
+      "position": [240, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-changes",
+      "name": "Get Recent Changes",
+      "type": "n8n-nodes-base.supabase",
+      "position": [460, 300],
+      "parameters": {
+        "operation": "select",
+        "tableName": "sync_queue",
+        "filterType": "manual",
+        "conditions": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "operation": "equal",
+              "value": "pending"
+            },
+            {
+              "keyName": "created_at",
+              "operation": "dateTimeAfter",
+              "value": "={{ $now.minus({minutes: 30}).toISO() }}"
+            }
+          ]
+        },
+        "sort": {
+          "field": "created_at",
+          "direction": "ASC"
+        },
+        "limit": 50
+      }
+    },
+    {
+      "id": "process-changes",
+      "name": "Process Changes",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const changeData = $json;\nconst tableName = changeData.table_name;\nconst operation = changeData.operation; // INSERT, UPDATE, DELETE\nconst recordId = changeData.record_id;\nconst changePayload = JSON.parse(changeData.payload || '{}');\n\n// Determine sync targets based on table\nlet syncTargets = [];\n\nswitch(tableName) {\n  case 'events':\n    syncTargets = ['linear', 'notion', 'slack'];\n    break;\n  case 'applications':\n    syncTargets = ['linear', 'slack'];\n    break;\n  case 'profiles':\n    syncTargets = ['notion'];\n    break;\n  case 'invoices':\n    syncTargets = ['xero', 'notion'];\n    break;\n  default:\n    syncTargets = ['linear']; // Default to Linear for issue tracking\n}\n\nconst processedChange = {\n  id: changeData.id,\n  table: tableName,\n  operation: operation,\n  recordId: recordId,\n  payload: changePayload,\n  targets: syncTargets,\n  processedAt: new Date().toISOString(),\n  priority: changeData.priority || 'normal'\n};\n\nreturn { json: processedChange };"
+      }
+    },
+    {
+      "id": "sync-to-linear",
+      "name": "Sync to Linear",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linear.app/graphql",
+        "authentication": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LINEAR_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "body": {
+          "query": "mutation CreateIssue($input: IssueCreateInput!) { issueCreate(input: $input) { issue { id title } } }",
+          "variables": {
+            "input": {
+              "title": "Database Change: {{ $json.table }} {{ $json.operation }}",
+              "description": "Automated sync from Supabase\\n\\nTable: {{ $json.table }}\\nOperation: {{ $json.operation }}\\nRecord ID: {{ $json.recordId }}\\n\\nPayload: {{ JSON.stringify($json.payload, null, 2) }}",
+              "teamId": "{{ $env.LINEAR_TEAM_ID || 'default-team' }}",
+              "priority": "{{ $json.priority === 'high' ? 1 : ($json.priority === 'urgent' ? 0 : 3) }}"
+            }
+          }
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 2000
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sync-to-notion",
+      "name": "Sync to Notion",
+      "type": "n8n-nodes-base.notion",
+      "position": [900, 300],
+      "parameters": {
+        "operation": "create",
+        "resource": "databasePage",
+        "databaseId": "{{ $env.NOTION_SYNC_DATABASE_ID }}",
+        "title": "Database Change: {{ $json.table }} {{ $json.operation }}",
+        "properties": {
+          "Table": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "{{ $json.table }}"
+                }
+              }
+            ]
+          },
+          "Operation": {
+            "select": {
+              "name": "{{ $json.operation }}"
+            }
+          },
+          "Record ID": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "{{ $json.recordId }}"
+                }
+              }
+            ]
+          },
+          "Processed At": {
+            "date": {
+              "start": "{{ $json.processedAt }}"
+            }
+          },
+          "Priority": {
+            "select": {
+              "name": "{{ $json.priority }}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sync-to-slack",
+      "name": "Sync to Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [900, 400],
+      "parameters": {
+        "operation": "postMessage",
+        "channel": "#database-sync",
+        "text": "🔄 Database Sync Alert\\n\\nTable: `{{ $json.table }}`\\nOperation: `{{ $json.operation }}`\\nRecord ID: `{{ $json.recordId }}`\\nTime: {{ $json.processedAt }}\\n\\n{{ $json.priority === 'high' || $json.priority === 'urgent' ? '⚠️ High Priority Change' : 'ℹ️ Standard Change' }}"
+      }
+    },
+    {
+      "id": "update-sync-status",
+      "name": "Update Sync Status",
+      "type": "n8n-nodes-base.supabase",
+      "position": [1120, 300],
+      "parameters": {
+        "operation": "update",
+        "tableName": "sync_queue",
+        "filterType": "manual",
+        "conditions": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "operation": "equal",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "updateFields": {
+          "status": "completed",
+          "synced_at": "={{ new Date().toISOString() }}",
+          "sync_targets": "={{ JSON.stringify($json.targets) }}"
+        }
+      }
+    },
+    {
+      "id": "error-handling",
+      "name": "Handle Sync Errors",
+      "type": "n8n-nodes-base.code",
+      "position": [900, 500],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const errorData = $input.all();\nconst errors = [];\n\nfor (const item of errorData) {\n  if (item.error) {\n    errors.push({\n      id: item.json?.id || 'unknown',\n      table: item.json?.table || 'unknown',\n      operation: item.json?.operation || 'unknown',\n      error: item.error.message || 'Unknown error',\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n\nif (errors.length > 0) {\n  console.error('Sync errors encountered:', errors);\n  \n  // Log to Knowledge Graph\n  const errorSummary = {\n    type: 'sync_error',\n    count: errors.length,\n    errors: errors,\n    severity: errors.length > 5 ? 'high' : 'medium',\n    timestamp: new Date().toISOString()\n  };\n  \n  return [{ json: errorSummary }];\n}\n\nreturn [];"
+      }
+    },
+    {
+      "id": "cleanup-old-records",
+      "name": "Cleanup Old Sync Records",
+      "type": "n8n-nodes-base.supabase",
+      "position": [680, 500],
+      "parameters": {
+        "operation": "delete",
+        "tableName": "sync_queue",
+        "filterType": "manual",
+        "conditions": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "operation": "equal",
+              "value": "completed"
+            },
+            {
+              "keyName": "created_at",
+              "operation": "dateTimeBefore",
+              "value": "={{ $now.minus({days: 7}).toISO() }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Sync Scheduler": {
+      "main": [
+        [
+          {
+            "node": "Get Recent Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Recent Changes": {
+      "main": [
+        [
+          {
+            "node": "Process Changes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cleanup Old Sync Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Changes": {
+      "main": [
+        [
+          {
+            "node": "Sync to Linear",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync to Notion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Linear": {
+      "main": [
+        [
+          {
+            "node": "Update Sync Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Notion": {
+      "main": [
+        [
+          {
+            "node": "Update Sync Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Slack": {
+      "main": [
+        [
+          {
+            "node": "Update Sync Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": {
+      "callerPolicy": "workflowOwner"
+    }
+  }
+}

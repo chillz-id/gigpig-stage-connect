@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-09-23T15:56:16.707Z",
+  "task": "MCP tools",
+  "checked_sources": [
+    "knowledge_graph",
+    "linear_issues",
+    "taskmaster"
+  ],
+  "findings_count": {
+    "kg_entries": 29,
+    "linear_issues": 1,
+    "tasks": 5,
+    "warnings": 1
+  },
+  "compliance_status": "checked"
+}

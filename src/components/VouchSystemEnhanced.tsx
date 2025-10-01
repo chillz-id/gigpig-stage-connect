@@ -58,8 +58,8 @@ export const VouchSystemEnhanced: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Get formatted vouch lists
-  const receivedVouches = useMemo(() => getReceivedVouches(), [vouches, user?.id]);
-  const givenVouches = useMemo(() => getGivenVouches(), [vouches, user?.id]);
+  const receivedVouches = useMemo(() => getReceivedVouches(), [getReceivedVouches]);
+  const givenVouches = useMemo(() => getGivenVouches(), [getGivenVouches]);
 
   // Handle user search
   useEffect(() => {

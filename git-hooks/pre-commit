@@ -1,0 +1,12 @@
+#!/bin/bash
+# Linear integration - validate branch naming
+branch=$(git branch --show-current)
+
+if [[ ! $branch =~ ^(frontend|backend|testing|infra|integration)/SUS-[0-9]{3}- ]]; then
+  echo "❌ Branch name must follow pattern: {team}/SUS-{number}-{description}"
+  echo "   Examples: frontend/SUS-004-comedian-profiles"
+  echo "             backend/SUS-001-auth-fix"
+  exit 1
+fi
+
+echo "✅ Branch name follows Linear conventions"

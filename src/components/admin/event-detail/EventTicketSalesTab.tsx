@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,7 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('all');
 
-  const fetchTicketSales = async () => {
+  const fetchTicketSales = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -152,7 +152,7 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, toast]);
 
   const handleSyncTickets = async () => {
     try {
@@ -195,11 +195,11 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
 
   useEffect(() => {
     fetchTicketSales();
-    
+
     // Set up real-time updates every 30 seconds
     const interval = setInterval(fetchTicketSales, 30000);
     return () => clearInterval(interval);
-  }, [eventId]);
+  }, [fetchTicketSales]);
 
   const filteredSales = ticketSales.filter(sale => {
     const matchesSearch = 

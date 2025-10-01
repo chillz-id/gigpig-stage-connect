@@ -1,0 +1,22 @@
+{
+  "id": "issue-1755955208321-64391f36",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Failed to Deploy Workflow Using Available APIs",
+  "description": "Attempted to find N8N API keys through various methods but didn't properly explore all deployment options like using the N8N CLI, direct database manipulation, or importing through mounted volumes. Gave up too quickly on deployment.",
+  "date": "2025-08-23",
+  "timestamp": "2025-08-23T13:20:08.321Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error",
+    "api",
+    "database",
+    "ui",
+    "deployment"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}

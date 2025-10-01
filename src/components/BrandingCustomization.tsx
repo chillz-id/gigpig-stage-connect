@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Palette, Upload, Save, RotateCcw } from 'lucide-react';
-
 interface BrandingSettings {
   primaryColor: string;
   secondaryColor: string;
@@ -17,18 +14,15 @@ interface BrandingSettings {
   companyName: string;
   tagline: string;
 }
-
 interface BrandingCustomizationProps {
   currentBranding: BrandingSettings;
   onSave: (branding: BrandingSettings) => void;
 }
-
 const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
   currentBranding,
   onSave
 }) => {
   const [branding, setBranding] = useState<BrandingSettings>(currentBranding);
-
   const presetColorSchemes = [
     { name: 'Purple Fusion', primary: '#8B5CF6', secondary: '#EC4899', accent: '#F59E0B' },
     { name: 'Ocean Blue', primary: '#0EA5E9', secondary: '#06B6D4', accent: '#10B981' },
@@ -36,11 +30,9 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
     { name: 'Forest Green', primary: '#059669', secondary: '#10B981', accent: '#84CC16' },
     { name: 'Royal Purple', primary: '#7C3AED', secondary: '#A855F7', accent: '#C084FC' },
   ];
-
   const handleColorChange = (colorType: keyof Pick<BrandingSettings, 'primaryColor' | 'secondaryColor' | 'accentColor'>, value: string) => {
     setBranding(prev => ({ ...prev, [colorType]: value }));
   };
-
   const applyPresetScheme = (scheme: typeof presetColorSchemes[0]) => {
     setBranding(prev => ({
       ...prev,
@@ -49,11 +41,9 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
       accentColor: scheme.accent
     }));
   };
-
   const resetToDefault = () => {
     setBranding(currentBranding);
   };
-
   return (
     <div className="space-y-6">
       <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
@@ -73,7 +63,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
               <TabsTrigger value="logo">Logo & Text</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
-
             <TabsContent value="colors" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
@@ -95,7 +84,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="secondaryColor" className="text-white">Secondary Color</Label>
                   <div className="flex space-x-2">
@@ -115,7 +103,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="accentColor" className="text-white">Accent Color</Label>
                   <div className="flex space-x-2">
@@ -136,7 +123,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                   </div>
                 </div>
               </div>
-
               <div className="space-y-3">
                 <Label className="text-white">Preset Color Schemes</Label>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -167,7 +153,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                 </div>
               </div>
             </TabsContent>
-
             <TabsContent value="logo" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -181,7 +166,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                       placeholder="Your Company Name"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="tagline" className="text-white">Tagline</Label>
                     <Input
@@ -193,7 +177,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                     />
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-white">Logo</Label>
@@ -218,7 +201,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                 </div>
               </div>
             </TabsContent>
-
             <TabsContent value="preview" className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-white">Dashboard Preview</Label>
@@ -283,7 +265,6 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
               </div>
             </TabsContent>
           </Tabs>
-
           <div className="flex justify-between pt-6">
             <Button
               variant="outline"
@@ -306,5 +287,4 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
     </div>
   );
 };
-
-export default BrandingCustomization;
+export default BrandingCustomization;

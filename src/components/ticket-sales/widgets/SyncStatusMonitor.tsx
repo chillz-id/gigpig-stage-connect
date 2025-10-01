@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ const SyncStatusMonitor: React.FC<SyncStatusMonitorProps> = ({ eventId }) => {
   const [platforms, setPlatforms] = useState<PlatformStatus[]>([]);
   const [syncHealth, setSyncHealth] = useState<number>(100);
 
-  const fetchSyncStatus = async () => {
+  const fetchSyncStatus = useCallback(async () => {
     try {
       const { data: platformData, error } = await supabase
         .from('ticket_platforms')
@@ -98,7 +98,7 @@ const SyncStatusMonitor: React.FC<SyncStatusMonitorProps> = ({ eventId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId]);
 
   const handleManualSync = async () => {
     try {
@@ -168,11 +168,11 @@ const SyncStatusMonitor: React.FC<SyncStatusMonitorProps> = ({ eventId }) => {
 
   useEffect(() => {
     fetchSyncStatus();
-    
+
     // Refresh every minute
     const interval = setInterval(fetchSyncStatus, 60000);
     return () => clearInterval(interval);
-  }, [eventId]);
+  }, [fetchSyncStatus]);
 
   if (loading) {
     return (

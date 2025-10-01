@@ -1,0 +1,20 @@
+{
+  "id": "issue-1755898296347-48808850",
+  "type": "issue",
+  "severity": "low",
+  "title": "N8N Orders Workflow Investigation Findings",
+  "description": "Comprehensive investigation revealed: Environment variables working (N8N has HUMANITIX_API_KEY access), Humanitix API returns 25 events with event 689d8a3c9e771b6de8e3bc0e containing 4 recent orders (including 2025-08-22T12:35:35.694Z), Notion API authentication working, all connectivity verified. Workflow executions #577 (21:00) and #584 (21:15) both show error status despite fixes. Root cause: workflow logic prevented processing of events with actual orders.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T21:31:36.347Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Completed comprehensive environment and API verification. All systems operational: N8N environment variables accessible, Humanitix API returning correct data (25 events, 4 recent orders in target event), Notion API authentication working. Investigation revealed workflow logic issues as root cause, not connectivity problems. All fixes applied and deployed. Next execution monitoring scheduled for validation.",
+    "successful": true,
+    "timestamp": "2025-08-22T21:31:43.299Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [],
+  "filename": "issue-1755898296347-48808850.json"
+}

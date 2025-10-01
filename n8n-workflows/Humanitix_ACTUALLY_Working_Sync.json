@@ -1,0 +1,121 @@
+{
+  "name": "Humanitix ACTUALLY Working Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0a1b2c3d-4e5f-6789-abcd-ef1234567890",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [120, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {"name": "page", "value": "1"},
+            {"name": "pageSize", "value": "10"}
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "X-API-Key", "value": "htx_ot4Ps1kNJIz8FhSfW7y8NKAVrC2AiZI8DQKs5Vvt"}
+          ]
+        }
+      },
+      "id": "http-1",
+      "name": "Get Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [300, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process events and prepare for Supabase\nconst events = $input.all()[0].json.events || [];\nconst results = [];\n\nfor (const event of events.slice(0, 3)) {\n  // Check if we should process this event\n  results.push({\n    json: {\n      source: 'humanitix',\n      source_id: event._id,\n      name: event.name,\n      description: event.description,\n      start_date: event.startDate,\n      end_date: event.endDate,\n      timezone: event.timezone,\n      status: event.status,\n      location: event.location,\n      currency: event.currency,\n      raw: event,\n      ingested_at: new Date().toISOString()\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "code-1",
+      "name": "Process Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/events_htx",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaWtqcGZ1bGhocHFweHpwZ3R1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTYxNTY3OCwiZXhwIjoyMDUxMTkxNjc4fQ.vqHJcZHjQO2d37qiJF2aYzOUj1mlBt5FlJ5U3bqe_bE"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Prefer", "value": "return=minimal"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "autodetect"
+            }
+          }
+        }
+      },
+      "id": "http-2",
+      "name": "Insert Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 240]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events": {
+      "main": [
+        [
+          {
+            "node": "Process Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Events": {
+      "main": [
+        [
+          {
+            "node": "Insert Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12345678-1234-1234-1234-123456789016",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "87654325",
+  "tags": []
+}

@@ -1,0 +1,1164 @@
+{
+  "name": "Humanitix → Supabase (events, sessions, customers, orders, tickets, cursors)",
+  "nodes": [
+    {
+      "id": "abfadc10-cd45-4050-920f-cf787112b959",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ee9108c6-c416-48d8-8618-4611f0cc99bc",
+      "name": "Init (page=1)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        -200
+      ],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "number": [
+            {
+              "name": "page",
+              "value": 1
+            }
+          ],
+          "string": [
+            {
+              "name": "pageSize",
+              "value": "100"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "38b55fe2-e1d5-4a58-8a8a-f56939740236",
+      "name": "Fetch Events (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -800,
+        -200
+      ],
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json.page}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "={{$json.pageSize}}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "pagination": "updateParameter",
+        "paginationUpdateParameters": {
+          "type": "query",
+          "name": "page",
+          "value": "={{ Number($response.body?.page ?? 1) + 1 }}",
+          "completeWhen": {
+            "type": "expression",
+            "value": "{{\n  (($response.body?.events?.length ?? 0) === 0) ||\n  (Number($response.body?.page ?? 1) >=\n    Math.ceil(Number($response.body?.total ?? 0) / Number($response.body?.pagesize ?? 100)))\n}}"
+          },
+          "interval": 1000
+        },
+        "genericAuthType": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$credentials.apiKey}}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "genericAuthType": "headerAuth",
+        "genericAuthCredential": {
+          "id": "HUMANITIX-CREDS-NAME-ONLY",
+          "name": "Humanitix API (Header)"
+        }
+      }
+    },
+    {
+      "id": "e25fa91c-3e79-4729-b74d-22d6ab97a406",
+      "name": "Split events[]",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        -200
+      ],
+      "parameters": {
+        "functionCode": "/**\n * Input: one or more items from HTTP pagination, each with body.events[]\n * Output: items = [{ event, raw, source, source_id, ... }]\n */\nconst out = [];\nfor (const item of items) {\n  const body = item.json;\n  const arr = body?.events ?? [];\n  for (const ev of arr) {\n    out.push({ json: { raw: ev } });\n  }\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "242cd70d-cb3d-456e-b51a-8169bc5673a2",
+      "name": "Map Events → rows",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -200
+      ],
+      "parameters": {
+        "functionCode": "/**\n * Map Humanitix event to Supabase public.events\n * Columns: source, source_id, title, description, status, updated_at, raw\n */\nfunction toTimestampISO(v) {\n  if (!v) return null;\n  try { return new Date(v).toISOString(); } catch { return null; }\n}\n\nreturn items.map(i => {\n  const e = i.json.raw;\n  return {\n    json: {\n      source: 'humanitix',\n      source_id: String(e.id ?? e._id ?? e.eventId ?? ''),\n      title: e.name ?? e.title ?? '',\n      description: e.description ?? '',\n      status: e.status ?? e.state ?? 'unknown',\n      updated_at: toTimestampISO(e.updatedAt ?? e.updated_at ?? e.modifiedAt),\n      raw: e\n    }\n  };\n});\n"
+      }
+    },
+    {
+      "id": "bee011ca-f06f-411c-aa3e-b477c2cc3936",
+      "name": "Upsert Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -200,
+        -200
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/events?on_conflict=source_id",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $items().map(i => i.json) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "0b3d1c4e-b62b-455f-9985-765be39b8a72",
+      "name": "Sessions from Events",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        20
+      ],
+      "parameters": {
+        "functionCode": "/**\n * Build sessions from event raw:\n * session: source, source_id, event_source_id, starts_at, venue_name, status, updated_at, raw\n * We try common shapes: event.sessions[], event.dates[], event.sessions or tickets containing session info.\n */\nfunction toISO(v) {\n  if (!v) return null;\n  try { return new Date(v).toISOString(); } catch { return null; }\n}\nconst out = [];\nfor (const { json } of items) {\n  const e = json.raw;\n  const eventId = String(e.id ?? e._id ?? e.eventId ?? '');\n  const sessions = e.sessions || e.dates || e.schedule || [];\n  for (const s of (Array.isArray(sessions) ? sessions : [])) {\n    const sid = String(s.id ?? s._id ?? s.sessionId ?? `${eventId}:${s.start || s.starts_at || s.startsAt || ''}`);\n    out.push({\n      json: {\n        source: 'humanitix',\n        source_id: sid,\n        event_source_id: eventId,\n        starts_at: toISO(s.start ?? s.starts_at ?? s.startsAt ?? s.datetime),\n        venue_name: s.venueName ?? e.venueName ?? e.venue ?? null,\n        status: s.status ?? 'scheduled',\n        updated_at: toISO(s.updatedAt ?? s.updated_at ?? e.updatedAt ?? e.updated_at),\n        raw: s,\n      }\n    });\n  }\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "9375d324-4a22-48b2-86a0-465ab2cbcd98",
+      "name": "Upsert Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -200,
+        20
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/sessions?on_conflict=source_id",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $items().map(i => i.json) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "376d4cea-58a1-4b89-a89d-4cbfffe36ca6",
+      "name": "Make Event Items",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -200
+      ],
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const e = i.json.raw;\n  return { json: { eventId: String(e.id ?? e._id ?? e.eventId ?? '') } };\n});\n"
+      }
+    },
+    {
+      "id": "b6548ba3-438e-4e6a-bcb2-59c588826c76",
+      "name": "For Each Event (1)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        200,
+        -200
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "1f56070a-266d-48a9-ad41-19dd776f9c97",
+      "name": "GET Orders Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        420,
+        -360
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/sync_state",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "value"
+            },
+            {
+              "name": "key",
+              "value": "={{ 'eq.' + 'humanitix:orders:' + $json.eventId }}"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "c475fa0d-cfe8-4dcd-b063-ac1d3f758b3b",
+      "name": "Seed Orders Cursor",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        620,
+        -360
+      ],
+      "parameters": {
+        "functionCode": "return const key = $json.key;\nconst row = items[0]?.json;\nlet value = row?.value;\nif (!value) value = '2000-01-01T00:00:00Z';\nreturn [{ json: { ...$json, cursor: value, maxUpdated: value } }];\n"
+      }
+    },
+    {
+      "id": "adf8879e-2400-4988-94d4-aca8becf2567",
+      "name": "Init Orders Page/Max",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -360
+      ],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "eventId",
+              "value": "={{$json.eventId}}"
+            },
+            {
+              "name": "ordersCursor",
+              "value": "={{$json.cursor}}"
+            },
+            {
+              "name": "maxUpdated",
+              "value": "={{$json.maxUpdated}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "page",
+              "value": 1
+            },
+            {
+              "name": "pageSize",
+              "value": 100
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5a6be483-b297-4252-859d-501184314f85",
+      "name": "Fetch Orders (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1020,
+        -360
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.humanitix.com/v1/events/' + $json.eventId + '/orders' }}",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json.page}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "={{$json.pageSize}}"
+            },
+            {
+              "name": "updatedSince",
+              "value": "={{$json.ordersCursor}}"
+            }
+          ]
+        },
+        "pagination": "updateParameter",
+        "paginationUpdateParameters": {
+          "type": "query",
+          "name": "page",
+          "value": "={{ Number($response.body?.page ?? 1) + 1 }}",
+          "completeWhen": {
+            "type": "expression",
+            "value": "{{\n  (($response.body?.orders?.length ?? 0) === 0) ||\n  (Number($response.body?.page ?? 1) >=\n    Math.ceil(Number($response.body?.total ?? 0) / Number($response.body?.pagesize ?? 100)))\n}}"
+          },
+          "interval": 2000
+        },
+        "genericAuthType": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$credentials.apiKey}}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "genericAuthType": "headerAuth",
+        "genericAuthCredential": {
+          "id": "HUMANITIX-CREDS-NAME-ONLY",
+          "name": "Humanitix API (Header)"
+        }
+      }
+    },
+    {
+      "id": "17ddb4cd-e346-44a3-a731-39e6a9277d43",
+      "name": "Split orders[]",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        -360
+      ],
+      "parameters": {
+        "functionCode": "const out = [];\nfor (const item of items) {\n  const body = item.json;\n  const arr = body?.orders ?? [];\n  for (const o of arr) out.push({ json: { raw: o, eventId: $json.eventId } });\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "51e7d449-195c-48c4-a08a-cc12c5b1fbeb",
+      "name": "Normalize Orders",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -360
+      ],
+      "parameters": {
+        "functionCode": "/**\n * Output items with { customer, order, eventId }\n * - parse DOB from additionalFields.details (DD/MM/YYYY accepted)\n * - derive age_band\n * - map money to cents\n */\nfunction toISO(v) { if (!v) return null; try { return new Date(v).toISOString(); } catch { return null; } }\nfunction parseDOB(s) {\n  if (!s || typeof s !== 'string') return null;\n  const m = s.match(/(\\d{1,2})\\/(\\d{1,2})\\/(\\d{2,4})/);\n  if (!m) return null;\n  const [ , d, mo, y ] = m;\n  const year = y.length===2 ? Number(y) + 1900 : Number(y);\n  const iso = new Date(Date.UTC(year, Number(mo)-1, Number(d))).toISOString().slice(0,10);\n  return iso;\n}\nfunction ageBand(dobIso) {\n  if (!dobIso) return null;\n  const today = new Date();\n  const dob = new Date(dobIso);\n  let age = today.getUTCFullYear() - dob.getUTCFullYear();\n  const m = today.getUTCMonth() - dob.getUTCMonth();\n  if (m < 0 || (m===0 && today.getUTCDate() < dob.getUTCDate())) age--;\n  if (age < 13 || age > 120) return null;\n  const bands = [[13,17],[18,24],[25,34],[35,44],[45,54],[55,64],[65,200]];\n  for (const [a,b] of bands) if (age>=a && age<=b) return `${a}-${b===200?'+':b}`.replace('-200','+');\n  return null;\n}\nfunction cents(n) {\n  if (n == null) return null;\n  const v = typeof n === 'string' ? parseFloat(n) : n;\n  if (isNaN(v)) return null;\n  return Math.round(v * 100);\n}\nfunction pick(obj, keys) {\n  const out = {}; for (const k of keys) if (obj?.[k] != null) out[k] = obj[k]; return out;\n}\n\nreturn items.map(i => {\n  const o = i.json.raw;\n  const details = (o.additionalFields?.details) || {};\n  // try DOB variants\n  const dob = (\n    parseDOB(details['Date of birth']) ||\n    parseDOB(details['DOB']) ||\n    parseDOB(details['Birthday']) ||\n    null\n  );\n  // address normalization\n  const addrKeys = Object.keys(details);\n  const get = (...variants) => {\n    for (const k of variants) {\n      const key = addrKeys.find(kk => kk.toLowerCase() === k.toLowerCase());\n      if (key) return details[key];\n    }\n    return null;\n  };\n  const customer = {\n    email: (o.purchaser?.email ?? o.email ?? '').trim().toLowerCase(),\n    first_name: o.purchaser?.firstName ?? o.purchaser?.first_name ?? o.first_name ?? null,\n    last_name: o.purchaser?.lastName ?? o.purchaser?.last_name ?? o.last_name ?? null,\n    phone: o.purchaser?.phone ?? o.phone ?? null,\n    dob,\n    age_band: ageBand(dob),\n    address_line1: get('Street address','Address','Address Line 1'),\n    address_line2: get('Address Line 2','Unit','Apartment'),\n    suburb: get('Suburb','Town'),\n    city: get('Town/City','City'),\n    state: get('State','Region','County'),\n    postcode: get('Post code','Postcode','Postal code','ZIP'),\n    country: get('Country'),\n  };\n\n  const order = {\n    source: 'humanitix',\n    source_id: String(o.id ?? o._id ?? o.orderId ?? ''),\n    event_source_id: String(i.json.eventId),\n    session_source_id: String(o.sessionId ?? o.session_id ?? ''),\n    order_reference: o.reference ?? o.orderReference ?? null,\n    status: o.status ?? 'unknown',\n    total_cents: cents(o.total ?? o.totalAmount),\n    net_sales_cents: cents(o.netSales ?? o.netSalesAmount),\n    purchaser_email: customer.email,\n    purchaser_first_name: customer.first_name,\n    purchaser_last_name: customer.last_name,\n    ordered_at: toISO(o.createdAt ?? o.ordered_at ?? o.created_at),\n    updated_at: toISO(o.updatedAt ?? o.updated_at),\n    additional_fields: o.additionalFields ?? null,\n    raw: o,\n  };\n\n  return { json: { customer, order, eventId: i.json.eventId } };\n});\n"
+      }
+    },
+    {
+      "id": "7f7b2118-2edf-4158-b990-80885400d35a",
+      "name": "Upsert Customers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1620,
+        -420
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/customers?on_conflict=email",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $items().map(i => i.json.customer).filter(Boolean) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "e2ade89f-395d-4717-890f-5cd72322f359",
+      "name": "Upsert Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1620,
+        -300
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/orders?on_conflict=source_id",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $items().map(i => i.json.order).filter(Boolean) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "84c5da19-7ee4-4d5d-9a1c-87f279505b2a",
+      "name": "Orders MaxUpdated",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        -360
+      ],
+      "parameters": {
+        "functionCode": "let maxU = $json.maxUpdated || '2000-01-01T00:00:00Z';\nfor (const it of items) {\n  const u = it.json?.order?.updated_at;\n  if (u && new Date(u) > new Date(maxU)) maxU = u;\n}\nreturn [{ json: { eventId: $json.eventId, maxUpdated: maxU } }];\n"
+      }
+    },
+    {
+      "id": "abc1fbae-b945-4a3e-900e-ce48602fd150",
+      "name": "Update Orders Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2020,
+        -360
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/sync_state?on_conflict=key",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ [{ key: 'humanitix:orders:' + $json.eventId, value: $json.maxUpdated }] }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "1e36ad4b-0c4b-443d-b132-a6c5418bbb91",
+      "name": "GET Tickets Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        420,
+        -40
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/sync_state",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "value"
+            },
+            {
+              "name": "key",
+              "value": "={{ 'eq.' + 'humanitix:tickets:' + $json.eventId }}"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "6bb52875-4257-4da7-8a78-28619ff2fd83",
+      "name": "Seed Tickets Cursor",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        620,
+        -40
+      ],
+      "parameters": {
+        "functionCode": "return const key = $json.key;\nconst row = items[0]?.json;\nlet value = row?.value;\nif (!value) value = '2000-01-01T00:00:00Z';\nreturn [{ json: { ...$json, cursor: value, maxUpdated: value } }];\n"
+      }
+    },
+    {
+      "id": "3a18de6a-028e-457a-b28b-d59604667860",
+      "name": "Init Tickets Page/Max",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -40
+      ],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "eventId",
+              "value": "={{$json.eventId}}"
+            },
+            {
+              "name": "ticketsCursor",
+              "value": "={{$json.cursor}}"
+            },
+            {
+              "name": "maxUpdated",
+              "value": "={{$json.maxUpdated}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "page",
+              "value": 1
+            },
+            {
+              "name": "pageSize",
+              "value": 100
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "dfbf8bf1-cf6e-427f-b6dc-e04d56e4023c",
+      "name": "Fetch Tickets (page)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1020,
+        -40
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.humanitix.com/v1/events/' + $json.eventId + '/tickets' }}",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json.page}}"
+            },
+            {
+              "name": "pageSize",
+              "value": "={{$json.pageSize}}"
+            },
+            {
+              "name": "updatedSince",
+              "value": "={{$json.ticketsCursor}}"
+            }
+          ]
+        },
+        "pagination": "updateParameter",
+        "paginationUpdateParameters": {
+          "type": "query",
+          "name": "page",
+          "value": "={{ Number($response.body?.page ?? 1) + 1 }}",
+          "completeWhen": {
+            "type": "expression",
+            "value": "{{\n  (($response.body?.tickets?.length ?? 0) === 0) ||\n  (Number($response.body?.page ?? 1) >=\n    Math.ceil(Number($response.body?.total ?? 0) / Number($response.body?.pagesize ?? 100)))\n}}"
+          },
+          "interval": 2000
+        },
+        "genericAuthType": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$credentials.apiKey}}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "genericAuthType": "headerAuth",
+        "genericAuthCredential": {
+          "id": "HUMANITIX-CREDS-NAME-ONLY",
+          "name": "Humanitix API (Header)"
+        }
+      }
+    },
+    {
+      "id": "a07f4b8c-db51-4bd4-ab8e-d5a85faec356",
+      "name": "Split tickets[]",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        -40
+      ],
+      "parameters": {
+        "functionCode": "const out = [];\nfor (const item of items) {\n  const body = item.json;\n  const arr = body?.tickets ?? [];\n  for (const t of arr) out.push({ json: { raw: t, eventId: $json.eventId } });\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "a1cca4e9-1ef7-480b-910d-2a906f88f77b",
+      "name": "Map Tickets → rows",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -40
+      ],
+      "parameters": {
+        "functionCode": "function toISO(v) { if (!v) return null; try { return new Date(v).toISOString(); } catch { return null; } }\nfunction cents(n) {\n  if (n == null) return null;\n  const v = typeof n === 'string' ? parseFloat(n) : n;\n  if (isNaN(v)) return null;\n  return Math.round(v * 100);\n}\nreturn items.map(i => {\n  const t = i.json.raw;\n  return {\n    json: {\n      source: 'humanitix',\n      source_id: String(t.id ?? t._id ?? t.ticketId ?? ''),\n      order_source_id: String(t.orderId ?? t.order_id ?? ''),\n      session_source_id: String(t.sessionId ?? t.session_id ?? ''),\n      ticket_type_name: t.ticketTypeName ?? t.typeName ?? t.name ?? null,\n      price_cents: cents(t.price ?? t.pricePaid ?? t.finalPrice),\n      status: t.status ?? 'unknown',\n      checked_in: Boolean(t.checkedIn ?? t.checkInStatus === 'checked_in'),\n      updated_at: toISO(t.updatedAt ?? t.updated_at),\n      barcode: t.barcode ?? null,\n      raw: t\n    }\n  };\n});\n"
+      }
+    },
+    {
+      "id": "7a72236d-3016-4acb-9190-a072d7164166",
+      "name": "Upsert Tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1620,
+        -40
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/tickets?on_conflict=source_id",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $items().map(i => i.json) }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "9323c7dc-4f32-465e-bcc5-8b859da81231",
+      "name": "Tickets MaxUpdated",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        -40
+      ],
+      "parameters": {
+        "functionCode": "let maxU = $json.maxUpdated || '2000-01-01T00:00:00Z';\nfor (const it of items) {\n  const u = it.json?.updated_at;\n  if (u && new Date(u) > new Date(maxU)) maxU = u;\n}\nreturn [{ json: { eventId: $json.eventId, maxUpdated: maxU } }];\n"
+      }
+    },
+    {
+      "id": "5b179da8-b021-40da-aacf-0f70b2ce5194",
+      "name": "Update Tickets Cursor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2020,
+        -40
+      ],
+      "parameters": {
+        "url": "https://{{ $credentials.host }}/rest/v1/sync_state?on_conflict=key",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ [{ key: 'humanitix:tickets:' + $json.eventId, value: $json.maxUpdated }] }}",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "predefinedCredentialType": "supabaseApi"
+      },
+      "credentials": {
+        "credentialType": "supabaseApi",
+        "credentials": {
+          "id": "SUPABASE-CREDS-NAME-ONLY",
+          "name": "Supabase (Service Role)"
+        }
+      }
+    },
+    {
+      "id": "f88112df-f601-4b5d-a6c5-94e49b769e17",
+      "name": "Merge (Orders & Tickets)",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        -200
+      ],
+      "parameters": {
+        "mode": "passThrough",
+        "combineMode": "mergeByIndex"
+      }
+    },
+    {
+      "id": "126fb0b1-f758-414f-8e9e-fed3f45c1aa0",
+      "name": "Wait 1s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        -200
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Init (page=1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init (page=1)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Events (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Events (page)": {
+      "main": [
+        [
+          {
+            "node": "Split events[]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split events[]": {
+      "main": [
+        [
+          {
+            "node": "Map Events → rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sessions from Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Events → rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sessions from Events": {
+      "main": [
+        [
+          {
+            "node": "Upsert Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Events": {
+      "main": [
+        [
+          {
+            "node": "Make Event Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Sessions": {
+      "main": [
+        [
+          {
+            "node": "Make Event Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Event Items": {
+      "main": [
+        [
+          {
+            "node": "For Each Event (1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Each Event (1)": {
+      "main": [
+        [
+          {
+            "node": "GET Orders Cursor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET Tickets Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Orders Cursor": {
+      "main": [
+        [
+          {
+            "node": "Seed Orders Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Orders Cursor": {
+      "main": [
+        [
+          {
+            "node": "Init Orders Page/Max",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Orders Page/Max": {
+      "main": [
+        [
+          {
+            "node": "Fetch Orders (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Orders (page)": {
+      "main": [
+        [
+          {
+            "node": "Split orders[]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split orders[]": {
+      "main": [
+        [
+          {
+            "node": "Normalize Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Orders": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customers": {
+      "main": [
+        [
+          {
+            "node": "Orders MaxUpdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Orders": {
+      "main": [
+        [
+          {
+            "node": "Orders MaxUpdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders MaxUpdated": {
+      "main": [
+        [
+          {
+            "node": "Update Orders Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Tickets Cursor": {
+      "main": [
+        [
+          {
+            "node": "Seed Tickets Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Tickets Cursor": {
+      "main": [
+        [
+          {
+            "node": "Init Tickets Page/Max",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Tickets Page/Max": {
+      "main": [
+        [
+          {
+            "node": "Fetch Tickets (page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Tickets (page)": {
+      "main": [
+        [
+          {
+            "node": "Split tickets[]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split tickets[]": {
+      "main": [
+        [
+          {
+            "node": "Map Tickets → rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Tickets → rows": {
+      "main": [
+        [
+          {
+            "node": "Upsert Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Tickets": {
+      "main": [
+        [
+          {
+            "node": "Tickets MaxUpdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tickets MaxUpdated": {
+      "main": [
+        [
+          {
+            "node": "Update Tickets Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Orders Cursor": {
+      "main": [
+        [
+          {
+            "node": "Merge (Orders & Tickets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tickets Cursor": {
+      "main": [
+        [
+          {
+            "node": "Merge (Orders & Tickets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge (Orders & Tickets)": {
+      "main": [
+        [
+          {
+            "node": "Wait 1s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1s": {
+      "main": [
+        [
+          {
+            "node": "For Each Event (1)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualRuns": true,
+    "timezone": "Australia/Sydney"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetup": "Create credentials named 'Humanitix API (Header)' and 'Supabase (Service Role)' after import."
+  },
+  "__type": "workflow"
+}

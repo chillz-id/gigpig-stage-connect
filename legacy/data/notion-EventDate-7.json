@@ -1,0 +1,44 @@
+{
+  "parent": {
+    "database_id": "2794745b-8cbe-81b8-b290-c4d552eb0c0f"
+  },
+  "properties": {
+    "Event Date ID": {
+      "title": [
+        {
+          "text": {
+            "content": "68947b841d67cb4b00f4c97b"
+          }
+        }
+      ]
+    },
+    "Start Date": {
+      "date": {
+        "start": "2025-09-02"
+      }
+    },
+    "End Date": {
+      "date": {
+        "start": "2025-09-30"
+      }
+    },
+    "Schedule ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Disabled": {
+      "checkbox": false
+    },
+    "Deleted": {
+      "checkbox": false
+    },
+    "Tickets Sold": null,
+    "Orders Count": null,
+    "Revenue": null
+  }
+}

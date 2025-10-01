@@ -1,0 +1,354 @@
+{
+  "parent": {
+    "database_id": "2794745b-8cbe-8112-9ce0-dc2229da701c"
+  },
+  "properties": {
+    "Event ID": {
+      "title": [
+        {
+          "text": {
+            "content": "68947b841d67cb4b00f4c974"
+          }
+        }
+      ]
+    },
+    "Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Jordan Shanks - Self Help LIVE (18+)"
+          }
+        }
+      ]
+    },
+    "Status": {
+      "select": {
+        "name": "Active"
+      }
+    },
+    "Description": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Unlock Your Potential Look, let’s be real - people who attend this LOVE it. Why? Because it’s not just a seminar, it’s an experience that changes lives.Walk out feeling inspired, energised, and ready to seize every moment of your week with unstoppable passion. This isn’t just motivation - it’s transformation.Don't miss your chance to feel the power. This is worth the price of admission.NOTE: This venue is 18+Dates: TUESDAY SEPTEMBER 2nd, 9th, 16th, 23rd &amp; 30th - 7:30pmClick through to the \"BUY TICKETS\" tab to see all the date options, including a bundle offer."
+          }
+        }
+      ]
+    },
+    "Event Type": {
+      "select": {
+        "name": "In Person"
+      }
+    },
+    "User ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "oDWrD9Vw4cT5Ckqs5k7FqauLylc2"
+          }
+        }
+      ]
+    },
+    "Organiser ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "6821a3b77a7599aeef88b30c"
+          }
+        }
+      ]
+    },
+    "Slug": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "jordan-shanks-self-help-live"
+          }
+        }
+      ]
+    },
+    "URL": {
+      "url": "https://events.humanitix.com/jordan-shanks-self-help-live"
+    },
+    "Website URL": {
+      "url": "https://events.humanitix.com/jordan-shanks-self-help-live"
+    },
+    "Currency": {
+      "select": {
+        "name": "AUD"
+      }
+    },
+    "Category": null,
+    "Classification Type": {
+      "select": {
+        "name": "concertOrPerformance"
+      }
+    },
+    "Classification Category": {
+      "select": {
+        "name": "healthAndWellness"
+      }
+    },
+    "Classification Subcategory": {
+      "select": {
+        "name": "personalHealth"
+      }
+    },
+    "Tag IDs": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[]"
+          }
+        }
+      ]
+    },
+    "Artists": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[]"
+          }
+        }
+      ]
+    },
+    "Keywords": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[\"selfhelp\",\"friendlyjordies\",\"jordanshanks\"]"
+          }
+        }
+      ]
+    },
+    "Public": {
+      "checkbox": true
+    },
+    "Published": {
+      "checkbox": true
+    },
+    "Suspend Sales": {
+      "checkbox": false
+    },
+    "Marked As Sold Out": {
+      "checkbox": false
+    },
+    "Created Date": {
+      "date": {
+        "start": "2025-08-07"
+      }
+    },
+    "Start Date": {
+      "date": {
+        "start": "2025-09-02"
+      }
+    },
+    "End Date": {
+      "date": {
+        "start": "2025-09-30"
+      }
+    },
+    "Published At": {
+      "date": {
+        "start": "2025-08-14"
+      }
+    },
+    "Updated At": {
+      "date": {
+        "start": "2025-09-25"
+      }
+    },
+    "Timezone": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Australia/Sydney"
+          }
+        }
+      ]
+    },
+    "Capacity": {
+      "number": 600
+    },
+    "Total Capacity": {
+      "number": 600
+    },
+    "Min Price": {
+      "number": 35
+    },
+    "Max Price": {
+      "number": 150
+    },
+    "Minimum Price": {
+      "number": 35
+    },
+    "Maximum Price": {
+      "number": 150
+    },
+    "Ticket Types": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"68947b841d67cb4b00f4c984\",\"name\":\"Tuesday September 2nd - 7:30pm\",\"price\":35,\"quantity\":120,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"689d860424ffca587f2032b5\",\"name\":\"Tuesday September 9th - 7:30pm\",\"price\":35,\"quantity\":120,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"689d861024ffca587f2032b6\",\"name\":\"Tuesday September 16th - 7:30pm\",\"price\":35,\"quantity\":120,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"689d862524ffca587f2032b7\",\"name\":\"Tuesday September 23rd - 7:30pm\",\"price\":35,\"quantity\":120,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"689d863424ffca587f2032b8\",\"name\":\"Tuesday September 30th - 7:30pm\",\"price\":35,\"quantity\":120,\"disabled\":false,\"deleted\":false,\"isDonation\":false}]"
+          }
+        }
+      ]
+    },
+    "Packaged Tickets": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"689d87382482b38c23f624be\",\"name\":\"All 5 Shows\",\"price\":150,\"quantity\":110,\"disabled\":false,\"deleted\":false,\"tickets\":[{\"_id\":\"689d87382482b38c23f624b9\",\"ticketTypeId\":\"68947b841d67cb4b00f4c984\",\"quantity\":1},{\"_id\":\"689d87382482b38c23f624ba\",\"ticketTypeId\":\"689d860424ffca587f2032b5\",\"quantity\":1},{\"_id\":\"689d87382482b38c23f624bb\",\"ticketTypeId\":\"689d861024ffca587f2032b6\",\"quantity\":1},{\"_id\":\"689d87382482b38c23f624bc\",\"ticketTypeId\":\"689d862524ffca587f2032b7\",\"quantity\":1},{\"_id\":\"689d87382482b38c23f624bd\",\"ticketTypeId\":\"689d863424ffca587f2032b8\",\"quantity\":1}]}]"
+          }
+        }
+      ]
+    },
+    "Refund Policy": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "No refunds"
+          }
+        }
+      ]
+    },
+    "Custom Refund Policy": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Additional Questions": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"68947d373310f51ed5785036\",\"createdAt\":\"2025-08-07T10:18:27.370Z\",\"updatedAt\":\"2025-08-07T10:18:27.370Z\",\"inputType\":\"date\",\"question\":\"Date of birth\",\"required\":true,\"perOrder\":true,\"disabled\":false}]"
+          }
+        }
+      ]
+    },
+    "Accessibility": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "{}"
+          }
+        }
+      ]
+    },
+    "Banner Image URL": {
+      "url": "https://cdn.filestackcontent.com/nOBKJDtQRRqhrYUryJJG"
+    },
+    "Feature Image URL": null,
+    "Social Image URL": null,
+    "Location Type": {
+      "select": {
+        "name": "address"
+      }
+    },
+    "Venue Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Kinselas Hotel"
+          }
+        }
+      ]
+    },
+    "Address": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "383 Bourke St, Darlinghurst NSW 2010, Australia"
+          }
+        }
+      ]
+    },
+    "City": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Darlinghurst"
+          }
+        }
+      ]
+    },
+    "Region": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "NSW"
+          }
+        }
+      ]
+    },
+    "Country": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AU"
+          }
+        }
+      ]
+    },
+    "Lat Lng": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[-33.880953,151.216496]"
+          }
+        }
+      ]
+    },
+    "Instructions": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Place ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "ChIJU-guBxquEmsREOgaMpovnyg"
+          }
+        }
+      ]
+    },
+    "Online URL": null,
+    "Map URL": null,
+    "Affiliate Code": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Location Code": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AU"
+          }
+        }
+      ]
+    },
+    "Event Date IDs": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[\"68947b841d67cb4b00f4c97b\"]"
+          }
+        }
+      ]
+    }
+  }
+}

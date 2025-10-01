@@ -1,0 +1,2 @@
+#!/bin/bash
+node /root/agents/comprehensive-tracking-system.cjs analyze "$1" "$2" "${3:-medium}"

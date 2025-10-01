@@ -1,0 +1,17 @@
+{
+  "id": "issue-1757459215459-9f3882ff",
+  "type": "issue",
+  "severity": "low",
+  "title": "N8N Production Workflows Created",
+  "description": "Created 4 production-ready N8N automation workflows: 1) webhook-processing-workflow.json (Humanitix/Eventbrite webhooks → Supabase → Slack), 2) social-media-automation-workflow.json (Cron → Content → Metricool posting), 3) content-generation-workflow.json (Event creation → AI content → Review → Publish), 4) database-sync-workflow.json (Supabase changes → Linear sync → GitHub updates). All workflows tested and ready for deployment. N8N operational at localhost:5678/rest/",
+  "date": "2025-09-09",
+  "timestamp": "2025-09-09T23:06:55.460Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "github"
+  ]
+}

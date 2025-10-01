@@ -1,0 +1,104 @@
+{
+  "name": "SIMPLE TEST: Just Events (No Sessions)",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.humanitix.com/v1/events",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "e1d1dd7f16c5e2ad034d89e2f2056d0684e7113d154476a6c59735a31ed78c91915e068534197c92e187ad0251c171fdf0bb0d7b99ee6cbc2cb62d5753a01f1e279cd316e5b64420b4264891f3332edac4b8404e400bf07e1f79f4e2ba0acf946c8c0b3c35963ea7a1c89e86c1ceb2"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "pageSize",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-events",
+      "name": "GET Events from Humanitix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple parse - just get the first event to test\nconst response = $input.all()[0].json;\nlet events = [];\n\nif (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n} else if (Array.isArray(response)) {\n  events = response;\n}\n\n// Just take first event for testing\nconst event = events[0] || {};\n\nreturn [{\n  json: {\n    event_id: event._id || 'test-id-123',\n    name: event.name || 'Test Event Name',\n    start_date: event.startDate || '2025-12-01T10:00:00.000Z'\n  }\n}];"
+      },
+      "id": "parse-simple",
+      "name": "Parse Simple Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2794745b-8cbe-8112-9ce0-dc2229da701c",
+          "mode": "id"
+        },
+        "title": "={{$json.name}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {"key": "Name", "textValue": "={{$json.name}}"},
+            {"key": "Start Date", "dateValue": "={{$json.start_date}}"}
+          ]
+        }
+      },
+      "id": "create-simple",
+      "name": "Create Simple Event",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "n2TBZCnpzOxSU5Wk",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "GET Events from Humanitix": {
+      "main": [
+        [
+          {
+            "node": "Parse Simple Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Simple Event": {
+      "main": [
+        [
+          {
+            "node": "Create Simple Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Australia/Sydney"
+  }
+}

@@ -1,0 +1,354 @@
+{
+  "parent": {
+    "database_id": "2794745b-8cbe-8112-9ce0-dc2229da701c"
+  },
+  "properties": {
+    "Event ID": {
+      "title": [
+        {
+          "text": {
+            "content": "68c248d8d4381d850eb0a4da"
+          }
+        }
+      ]
+    },
+    "Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "ID Comedy Club x Mary's Underground - Sat"
+          }
+        }
+      ]
+    },
+    "Status": {
+      "select": {
+        "name": "Active"
+      }
+    },
+    "Description": {
+      "rich_text": [
+        {
+          "text": {
+            "content": " ONE OFF LINEUP SHOW AT MARY'S UNDERGROUND!Welcome to the laughter hub of Sydney – iD Comedy ClubBrace yourself for an unforgettable comedy showcase that brings you the city’s crème de la crème of comedic talent, in the best comedy club in Sydney.Every performance is a unique blend of wit, humour, and outright hilarity, promising a night you won’t soon forget.Our showcase is a celebration of the vibrant comedy scene that Sydney has to offer.iD Comedy Club has meticulously curated a line-up that features the best and brightest in the business, ensuring that each act is a gem of comedic brilliance.The ambiance of iD Comedy Club sets the stage for an extraordinary evening.DJ Max Dary playing tunes between doors &amp; showtime, 5mins before show the spotlight will illuminate the stage, and our talented comedians will take you on a laughter-filled journey.From observational humour to sharp-witted satire, our showcase spans the entire spectrum of comedic styles.Why choose iD Comedy Club for your weekend entertainment?The answer is simple – we are committed to delivering top-notch performances in a welcoming and vibrant atmosphere.As the city’s premier comedy venue, we take pride in presenting a showcase that reflects the rich diversity and talent that Sydney’s comedy scene has to offer.To secure your spot at this unmissable event, purchase your tickets now.The demand for our showcases is high come unwind after a day’s work with laughter therapy.Book your tickets early to ensure you have a seat in the heart of the comedy action.Don’t miss this opportunity to experience the best of Sydney’s comedy talent, all under one roof at iD Comedy Club.Join us for an evening of laughter, camaraderie, and sheer comedic brilliance!"
+          }
+        }
+      ]
+    },
+    "Event Type": {
+      "select": {
+        "name": "In Person"
+      }
+    },
+    "User ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "oDWrD9Vw4cT5Ckqs5k7FqauLylc2"
+          }
+        }
+      ]
+    },
+    "Organiser ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "6821a3b77a7599aeef88b30c"
+          }
+        }
+      ]
+    },
+    "Slug": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "maryscomedysat"
+          }
+        }
+      ]
+    },
+    "URL": {
+      "url": "https://events.humanitix.com/maryscomedysat"
+    },
+    "Website URL": {
+      "url": "https://events.humanitix.com/maryscomedysat"
+    },
+    "Currency": {
+      "select": {
+        "name": "AUD"
+      }
+    },
+    "Category": null,
+    "Classification Type": {
+      "select": {
+        "name": "concertOrPerformance"
+      }
+    },
+    "Classification Category": {
+      "select": {
+        "name": "performingAndVisualArts"
+      }
+    },
+    "Classification Subcategory": {
+      "select": {
+        "name": "comedy"
+      }
+    },
+    "Tag IDs": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[]"
+          }
+        }
+      ]
+    },
+    "Artists": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[]"
+          }
+        }
+      ]
+    },
+    "Keywords": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[\"standup\",\"comedy\",\"comedyclub\",\"sydney\",\"thingstodo\",\"fun\",\"laugh\",\"drink\",\"eat\",\"city\"]"
+          }
+        }
+      ]
+    },
+    "Public": {
+      "checkbox": true
+    },
+    "Published": {
+      "checkbox": true
+    },
+    "Suspend Sales": {
+      "checkbox": false
+    },
+    "Marked As Sold Out": {
+      "checkbox": false
+    },
+    "Created Date": {
+      "date": {
+        "start": "2025-09-11"
+      }
+    },
+    "Start Date": {
+      "date": {
+        "start": "2025-09-13"
+      }
+    },
+    "End Date": {
+      "date": {
+        "start": "2025-09-13"
+      }
+    },
+    "Published At": {
+      "date": {
+        "start": "2025-09-11"
+      }
+    },
+    "Updated At": {
+      "date": {
+        "start": "2025-09-24"
+      }
+    },
+    "Timezone": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Australia/Sydney"
+          }
+        }
+      ]
+    },
+    "Capacity": {
+      "number": 110
+    },
+    "Total Capacity": {
+      "number": 110
+    },
+    "Min Price": {
+      "number": 25
+    },
+    "Max Price": {
+      "number": 180
+    },
+    "Minimum Price": {
+      "number": 25
+    },
+    "Maximum Price": {
+      "number": 180
+    },
+    "Ticket Types": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"68c248d7d4381d850eb0a2de\",\"name\":\"Early Bird\",\"price\":19.99,\"quantity\":10,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"68c248d7d4381d850eb0a2df\",\"name\":\"General Admission\",\"price\":25,\"quantity\":100,\"disabled\":false,\"deleted\":false,\"isDonation\":false},{\"_id\":\"68c248d7d4381d850eb0a2e0\",\"name\":\"COMP TICKETS\",\"price\":0,\"quantity\":30,\"disabled\":false,\"deleted\":false,\"isDonation\":false}]"
+          }
+        }
+      ]
+    },
+    "Packaged Tickets": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"68c248d7d4381d850eb0a2e1\",\"name\":\"Group of 4\",\"price\":75,\"quantity\":10,\"disabled\":false,\"deleted\":false,\"tickets\":[{\"_id\":\"6821a6e20015b001b44cec41\",\"ticketTypeId\":\"68c248d7d4381d850eb0a2df\",\"quantity\":4}]},{\"_id\":\"68c248d7d4381d850eb0a2e2\",\"name\":\"Group of 10\",\"price\":180,\"quantity\":5,\"disabled\":false,\"deleted\":false,\"tickets\":[{\"_id\":\"6821d8740015b001b4531249\",\"ticketTypeId\":\"68c248d7d4381d850eb0a2df\",\"quantity\":10}]}]"
+          }
+        }
+      ]
+    },
+    "Refund Policy": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "No refunds"
+          }
+        }
+      ]
+    },
+    "Custom Refund Policy": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Additional Questions": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[{\"_id\":\"6821a749cf537c448a92bccc\",\"inputType\":\"text\",\"question\":\"Address\",\"required\":false,\"perOrder\":true,\"disabled\":false,\"createdAt\":\"2025-09-11T03:58:16.134Z\",\"updatedAt\":\"2025-09-11T03:58:16.134Z\"},{\"_id\":\"6821a771cf537c448a92bccd\",\"inputType\":\"date\",\"question\":\"Date of birth\",\"required\":false,\"perOrder\":true,\"disabled\":false,\"createdAt\":\"2025-09-11T03:58:16.134Z\",\"updatedAt\":\"2025-09-11T03:58:16.134Z\"},{\"_id\":\"6821a77acf537c448a92bcce\",\"question\":\"Which comedian would you like to see perform most at our shows?\",\"required\":false,\"perOrder\":true,\"disabled\":false,\"createdAt\":\"2025-09-11T03:58:16.134Z\",\"updatedAt\":\"2025-09-11T03:58:16.134Z\"}]"
+          }
+        }
+      ]
+    },
+    "Accessibility": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "{\"features\":{}}"
+          }
+        }
+      ]
+    },
+    "Banner Image URL": {
+      "url": "https://cdn.filestackcontent.com/HxYoQHH3TpCYBuEeCxm6"
+    },
+    "Feature Image URL": null,
+    "Social Image URL": null,
+    "Location Type": {
+      "select": {
+        "name": "address"
+      }
+    },
+    "Venue Name": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Mary's Underground"
+          }
+        }
+      ]
+    },
+    "Address": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "29 Reiby Pl, Sydney NSW 2000, Australia"
+          }
+        }
+      ]
+    },
+    "City": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "Sydney"
+          }
+        }
+      ]
+    },
+    "Region": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "NSW"
+          }
+        }
+      ]
+    },
+    "Country": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AU"
+          }
+        }
+      ]
+    },
+    "Lat Lng": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[-33.8626518,151.2099426]"
+          }
+        }
+      ]
+    },
+    "Instructions": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Place ID": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "ChIJ-ZlzzbavEmsRWbAq6v_jqEM"
+          }
+        }
+      ]
+    },
+    "Online URL": null,
+    "Map URL": null,
+    "Affiliate Code": {
+      "rich_text": [
+        {
+          "text": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    "Location Code": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "AU"
+          }
+        }
+      ]
+    },
+    "Event Date IDs": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "[\"68c248d7d4381d850eb0a2e3\"]"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "issue-1755876174577-2576f050",
+  "type": "issue",
+  "severity": "medium",
+  "title": "TypeScript Compilation Errors Blocking Test Validation",
+  "description": "Testing Agent encountered TypeScript compilation errors that prevented full test suite validation. This blocked comprehensive testing of the credential system changes and required alternative testing approaches.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:22:54.578Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "error"
+  ]
+}

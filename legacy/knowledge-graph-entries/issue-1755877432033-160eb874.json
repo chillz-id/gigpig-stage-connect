@@ -1,0 +1,19 @@
+{
+  "id": "issue-1755877432033-160eb874",
+  "type": "issue",
+  "severity": "medium",
+  "title": "N8N Documentation Outdated UI References",
+  "description": "N8N UI credential setup guide referenced non-existent 'HTTP Header Auth' credential type. Current 2025 N8N UI uses 'Generic Credential Type' with 'Header Auth' sub-option. Also discovered multiple active bugs in 2025 N8N affecting Generic Credential Types including credential values resetting to placeholders and Bearer tokens not being attached to requests.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T15:43:52.033Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Fixed Knowledge Graph script toLowerCase undefined error and removed hardcoded API keys from documentation. Updated N8N guide with secure placeholder examples and proper environment variable references.",
+    "successful": true,
+    "timestamp": "2025-08-22T16:02:53.492Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": []
+}

@@ -200,7 +200,7 @@ export class FinancialValidationEngine {
    */
   async validateEdgeCase(edgeCase: any): Promise<EdgeCaseValidation> {
     const edgeCaseType = edgeCase.type;
-    let validation: EdgeCaseValidation = {
+    const validation: EdgeCaseValidation = {
       edgeCaseType
     };
 

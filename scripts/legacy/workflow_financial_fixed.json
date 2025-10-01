@@ -1,0 +1,586 @@
+[
+  {
+    "createdAt": "2025-08-02T04:30:49.829Z",
+    "updatedAt": "2025-08-22T00:22:56.734Z",
+    "id": "py2wq9zchBz0TD9j",
+    "name": "Humanitix Historical Import - All Time (Fixed Field Mapping)",
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "manual-trigger",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Import ALL historical data\n// Set a very early start date to get everything\nconst startDate = new Date('2020-01-01');\nconst endDate = new Date();\n\nconsole.log(`Importing ALL historical data from ${startDate.toDateString()} to ${endDate.toDateString()}`);\n\nreturn [{\n  json: {\n    startDate: startDate.toISOString(),\n    endDate: endDate.toISOString(),\n    currentPage: 1,\n    hasMore: true\n  }\n}];"
+        },
+        "id": "set-params",
+        "name": "Set Parameters",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          464,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Handle pagination for getting ALL events\nconst currentPage = $json.currentPage || 1;\nconst maxPages = 100; // Safety limit\n\nif (currentPage > maxPages) {\n  console.log(`Reached max pages limit (${maxPages})`);\n  return [];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    page: currentPage\n  }\n}];"
+        },
+        "id": "pagination-loop",
+        "name": "Pagination Loop",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          688,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://api.humanitix.com/v1/events",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "page",
+                "value": "={{ $json.page }}"
+              },
+              {
+                "name": "pageSize",
+                "value": "100"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": []
+          },
+          "options": {},
+          "httpHeaderAuth": "uLfBC8aVXqgfKrfF"
+        },
+        "id": "get-all-events",
+        "name": "Get ALL Events",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          912,
+          304
+        ],
+        "alwaysOutputData": false,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "aKivaYZ2GgdV4BF8",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Process the events response and initialize orders pagination\nconst response = $input.all()[0].json;\nlet events = [];\n\n// Handle different response formats\nif (Array.isArray(response)) {\n  events = response;\n} else if (response.events && Array.isArray(response.events)) {\n  events = response.events;\n} else if (response.data && Array.isArray(response.data)) {\n  events = response.data;\n}\n\nconsole.log(`Found ${events.length} events on page ${$json.page}`);\n\n// Return events with orders pagination initialized\nreturn events.map(event => ({\n  json: {\n    event,\n    ordersPage: 1,\n    ordersHasMore: true,\n    eventHasMore: events.length === 100,\n    nextEventPage: events.length === 100 ? ($json.page + 1) : null\n  }\n}));"
+        },
+        "id": "process-events",
+        "name": "Process Events",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Orders pagination logic\nconst ordersPage = $json.ordersPage || 1;\nconst maxOrdersPages = 50; // Safety limit per event\n\nconsole.log(`Getting orders page ${ordersPage} for event: ${$json.event?.title || 'Unknown'}`);\n\nif (ordersPage > maxOrdersPages) {\n  console.log(`Reached max orders pages limit (${maxOrdersPages}) for event`);\n  return [];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    currentOrdersPage: ordersPage\n  }\n}];"
+        },
+        "id": "orders-pagination-loop",
+        "name": "Orders Pagination Loop",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1312,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://api.humanitix.com/v1/events/{{ $json.event._id || $json.event.id }}/orders",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "page",
+                "value": "={{ $json.currentOrdersPage }}"
+              },
+              {
+                "name": "pageSize",
+                "value": "100"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": []
+          },
+          "options": {},
+          "httpHeaderAuth": "uLfBC8aVXqgfKrfF"
+        },
+        "id": "get-all-orders",
+        "name": "Get ALL Orders",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1504,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "aKivaYZ2GgdV4BF8",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Process orders response and handle pagination\nconst orderResponse = $input.all()[0]?.json || {};\nlet orders = [];\n\n// Extract orders from response\nif (Array.isArray(orderResponse)) {\n  orders = orderResponse;\n} else if (orderResponse.orders && Array.isArray(orderResponse.orders)) {\n  orders = orderResponse.orders;\n} else if (orderResponse.data && Array.isArray(orderResponse.data)) {\n  orders = orderResponse.data;\n}\n\nconst eventInfo = $json.event || {};\nconst eventName = eventInfo?.title || eventInfo?.name || 'Unknown Event';\nconst currentPage = $json.currentOrdersPage || 1;\n\nconsole.log(`Found ${orders.length} orders on page ${currentPage} for event: ${eventName}`);\n\n// Check if there are more orders pages\nconst ordersHasMore = orders.length === 100; // Full page = likely more pages\n\nif (orders.length === 0) {\n  console.log(`No orders found for event: ${eventName}`);\n  return [];\n}\n\n// Return orders with pagination info\nreturn orders.map(order => ({\n  json: {\n    ...order,\n    event: eventInfo,\n    ordersHasMore,\n    nextOrdersPage: ordersHasMore ? (currentPage + 1) : null,\n    isLastOrdersPage: !ordersHasMore\n  }\n}));"
+        },
+        "id": "process-orders-response",
+        "name": "Process Orders Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1728,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Ultra-safe Transform Orders with CORRECT FINANCIAL FIELDS\nconst orders = $input.all();\nconst transformedOrders = [];\n\nconsole.log('🔄 Transform Orders: Processing', orders.length, 'orders');\n\nfor (let i = 0; i < orders.length; i++) {\n  const orderItem = orders[i];\n  console.log('📦 Processing order item', i + 1, ':', orderItem);\n  \n  try {\n    // Handle both direct order data and nested json structures\n    let orderData, eventInfo;\n    \n    if (orderItem.json && orderItem.json.orders && orderItem.json.eventInfo) {\n      // From \"Get Event Details\" format\n      const ordersList = orderItem.json.orders;\n      eventInfo = orderItem.json.eventInfo;\n      \n      for (let j = 0; j < ordersList.length; j++) {\n        orderData = ordersList[j];\n        transformedOrders.push(processOrder(orderData, eventInfo, j));\n      }\n    } else if (orderItem.json && Array.isArray(orderItem.json)) {\n      // Array of orders\n      for (let j = 0; j < orderItem.json.length; j++) {\n        orderData = orderItem.json[j];\n        eventInfo = { name: 'Unknown Event', _id: 'unknown', startDate: new Date().toISOString() };\n        transformedOrders.push(processOrder(orderData, eventInfo, j));\n      }\n    } else if (orderItem.json) {\n      // Single order\n      orderData = orderItem.json;\n      eventInfo = { name: 'Unknown Event', _id: 'unknown', startDate: new Date().toISOString() };\n      transformedOrders.push(processOrder(orderData, eventInfo, 0));\n    }\n  } catch (error) {\n    console.error('❌ Error processing order:', error.message);\n  }\n}\n\nfunction processOrder(orderData, eventInfo, index) {\n  console.log('🔄 Processing individual order:', orderData?._id || 'unknown');\n  \n  try {\n    const orderId = orderData?._id || orderData?.id || 'unknown-' + Date.now();\n    const eventId = orderData?.eventId || eventInfo?._id || 'unknown-event';\n    \n    // Safe customer name extraction\n    let customerName = 'Anonymous';\n    try {\n      const firstName = orderData?.firstName || '';\n      const lastName = orderData?.lastName || '';\n      customerName = `${firstName} ${lastName}`.trim() || 'Anonymous';\n    } catch (e) {\n      customerName = 'Anonymous';\n    }\n    \n    const email = orderData?.email || \"no-email@example.com\";\n    const phone = orderData?.mobile || orderData?.phone || null;\n    \n    // FIXED FINANCIAL FIELDS - Use correct data sources\n    let grossSales = 0;\n    let netSales = 0;\n    let discountAmount = 0;\n    let discountCode = '';\n    \n    try {\n      // Use grossSales for Total Amount (original price before discount)\n      grossSales = parseFloat(orderData?.totals?.grossSales || orderData?.purchaseTotals?.grossSales || 0);\n      if (isNaN(grossSales)) grossSales = 0;\n      \n      // Use netSales for Net Sales (amount after discount)\n      netSales = parseFloat(orderData?.totals?.netSales || orderData?.purchaseTotals?.netSales || 0);\n      if (isNaN(netSales)) netSales = 0;\n      \n      // Extract discount information\n      discountCode = orderData?.discounts?.discountCode?.code || '';\n      discountAmount = parseFloat(orderData?.discounts?.discountCode?.discountAmount || orderData?.totals?.discounts || 0);\n      if (isNaN(discountAmount)) discountAmount = 0;\n      \n      console.log(`💰 Financial data - Gross: ${grossSales}, Net: ${netSales}, Discount: ${discountCode} (${discountAmount})`);\n      \n    } catch (e) {\n      console.error('⚠️ Error extracting financial data:', e.message);\n    }\n    \n    const totalQuantity = 1;\n    \n    // Safe date extraction\n    let eventDate = new Date().toISOString();\n    try {\n      eventDate = eventInfo?.startDate || eventInfo?.date || new Date().toISOString();\n    } catch (e) {\n      eventDate = new Date().toISOString();\n    }\n    \n    let orderDate = new Date().toISOString();\n    try {\n      orderDate = orderData?.completedAt || orderData?.createdAt || new Date().toISOString();\n    } catch (e) {\n      orderDate = new Date().toISOString();\n    }\n    \n    const status = orderData?.status || orderData?.financialStatus || \"completed\";\n    const ticketTypes = 'General Admission';\n    const eventName = eventInfo?.name || eventInfo?.title || 'Unknown Event';\n    \n    // Create the order entry with CORRECT field mappings\n    const orderEntry = {\n      orderId: orderId,\n      properties: {\n        \"Name\": {\n          title: [{ text: { content: customerName } }]\n        },\n        \"Email\": {\n          email: email\n        },\n        \"Event Name\": {\n          rich_text: [{ text: { content: eventName } }]\n        },\n        \"Event ID\": {\n          rich_text: [{ text: { content: eventId } }]\n        },\n        \"Event Date & Time\": {\n          date: { start: eventDate }\n        },\n        \"Order ID\": {\n          rich_text: [{ text: { content: orderId } }]\n        },\n        // FIXED: Use gross sales for Total Amount (original price)\n        \"Total Amount\": {\n          number: grossSales\n        },\n        // NEW: Add Net Sales field\n        \"Net Sales\": {\n          number: netSales\n        },\n        // NEW: Add Discount Code field\n        \"Discount Code\": {\n          rich_text: [{ text: { content: discountCode } }]\n        },\n        // NEW: Add Discount Amount field\n        \"Discount Amount\": {\n          number: discountAmount\n        },\n        \"Quantity\": {\n          number: totalQuantity\n        },\n        \"Ticket Type\": {\n          rich_text: [{ text: { content: ticketTypes } }]\n        },\n        \"Payment Status\": {\n          rich_text: [{ text: { content: status } }]\n        },\n        \"Order Date\": {\n          date: { start: orderDate }\n        },\n        \"Ticketing Partner\": {\n          select: { name: \"Humanitix\" }\n        },\n        \"Created At\": {\n          date: { start: new Date().toISOString() }\n        },\n        \"Updated At\": {\n          date: { start: new Date().toISOString() }\n        }\n      }\n    };\n    \n    // Add phone if available\n    if (phone) {\n      orderEntry.properties[\"Mobile\"] = {\n        phone_number: phone\n      };\n    }\n    \n    console.log(`✅ Created order entry for: ${customerName} (Gross: $${grossSales}, Net: $${netSales})`);\n    return orderEntry;\n    \n  } catch (error) {\n    console.error('❌ Error in processOrder:', error.message);\n    return null;\n  }\n}\n\nconsole.log(`🎯 Transformed ${transformedOrders.length} orders with correct financial fields`);\nreturn transformedOrders.filter(order => order !== null);"
+        },
+        "id": "transform-orders",
+        "name": "Transform Orders",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1952,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "getAll",
+          "databaseId": "1374745b-8cbe-804b-87a2-ec93b3385e01",
+          "filterType": "manual",
+          "filters": {
+            "conditions": [
+              {
+                "key": "Order ID|rich_text",
+                "condition": "equals",
+                "richTextValue": "={{ $json.orderId }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "check-duplicates",
+        "name": "Check Duplicates",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          2160,
+          304
+        ],
+        "credentials": {
+          "notionApi": {
+            "id": "n2TBZCnpzOxSU5Wk",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Debug: Check what Notion returns\nconsole.log(\"=== NOTION DEBUG ===\");\nconsole.log(\"Input all length:\", $input.all().length);\nconsole.log(\"Items length:\", $items().length);\nconsole.log(\"JSON type:\", typeof $json);\nconsole.log(\"Has results property:\", $json.results ? true : false);\nif ($json.results) {\n  console.log(\"Results length:\", $json.results.length);\n}\nconsole.log(\"First input item:\", JSON.stringify($input.all()[0], null, 2));\nconsole.log(\"=== END DEBUG ===\");\n\n// Pass data through unchanged\nreturn $input.all();"
+        },
+        "id": "debug-notion-output",
+        "name": "Debug Notion Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2384,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "check-new-fixed",
+                "leftValue": "={{ $input.all().length }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals",
+                  "rightType": "number"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-new",
+        "name": "IF New Order",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2608,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "databasePage",
+          "databaseId": "1374745b-8cbe-804b-87a2-ec93b3385e01",
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "Name|title",
+                "title": "={{ $json.properties.Name.title[0].text.content }}"
+              },
+              {
+                "key": "Email|email",
+                "emailValue": "={{ $json.properties.Email.email }}"
+              },
+              {
+                "key": "Mobile|phone_number",
+                "phoneValue": "={{ $json.properties.Mobile?.phone_number || '' }}"
+              },
+              {
+                "key": "Event Name|rich_text",
+                "textContent": "={{ $json.properties['Event Name'].rich_text[0].text.content }}"
+              },
+              {
+                "key": "Event ID|rich_text",
+                "textContent": "={{ $json.properties['Event ID'].rich_text[0].text.content }}"
+              },
+              {
+                "key": "Event Date & Time|date",
+                "date": "={{ $json.properties['Event Date & Time'].date.start }}"
+              },
+              {
+                "key": "Order ID|rich_text",
+                "textContent": "={{ $json.properties['Order ID'].rich_text[0].text.content }}"
+              },
+              {
+                "key": "Total Amount|number",
+                "numberValue": "={{ $json.properties['Total Amount'].number }}"
+              },
+              {
+                "key": "Quantity|number",
+                "numberValue": "={{ $json.properties.Quantity.number }}"
+              },
+              {
+                "key": "Ticket Type|rich_text",
+                "textContent": "={{ $json.properties['Ticket Type'].rich_text[0].text.content }}"
+              },
+              {
+                "key": "Ticketing Partner|select",
+                "selectValue": "={{ $json.properties['Ticketing Partner'].select.name }}"
+              },
+              {
+                "key": "Payment Status|rich_text",
+                "textContent": "={{ $json.properties['Payment Status'].rich_text[0].text.content }}"
+              },
+              {
+                "key": "Order Date|date",
+                "date": "={{ $json.properties['Order Date'].date.start }}"
+              },
+              {
+                "key": "Created At|date",
+                "date": "={{ $json.properties['Created At'].date.start }}"
+              },
+              {
+                "key": "Updated At|date",
+                "date": "={{ $json.properties['Updated At'].date.start }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "create-entry",
+        "name": "Create Entry",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          2832,
+          272
+        ],
+        "credentials": {
+          "notionApi": {
+            "id": "n2TBZCnpzOxSU5Wk",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "has-more-orders",
+                "leftValue": "={{ $json.ordersHasMore }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-more-orders",
+        "name": "IF More Orders",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3040,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Track import progress\nconst items = $input.all();\nconst importCount = items.length;\n\nreturn [{\n  json: {\n    imported: importCount,\n    timestamp: new Date().toISOString(),\n    message: `Imported ${importCount} historical orders`\n  }\n}];"
+        },
+        "id": "count-imports",
+        "name": "Count Imports",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3264,
+          304
+        ]
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Set Parameters",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set Parameters": {
+        "main": [
+          [
+            {
+              "node": "Pagination Loop",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pagination Loop": {
+        "main": [
+          [
+            {
+              "node": "Get ALL Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get ALL Events": {
+        "main": [
+          [
+            {
+              "node": "Process Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Events": {
+        "main": [
+          [
+            {
+              "node": "Orders Pagination Loop",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Orders Pagination Loop": {
+        "main": [
+          [
+            {
+              "node": "Get ALL Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get ALL Orders": {
+        "main": [
+          [
+            {
+              "node": "Process Orders Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Orders Response": {
+        "main": [
+          [
+            {
+              "node": "Transform Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transform Orders": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Debug Notion Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Debug Notion Output": {
+        "main": [
+          [
+            {
+              "node": "IF New Order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF New Order": {
+        "main": [
+          [
+            {
+              "node": "Create Entry",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Create Entry": {
+        "main": [
+          [
+            {
+              "node": "IF More Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF More Orders": {
+        "main": [
+          [
+            {
+              "node": "Orders Pagination Loop",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Count Imports",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "executionTimeout": 3600
+    },
+    "staticData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "70331de5-5a16-4cf5-b88f-c970c42f1deb",
+    "triggerCount": 0,
+    "tags": [],
+    "shared": [
+      {
+        "createdAt": "2025-08-02T04:30:49.830Z",
+        "updatedAt": "2025-08-02T04:30:49.830Z",
+        "role": "workflow:owner",
+        "workflowId": "py2wq9zchBz0TD9j",
+        "projectId": "ZMikqJqmz2IcRNGF",
+        "project": {
+          "createdAt": "2025-08-02T03:57:41.176Z",
+          "updatedAt": "2025-08-02T04:07:23.137Z",
+          "id": "ZMikqJqmz2IcRNGF",
+          "name": "Anthony Skinner <chillz@standupsydney.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null
+        }
+      }
+    ]
+  }
+]

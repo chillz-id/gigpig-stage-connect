@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/AuthContext';
 import { InvoiceTemplate, InvoiceTemplateConfig, DEFAULT_TEMPLATES } from '@/types/invoiceTemplate';
@@ -37,15 +37,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   });
 
   // Load user's saved templates
-  useEffect(() => {
-    if (user) {
-      loadUserTemplates();
-    } else {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  const loadUserTemplates = async () => {
+  const loadUserTemplates = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('invoice_templates')
@@ -70,7 +62,15 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserTemplates();
+    } else {
+      setIsLoading(false);
+    }
+  }, [loadUserTemplates, user]);
 
   const handleSelectTemplate = (template: InvoiceTemplate) => {
     setSelectedTemplate(template);

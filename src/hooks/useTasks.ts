@@ -10,7 +10,7 @@ import {
   timeTrackingService,
   taskCalendarService,
   taskSubscriptionService
-} from '@/services/taskService';
+} from '@/services/task';
 import type {
   Task,
   TaskComment,

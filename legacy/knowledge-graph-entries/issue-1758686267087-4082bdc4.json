@@ -1,0 +1,22 @@
+{
+  "id": "issue-1758686267087-4082bdc4",
+  "type": "issue",
+  "severity": "medium",
+  "title": "Incorrect MCP Tool Naming Assumptions",
+  "description": "Assistant repeatedly tried to call MCP tools with mcp__server__tool naming pattern (e.g. mcp__notion__create_page) when MCP tools should be called by their actual names without prefixes. Also incorrectly assumed tools were not accessible when they may have been configured correctly but assistant was using wrong calling syntax.",
+  "date": "2025-09-24",
+  "timestamp": "2025-09-24T03:57:47.088Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": {
+    "description": "Learned correct MCP tool calling: MCP tools are called by their actual names (e.g. create_page for Notion, resolve-library-id for Context7). The mcp__server__ prefix is only used internally by Claude Code for identification but not for calling tools. Tools may be accessible in new sessions after configuration changes.",
+    "successful": true,
+    "timestamp": "2025-09-24T03:57:55.430Z",
+    "status": "resolved"
+  },
+  "related_files": [],
+  "tags": [
+    "mcp",
+    "fix"
+  ]
+}

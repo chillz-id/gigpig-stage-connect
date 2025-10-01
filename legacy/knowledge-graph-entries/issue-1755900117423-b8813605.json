@@ -1,0 +1,22 @@
+{
+  "id": "issue-1755900117423-b8813605",
+  "type": "issue",
+  "severity": "medium",
+  "title": "N8N Service Not Running",
+  "description": "N8N Docker container is not running, preventing multi-workflow monitoring tests. API calls to localhost:5678 are failing with 'fetch failed' errors.",
+  "date": "2025-08-22",
+  "timestamp": "2025-08-22T22:01:57.424Z",
+  "status": "resolved",
+  "investigation_time": null,
+  "solution": "Successfully resolved by starting N8N Docker container with proper configuration. Container started with ID 7e5a90bb00f1. N8N API is now accessible at localhost:5678 and multi-workflow monitoring functionality confirmed working with 21 workflows detected (4 active, 17 inactive) and 202 total executions processed.",
+  "related_files": [],
+  "tags": [
+    "error",
+    "api",
+    "test"
+  ],
+  "linear_issue_id": null,
+  "cross_references": [],
+  "solution_timestamp": "2025-08-22T22:38:05.460Z",
+  "solution_successful": true
+}

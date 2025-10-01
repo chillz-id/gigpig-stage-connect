@@ -1,0 +1,20 @@
+{
+  "id": "issue-1756306619595-9417e566",
+  "type": "issue",
+  "severity": "Medium",
+  "title": "Humanitix Integration Architecture Evolution - Complete Journey Documentation",
+  "description": "Need comprehensive documentation of the complete Humanitix integration journey from initial concept to production solution. This includes: 1) Timeline of architectural decisions from N8N workflow attempts to Python direct integration, 2) Technical trade-offs and decision points throughout development, 3) Failed approaches and lessons learned from multiple N8N workflow iterations, 4) Evolution from simple event sync to complex 3-database architecture, 5) API discovery process and nested data structure mapping, 6) Business requirements evolution (venue data, fee rebate calculations, quantity tracking), 7) Performance optimization decisions and rate limiting strategies. Critical for knowledge preservation and future development teams understanding the complete context behind current architecture.",
+  "date": "2025-08-27",
+  "timestamp": "2025-08-27T14:56:59.595Z",
+  "status": "open",
+  "investigation_time": null,
+  "solution": null,
+  "related_files": [],
+  "tags": [
+    "database",
+    "api",
+    "integration"
+  ],
+  "linear_issue_id": null,
+  "cross_references": []
+}
