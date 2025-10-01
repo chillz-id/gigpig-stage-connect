@@ -155,11 +155,11 @@ export function useDeadlineMonitoring({
   // Auto-start monitoring on mount
   useEffect(() => {
     startMonitoring();
-    
+
     return () => {
       stopMonitoring();
     };
-  }, []);
+  }, [startMonitoring, stopMonitoring]);
 
   return {
     // Data

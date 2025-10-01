@@ -35,51 +35,7 @@ export const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAut
   // Forward the ref to the internal input ref
   useImperativeHandle(forwardedRef, () => internalRef.current!);
 
-  useEffect(() => {
-    if (!isLoaded && !isInitializing) {
-      setIsInitializing(true);
-      setDebugInfo('Loading Google Maps script...');
-      
-      // Check if API key is configured
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!apiKey || apiKey === 'DEMO_KEY_PLEASE_CONFIGURE') {
-        setDebugInfo('Google Maps API key not configured');
-        setIsInitializing(false);
-        // Don't show error toast for missing API key - just allow manual entry
-        return;
-      }
-      
-      loadScript()
-        .then(() => {
-          if (window.google && window.google.maps && window.google.maps.places) {
-            setDebugInfo('Google Maps loaded, initializing autocomplete...');
-            initializeAutocomplete();
-          } else {
-            setDebugInfo('Google Maps loaded but Places library not available');
-            setIsInitializing(false);
-          }
-        })
-        .catch((error) => {
-          setDebugInfo(`Error loading Google Maps: ${error.message || 'Unknown error'}`);
-          // Only show toast for actual errors, not missing API key
-          if (apiKey && apiKey !== 'DEMO_KEY_PLEASE_CONFIGURE') {
-            toast({
-              title: "Maps service unavailable",
-              description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
-              variant: "destructive",
-            });
-          }
-        })
-        .finally(() => {
-          setIsInitializing(false);
-        });
-    } else if (isLoaded) {
-      setDebugInfo('Initializing autocomplete...');
-      initializeAutocomplete();
-    }
-  }, [isLoaded]);
-
-  const initializeAutocomplete = () => {
+  const initializeAutocomplete = React.useCallback(() => {
     if (!internalRef.current) {
       setDebugInfo('Error: Input element not found');
       return;
@@ -137,7 +93,51 @@ export const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAut
       // Don't show error toast here as it would be too intrusive
       // The component will still work as a regular input field
     }
-  };
+  }, [onAddressSelect, toast]);
+
+  useEffect(() => {
+    if (!isLoaded && !isInitializing) {
+      setIsInitializing(true);
+      setDebugInfo('Loading Google Maps script...');
+      
+      // Check if API key is configured
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey || apiKey === 'DEMO_KEY_PLEASE_CONFIGURE') {
+        setDebugInfo('Google Maps API key not configured');
+        setIsInitializing(false);
+        // Don't show error toast for missing API key - just allow manual entry
+        return;
+      }
+      
+      loadScript()
+        .then(() => {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            setDebugInfo('Google Maps loaded, initializing autocomplete...');
+            initializeAutocomplete();
+          } else {
+            setDebugInfo('Google Maps loaded but Places library not available');
+            setIsInitializing(false);
+          }
+        })
+        .catch((error) => {
+          setDebugInfo(`Error loading Google Maps: ${error.message || 'Unknown error'}`);
+          // Only show toast for actual errors, not missing API key
+          if (apiKey && apiKey !== 'DEMO_KEY_PLEASE_CONFIGURE') {
+            toast({
+              title: "Maps service unavailable",
+              description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
+              variant: "destructive",
+            });
+          }
+        })
+        .finally(() => {
+          setIsInitializing(false);
+        });
+    } else if (isLoaded) {
+      setDebugInfo('Initializing autocomplete...');
+      initializeAutocomplete();
+    }
+  }, [initializeAutocomplete, isInitializing, isLoaded, loadScript, toast]);
 
   // Handle manual address input when Google Maps is not available
   const [manualInputTimeout, setManualInputTimeout] = useState<NodeJS.Timeout | null>(null);

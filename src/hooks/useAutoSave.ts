@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { localStorage } from '@/utils/localStorage';
@@ -267,10 +267,7 @@ export function useAutoSave({
   }, [isEnabled, saveToLocalStorage, saveToDatabase]);
 
   // Create debounced save function
-  const debouncedSave = useCallback(
-    debounce(performSave, debounceMs),
-    [performSave, debounceMs]
-  );
+  const debouncedSave = useMemo(() => debounce(performSave, debounceMs), [performSave, debounceMs]);
 
   // Auto-save when form data changes
   useEffect(() => {

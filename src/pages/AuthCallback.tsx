@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +20,7 @@ const AuthCallback = () => {
   };
 
   // Helper function to ensure unique profile slug
-  const ensureUniqueProfileSlug = async (baseSlug: string, userId: string): Promise<string> => {
+  const ensureUniqueProfileSlug = useCallback(async (baseSlug: string, userId: string): Promise<string> => {
     let slug = baseSlug;
     let counter = 1;
     
@@ -46,10 +46,10 @@ const AuthCallback = () => {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
-  };
+  }, []);
 
   // Retry mechanism for profile creation
-  const retryOperation = async (operation: () => Promise<any>, maxRetries = 3, delay = 1000) => {
+  const retryOperation = useCallback(async (operation: () => Promise<any>, maxRetries = 3, delay = 1000) => {
     for (let i = 0; i < maxRetries; i++) {
       try {
         const result = await operation();
@@ -59,10 +59,10 @@ const AuthCallback = () => {
         await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
       }
     }
-  };
+  }, []);
 
   // Enhanced profile creation with error handling
-  const createProfileWithRetry = async (user: any) => {
+  const createProfileWithRetry = useCallback(async (user: any) => {
     const displayName = user.user_metadata?.full_name || 
                        user.user_metadata?.name || 
                        user.email?.split('@')[0] || 
@@ -94,10 +94,10 @@ const AuthCallback = () => {
       
       return data;
     });
-  };
+  }, [ensureUniqueProfileSlug, retryOperation]);
 
   // Enhanced role creation with error handling
-  const createRoleWithRetry = async (userId: string) => {
+  const createRoleWithRetry = useCallback(async (userId: string) => {
     return await retryOperation(async () => {
       const { data, error } = await supabase
         .from('user_roles')
@@ -114,7 +114,7 @@ const AuthCallback = () => {
       
       return data;
     });
-  };
+  }, [retryOperation]);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -254,7 +254,7 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast]);
+  }, [createProfileWithRetry, createRoleWithRetry, navigate, toast]);
 
   if (isLoading) {
     return (

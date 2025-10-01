@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { checkForDuplicateEvents, checkVenueAvailability, DuplicateCheckResult } from '@/utils/eventDuplicateChecker';
 import { debounce } from '@/utils/debounce';
 import { useToast } from './use-toast';
@@ -97,15 +97,9 @@ export const useEventDuplicateCheck = (
   }, [venue, date, startTime, endTime, excludeEventId, toast]);
 
   // Debounced check functions
-  const debouncedCheckDuplicates = useCallback(
-    debounce(checkDuplicates, debounceMs),
-    [checkDuplicates, debounceMs]
-  );
+  const debouncedCheckDuplicates = useMemo(() => debounce(checkDuplicates, debounceMs), [checkDuplicates, debounceMs]);
 
-  const debouncedCheckVenue = useCallback(
-    debounce(checkVenue, debounceMs),
-    [checkVenue, debounceMs]
-  );
+  const debouncedCheckVenue = useMemo(() => debounce(checkVenue, debounceMs), [checkVenue, debounceMs]);
 
   // Auto-check when values change
   useEffect(() => {

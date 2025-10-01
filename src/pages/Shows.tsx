@@ -74,6 +74,8 @@ const Shows = () => {
     return events.filter(event => {
       const eventDate = new Date(event.event_date);
       
+      const now = new Date();
+
       // Date filtering logic - use date range if set, otherwise use month/year
       let matchesDate = true;
       if (useAdvancedFilters && (dateRange.start || dateRange.end)) {
@@ -88,6 +90,10 @@ const Shows = () => {
         // Month/year filtering (default behavior)
         matchesDate = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
       }
+
+      if (!showPastEvents && eventDate < now) {
+        matchesDate = false;
+      }
       
       const matchesSearch = searchTerm === '' || 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,13 +102,14 @@ const Shows = () => {
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
       const matchesType = typeFilter === '' || event.type === typeFilter;
       const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
+      const matchesOwnership = !showOnlyMyEvents || event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '');
       
       // Filter drafts for non-owners
       const canViewEvent = event.status !== 'draft' || 
         (showMyDrafts && (event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '')));
       
-      return matchesDate && matchesSearch && matchesLocation && matchesType && matchesStatus && canViewEvent;
-    }).sort((a, b) => {
+      return matchesDate && matchesSearch && matchesLocation && matchesType && matchesStatus && matchesOwnership && canViewEvent;
+  }).sort((a, b) => {
       const dateA = new Date(a.event_date).getTime();
       const dateB = new Date(b.event_date).getTime();
       
@@ -126,7 +133,7 @@ const Shows = () => {
           return dateA - dateB;
       }
     });
-  }, [events, selectedMonth, selectedYear, dateRange, searchTerm, locationFilter, typeFilter, statusFilter, sortBy, useAdvancedFilters]);
+  }, [dateRange, events, locationFilter, selectedMonth, selectedYear, showMyDrafts, showOnlyMyEvents, showPastEvents, sortBy, statusFilter, typeFilter, useAdvancedFilters, user?.id, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');

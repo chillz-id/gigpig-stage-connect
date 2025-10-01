@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,7 @@ export const InvoicePaymentCancelled: React.FC = () => {
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (invoiceId) {
-      loadInvoice();
-    }
-  }, [invoiceId]);
-
-  const loadInvoice = async () => {
+  const loadInvoice = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('invoices')
@@ -32,7 +26,13 @@ export const InvoicePaymentCancelled: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [invoiceId]);
+
+  useEffect(() => {
+    if (invoiceId) {
+      void loadInvoice();
+    }
+  }, [invoiceId, loadInvoice]);
 
   const handleRetryPayment = async () => {
     if (!invoice) return;

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { WaitlistEntry } from '@/types/waitlist';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +10,7 @@ export const useWaitlist = (eventId: string) => {
   const [loading, setLoading] = useState(true);
   const [waitlistCount, setWaitlistCount] = useState(0);
 
-  const fetchWaitlist = async () => {
+  const fetchWaitlist = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('event_waitlists')
@@ -31,13 +31,13 @@ export const useWaitlist = (eventId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, toast]);
 
   useEffect(() => {
     if (eventId) {
       fetchWaitlist();
     }
-  }, [eventId]);
+  }, [eventId, fetchWaitlist]);
 
   return {
     waitlistEntries,

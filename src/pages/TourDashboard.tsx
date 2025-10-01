@@ -41,7 +41,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { tourService } from '@/services/tourService';
-import { taskService } from '@/services/taskService';
+import { taskService } from '@/services/task';
 import { cn } from '@/lib/utils';
 import type { 
   Tour, 
@@ -63,7 +63,6 @@ const TourDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'calendar'>('grid');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Queries
   const { data: dashboardStats, isLoading: statsLoading } = useQuery({
@@ -169,15 +168,13 @@ const TourDashboard: React.FC = () => {
 
   // Real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['tour-dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['tour-calendar-events'] });
     }, 60000); // Refresh every minute
 
-    setRefreshInterval(interval);
-
     return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
+      clearInterval(interval);
     };
   }, [queryClient]);
 

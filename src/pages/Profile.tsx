@@ -58,7 +58,7 @@ const Profile = () => {
     } else {
       setActiveTab('profile');
     }
-  }, []); // Empty dependency array - only run on mount
+  }, [availableTabs, location.search]);
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
@@ -237,7 +237,6 @@ const Profile = () => {
         newUrl.searchParams.set('tab', newTab);
       }
       window.history.replaceState({}, '', newUrl.toString());
-    } else {
     }
   };
 

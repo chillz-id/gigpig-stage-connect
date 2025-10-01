@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,7 @@ const ComedianMarketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [contacting, setContacting] = useState<string | null>(null);
 
-  const fetchComedians = async () => {
+  const fetchComedians = useCallback(async () => {
     try {
       // Fetch comedians who have the comedian role, excluding admins
       const { data: comedianRoles, error: rolesError } = await supabase
@@ -78,7 +78,7 @@ const ComedianMarketplace = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleContact = async (comedianId: string, comedianEmail: string) => {
     setContacting(comedianId);
@@ -114,7 +114,7 @@ const ComedianMarketplace = () => {
     if (hasRole('promoter') || hasRole('admin')) {
       fetchComedians();
     }
-  }, [hasRole]);
+  }, [fetchComedians, hasRole]);
 
   if (!hasRole('promoter') && !hasRole('admin')) {
     return (

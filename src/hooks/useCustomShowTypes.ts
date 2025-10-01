@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 
@@ -7,13 +7,7 @@ export const useCustomShowTypes = () => {
   const { user } = useUser();
   const [customShowTypes, setCustomShowTypes] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      loadCustomShowTypes();
-    }
-  }, [user]);
-
-  const loadCustomShowTypes = async () => {
+  const loadCustomShowTypes = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -30,7 +24,13 @@ export const useCustomShowTypes = () => {
     } catch (error) {
       console.error('Error loading custom show types:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadCustomShowTypes();
+    }
+  }, [loadCustomShowTypes, user]);
 
   const saveCustomShowType = async (showType: string) => {
     if (!user || !showType.trim()) return;

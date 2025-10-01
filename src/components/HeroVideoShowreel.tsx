@@ -91,7 +91,7 @@ const HeroVideoShowreel: React.FC<HeroVideoShowreelProps> = ({
       video.removeEventListener('error', handleError);
       video.removeEventListener('canplay', handleCanPlay);
     };
-  }, [autoPlay, onVideoLoad, onVideoError]);
+  }, [autoPlay, onVideoLoad, onVideoError, videoSrc]);
 
   const togglePlayPause = () => {
     const video = videoRef.current;

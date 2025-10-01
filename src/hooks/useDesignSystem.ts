@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DesignSystemSettings } from '@/types/designSystem';
 import { DEFAULT_DESIGN_SETTINGS } from '@/utils/designSystem/defaultSettings';
 import { applyCSSVariables } from '@/utils/designSystem/cssVariables';
@@ -13,7 +13,7 @@ export const useDesignSystem = () => {
   const { loadSettings, saveSettings: persistSettings } = useDesignSystemPersistence();
   const { toast } = useToast();
 
-  const loadSettingsAsync = async () => {
+  const loadSettingsAsync = useCallback(async () => {
     setIsLoading(true);
     try {
       const loadedSettings = await loadSettings();
@@ -28,7 +28,7 @@ export const useDesignSystem = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadSettings, setSettings, toast]);
 
   const saveSettings = async (presetName?: string) => {
     await persistSettings(settings, presetName);
@@ -41,7 +41,7 @@ export const useDesignSystem = () => {
 
   useEffect(() => {
     loadSettingsAsync();
-  }, []);
+  }, [loadSettingsAsync]);
 
   useEffect(() => {
     applyCSSVariables(settings);

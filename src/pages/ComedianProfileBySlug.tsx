@@ -93,20 +93,11 @@ const ComedianProfileBySlug = () => {
     enabled: !!slug,
   });
 
-  // Handle loading state
-  if (isLoading) {
-    return <ComedianProfileLoader />;
-  }
-
-  // Handle error state
-  if (error || !comedian) {
-    console.error('Error loading comedian:', error);
-    return <ComedianProfileError slug={slug} />;
-  }
+  const comedianId = comedian?.id;
 
   // Fetch upcoming shows for structured data
   const { data: upcomingShows } = useQuery({
-    queryKey: ['comedian-upcoming-shows', comedian.id],
+    queryKey: ['comedian-upcoming-shows', comedianId],
     queryFn: async () => {
       const { data } = await supabase
         .from('applications')
@@ -121,7 +112,7 @@ const ComedianProfileBySlug = () => {
             ticket_url
           )
         `)
-        .eq('profile_id', comedian.id)
+        .eq('profile_id', comedianId)
         .eq('status', 'confirmed')
         .gte('events.start_time', new Date().toISOString())
         .order('events.start_time', { ascending: true })
@@ -129,8 +120,19 @@ const ComedianProfileBySlug = () => {
       
       return data?.map(app => app.event).filter(Boolean) || [];
     },
-    enabled: !!comedian.id
+    enabled: !!comedianId
   });
+
+  // Handle loading state
+  if (isLoading) {
+    return <ComedianProfileLoader />;
+  }
+
+  // Handle error state
+  if (error || !comedian) {
+    console.error('Error loading comedian:', error);
+    return <ComedianProfileError slug={slug} />;
+  }
   
   // Build social media object for structured data
   const socialMedia: any = {};

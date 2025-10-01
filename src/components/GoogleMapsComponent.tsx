@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { MapPin, Search } from 'lucide-react';
@@ -34,30 +34,7 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
   const { toast } = useToast();
   const { isLoaded, loadScript, reverseGeocode } = useGoogleMaps();
 
-  useEffect(() => {
-    if (!isLoaded && !isInitializing) {
-      setIsInitializing(true);
-      loadScript()
-        .then(() => {
-          initializeMap();
-        })
-        .catch((error) => {
-          console.error('Failed to load Google Maps:', error);
-          toast({
-            title: "Maps loading failed",
-            description: "Unable to load Google Maps. Please check your API key configuration.",
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setIsInitializing(false);
-        });
-    } else if (isLoaded) {
-      initializeMap();
-    }
-  }, [isLoaded]);
-
-  const initializeMap = () => {
+  const initializeMap = useCallback(() => {
     if (!mapRef.current || !window.google) return;
 
     try {
@@ -166,7 +143,30 @@ export const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
         variant: "destructive",
       });
     }
-  };
+  }, [defaultAddress, onAddressSelect, reverseGeocode, showAddressInput, toast]);
+
+  useEffect(() => {
+    if (!isLoaded && !isInitializing) {
+      setIsInitializing(true);
+      loadScript()
+        .then(() => {
+          initializeMap();
+        })
+        .catch((error) => {
+          console.error('Failed to load Google Maps:', error);
+          toast({
+            title: "Maps loading failed",
+            description: "Unable to load Google Maps. Please check your API key configuration.",
+            variant: "destructive",
+          });
+        })
+        .finally(() => {
+          setIsInitializing(false);
+        });
+    } else if (isLoaded) {
+      initializeMap();
+    }
+  }, [initializeMap, isInitializing, isLoaded, loadScript, toast]);
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border">

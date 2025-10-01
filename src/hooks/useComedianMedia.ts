@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,7 +36,7 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,7 +68,7 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
     } finally {
       setLoading(false);
     }
-  };
+  }, [mediaType, userId]);
 
   const deleteMedia = async (mediaId: string) => {
     try {
@@ -212,7 +212,7 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
 
   useEffect(() => {
     fetchMedia();
-  }, [userId, mediaType]);
+  }, [fetchMedia]);
 
   return {
     media,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Vouch, VouchWithProfiles, VouchFormData, VouchStats, UserSearchResult } from '@/types/vouch';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,12 +7,16 @@ import { useToast } from '@/hooks/use-toast';
 export const useVouches = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
   const [loading, setLoading] = useState(false);
   const [vouches, setVouches] = useState<VouchWithProfiles[]>([]);
   const [stats, setStats] = useState<VouchStats | null>(null);
 
   // Fetch vouches for current user
-  const fetchVouches = async () => {
+  const fetchVouches = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
@@ -31,7 +35,7 @@ export const useVouches = () => {
       setVouches(data || []);
     } catch (error) {
       console.error('Error fetching vouches:', error);
-      toast({
+      toastRef.current({
         title: "Error",
         description: "Failed to load vouches",
         variant: "destructive",
@@ -39,10 +43,10 @@ export const useVouches = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Fetch vouch statistics
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -54,7 +58,7 @@ export const useVouches = () => {
     } catch (error) {
       console.error('Error fetching vouch stats:', error);
     }
-  };
+  }, [user?.id]);
 
   // Search for users to vouch for
   const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
@@ -132,7 +136,7 @@ export const useVouches = () => {
 
       if (error) throw error;
 
-      toast({
+      toastRef.current({
         title: "Vouch Created",
         description: "Your vouch has been successfully submitted.",
       });
@@ -169,7 +173,7 @@ export const useVouches = () => {
 
       if (error) throw error;
 
-      toast({
+      toastRef.current({
         title: "Vouch Updated",
         description: "Your vouch has been successfully updated.",
       });
@@ -195,7 +199,7 @@ export const useVouches = () => {
 
       if (error) throw error;
 
-      toast({
+      toastRef.current({
         title: "Vouch Deleted",
         description: "Your vouch has been successfully deleted.",
       });
@@ -222,7 +226,7 @@ export const useVouches = () => {
       fetchVouches();
       fetchStats();
     }
-  }, [user?.id]);
+  }, [fetchStats, fetchVouches, user?.id]);
 
   return {
     loading,

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CustomizationData } from '@/types/customization';
@@ -49,7 +49,7 @@ export const useCustomizationData = () => {
   const [savedThemes, setSavedThemes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('customization_settings')
@@ -76,9 +76,9 @@ export const useCustomizationData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const loadSavedThemes = async () => {
+  const loadSavedThemes = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('customization_settings')
@@ -90,7 +90,7 @@ export const useCustomizationData = () => {
     } catch (error) {
       console.error('Error loading saved themes:', error);
     }
-  };
+  }, []);
 
   const updateSettings = (section: keyof CustomizationData, key: string, value: any) => {
     if (!settings) return;
@@ -111,7 +111,7 @@ export const useCustomizationData = () => {
   useEffect(() => {
     loadSettings();
     loadSavedThemes();
-  }, []);
+  }, [loadSavedThemes, loadSettings]);
 
   return {
     settings,

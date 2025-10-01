@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,7 +28,7 @@ export const useLineupData = (eventId: string) => {
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
   const [eventRevenue, setEventRevenue] = useState(0);
 
-  const fetchLineupData = async () => {
+  const fetchLineupData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -89,7 +89,7 @@ export const useLineupData = (eventId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, toast]);
 
   const calculateTotalFees = async (bookingsList: ComedianBooking[], revenue: number) => {
     let total = 0;
@@ -109,7 +109,7 @@ export const useLineupData = (eventId: string) => {
 
   useEffect(() => {
     fetchLineupData();
-  }, [eventId]);
+  }, [fetchLineupData]);
 
   return {
     loading,

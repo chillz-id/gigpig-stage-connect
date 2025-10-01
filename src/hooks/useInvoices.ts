@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -12,19 +12,7 @@ export const useInvoices = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user && (hasRole('promoter') || hasRole('comedian') || hasRole('admin'))) {
-      console.log('=== FETCHING INVOICES ===', user.id);
-      fetchInvoices();
-    } else {
-      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===');
-      setInvoices([]);
-      setLoading(false);
-      setError(null);
-    }
-  }, [user, hasRole]);
-
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     if (!user) {
       console.log('=== NO USER FOR INVOICE FETCH ===');
       setLoading(false);
@@ -119,7 +107,19 @@ export const useInvoices = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && (hasRole('promoter') || hasRole('comedian') || hasRole('admin'))) {
+      console.log('=== FETCHING INVOICES ===', user.id);
+      fetchInvoices();
+    } else {
+      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===');
+      setInvoices([]);
+      setLoading(false);
+      setError(null);
+    }
+  }, [fetchInvoices, hasRole, user]);
 
   const deleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;

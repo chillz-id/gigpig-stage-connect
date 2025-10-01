@@ -1,12 +1,12 @@
 // Unified Notification Center - Real-time notifications with cross-system integration
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Bell, 
   BellOff, 
@@ -24,14 +24,13 @@ import {
   DollarSign,
   Info,
   Trash2,
-  MoreHorizontal,
-  Volume2,
-  VolumeX
+  MoreHorizontal
 } from 'lucide-react';
-import { useNotifications, useUnreadNotifications, useNotificationPreferences } from '@/hooks/useNotifications';
+import { useNotifications, useNotificationPreferences } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import type { Notification, NotificationType, NotificationPriority } from '@/services/notificationService';
+import NotificationPreferencesPanel from '@/components/notifications/NotificationPreferences';
 
 interface NotificationCenterProps {
   className?: string;
@@ -48,8 +47,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | NotificationType>('all');
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
   // Hooks for notifications
   const { 
     notifications, 
@@ -63,11 +60,16 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     limit: 50
   });
 
-  const { preferences, updatePreferences, isUpdating } = useNotificationPreferences();
+  const {
+    preferences,
+    savePreferences,
+    isUpdating,
+    isLoading: preferencesLoading
+  } = useNotificationPreferences();
 
   // Play notification sound
-  const playNotificationSound = () => {
-    if (soundEnabled && typeof Audio !== 'undefined') {
+  const playNotificationSound = useCallback(() => {
+    if (preferences.inApp.sound && typeof Audio !== 'undefined') {
       try {
         const audio = new Audio('/notification-sound.mp3');
         audio.volume = 0.3;
@@ -78,7 +80,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         console.warn('Could not play notification sound:', error);
       }
     }
-  };
+  }, [preferences.inApp.sound]);
 
   // Listen for new notifications to play sound
   useEffect(() => {
@@ -90,7 +92,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
     
     localStorage.setItem('notification-count', currentCount);
-  }, [unreadCount, soundEnabled]);
+  }, [unreadCount, playNotificationSound]);
 
   // Filter notifications by category
   const filteredNotifications = notifications.filter(notification => 
@@ -249,44 +251,21 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <h3 className="font-medium mb-4">Notification Preferences</h3>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium">Email Notifications</label>
-              <p className="text-xs text-gray-500">Receive notifications via email</p>
+          {preferencesLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
-            <Switch
-              checked={preferences?.email_notifications ?? true}
-              onCheckedChange={(checked) => {
-                updatePreferences({ email_notifications: checked });
+          ) : (
+            <NotificationPreferencesPanel
+              preferences={preferences}
+              onUpdate={(nextPreferences) => {
+                void savePreferences(nextPreferences);
               }}
               disabled={isUpdating}
             />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium">Push Notifications</label>
-              <p className="text-xs text-gray-500">Receive browser push notifications</p>
-            </div>
-            <Switch
-              checked={preferences?.push_notifications ?? true}
-              onCheckedChange={(checked) => {
-                updatePreferences({ push_notifications: checked });
-              }}
-              disabled={isUpdating}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium">Sound Notifications</label>
-              <p className="text-xs text-gray-500">Play sound for new notifications</p>
-            </div>
-            <Switch
-              checked={soundEnabled}
-              onCheckedChange={setSoundEnabled}
-            />
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -302,7 +281,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           className="relative"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {soundEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+          {preferences.inApp.sound ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           {unreadCount > 0 && (
             <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs bg-red-500 text-white">
               {unreadCount > 99 ? '99+' : unreadCount}

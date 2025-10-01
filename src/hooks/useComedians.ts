@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Comedian } from '@/types/comedian';
@@ -12,7 +12,7 @@ export const useComedians = () => {
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState<string | null>(null);
 
-  const loadComedians = async (): Promise<void> => {
+  const loadComedians = useCallback(async (): Promise<void> => {
     try {
       const fetchedComedians = await fetchComedians();
       setComedians(fetchedComedians);
@@ -25,7 +25,7 @@ export const useComedians = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleContact = async (comedianId: string, comedianEmail: string): Promise<void> => {
     if (!user) {
@@ -58,7 +58,7 @@ export const useComedians = () => {
 
   useEffect(() => {
     loadComedians();
-  }, []);
+  }, [loadComedians]);
 
   return {
     comedians,

@@ -133,7 +133,7 @@ const Applications = () => {
             return 0;
         }
       });
-  }, [transformedApplications, searchTerm, eventFilter, sortBy, dateRange]);
+  }, [confirmationFilter, dateRange, eventFilter, searchTerm, sortBy, spotTypeFilter, statusFilter, transformedApplications]);
 
   // Calculate stats
   const stats = useMemo(() => ({

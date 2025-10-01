@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { stripePaymentService } from '@/services/stripeService';
 import { flexPayService, PaymentGatewayConfig } from '@/services/paymentService';
@@ -39,13 +39,7 @@ export const usePaymentGateway = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Load gateway configurations
-  useEffect(() => {
-    if (user) {
-      loadGateways();
-    }
-  }, [user]);
-
-  const loadGateways = async () => {
+  const loadGateways = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -63,7 +57,13 @@ export const usePaymentGateway = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadGateways();
+    }
+  }, [loadGateways, user]);
 
   const createPaymentLink = async (invoice: Invoice): Promise<string | null> => {
     if (!user) {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useBulkInvoiceOperations } from '@/hooks/useBulkInvoiceOperations';
 import { InvoiceDetails } from './InvoiceDetails';
@@ -36,6 +36,13 @@ export const InvoiceManagement: React.FC = () => {
   const { user, hasRole } = useAuth();
   const { invoices, loading, error, deleteInvoice, filterInvoices, refetchInvoices } = useInvoices();
   const bulkOperations = useBulkInvoiceOperations();
+  const {
+    selectedCount,
+    selectedInvoiceIds,
+    clearSelection,
+    toggleInvoiceSelection
+  } = bulkOperations;
+  const selectedInvoiceIdsArray = useMemo(() => Array.from(selectedInvoiceIds), [selectedInvoiceIds]);
   
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -52,18 +59,18 @@ export const InvoiceManagement: React.FC = () => {
 
   // Update filtered invoice IDs when filters change
   useEffect(() => {
-    if (isSelectionMode && bulkOperations.selectedCount > 0) {
+    if (isSelectionMode && selectedCount > 0) {
       // Keep only selected invoices that are still in filtered results
       const filteredIds = new Set(filteredInvoices.map(inv => inv.id));
-      const currentSelected = Array.from(bulkOperations.selectedInvoiceIds);
+      const currentSelected = selectedInvoiceIdsArray;
       const validSelections = currentSelected.filter(id => filteredIds.has(id));
       
       if (validSelections.length !== currentSelected.length) {
-        bulkOperations.clearSelection();
-        validSelections.forEach(id => bulkOperations.toggleInvoiceSelection(id));
+        clearSelection();
+        validSelections.forEach(id => toggleInvoiceSelection(id));
       }
     }
-  }, [filteredInvoices]);
+  }, [clearSelection, filteredInvoices, isSelectionMode, selectedCount, selectedInvoiceIdsArray, toggleInvoiceSelection]);
 
   const handleViewDetails = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -85,13 +92,13 @@ export const InvoiceManagement: React.FC = () => {
   const toggleSelectionMode = () => {
     setIsSelectionMode(!isSelectionMode);
     if (isSelectionMode) {
-      bulkOperations.clearSelection();
+      clearSelection();
     }
   };
 
   const handleSelectAll = () => {
-    if (bulkOperations.selectedCount === filteredInvoices.length) {
-      bulkOperations.clearSelection();
+    if (selectedCount === filteredInvoices.length) {
+      clearSelection();
     } else {
       bulkOperations.selectAllInvoices(filteredInvoices.map(inv => inv.id));
     }
@@ -163,7 +170,7 @@ export const InvoiceManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Bulk actions bar */}
       <BulkActionsBar
-        selectedCount={bulkOperations.selectedCount}
+        selectedCount={selectedCount}
         isProcessing={bulkOperations.isProcessing}
         progress={bulkOperations.progress}
         onSendEmails={async () => {
@@ -182,7 +189,7 @@ export const InvoiceManagement: React.FC = () => {
         onDeleteDrafts={handleBulkDelete}
         onExportCSV={bulkOperations.bulkExportCSV}
         onExportPDF={bulkOperations.bulkExportPDF}
-        onClearSelection={bulkOperations.clearSelection}
+        onClearSelection={clearSelection}
         onCancel={bulkOperations.cancelOperation}
       />
 
