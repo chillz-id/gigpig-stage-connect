@@ -1,42 +1,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
-type EventApplication = {
-  id: string;
-  event_id: string;
-  comedian_id: string;
-  status: string | null;
-  message?: string | null;
-  applied_at: string | null;
-  responded_at?: string | null;
-  spot_type?: string | null;
-  availability_confirmed?: boolean | null;
-  requirements_acknowledged?: boolean | null;
-};
-
-type EventApplicationInsert = {
-  event_id: string;
-  status?: string;
-  message?: string;
-  spot_type?: string;
-  availability_confirmed?: boolean;
-  requirements_acknowledged?: boolean;
-};
-
-type EventApplicationUpdate = {
-  status?: string;
-  message?: string;
-  responded_at?: string;
-  spot_type?: string;
-  availability_confirmed?: boolean;
-  requirements_acknowledged?: boolean;
-};
+import {
+  eventApplicationService,
+  type EventApplication,
+} from '@/services/event';
+import type { ApplicationInsert, ApplicationUpdate } from '@/types/application';
 
 export const useEventApplications = (eventId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch applications for a specific event
   const {
@@ -47,14 +22,7 @@ export const useEventApplications = (eventId?: string) => {
     queryFn: async () => {
       if (!eventId) return [];
 
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-      return data as EventApplication[];
+      return eventApplicationService.listByEvent(eventId);
     },
     enabled: !!eventId
   });
@@ -64,49 +32,23 @@ export const useEventApplications = (eventId?: string) => {
     data: userApplications = [],
     isLoading: isLoadingUserApplications
   } = useQuery({
-    queryKey: ['user-applications'],
+    queryKey: ['user-applications', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('applications')
-        .select(`
-          *,
-          events (
-            title,
-            venue,
-            event_date,
-            venue_address
-          )
-        `)
-        .eq('comedian_id', user.id)
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
+      return eventApplicationService.listForComedian(user.id);
     },
-    staleTime: 0, // Always consider data stale
-    refetchInterval: 5000 // Refetch every 5 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes (matches platform standard)
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds instead of 5
+    enabled: !!user
   });
 
   // Apply to event mutation
   const applyToEventMutation = useMutation({
-    mutationFn: async (applicationData: Omit<EventApplicationInsert, 'comedian_id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
+    mutationFn: async (applicationData: Omit<ApplicationInsert, 'comedian_id'>) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('applications')
-        .insert({
-          ...applicationData,
-          comedian_id: user.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return eventApplicationService.apply(user.id, applicationData);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['event-applications'] });
@@ -136,16 +78,8 @@ export const useEventApplications = (eventId?: string) => {
 
   // Update application status mutation
   const updateApplicationMutation = useMutation({
-    mutationFn: async ({ id, ...applicationData }: EventApplicationUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('applications')
-        .update(applicationData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ id, ...applicationData }: ApplicationUpdate & { id: string }) => {
+      return eventApplicationService.update(id, applicationData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-applications'] });

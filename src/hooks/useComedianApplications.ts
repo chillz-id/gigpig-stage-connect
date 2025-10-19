@@ -103,7 +103,7 @@ export const useComedianApplications = () => {
       })) as ComedianApplication[];
     },
     enabled: !!user,
-    staleTime: 0, // Always refetch
+    staleTime: 5 * 60 * 1000, // 5 minutes (matches platform standard)
     refetchInterval: 30000 // Refetch every 30 seconds
   });
 

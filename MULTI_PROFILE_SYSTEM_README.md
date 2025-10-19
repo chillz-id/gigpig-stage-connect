@@ -12,10 +12,13 @@ The Multi-Profile Switching System allows Stand Up Sydney users to maintain and 
 
 - **📖 [Developer Guide](docs/MULTI_PROFILE_DEVELOPER_GUIDE.md)** - Code examples and API reference
 - **🧪 [Testing Guide](docs/MULTI_PROFILE_TESTING_GUIDE.md)** - How to run and write tests
-- **📋 [Implementation Plan](docs/multi-profile-switching-plan.md)** - Original design document
+- **📋 [Implementation Plan](docs/multi-profile-switching-plan.md)** - Original design document with Phase 8 roadmap
 - **✅ [Phase 1-5 Summary](docs/MULTI_PROFILE_IMPLEMENTATION_COMPLETE.md)** - Core system implementation
 - **🎨 [Phase 6: Dashboards](docs/PHASE_6_PROFILE_DASHBOARDS.md)** - Profile-specific dashboards
 - **🚀 [Phase 7: Advanced Features](docs/PHASE_7_ADVANCED_FEATURES.md)** - Profile context indicators
+- **📊 [Phase 8: Data Integration](docs/PHASE_8_DATA_INTEGRATION_PLAN.md)** - Comprehensive data integration plan (DOCUMENTED)
+- **🔧 [Phase 8A: Profile-Aware Hooks](docs/PHASE_8_PROFILE_AWARE_HOOKS.md)** - Hook conversion guide
+- **📈 [Phase 8D-E: Notifications & Widgets](docs/PHASE_8_NOTIFICATIONS_AND_QUERIES.md)** - Notification system & dashboard widgets
 
 ## Features
 
@@ -336,19 +339,37 @@ npm run test:e2e:ui
 - [x] Reusable PageHeader component
 - [x] Profile-aware descriptions
 
-### Phase 8: Data Integration (Next)
-- [ ] Profile-aware data fetching in hooks
-- [ ] Profile-specific filtering logic
-- [ ] Profile-specific notifications
-- [ ] Dashboard customization and widgets
+### 📋 Phase 8: Data Integration (DOCUMENTED - Ready to Implement)
+**Status:** Fully documented January 19, 2025
+**Documentation:** [PHASE_8_DATA_INTEGRATION_PLAN.md](docs/PHASE_8_DATA_INTEGRATION_PLAN.md)
 
-### Future Enhancements
+#### Sub-phase 8A: Profile-Aware Data Hooks
+- [ ] Convert hooks to profile-aware pattern
+- [ ] Documentation: [PHASE_8_PROFILE_AWARE_HOOKS.md](docs/PHASE_8_PROFILE_AWARE_HOOKS.md)
+
+#### Sub-phase 8B: Profile-Specific Filtering
+- [ ] Add profile-aware filters to all pages
+
+#### Sub-phase 8C: Backend Queries
+- [ ] Manager/Photographer/Videographer dashboard data
+- [ ] Database schema additions
+- [ ] Documentation: [PHASE_8_NOTIFICATIONS_AND_QUERIES.md](docs/PHASE_8_NOTIFICATIONS_AND_QUERIES.md)
+
+#### Sub-phase 8D: Profile-Specific Notifications
+- [ ] Notification system per profile type
+
+#### Sub-phase 8E: Dashboard Widget Customization
+- [ ] react-grid-layout widget system
+- [ ] Documentation: [PHASE_8_DASHBOARD_WIDGETS.md](docs/PHASE_8_DASHBOARD_WIDGETS.md)
+
+### Phase 9+: Advanced Features (Future)
 - [ ] Profile analytics and usage tracking
 - [ ] Profile collaboration (manager → comedian access)
 - [ ] Profile verification/badges
 - [ ] Quick switch keyboard shortcut (Cmd+Shift+P)
 - [ ] Profile themes and branding
 - [ ] Profile presets and templates
+- [ ] AI-powered profile optimization
 
 ## Contributing
 

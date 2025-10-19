@@ -64,8 +64,11 @@ const Dashboard = () => {
     );
   }
 
-  // Handle no active profile
+  // Handle no active profile - redirect to profile creation
   if (!activeProfile) {
+    // Automatically redirect to profile creation wizard
+    navigate('/profile-management', { replace: true });
+
     return (
       <div className={cn("min-h-screen flex items-center justify-center",
         theme === 'pleasure'
@@ -74,13 +77,7 @@ const Dashboard = () => {
       )}>
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold mb-4">No Active Profile</h2>
-            <p className="text-muted-foreground mb-6">
-              You need to create a profile to access your dashboard.
-            </p>
-            <Button onClick={() => navigate('/profile-management')} className="w-full">
-              Create Profile
-            </Button>
+            <p className="text-muted-foreground">Redirecting to profile setup...</p>
           </CardContent>
         </Card>
       </div>

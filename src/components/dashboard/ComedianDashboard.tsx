@@ -217,7 +217,7 @@ export function ComedianDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Acceptance Rate</span>
                   <span className="text-lg font-bold">
-                    {isLoadingUserApplicationations ? '...' :
+                    {isLoadingUserApplications ? '...' :
                       userApplications && userApplications.length > 0
                         ? `${Math.round((userApplications.filter(a => a.status === 'accepted').length / userApplications.length) * 100)}%`
                         : 'N/A'

@@ -232,13 +232,25 @@ const AuthCallback = () => {
         }
         
         setStatus('Completing setup...');
-        
-        toast({
-          title: "Welcome!",
-          description: "Successfully signed in with Google.",
-        });
-        
-        navigate('/dashboard');
+
+        // Check if user has any comedy profiles (not just member role)
+        const hasComedyProfile = roles && roles.some(role =>
+          ['comedian', 'promoter', 'manager', 'photographer', 'videographer'].includes(role.role)
+        );
+
+        if (!hasComedyProfile) {
+          toast({
+            title: "Welcome to Stand Up Sydney!",
+            description: "Let's set up your profile to get started.",
+          });
+          navigate('/profile-management');
+        } else {
+          toast({
+            title: "Welcome back!",
+            description: "Successfully signed in with Google.",
+          });
+          navigate('/dashboard');
+        }
         
       } catch (error: any) {
         console.error('Auth callback exception:', error);
