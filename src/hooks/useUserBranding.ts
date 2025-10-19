@@ -20,7 +20,7 @@ interface UserBranding {
  * @returns {UserBranding} Logo URL, brand name, and loading state
  */
 export const useUserBranding = (): UserBranding => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
   const { profile } = useUser();
   const [branding, setBranding] = useState<UserBranding>({
     logoUrl: '/id-logo.png',
@@ -67,7 +67,7 @@ export const useUserBranding = (): UserBranding => {
     };
 
     fetchBranding();
-  }, [user, profile, hasRole]);
+  }, [user, profile]);
 
   return branding;
 };

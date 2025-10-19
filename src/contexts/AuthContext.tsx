@@ -1,4 +1,4 @@
-
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthOperations } from '@/hooks/useAuthOperations';
@@ -248,43 +248,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const hasRole = (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
+  const hasRole = useCallback((role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);
     // Checking user role
     return hasTheRole;
-  };
+  }, [roles]);
 
-  const hasAnyRole = (checkRoles: Array<'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => {
+  const hasAnyRole = useCallback((checkRoles: Array<'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => {
     return roles.some(userRole => checkRoles.includes(userRole.role));
-  };
+  }, [roles]);
 
-  const isCoPromoterForEvent = async (eventId: string) => {
+  const isCoPromoterForEvent = useCallback(async (eventId: string) => {
     if (!user) return false;
-    
+
     try {
       const { data, error } = await supabase.rpc('is_co_promoter_for_event', {
         _user_id: user.id,
         _event_id: eventId
       });
-      
+
       if (error) {
         console.error('Error checking co-promoter status:', error);
         return false;
       }
-      
+
       return data === true;
     } catch (error) {
       console.error('Error checking co-promoter status:', error);
       return false;
     }
-  };
+  }, [user]);
 
-  const markFirstLoginComplete = () => {
+  const markFirstLoginComplete = useCallback(() => {
     setIsFirstLogin(false);
     localStorage.setItem('isFirstLogin', 'false');
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     session,
     profile,
@@ -299,7 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasAnyRole,
     isCoPromoterForEvent,
     markFirstLoginComplete,
-  };
+  }), [user, session, profile, roles, isLoading, isFirstLogin, signIn, signUp, signOut, updateProfile, hasRole, hasAnyRole, isCoPromoterForEvent, markFirstLoginComplete]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

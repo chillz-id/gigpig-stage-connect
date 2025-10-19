@@ -1,4 +1,4 @@
-
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 export interface User {
   id: string;
@@ -43,24 +43,35 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading] = useState(false);
 
-  const login = (userData: User) => {
+  const login = useCallback((userData: User) => {
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     // In a real app, you'd also clear tokens, redirect to login, etc.
     window.location.href = '/';
-  };
+  }, []);
 
-  const updateUser = (updates: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...updates });
-    }
-  };
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser(currentUser => {
+      if (currentUser) {
+        return { ...currentUser, ...updates };
+      }
+      return currentUser;
+    });
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    isLoading,
+    login,
+    logout,
+    updateUser
+  }), [user, isLoading, login, logout, updateUser]);
 
   return (
-    <UserContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

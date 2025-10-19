@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import {
   Briefcase,
   Camera,
@@ -75,72 +76,61 @@ interface ProfileProviderProps {
 export function ProfileProvider({ children }: ProfileProviderProps) {
   const { user } = useAuth();
   const [activeProfile, setActiveProfile] = useState<ProfileTypeValue | null>(null);
-  const [availableProfiles, setAvailableProfiles] = useState<ProfileTypeValue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch available profiles from user_roles
+  // Use React Query to cache user roles data
+  const { data: availableProfiles = [], isLoading, error } = useQuery({
+    queryKey: ['user-roles', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      // Fetch user roles from user_roles table
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      if (rolesError) {
+        throw rolesError;
+      }
+
+      // Map roles to profile types
+      const profiles: ProfileTypeValue[] = [];
+      userRoles?.forEach((userRole) => {
+        const profileType = ROLE_TO_PROFILE_MAP[userRole.role];
+        if (profileType && !profiles.includes(profileType)) {
+          profiles.push(profileType);
+        }
+      });
+
+      return profiles;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+  });
+
+  // Set active profile when availableProfiles changes
   useEffect(() => {
-    const fetchAvailableProfiles = async () => {
-      if (!user) {
-        setAvailableProfiles([]);
-        setActiveProfile(null);
-        setIsLoading(false);
-        return;
+    if (isLoading) return;
+
+    // Set active profile from localStorage or default to first available
+    const savedProfile = localStorage.getItem(STORAGE_KEY) as ProfileTypeValue | null;
+    if (savedProfile && availableProfiles.includes(savedProfile)) {
+      setActiveProfile(savedProfile);
+    } else if (availableProfiles.length > 0) {
+      // Default to first available profile
+      const defaultProfile = availableProfiles[0];
+      if (defaultProfile) {
+        setActiveProfile(defaultProfile);
+        localStorage.setItem(STORAGE_KEY, defaultProfile);
       }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Fetch user roles from user_roles table
-        const { data: userRoles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-
-        if (rolesError) {
-          throw rolesError;
-        }
-
-        // Map roles to profile types
-        const profiles: ProfileTypeValue[] = [];
-        userRoles?.forEach((userRole) => {
-          const profileType = ROLE_TO_PROFILE_MAP[userRole.role];
-          if (profileType && !profiles.includes(profileType)) {
-            profiles.push(profileType);
-          }
-        });
-
-        setAvailableProfiles(profiles);
-
-        // Set active profile from localStorage or default to first available
-        const savedProfile = localStorage.getItem(STORAGE_KEY) as ProfileTypeValue | null;
-        if (savedProfile && profiles.includes(savedProfile)) {
-          setActiveProfile(savedProfile);
-        } else if (profiles.length > 0) {
-          // Default to first available profile
-          const defaultProfile = profiles[0];
-          if (defaultProfile) {
-            setActiveProfile(defaultProfile);
-            localStorage.setItem(STORAGE_KEY, defaultProfile);
-          }
-        } else {
-          // User has no comedy profiles - clear any stale localStorage
-          setActiveProfile(null);
-          localStorage.removeItem(STORAGE_KEY);
-          console.log('User has no comedy profiles - profile creation required');
-        }
-      } catch (err) {
-        console.error('Error fetching available profiles:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load profiles');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAvailableProfiles();
-  }, [user]);
+    } else {
+      // User has no comedy profiles - clear any stale localStorage
+      setActiveProfile(null);
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('User has no comedy profiles - profile creation required');
+    }
+  }, [availableProfiles, isLoading]);
 
   const switchProfile = useCallback((type: ProfileTypeValue) => {
     if (!availableProfiles.includes(type)) {
@@ -168,7 +158,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     switchProfile,
     isLoading,
     hasProfile,
-    error,
+    error: error ? (error instanceof Error ? error.message : 'Failed to load profiles') : null,
   }), [activeProfile, availableProfiles, switchProfile, isLoading, hasProfile, error]);
 
   return (
