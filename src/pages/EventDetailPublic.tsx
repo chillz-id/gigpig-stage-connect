@@ -47,11 +47,6 @@ const EventDetailPublic = () => {
         .from('events')
         .select(`
           *,
-          profiles!promoter_id (
-            id,
-            name,
-            avatar_url
-          ),
           event_spots (
             id,
             spot_name,
@@ -67,7 +62,20 @@ const EventDetailPublic = () => {
       if (!data) {
         throw new Error('Event not found');
       }
-      
+
+      // Fetch promoter profile separately since no FK exists
+      if (data.promoter_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, bio')
+          .eq('id', data.promoter_id)
+          .single();
+
+        if (profileData) {
+          data.profiles = profileData;
+        }
+      }
+
       return data;
     }
   });

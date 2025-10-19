@@ -287,7 +287,7 @@ export class DeadlineMonitoringService {
   private async triggerReassignmentWorkflow(expiredCount: number): Promise<void> {
     try {
       // Get expired spots that need reassignment
-      const { data: expiredSpots, error } = await supabase
+      const { data, error } = await supabase
         .from('event_spots')
         .select(`
           id,
@@ -302,13 +302,18 @@ export class DeadlineMonitoringService {
         `)
         .eq('confirmation_status', 'expired')
         .eq('is_filled', false)
-        .is('comedian_id', null)
-        .gte('events.event_date', new Date().toISOString());
+        .is('comedian_id', null);
 
       if (error) throw error;
 
+      // Filter by event_date client-side since PostgREST doesn't support filtering by joined table columns
+      const now = new Date().toISOString();
+      const expiredSpots = (data || []).filter(spot =>
+        spot.events?.event_date && spot.events.event_date >= now
+      );
+
       // Create tasks for promoters to reassign spots
-      for (const spot of expiredSpots || []) {
+      for (const spot of expiredSpots) {
         await supabase
           .from('tasks')
           .insert({

@@ -76,36 +76,39 @@ export const ProfileCalendarView: React.FC = () => {
               id,
               title,
               venue,
-              date,
+              event_date,
               created_at
             )
           `)
-          .eq('comedian_id', user.id)
-          .order('events.date', { ascending: true });
+          .eq('comedian_id', user.id);
 
         if (error) throw error;
-        return (data || []).map(booking => ({
+
+        const bookings = (data || []).map(booking => ({
           id: booking.id,
           title: booking.events?.title || 'Gig',
           venue: booking.events?.venue || 'Venue TBA',
-          event_date: booking.events?.date || new Date().toISOString(),
+          event_date: booking.events?.event_date || new Date().toISOString(),
           status: booking.status,
           calendar_sync_status: 'confirmed'
         }));
+
+        // Sort client-side since PostgREST doesn't support ordering by joined table columns
+        return bookings.sort((a, b) => a.event_date.localeCompare(b.event_date));
       } else {
         // For promoters, fetch events they created
         const { data, error } = await supabase
           .from('events')
-          .select('id, title, venue, date, status')
+          .select('id, title, venue, event_date, status')
           .eq('promoter_id', user.id)
-          .order('date', { ascending: true });
+          .order('event_date', { ascending: true });
 
         if (error) throw error;
         return (data || []).map(event => ({
           id: event.id,
           title: event.title,
           venue: event.venue,
-          event_date: event.date,
+          event_date: event.event_date,
           status: event.status || 'published',
           calendar_sync_status: 'published'
         }));

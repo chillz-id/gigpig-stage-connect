@@ -37,12 +37,17 @@ const fetchBookings = async (userId: string, startIso: string, endIso: string) =
       performance_fee,
       events!inner(title, event_date)
     `)
-    .eq('comedian_id', userId)
-    .gte('events.event_date', startIso)
-    .lte('events.event_date', endIso);
+    .eq('comedian_id', userId);
 
   if (error) throw error;
-  return (data as Array<{ performance_fee?: number; events?: { title?: string; event_date?: string } }> | null) ?? [];
+
+  const rows = (data as Array<{ performance_fee?: number; events?: { title?: string; event_date?: string } }> | null) ?? [];
+
+  // Filter by date range client-side since PostgREST doesn't support filtering by joined table columns
+  return rows.filter(booking => {
+    const eventDate = booking.events?.event_date;
+    return eventDate && eventDate >= startIso && eventDate <= endIso;
+  });
 };
 
 const fetchInvoices = async (userId: string, startIso: string, endIso: string) => {

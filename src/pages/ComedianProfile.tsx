@@ -30,12 +30,16 @@ const ComedianProfile = () => {
         )
       `)
         .eq('profile_id', comedianId)
-        .eq('status', 'confirmed')
-        .gte('events.start_time', new Date().toISOString())
-        .order('events.start_time', { ascending: true })
-        .limit(10);
-      
-      return data?.map(app => app.event).filter(Boolean) || [];
+        .eq('status', 'confirmed');
+
+      const events = data?.map(app => app.event).filter(Boolean) || [];
+
+      // Filter and sort client-side since PostgREST doesn't support filtering/ordering by joined table columns
+      const now = new Date().toISOString();
+      return events
+        .filter(event => event.start_time && event.start_time >= now)
+        .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
+        .slice(0, 10);
     },
     enabled: !!comedianId
   });
