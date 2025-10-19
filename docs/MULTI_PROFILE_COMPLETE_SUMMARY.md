@@ -382,10 +382,14 @@ photographer_profiles (already existed)
 ### For Developers
 1. **[Developer Guide](MULTI_PROFILE_DEVELOPER_GUIDE.md)** - Code examples and API reference
 2. **[Testing Guide](MULTI_PROFILE_TESTING_GUIDE.md)** - How to run and write tests
-3. **[Implementation Plan](multi-profile-switching-plan.md)** - Original design document
+3. **[Implementation Plan](multi-profile-switching-plan.md)** - Original design document with Phase 8 roadmap
 4. **[Phase 1-5 Summary](MULTI_PROFILE_IMPLEMENTATION_COMPLETE.md)** - Core system
 5. **[Phase 6: Dashboards](PHASE_6_PROFILE_DASHBOARDS.md)** - Dashboard implementation
 6. **[Phase 7: Advanced Features](PHASE_7_ADVANCED_FEATURES.md)** - Profile context indicators
+7. **[Phase 8: Data Integration Plan](PHASE_8_DATA_INTEGRATION_PLAN.md)** - Master plan for data integration
+8. **[Phase 8A: Profile-Aware Hooks](PHASE_8_PROFILE_AWARE_HOOKS.md)** - Hook conversion guide
+9. **[Phase 8D: Notifications & Queries](PHASE_8_NOTIFICATIONS_AND_QUERIES.md)** - Notification system & backend optimization
+10. **[Phase 8E: Dashboard Widgets](PHASE_8_DASHBOARD_WIDGETS.md)** - Widget system architecture
 
 ### For Project Managers
 1. **This Document** - Complete implementation summary
@@ -395,22 +399,128 @@ photographer_profiles (already existed)
 
 ## 🔮 Future Enhancements (Phase 8+)
 
-### Phase 8: Data Integration (Planned)
-- [ ] Profile-aware data fetching in hooks
-- [ ] Profile-specific filtering logic
-- [ ] Backend queries for manager/photographer/videographer dashboards
-- [ ] Profile-specific notifications
+### Phase 8: Data Integration (DOCUMENTED - Ready to Implement)
 
-### Future Enhancements
+**Status:** Fully documented January 19, 2025
+**Duration:** 2-3 weeks (estimated)
+**Documentation:** [PHASE_8_DATA_INTEGRATION_PLAN.md](PHASE_8_DATA_INTEGRATION_PLAN.md)
+
+Phase 8 expands the multi-profile system with complete data integration, profile-aware hooks, notifications, and customizable dashboard widgets. All sub-phases are fully documented with implementation details, code examples, database schemas, and testing strategies.
+
+#### Sub-phase 8A: Profile-Aware Data Hooks (Week 1)
+**Documentation:** [PHASE_8_PROFILE_AWARE_HOOKS.md](PHASE_8_PROFILE_AWARE_HOOKS.md)
+
+- [ ] Convert existing hooks to profile-aware pattern
+- [ ] Implement `useProfileAwareQuery` wrapper hook
+- [ ] Convert high-priority hooks: `useEvents`, `useApplications`, `useGigs`
+- [ ] Convert medium-priority hooks: `useVenues`, `useShowRequests`, `useSpots`
+- [ ] Convert low-priority hooks: `usePhotos`, `useReviews`
+
+**Features:**
+- Profile-aware query keys for TanStack Query
+- Bidirectional data filtering (viewing and ownership)
+- Performance-optimized with selective refetching
+- Type-safe with TypeScript generics
+
+#### Sub-phase 8B: Profile-Specific Filtering (Week 1-2)
+
+- [ ] Add profile-aware filters to Shows/Events page
+- [ ] Add profile-aware filters to Applications page
+- [ ] Add profile-aware filters to Gigs page
+- [ ] Add profile-aware filters to Venues page
+
+**Features:**
+- Comedian filters: Genre, difficulty, location, compensation
+- Promoter filters: Event status, capacity, revenue, date
+- Manager filters: Client events, commission status, contract status
+- Photographer filters: Coverage type, venue, payment status
+- Videographer filters: Equipment needs, event type, delivery status
+
+#### Sub-phase 8C: Backend Queries (Week 2)
+**Documentation:** [PHASE_8_NOTIFICATIONS_AND_QUERIES.md](PHASE_8_NOTIFICATIONS_AND_QUERIES.md)
+
+- [ ] Manager dashboard: Real client roster data
+- [ ] Manager dashboard: Commission tracking
+- [ ] Photographer dashboard: Real booking data
+- [ ] Photographer dashboard: Payment tracking
+- [ ] Videographer dashboard: Real booking data
+- [ ] Videographer dashboard: Delivery tracking
+- [ ] Database schema additions (manager_clients, photographer_bookings, etc.)
+- [ ] PostgreSQL functions for optimized aggregations
+- [ ] Materialized views for dashboard metrics
+
+**Features:**
+- Optimized database functions for complex queries
+- Client roster management for managers
+- Booking management for photographers/videographers
+- Commission tracking with automated calculations
+- Performance optimization with indexes and caching
+
+#### Sub-phase 8D: Profile-Specific Notifications (Week 2-3)
+**Documentation:** [PHASE_8_NOTIFICATIONS_AND_QUERIES.md](PHASE_8_NOTIFICATIONS_AND_QUERIES.md)
+
+- [ ] Create profile notification settings table
+- [ ] Implement notification types per profile
+- [ ] Create `useProfileNotifications` hook
+- [ ] Create `NotificationCenter` component
+- [ ] Create `NotificationSettings` component
+- [ ] Integrate with PWA push notifications
+
+**Features:**
+- Profile-specific notification types (15-20 per profile)
+- Customizable notification preferences per profile
+- Multiple delivery channels (in-app, email, push)
+- Real-time notifications with Supabase subscriptions
+- Notification history and read/unread tracking
+
+**Notification Types:**
+- **Comedian:** Gig invites, application updates, payment received, schedule changes
+- **Promoter:** New applications, ticket sales milestones, venue confirmations, RSVPs
+- **Manager:** Client booking confirmations, commission settlements, contract expirations
+- **Photographer:** Booking requests, event reminders, payment received, delivery deadlines
+- **Videographer:** Equipment requests, event confirmations, upload deadlines, review requests
+
+#### Sub-phase 8E: Dashboard Widget Customization (Week 3)
+**Documentation:** [PHASE_8_DASHBOARD_WIDGETS.md](PHASE_8_DASHBOARD_WIDGETS.md)
+
+- [ ] Install react-grid-layout
+- [ ] Create widget registry system
+- [ ] Create 15-20 profile-specific widgets
+- [ ] Create `WidgetGrid` component with drag-and-drop
+- [ ] Create `WidgetContainer` component
+- [ ] Implement layout persistence (localStorage + database)
+- [ ] Implement mobile-responsive layouts
+
+**Features:**
+- Drag-and-drop widget positioning with react-grid-layout
+- Profile-specific widget sets (15-20 widgets per profile)
+- Dual persistence (localStorage for speed, database for cross-device)
+- Responsive layouts with breakpoint-based grids
+- Widget refresh intervals and data caching
+
+**Example Widgets:**
+- **Comedian:** Upcoming Gigs, Application Status, Earnings Chart, Skill Badges
+- **Promoter:** Event Calendar, Ticket Sales, Revenue Chart, Lineup Builder
+- **Manager:** Client Roster, Commission Dashboard, Contract Expiry Alerts, Performance Metrics
+- **Photographer:** Booking Calendar, Payment Tracker, Portfolio Highlights, Equipment Checklist
+- **Videographer:** Project Timeline, Upload Progress, Client Reviews, Equipment Availability
+
+**Success Metrics:**
+- Widget drag performance: <16ms (60fps)
+- Layout persistence: <100ms
+- Widget data refresh: <500ms per widget
+- Mobile responsiveness: All breakpoints supported
+- Accessibility: Full keyboard navigation
+
+### Phase 9+: Advanced Features (Future)
 - [ ] Profile analytics and usage tracking
 - [ ] Profile collaboration (manager → comedian access)
 - [ ] Profile verification/badges
 - [ ] Quick switch keyboard shortcut (Cmd+Shift+P)
 - [ ] Profile themes and branding
 - [ ] Profile presets and templates
-- [ ] Dashboard widget customization
 - [ ] Cross-profile insights
-- [ ] AI-powered profile optimization
+- [ ] AI-powered profile optimization (profile recommendations, smart scheduling, content generation)
 
 ---
 
