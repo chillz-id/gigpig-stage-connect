@@ -15,6 +15,7 @@ The Multi-Profile Switching System allows Stand Up Sydney users to maintain and 
 - **📋 [Implementation Plan](docs/multi-profile-switching-plan.md)** - Original design document
 - **✅ [Phase 1-5 Summary](docs/MULTI_PROFILE_IMPLEMENTATION_COMPLETE.md)** - Core system implementation
 - **🎨 [Phase 6: Dashboards](docs/PHASE_6_PROFILE_DASHBOARDS.md)** - Profile-specific dashboards
+- **🚀 [Phase 7: Advanced Features](docs/PHASE_7_ADVANCED_FEATURES.md)** - Profile context indicators
 
 ## Features
 
@@ -327,9 +328,17 @@ npm run test:e2e:ui
 - [x] Theme support across all dashboards
 - [x] Responsive mobile layouts
 
-### Phase 7: Advanced Features (Next)
-- [ ] Profile-aware data fetching in existing pages
-- [ ] Profile context indicators in page headers
+### ✅ Phase 7: Advanced Features (COMPLETE)
+- [x] Profile context badge component
+- [x] Profile-aware page headers
+- [x] Profile context indicators in Applications page
+- [x] Profile context indicators in Shows page
+- [x] Reusable PageHeader component
+- [x] Profile-aware descriptions
+
+### Phase 8: Data Integration (Next)
+- [ ] Profile-aware data fetching in hooks
+- [ ] Profile-specific filtering logic
 - [ ] Profile-specific notifications
 - [ ] Dashboard customization and widgets
 

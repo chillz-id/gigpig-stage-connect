@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { useApplications } from '@/hooks/useApplications';
 import { useEvents } from '@/hooks/data/useEvents';
 import { useSpotAssignment } from '@/hooks/useSpotAssignment';
@@ -12,12 +13,14 @@ import ApplicationFilters from '@/components/admin/ApplicationFilters';
 import BulkApplicationActions from '@/components/admin/BulkApplicationActions';
 import SpotAssignmentManager from '@/components/events/SpotAssignmentManager';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Applications = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { activeProfile } = useProfile();
   const navigate = useNavigate();
   
   // Fetch real data
@@ -278,11 +281,18 @@ const Applications = () => {
     <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Applications Management</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Applications Management</h1>
+            <ProfileContextBadge />
+          </div>
           <p className={cn(
             theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
           )}>
-            Review and manage comedian applications for your events
+            {activeProfile === 'promoter'
+              ? 'Review and manage comedian applications for your events'
+              : activeProfile === 'manager'
+                ? 'View applications for your managed clients'
+                : 'Applications for your events'}
           </p>
         </div>
 

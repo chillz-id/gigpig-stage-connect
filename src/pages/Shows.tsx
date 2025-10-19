@@ -11,12 +11,15 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { ApplicationForm } from '@/components/ApplicationForm';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
+import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
 
 const Shows = () => {
   const { theme } = useTheme();
   const { user, hasRole } = useAuth();
+  const { activeProfile } = useProfile();
   const location = useLocation();
   
   // Get month from URL params
@@ -238,8 +241,19 @@ const Shows = () => {
 
         {/* Filter Mode Toggle */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">Discover Events</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white">
+                {activeProfile === 'comedian'
+                  ? 'Find Gigs'
+                  : activeProfile === 'promoter'
+                    ? 'Manage Events'
+                    : activeProfile === 'photographer' || activeProfile === 'videographer'
+                      ? 'Browse Events'
+                      : 'Discover Events'}
+              </h2>
+              <ProfileContextBadge size="sm" />
+            </div>
             <div className="flex gap-2">
               {/* Additional filter buttons */}
               <button
