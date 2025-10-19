@@ -78,34 +78,15 @@ export const BookingRequestsSection: React.FC = () => {
       // Fetch general requests and specific requests for this comedian
       const { data, error } = await supabase
         .from('booking_requests')
-        .select(`
-          *,
-          requester:profiles!booking_requests_requester_id_fkey(
-            id,
-            name,
-            email
-          ),
-          my_response:booking_request_responses!left(
-            id,
-            response_type,
-            proposed_fee,
-            counter_offer_notes,
-            response_message
-          )
-        `)
+        .select('*')
         .or(`requested_comedian_id.eq.${user.id},requested_comedian_id.is.null`)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Filter to only show requests where this comedian hasn't responded yet
-      return (data || []).filter(request => 
-        !request.my_response || request.my_response.length === 0
-      ).map(request => ({
-        ...request,
-        my_response: request.my_response?.[0] || null
-      }));
+
+      // Return requests without attempting to join non-existent foreign keys
+      return data || [];
     },
     enabled: !!user?.id
   });
@@ -244,7 +225,7 @@ export const BookingRequestsSection: React.FC = () => {
                               {request.event_title || 'Comedy Event'}
                             </h4>
                             <p className="text-sm text-gray-400">
-                              From: {request.requester?.name || 'Unknown'}
+                              Booking Request
                             </p>
                           </div>
                           <Badge className={getRequestTypeBadgeColor(request)}>

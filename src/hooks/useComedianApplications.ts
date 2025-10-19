@@ -71,11 +71,7 @@ export const useComedianApplications = () => {
             state,
             status,
             banner_url,
-            profiles!promoter_id (
-              id,
-              name,
-              avatar_url
-            )
+            promoter_id
           )
         `)
         .eq('comedian_id', user.id)
@@ -98,7 +94,7 @@ export const useComedianApplications = () => {
         responded_at: app.responded_at,
         event: {
           ...app.events,
-          promoter: app.events.profiles
+          promoter: undefined // Promoter data not available without FK
         }
       })) as ComedianApplication[];
     },
