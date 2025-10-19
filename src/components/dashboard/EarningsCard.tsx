@@ -30,8 +30,13 @@ export const EarningsCard: React.FC = () => {
   const { theme } = useTheme();
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
   const [showDetails, setShowDetails] = useState(false);
-  
-  const { earningsData, isLoading, startDate, endDate } = useEarnings(dateRange);
+
+  const { earningsData, isLoading } = useEarnings(dateRange);
+
+  // Calculate display dates
+  const now = new Date();
+  const startDate = dateRange.start ?? new Date(now.getFullYear(), now.getMonth(), 1);
+  const endDate = dateRange.end ?? new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   const getStatCardStyles = () => {
     return theme === 'pleasure'
