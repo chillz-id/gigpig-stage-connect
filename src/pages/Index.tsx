@@ -50,14 +50,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <main>
-        {/* Hero Video Section */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <HeroVideoShowreel 
-            className="absolute inset-0 z-0"
-            controls={true}
-            overlay={true}
-          />
-          
+        {/* Hero Section */}
+        <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-r from-red-900/20 to-gray-900">
           <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
             <div className="mb-8">
               <Drama className="w-20 h-20 mx-auto mb-6 text-yellow-400 drop-shadow-lg" />

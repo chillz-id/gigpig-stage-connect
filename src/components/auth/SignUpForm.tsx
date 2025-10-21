@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mic, Camera, Video } from 'lucide-react';
+import { Mic, Users, Briefcase, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GoogleSignInButton from './GoogleSignInButton';
 
@@ -177,26 +177,38 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="is-photographer"
-                checked={selectedRoles.includes('photographer')}
-                onCheckedChange={() => handleRoleToggle('photographer')}
+                id="is-promoter"
+                checked={selectedRoles.includes('promoter')}
+                onCheckedChange={() => handleRoleToggle('promoter')}
                 className="h-4 w-4 accent-indigo-500"
               />
-              <Label htmlFor="is-photographer" className="text-sm cursor-pointer flex items-center gap-2">
-                <Camera className="w-4 h-4" />
-                Photographer
+              <Label htmlFor="is-promoter" className="text-sm cursor-pointer flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Promoter
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="is-videographer"
-                checked={selectedRoles.includes('videographer')}
-                onCheckedChange={() => handleRoleToggle('videographer')}
+                id="is-manager"
+                checked={selectedRoles.includes('manager')}
+                onCheckedChange={() => handleRoleToggle('manager')}
                 className="h-4 w-4 accent-indigo-500"
               />
-              <Label htmlFor="is-videographer" className="text-sm cursor-pointer flex items-center gap-2">
-                <Video className="w-4 h-4" />
-                Videographer
+              <Label htmlFor="is-manager" className="text-sm cursor-pointer flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Manager
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is-organization"
+                checked={selectedRoles.includes('organization')}
+                onCheckedChange={() => handleRoleToggle('organization')}
+                className="h-4 w-4 accent-indigo-500"
+              />
+              <Label htmlFor="is-organization" className="text-sm cursor-pointer flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Organization
               </Label>
             </div>
           </div>

@@ -12,8 +12,10 @@ export const CalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
+  const [appliedEvents, setAppliedEvents] = useState<Set<string>>(new Set());
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
+  const isComedian = user && hasRole('comedian');
   
   // Get events from the hook
   const today = new Date();
@@ -73,10 +75,33 @@ export const CalendarView: React.FC = () => {
       return;
     }
 
-    toast({
-      title: "Application submitted!",
-      description: `Your application for "${event.title}" has been submitted successfully.`,
-    });
+    const newAppliedEvents = new Set(appliedEvents);
+    if (appliedEvents.has(event.id)) {
+      // Unapply
+      newAppliedEvents.delete(event.id);
+      toast({
+        title: "Application removed",
+        description: `Your application for "${event.title}" has been removed.`,
+      });
+    } else {
+      // Apply
+      newAppliedEvents.add(event.id);
+      toast({
+        title: "Application submitted!",
+        description: `Your application for "${event.title}" has been submitted successfully.`,
+      });
+    }
+    setAppliedEvents(newAppliedEvents);
+  };
+
+  const handleDayClick = (date: Date, dayEvents: any[]) => {
+    setSelectedDate(date);
+
+    // If comedian clicks a date with events, toggle apply on first event
+    if (isComedian && dayEvents.length > 0) {
+      const firstEvent = dayEvents[0];
+      handleApply(firstEvent);
+    }
   };
 
   const monthNames = [
@@ -147,7 +172,8 @@ export const CalendarView: React.FC = () => {
                 const isToday = day.toDateString() === today.toDateString();
                 const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
                 const dayEvents = getEventsForDate(day);
-                
+                const hasAppliedToDate = isComedian && dayEvents.some(event => appliedEvents.has(event.id));
+
                 return (
                   <div
                     key={index}
@@ -156,9 +182,10 @@ export const CalendarView: React.FC = () => {
                       ${isCurrentMonth ? 'bg-card/30' : 'bg-muted/20 text-muted-foreground'}
                       ${isToday ? 'bg-primary/20 border-primary' : ''}
                       ${isSelected ? 'bg-primary/30 border-primary' : ''}
+                      ${hasAppliedToDate ? 'bg-green-500/20 border-green-500' : ''}
                       hover:bg-card/50
                     `}
-                    onClick={() => setSelectedDate(day)}
+                    onClick={() => handleDayClick(day, dayEvents)}
                   >
                     <div className="text-sm font-medium mb-1">{day.getDate()}</div>
                     <div className="space-y-1">
@@ -191,18 +218,36 @@ export const CalendarView: React.FC = () => {
 
         {selectedDate && selectedDateEvents.length > 0 ? (
           <div className="space-y-4">
-            {selectedDateEvents.map(event => (
-              <ModernEventCard
-                key={event.id}
-                show={event}
-                interestedEvents={interestedEvents}
-                onToggleInterested={handleToggleInterested}
-                onApply={handleApply}
-                onBuyTickets={handleBuyTickets}
-                onShowDetails={() => {}} // No details handler needed for calendar
-                onGetDirections={() => {}} // No directions handler needed for calendar
-              />
-            ))}
+            {selectedDateEvents.map(event => {
+              const hasApplied = appliedEvents.has(event.id);
+              return (
+                <div key={event.id} className="relative">
+                  <ModernEventCard
+                    show={event}
+                    interestedEvents={interestedEvents}
+                    onToggleInterested={handleToggleInterested}
+                    onApply={handleApply}
+                    onBuyTickets={handleBuyTickets}
+                    onShowDetails={() => {}}
+                    onGetDirections={() => {}}
+                  />
+                  {isComedian && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => handleApply(event)}
+                        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                          hasApplied
+                            ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30 border border-green-500'
+                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        }`}
+                      >
+                        {hasApplied ? 'Applied ✓' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <Card className="bg-card/50 backdrop-blur-sm border-border">
