@@ -9,6 +9,7 @@ import { useComedianMedia } from '@/hooks/useComedianMedia';
 import { MediaUpload } from '@/components/profile/MediaUpload';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface ComedianMediaProps {
   comedianId: string;
@@ -153,10 +154,11 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
                         onMouseLeave={() => setHoveredVideo(null)}
                       >
                         <div className="relative aspect-video">
-                          <img
+                          <OptimizedImage
                             src={thumbnailUrl}
                             alt={video.title || 'Video thumbnail'}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                           
                           {/* Overlay */}
@@ -282,10 +284,11 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
                             onMouseLeave={() => setHoveredPhoto(null)}
                           >
                             <div className="aspect-square">
-                              <img
+                              <OptimizedImage
                                 src={photoUrl}
                                 alt={photo.title || 'Photo'}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                               />
                               
                               {/* Overlay */}
@@ -323,7 +326,7 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
                             <DialogTitle>{photo.title}</DialogTitle>
                           </DialogHeader>
                           <div className="max-h-[80vh] overflow-auto">
-                            <img
+                            <OptimizedImage
                               src={photoUrl}
                               alt={photo.title || 'Photo'}
                               className="w-full h-auto rounded-lg"

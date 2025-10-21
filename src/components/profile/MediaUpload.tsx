@@ -12,6 +12,8 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { YouTubeUploadGuide } from './YouTubeUploadGuide';
+import { cn } from '@/lib/utils';
 
 interface MediaUploadProps {
   mediaType: 'photo' | 'video';
@@ -338,16 +340,22 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
             <TabsContent value="youtube" className="mt-4">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="youtube-url">YouTube URL</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="youtube-url">YouTube URL</Label>
+                    <YouTubeUploadGuide variant="icon" />
+                  </div>
                   <Input
                     id="youtube-url"
                     value={externalUrl}
                     onChange={(e) => setExternalUrl(e.target.value)}
                     placeholder="https://www.youtube.com/watch?v=..."
                   />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Paste your unlisted YouTube video URL. Click the info icon above for step-by-step instructions.
+                  </p>
                 </div>
-                <Button 
-                  onClick={handleExternalLink} 
+                <Button
+                  onClick={handleExternalLink}
                   disabled={isUploading || !externalUrl.trim()}
                   className="w-full"
                 >
