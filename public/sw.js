@@ -2,9 +2,9 @@
 // Provides offline functionality, caching, and push notifications
 // Enhanced with advanced caching strategies and background sync
 
-const CACHE_NAME = 'standup-sydney-v1.1.0';
-const STATIC_CACHE = 'standup-sydney-static-v1.1.0';
-const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.1.0';
+const CACHE_NAME = 'standup-sydney-v1.2.0';
+const STATIC_CACHE = 'standup-sydney-static-v1.2.0';
+const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.2.0';
 
 // Cache strategies by resource type
 const CACHE_STRATEGIES = {
@@ -15,14 +15,14 @@ const CACHE_STRATEGIES = {
 };
 
 // Assets to cache immediately
+// Note: Only cache files that actually exist in the build
+// Vite outputs to /assets/ not /static/, so don't cache build artifacts here
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/offline.html',
   '/icon-192x192.png',
-  '/icon-512x512.png',
-  '/static/js/bundle.js',
-  '/static/css/main.css'
+  '/icon-512x512.png'
 ];
 
 // API endpoints to cache
@@ -40,18 +40,30 @@ const API_CACHE_PATTERNS = [
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
-  
+
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('Service Worker: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        // Cache assets individually to prevent one failure from blocking all
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url =>
+            cache.add(url).catch(err => {
+              console.warn(`Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        );
+      })
+      .then(() => {
+        console.log('Service Worker: Static assets cached (with possible partial failures)');
       })
       .catch((error) => {
-        console.error('Service Worker: Failed to cache static assets', error);
+        console.error('Service Worker: Failed to open cache', error);
+        // Don't throw - allow SW to install anyway
       })
   );
-  
+
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
