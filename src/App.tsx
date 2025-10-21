@@ -54,6 +54,7 @@ const EventApplicationPage = lazy(() => import('@/pages/EventApplicationPage'));
 const SpotConfirmationPage = lazy(() => import('@/pages/SpotConfirmationPage'));
 const InvoicePaymentSuccess = lazy(() => import('@/pages/InvoicePaymentSuccess'));
 const InvoicePaymentCancelled = lazy(() => import('@/pages/InvoicePaymentCancelled'));
+const PostSignupSetup = lazy(() => import('@/pages/PostSignupSetup'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -165,6 +166,7 @@ function App() {
                         <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
                         <Route path="/auth/xero-callback" element={<XeroCallback />} />
+                        <Route path="/post-signup-setup" element={<PostSignupSetup />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/shows" element={<Shows />} />
                         <Route path="/browse" element={<Navigate to="/shows" replace />} />

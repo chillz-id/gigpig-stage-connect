@@ -238,12 +238,23 @@ const AuthCallback = () => {
           ['comedian', 'promoter', 'manager', 'photographer', 'videographer'].includes(role.role)
         );
 
+        // Check if user needs post-signup setup (organization or manager roles)
+        const needsPostSignupSetup = roles && roles.some(role =>
+          ['organization', 'manager'].includes(role.role)
+        );
+
         if (!hasComedyProfile) {
           toast({
             title: "Welcome to Stand Up Sydney!",
             description: "Let's set up your profile to get started.",
           });
-          navigate('/profile-management');
+          navigate('/post-signup-setup');
+        } else if (needsPostSignupSetup) {
+          toast({
+            title: "Welcome to Stand Up Sydney!",
+            description: "Let's complete your profile setup.",
+          });
+          navigate('/post-signup-setup');
         } else {
           toast({
             title: "Welcome back!",
