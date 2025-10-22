@@ -17,7 +17,7 @@
 - ✅ Environment variables configured:
   - `RESEND_API_KEY=re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG`
   - `VITE_RESEND_API_KEY=re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG`
-  - `VITE_RESEND_FROM_EMAIL=noreply@gigpigs.app`
+  - `VITE_RESEND_FROM_EMAIL=team@gigpigs.app`
 
 ### 3. Testing
 - ✅ Created test script: `scripts/test-email-service.js`
@@ -87,7 +87,7 @@
    |---------------|-------|
    | `RESEND_API_KEY` | `re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG` |
    | `VITE_RESEND_API_KEY` | `re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG` |
-   | `VITE_RESEND_FROM_EMAIL` | `noreply@gigpigs.app` |
+   | `VITE_RESEND_FROM_EMAIL` | `team@gigpigs.app` |
 
 3. **Redeploy Application:**
    - After adding variables, trigger a new deployment
@@ -170,7 +170,7 @@ User can sign in immediately
 
 ### Domain Configuration
 - **Domain:** `gigpigs.app`
-- **From Address:** `noreply@gigpigs.app`
+- **From Address:** `team@gigpigs.app`
 - **Status:** NOT verified ⚠️ (must verify to send emails)
 
 ### Resend Dashboard Links

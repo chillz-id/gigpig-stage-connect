@@ -15,7 +15,7 @@ The following environment variables need to be added to Vercel for the email ser
 - **Description:** Client-accessible Resend API key (prefixed with VITE_ for Vite)
 
 ### 3. VITE_RESEND_FROM_EMAIL
-- **Value:** `noreply@gigpigs.app`
+- **Value:** `team@gigpigs.app`
 - **Environment:** Production, Preview, Development
 - **Description:** Default "from" email address for all transactional emails
 
@@ -51,9 +51,9 @@ echo "re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG" | vercel env add VITE_RESEND_API_KEY
 echo "re_dkLktbsg_7nvvNhZB3QxumBEPDSU5oKaG" | vercel env add VITE_RESEND_API_KEY development
 
 # Add VITE_RESEND_FROM_EMAIL
-echo "noreply@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL production
-echo "noreply@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL preview
-echo "noreply@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL development
+echo "team@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL production
+echo "team@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL preview
+echo "team@gigpigs.app" | vercel env add VITE_RESEND_FROM_EMAIL development
 ```
 
 ## Domain Verification Required

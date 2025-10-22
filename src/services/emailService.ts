@@ -21,7 +21,7 @@ export const emailService = {
    */
   async sendEmail({ to, subject, html, text, from }: SendEmailParams) {
     try {
-      const fromEmail = from || import.meta.env.VITE_RESEND_FROM_EMAIL || 'noreply@standupsydney.com';
+      const fromEmail = from || import.meta.env.VITE_RESEND_FROM_EMAIL || 'team@gigpigs.app';
 
       const { data, error } = await resend.emails.send({
         from: fromEmail,
