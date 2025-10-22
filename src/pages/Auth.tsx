@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { emailService } from '@/services/emailService';
 import AuthLayout from '@/components/auth/AuthLayout';
 import SignInForm from '@/components/auth/SignInForm';
 import SignUpForm from '@/components/auth/SignUpForm';
@@ -88,21 +89,31 @@ const Auth = () => {
 
   const handleSignUp = async (email: string, password: string, userData: any) => {
     setIsLoading(true);
-    
+
     // Processing sign up
     const { error } = await signUp(email, password, userData);
-    
+
     if (!error) {
       // Sign up successful
-      // Don't redirect immediately, wait for email confirmation or auto-login
       toast({
-        title: "Account Created",
-        description: "Your account has been created successfully. Please check your email if confirmation is required.",
+        title: "Account Created Successfully! 🎉",
+        description: "You can sign in immediately. Check your inbox for a welcome email with tips to get started.",
       });
+
+      // Send welcome email (non-blocking, don't wait for it)
+      try {
+        await emailService.sendComedianWelcome(
+          email,
+          userData.name || email.split('@')[0]
+        );
+      } catch (emailError) {
+        // Log email error but don't block user experience
+        console.error('Failed to send welcome email:', emailError);
+      }
     } else {
       console.log('=== SIGN UP FAILED ===', error);
     }
-    
+
     setIsLoading(false);
   };
 
