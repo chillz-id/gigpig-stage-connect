@@ -72,17 +72,16 @@ const Auth = () => {
 
   const handleSignIn = async (email: string, password: string) => {
     setIsLoading(true);
-    
+
     // Processing sign in
     const { error } = await signIn(email, password);
-    
+
     if (!error) {
-      // Sign in successful
-      navigate(from, { replace: true });
+      // Sign in successful - the useEffect will handle navigation once user state updates
     } else {
       // Sign in failed
     }
-    
+
     setIsLoading(false);
   };
 
