@@ -1,7 +1,22 @@
 import { Resend } from 'resend';
 
 // Initialize Resend with API key from environment
-const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
+// Gracefully handle missing API key to prevent module load failures
+let resend: Resend | null = null;
+let resendInitError: string | null = null;
+
+try {
+  const apiKey = import.meta.env.VITE_RESEND_API_KEY;
+  if (apiKey) {
+    resend = new Resend(apiKey);
+  } else {
+    resendInitError = 'VITE_RESEND_API_KEY not configured';
+    console.warn('⚠️ Resend email service not configured. Welcome emails will not be sent.');
+  }
+} catch (error) {
+  resendInitError = `Resend initialization failed: ${error}`;
+  console.error('❌ Failed to initialize Resend:', error);
+}
 
 interface SendEmailParams {
   to: string | string[];
@@ -20,6 +35,16 @@ export const emailService = {
    * Send an email using Resend
    */
   async sendEmail({ to, subject, html, text, from }: SendEmailParams) {
+    // Check if Resend is initialized
+    if (!resend) {
+      console.warn('⚠️ Email service not available:', resendInitError || 'Resend not initialized');
+      return {
+        success: false,
+        error: resendInitError || 'Email service not configured',
+        skipped: true
+      };
+    }
+
     try {
       const fromEmail = from || import.meta.env.VITE_RESEND_FROM_EMAIL || 'team@gigpigs.app';
 
@@ -33,14 +58,14 @@ export const emailService = {
 
       if (error) {
         console.error('Resend email error:', error);
-        throw new Error(`Failed to send email: ${error.message}`);
+        return { success: false, error: error.message };
       }
 
       console.log('Email sent successfully:', data);
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Email service error:', error);
-      throw error;
+      return { success: false, error: error.message };
     }
   },
 

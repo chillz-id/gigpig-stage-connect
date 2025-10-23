@@ -101,15 +101,22 @@ const Auth = () => {
       });
 
       // Send welcome email (non-blocking, don't wait for it)
-      try {
-        await emailService.sendComedianWelcome(
-          email,
-          userData.name || email.split('@')[0]
-        );
-      } catch (emailError) {
-        // Log email error but don't block user experience
-        console.error('Failed to send welcome email:', emailError);
-      }
+      // This is completely optional - auth flow works without it
+      emailService.sendComedianWelcome(
+        email,
+        userData.name || email.split('@')[0]
+      ).then((result) => {
+        if (result.success) {
+          console.log('✅ Welcome email sent successfully');
+        } else if (result.skipped) {
+          console.warn('⚠️ Welcome email skipped:', result.error);
+        } else {
+          console.error('❌ Failed to send welcome email:', result.error);
+        }
+      }).catch((error) => {
+        // Failsafe: Log error but don't block user experience
+        console.error('❌ Welcome email error:', error);
+      });
     } else {
       console.log('=== SIGN UP FAILED ===', error);
     }
