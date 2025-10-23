@@ -6,8 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import Navigation from '@/components/Navigation';
-import DockNavigation from '@/components/DockNavigation';
+import { PlatformLayout } from '@/components/layout/PlatformLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -155,12 +154,10 @@ function App() {
               <UserProvider>
                 <DesignSystemInitializer>
                   <Router>
-                  <div className="min-h-screen transition-all duration-200">
-                    {/* <Navigation /> */}
-                    <DockNavigation />
                     <PWAIntegration />
-                    <Suspense fallback={<LoadingFallback />}>
-                      <Routes>
+                    <PlatformLayout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
@@ -200,13 +197,11 @@ function App() {
                         <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
                         <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
-                      </Routes>
-                    </Suspense>
+                        </Routes>
+                      </Suspense>
+                    </PlatformLayout>
                     <Toaster />
-                    {/* Add bottom padding for dock navigation */}
-                    <div className="h-20 md:h-32" />
-                  </div>
-                </Router>
+                  </Router>
                 </DesignSystemInitializer>
               </UserProvider>
             </AuthProvider>
