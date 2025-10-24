@@ -1,0 +1,2 @@
+# This directory stores Playwright session state for authenticated tests
+# The .json files in this directory contain session tokens and should never be committed

@@ -1,0 +1,43 @@
+import { useNavigate } from 'react-router-dom';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
+
+export default function OrganizationBookComedian() {
+  const { organization, orgId } = useOrganization();
+  const navigate = useNavigate();
+
+  if (!organization) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-bold">Organization Not Found</h1>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto max-w-3xl space-y-6 py-8">
+      <div>
+        <h1 className="text-3xl font-bold">Book Comedian</h1>
+        <p className="mt-1 text-gray-600">Book a comedian for {organization.organization_name}</p>
+      </div>
+
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <Users className="mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium">Comedian Booking Form</h3>
+          <p className="mb-4 text-sm text-gray-600">
+            Organization comedian booking form will be available here
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => navigate(`/org/${orgId}/dashboard`)}>
+              Cancel
+            </Button>
+            <Button>Book Comedian</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

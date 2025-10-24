@@ -1,0 +1,78 @@
+; Domain: standupsydney.com
+; Exported (y-m-d hh:mm:ss): 2025-10-16 14:51:58
+;
+; This file is intended for use for informational and archival
+; purposes ONLY and MUST be edited before use on a production
+; DNS server.
+;
+; In particular, you must update the SOA record with the correct
+; authoritative name server and contact e-mail address information,
+; and add the correct NS records for the name servers which will
+; be authoritative for this domain.
+;
+; For further information, please consult the BIND documentation
+; located on the following website:
+;
+; http://www.isc.org/
+;
+; And RFC 1035:
+;
+; http://www.ietf.org/rfc/rfc1035.txt
+;
+; Please note that we do NOT offer technical support for any use
+; of this zone data, the BIND name server, or any other third-
+; party DNS software.
+;
+; Use at your own risk.
+
+
+$ORIGIN standupsydney.com.
+
+; SOA Record
+@	3600	 IN 	SOA	ns03.domaincontrol.com.	dns.jomax.net. (
+					2025101610
+					28800
+					7200
+					604800
+					3600
+					) 
+
+; A Record
+@	600	 IN 	A	31.43.160.6
+@	600	 IN 	A	31.43.161.6
+email	3600	 IN 	A	15.197.225.128
+email	3600	 IN 	A	3.33.251.168
+harrys	600	 IN 	A	170.64.129.59
+n8n	3600	 IN 	A	15.197.225.128
+n8n	3600	 IN 	A	3.33.251.168
+offtherecord	3600	 IN 	A	15.197.225.128
+offtherecord	3600	 IN 	A	3.33.251.168
+
+; TXT Record
+@	600	 IN 	TXT	"brevo-code:e2646df7457f9a1a0f9e11926bb08f3e"
+@	3600	 IN 	TXT	"v=spf1 include:dc-8e814c8572._spfm.standupsydney.com ~all"
+dc-8e814c8572._spfm	3600	 IN 	TXT	"v=spf1 include:zohomail.com ~all"
+email	1800	 IN 	TXT	"google-site-verification=x1TMiHy37CKZdMWwMmEangpeMTuXkeVia7q4w6RgADc"
+k1._domainkey.email	600	 IN 	TXT	"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCsQFoHX0JWx1lsNl+CA9UGH/Dlu7dGpZxzwbOlqEms5pWj5MnYRbs3xEgRDY9HEKZYuKvLdQQJwxk8hzVxFimw2O1ClaKICu3xOrTxI5JnuolyNybV6ZRKuRKQR2maX8jlZPCkcRuMgvNk2Ve0TIdPhU4OaPvkXcLqKR+ouH3ymQIDAQAB"
+mail._domainkey	600	 IN 	TXT	"k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDeMVIzrCa3T14JsNY0IRv5/2V1/v2itlviLQBwXsa7shBD6TrBkswsFUToPyMRWC9tbR/5ey0nRBH0ZVxp+lsmTxid2Y2z+FApQ6ra2VsXfbJP3HE6wAO0YTVEJt1TmeczhEd2Jiz/fcabIISgXEdSpTYJhb0ct0VJRxcg4c8c7wIDAQAB"
+_acme-challenge.n8n	600	 IN 	TXT	"Tef_MDHTNoAEx7GUCq57GGAHlbXtO2RnbBvfeMZ0PqM"
+_dmarc	600	 IN 	TXT	"v=DMARC1; p=none; rua=mailto:info@idcomedy.com; ruf=mailto:info@idcomedy.com; sp=none; adkim=r; aspf=r"
+
+; CNAME Record
+brevo1._domainkey	3600	 IN 	CNAME	b1.standupsydney-com.dkim.brevo.com.
+brevo2._domainkey	3600	 IN 	CNAME	b2.standupsydney-com.dkim.brevo.com.
+fde._domainkey	1800	 IN 	CNAME	dkim.xgga8p.fl82.fdske.com.
+fdesp	3600	 IN 	CNAME	spf.xgga8p.fl82.fdske.com.
+google-site-verification	3600	 IN 	CNAME	x1tmihy37ckzdmwwmmeangpemtuxkevia7q4w6rgadc.
+www	600	 IN 	CNAME	sites.framer.app.
+_domainconnect	3600	 IN 	CNAME	_domainconnect.gd.domaincontrol.com.
+
+; NS Record
+@	3600	 IN 	NS	ns03.domaincontrol.com.
+@	3600	 IN 	NS	ns04.domaincontrol.com.
+
+; MX Record
+@	600	 IN 	MX	10	mx.zoho.com.
+@	600	 IN 	MX	20	mx2.zoho.com.
+@	600	 IN 	MX	50	mx3.zoho.com.
+

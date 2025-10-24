@@ -1,0 +1,245 @@
+{
+  "name": "Eventbrite → Supabase (Webhook Workflow)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8ffbe5cb-e7da-4892-a393-37cc144c4a05",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.eventbriteapi.com/v3/organizations/276710097137/webhooks/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "eventbriteOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"endpoint_url\": \"https://n8n.gigpigs.app/webhook/eventbrite/order-events\",\n  \"actions\": \"order.placed,order.updated,order.refunded\"\n}",
+        "options": {}
+      },
+      "id": "7de42a0e-ff2a-4557-a127-85afe07bf7a9",
+      "name": "Register Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        128
+      ],
+      "credentials": {
+        "eventbriteApi": {
+          "id": "AbncrT7WPjSJQhsT",
+          "name": "Eventbrite account"
+        },
+        "eventbriteOAuth2Api": {
+          "id": "zWvsIwODoG31sWmb",
+          "name": "Eventbrite account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eventbrite/order-events",
+        "options": {}
+      },
+      "id": "5f40f30a-19b6-4df6-be22-abe14eb0d732",
+      "name": "Webhook Order Events",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        336
+      ],
+      "webhookId": "cc8295fc-c125-4215-a2ba-4a67ffc49ec1"
+    },
+    {
+      "parameters": {
+        "amount": 4
+      },
+      "id": "3a202225-d6d6-4c95-95e1-61a9e031a185",
+      "name": "Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        336
+      ],
+      "webhookId": "4d5963c3-3d07-4eab-8770-3923d013e895"
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"body\"] && $json[\"body\"].api_url ? $json[\"body\"].api_url : 'https://www.eventbriteapi.com/v3/orders/' + $json[\"body\"].id + '/'}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "eventbriteApi",
+        "options": {}
+      },
+      "id": "4a9de3cd-9b39-46be-908d-2e02228c44a1",
+      "name": "Fetch Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "type": "string",
+            "name": "order_id",
+            "value": "={{$json[\"id\"]}}"
+          },
+          {
+            "type": "string",
+            "name": "event_id",
+            "value": "={{$json[\"event_id\"]}}"
+          },
+          {
+            "type": "string",
+            "name": "order_number",
+            "value": "={{$json[\"order_number\"]}}"
+          },
+          {
+            "type": "string",
+            "name": "status",
+            "value": "={{$json[\"status\"]}}"
+          },
+          {
+            "type": "string",
+            "name": "profile_email",
+            "value": "={{$json[\"profile\"] && $json[\"profile\"].email ? $json[\"profile\"].email : ''}}"
+          },
+          {
+            "type": "string",
+            "name": "changed_at",
+            "value": "={{$json[\"changed\"]}}"
+          },
+          {
+            "type": "string",
+            "name": "currency",
+            "value": "={{$json[\"costs\"] && $json[\"costs\"].base_price ? $json[\"costs\"].base_price.currency : ''}}"
+          },
+          {
+            "type": "number",
+            "name": "gross_amount",
+            "value": "={{$json[\"costs\"] && $json[\"costs\"].gross && $json[\"costs\"].gross.major_value ? parseFloat($json[\"costs\"].gross.major_value) : 0}}"
+          },
+          {
+            "type": "number",
+            "name": "net_amount",
+            "value": "={{$json[\"costs\"] && $json[\"costs\"].gross && $json[\"costs\"].gross.major_value ? parseFloat($json[\"costs\"].gross.major_value) : 0}}"
+          },
+          {
+            "type": "boolean",
+            "name": "is_manual",
+            "value": "={{$json[\"is_manual\"]}}"
+          },
+          {
+            "type": "dateTime",
+            "name": "created_at",
+            "value": "={{$json[\"created\"]}}"
+          }
+        ],
+        "options": {}
+      },
+      "id": "9a31ad43-d036-4828-97ed-61c0a8368eb9",
+      "name": "Prepare Order Row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "eventbrite_orders",
+        "dataToSend": "autoMapInputData"
+      },
+      "id": "d0df6422-9c89-4c1b-9b6d-7d0b68f197f8",
+      "name": "Supabase Insert Order",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        336
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Register Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Order Events": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Fetch Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order": {
+      "main": [
+        [
+          {
+            "node": "Prepare Order Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Order Row": {
+      "main": [
+        [
+          {
+            "node": "Supabase Insert Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32ab8750-b467-43fb-b728-ef570eec3d61",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f7982260359ec38ac1c22ac6f7afe7d220775ffc19f83939f161a55b37bcebf7"
+  },
+  "id": "3qZz4I25AquOIS9K",
+  "tags": []
+}
