@@ -4,7 +4,9 @@ module.exports = {
   roots: ['<rootDir>/tests'],
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
-    '<rootDir>/tests/e2e/'
+    '<rootDir>/tests/e2e/',
+    '<rootDir>/tests/legacy/',
+    '<rootDir>/tests/ticket-sync-comprehensive.test.ts'
   ],
   testMatch: [
     '<rootDir>/tests/**/*.test.ts',

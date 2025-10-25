@@ -23,9 +23,13 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env file
+config({ path: path.resolve(__dirname, '../.env') });
 
 // Configuration
 const DB_URL = process.env.SUPABASE_DB_URL;
