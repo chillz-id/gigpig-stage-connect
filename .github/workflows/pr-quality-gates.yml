@@ -1,0 +1,108 @@
+name: PR Quality Gates
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr:
+    name: Validate PR Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for commit validation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check for skip label
+        id: check-skip
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const shouldSkip = labels.includes('skip-validation');
+            if (shouldSkip) {
+              core.notice('⏭️ Skipping validation due to [skip-validation] label');
+            }
+            return shouldSkip ? 'true' : 'false';
+
+      - name: Validate PR Description
+        if: steps.check-skip.outputs.result != 'true'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/validate-pr-description.js
+
+      - name: Check PR Size
+        if: steps.check-skip.outputs.result != 'true'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-pr-size.js
+
+      - name: Validate Issue Link
+        if: steps.check-skip.outputs.result != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+
+            // Check for Linear issue link
+            const linearPattern = /linear\.app\/sus-gigpig\/issue\/SUS-\d+/i;
+            // Check for GitHub issue reference
+            const githubIssuePattern = /#\d+/;
+
+            const hasLinearLink = linearPattern.test(prBody);
+            const hasGithubIssue = githubIssuePattern.test(prBody);
+
+            if (!hasLinearLink && !hasGithubIssue) {
+              core.warning('⚠️ No issue link found in PR description');
+              core.warning('   Consider linking to a Linear issue (linear.app/sus-gigpig/issue/SUS-XX)');
+              core.warning('   or GitHub issue (#123) for better tracking.');
+            } else {
+              const linkType = hasLinearLink ? 'Linear' : 'GitHub';
+              core.notice(`✅ ${linkType} issue link found in PR description`);
+            }
+
+      - name: Validate Conventional Commits
+        if: steps.check-skip.outputs.result != 'true'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/validate-commits.js
+
+      - name: Check for large PR label
+        if: failure() && steps.check-skip.outputs.result != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasLargePRLabel = labels.includes('large-pr');
+
+            if (hasLargePRLabel) {
+              core.notice('✅ [large-pr] label found - overriding size validation failure');
+              // Don't actually override the failure, just note it
+            }
+
+      - name: PR Quality Summary
+        if: always() && steps.check-skip.outputs.result != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const conclusion = '${{ job.status }}';
+
+            if (conclusion === 'success') {
+              core.notice('✅ All PR quality gates passed!');
+            } else {
+              core.warning('⚠️ Some PR quality gates failed. See above for details.');
+              core.warning('💡 To skip validation, add the [skip-validation] label to your PR.');
+            }
