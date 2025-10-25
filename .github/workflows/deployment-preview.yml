@@ -1,0 +1,118 @@
+name: Deployment Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  comment-preview:
+    name: Comment Vercel Preview URL
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for Vercel Deployment
+        id: wait-for-deploy
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          check_interval: 10
+
+      - name: Get deployment URL
+        id: get-url
+        run: |
+          echo "url=${{ steps.wait-for-deploy.outputs.url }}" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const deploymentUrl = '${{ steps.get-url.outputs.url }}';
+            const commitSha = context.payload.pull_request.head.sha.substring(0, 7);
+
+            // Comment body with QA checklist
+            const commentBody = `## 🚀 Deployment Preview Ready!
+
+**Preview URL**: ${deploymentUrl}
+
+### QA Checklist
+Please verify the following before merging:
+
+- [ ] Preview deployment loads without errors
+- [ ] All interactive features work correctly
+- [ ] No console errors in browser DevTools
+- [ ] Mobile responsiveness looks good
+- [ ] Authentication flows work (if applicable)
+- [ ] Database queries return expected results
+
+### Deployment Info
+- **Commit**: \`${commitSha}\`
+- **Branch**: \`${context.payload.pull_request.head.ref}\`
+- **Deploy time**: ${new Date().toISOString()}
+
+---
+*This preview will be automatically updated when you push new commits.*`;
+
+            // Find existing comment from this workflow
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('## 🚀 Deployment Preview Ready!')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody,
+              });
+              core.notice('✅ Updated existing deployment preview comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody,
+              });
+              core.notice('✅ Created deployment preview comment');
+            }
+
+      - name: Check deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.get-url.outputs.url }}';
+
+            if (!deploymentUrl || deploymentUrl === '') {
+              core.setFailed('❌ Vercel deployment failed or timed out');
+              return;
+            }
+
+            // Verify deployment is accessible
+            try {
+              const response = await fetch(deploymentUrl, {
+                method: 'HEAD',
+                redirect: 'follow',
+              });
+
+              if (response.ok) {
+                core.notice(`✅ Deployment verified: ${deploymentUrl}`);
+              } else {
+                core.warning(`⚠️ Deployment returned status ${response.status}`);
+              }
+            } catch (error) {
+              core.warning(`⚠️ Could not verify deployment: ${error.message}`);
+            }
