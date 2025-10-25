@@ -110,6 +110,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          PORT: 8083
         run: npx playwright test tests/e2e/smoke.test.ts --project=chromium --reporter=github
 
       - name: Upload test results
