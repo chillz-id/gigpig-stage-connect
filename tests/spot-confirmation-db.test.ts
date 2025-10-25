@@ -1,22 +1,24 @@
 import { test, expect } from '@playwright/test';
 import { supabase } from '../src/integrations/supabase/client';
+import { randomUUID } from 'crypto';
 
 test.describe('Spot Confirmation Database Operations', () => {
-  let testEventId: string;
-  let testComedianId: string;
-  let testPromoterId: string;
-  let testApplicationId: string;
-  let testSpotId: string;
+  let testEventId!: string;
+  let testComedianId!: string;
+  let testPromoterId!: string;
+  let testApplicationId!: string;
+  let testSpotId!: string;
 
   test.beforeAll(async () => {
     // Create test data in database
     console.log('Setting up database test data...');
-    
+
     // Create test promoter profile
+    const promoterId = randomUUID();
     const { data: promoterData, error: promoterError } = await supabase
       .from('profiles')
       .insert({
-        id: 'test-promoter-' + Date.now(),
+        id: promoterId,
         email: 'test-promoter@example.com',
         name: 'Test Promoter',
         phone: '+61412345678'
@@ -24,18 +26,18 @@ test.describe('Spot Confirmation Database Operations', () => {
       .select()
       .single();
 
-    if (promoterError) {
-      console.error('Error creating promoter:', promoterError);
-    } else {
-      testPromoterId = promoterData.id;
-      console.log('Created test promoter:', testPromoterId);
+    if (promoterError || !promoterData) {
+      throw new Error(`Failed to create test promoter: ${promoterError?.message}`);
     }
+    testPromoterId = promoterData.id;
+    console.log('Created test promoter:', testPromoterId);
 
     // Create test comedian profile
+    const comedianId = randomUUID();
     const { data: comedianData, error: comedianError } = await supabase
       .from('profiles')
       .insert({
-        id: 'test-comedian-' + Date.now(),
+        id: comedianId,
         email: 'test-comedian@example.com',
         name: 'Test Comedian',
         stage_name: 'The Test Comic',
@@ -44,25 +46,24 @@ test.describe('Spot Confirmation Database Operations', () => {
       .select()
       .single();
 
-    if (comedianError) {
-      console.error('Error creating comedian:', comedianError);
-    } else {
-      testComedianId = comedianData.id;
-      console.log('Created test comedian:', testComedianId);
+    if (comedianError || !comedianData) {
+      throw new Error(`Failed to create test comedian: ${comedianError?.message}`);
     }
+    testComedianId = comedianData.id;
+    console.log('Created test comedian:', testComedianId);
 
     // Create test event
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+    const eventDate = tomorrow.toISOString().split('T')[0]!;
+
     const { data: eventData, error: eventError } = await supabase
       .from('events')
       .insert({
-        id: 'test-event-' + Date.now(),
         title: 'Test Spot Confirmation Event',
         venue: 'Test Venue',
         address: '123 Test Street, Sydney NSW 2000',
-        event_date: tomorrow.toISOString().split('T')[0],
+        event_date: eventDate,
         start_time: '19:00',
         end_time: '21:00',
         promoter_id: testPromoterId,
@@ -73,12 +74,11 @@ test.describe('Spot Confirmation Database Operations', () => {
       .select()
       .single();
 
-    if (eventError) {
-      console.error('Error creating event:', eventError);
-    } else {
-      testEventId = eventData.id;
-      console.log('Created test event:', testEventId);
+    if (eventError || !eventData) {
+      throw new Error(`Failed to create test event: ${eventError?.message}`);
     }
+    testEventId = eventData.id;
+    console.log('Created test event:', testEventId);
 
     // Create event spots
     const { data: spotData, error: spotError } = await supabase
@@ -117,12 +117,11 @@ test.describe('Spot Confirmation Database Operations', () => {
       ])
       .select();
 
-    if (spotError) {
-      console.error('Error creating spots:', spotError);
-    } else {
-      testSpotId = spotData[0].id;
-      console.log('Created test spots:', spotData.length);
+    if (spotError || !spotData || spotData.length === 0) {
+      throw new Error(`Failed to create test spots: ${spotError?.message}`);
     }
+    testSpotId = spotData[0]!.id;
+    console.log('Created test spots:', spotData.length);
   });
 
   test('Application approval assigns spot correctly', async () => {
@@ -143,8 +142,11 @@ test.describe('Spot Confirmation Database Operations', () => {
 
       expect(applicationError).toBeNull();
       expect(applicationData).toBeDefined();
+      if (!applicationData) {
+        throw new Error('Failed to create application');
+      }
       testApplicationId = applicationData.id;
-      
+
       console.log('Created application:', testApplicationId);
     });
 
@@ -184,9 +186,12 @@ test.describe('Spot Confirmation Database Operations', () => {
         .single();
 
       expect(spotError).toBeNull();
+      if (!spotData) {
+        throw new Error('Failed to retrieve spot data');
+      }
       expect(spotData.comedian_id).toBe(testComedianId);
       expect(spotData.is_filled).toBe(true);
-      
+
       console.log('Spot assignment verified');
     });
   });
@@ -225,9 +230,15 @@ test.describe('Spot Confirmation Database Operations', () => {
 
       expect(notificationError).toBeNull();
       expect(notifications).toBeDefined();
+      if (!notifications || notifications.length === 0) {
+        throw new Error('No notifications found');
+      }
       expect(notifications.length).toBeGreaterThan(0);
-      
+
       const notification = notifications[0];
+      if (!notification) {
+        throw new Error('Notification is undefined');
+      }
       expect(notification.title).toBe('Spot Confirmed');
       expect(notification.read_at).toBeNull();
       
@@ -258,12 +269,16 @@ test.describe('Spot Confirmation Database Operations', () => {
         .eq('id', testEventId)
         .single();
 
+      if (!eventData) {
+        throw new Error('Failed to retrieve event data');
+      }
+
       const { data: calendarData, error: calendarError } = await supabase
         .from('calendar_events')
         .insert({
           comedian_id: testComedianId,
           event_id: testEventId,
-          title: eventData.title,
+          title: eventData.title || 'Event',
           venue: eventData.venue,
           event_date: eventData.event_date,
           status: 'confirmed',
@@ -296,7 +311,10 @@ test.describe('Spot Confirmation Database Operations', () => {
         .single();
 
       expect(applicationError).toBeNull();
-      
+      if (!applicationData) {
+        throw new Error('Failed to create application');
+      }
+
       // Assign to Feature spot
       const { error: spotUpdateError } = await supabase
         .from('event_spots')
@@ -338,6 +356,9 @@ test.describe('Spot Confirmation Database Operations', () => {
         .single();
 
       expect(spotError).toBeNull();
+      if (!spotData) {
+        throw new Error('Failed to retrieve spot data');
+      }
       expect(spotData.comedian_id).toBeNull();
       expect(spotData.is_filled).toBe(false);
       
@@ -404,8 +425,11 @@ test.describe('Spot Confirmation Database Operations', () => {
 
       expect(notificationError).toBeNull();
       expect(notifications).toBeDefined();
+      if (!notifications || notifications.length < 2) {
+        throw new Error('Expected at least 2 notifications');
+      }
       expect(notifications.length).toBeGreaterThanOrEqual(2);
-      
+
       const confirmNotification = notifications.find(n => n.title.includes('Confirmed'));
       const declineNotification = notifications.find(n => n.title.includes('Declined'));
       
