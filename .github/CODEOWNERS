@@ -1,0 +1,33 @@
+# Code Owners for Stand Up Sydney
+# These owners will be automatically requested for review when PRs modify these paths
+# Prevents accidental changes to critical infrastructure
+
+# Database migrations - require review to prevent data loss
+/supabase/migrations/ @chillz-id
+
+# Critical scripts - migration safety, webhooks, automation
+/scripts/safe-migrate.js @chillz-id
+/scripts/webhook-*.js @chillz-id
+/scripts/humanitix-*.js @chillz-id
+/scripts/eventbrite-*.js @chillz-id
+
+# GitHub workflows - prevent CI/CD breakage
+/.github/ @chillz-id
+
+# Core API services - authentication, payments, integrations
+/src/services/api/ @chillz-id
+/src/services/stripe/ @chillz-id
+/src/services/xero/ @chillz-id
+/src/services/humanitix/ @chillz-id
+/src/services/eventbrite/ @chillz-id
+
+# Authentication contexts - prevent auth bypass or security issues
+/src/contexts/AuthContext.tsx @chillz-id
+/src/contexts/UserContext.tsx @chillz-id
+
+# Environment and configuration - prevent secret leaks
+.env* @chillz-id
+/src/config/ @chillz-id
+
+# N8N workflows (stored outside this repo but tracked)
+/n8n/ @chillz-id
