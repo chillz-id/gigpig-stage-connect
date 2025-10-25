@@ -182,18 +182,68 @@ pg_restore --dbname="$SUPABASE_DB_URL" backups/pre-migrate-2025-10-25T14-30-00-0
 # Replace all instances of @chillz-id with your actual GitHub username
 ```
 
-### Step 2: Add GitHub Secrets
+### Step 2: Add GitHub Secrets ✅ AUTOMATED
+**Status**: ✅ **COMPLETED AUTOMATICALLY** via gh CLI
+
+The following GitHub Actions secrets were added automatically using `gh secret set`:
+- ✅ `VITE_SUPABASE_URL` - https://pdikjpfulhhpqpxzpgtu.supabase.co
+- ✅ `VITE_SUPABASE_ANON_KEY` - (anon key encrypted)
+
+**Verification**:
+```bash
+gh secret list --repo chillz-id/gigpig-stage-connect
+```
+
+**Manual alternative** (if needed):
 Go to GitHub repo → Settings → Secrets and variables → Actions → New repository secret
 
-**Required Secrets**:
-- `VITE_SUPABASE_URL` - Your Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Your Supabase anon key
+### Step 2b: Vercel Environment Variables ✅ AUTOMATED
+**Status**: ✅ **ALREADY CONFIGURED** (120 days ago)
 
-**To get these values**:
+Vercel environment variables are already synced to all environments:
+- ✅ Production: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- ✅ Preview: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- ✅ Development: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+
+**Verification**:
 ```bash
-# From your .env.local file
-cat .env.local | grep VITE_SUPABASE
+vercel env ls --token $VERCEL_TOKEN
 ```
+
+### Step 2c: Automated Sync Script ✅ CREATED
+**Status**: ✅ **READY TO USE**
+
+Created `scripts/sync-env-vars.sh` for future environment variable management:
+
+**Features**:
+- 🔄 Syncs .env variables to GitHub Actions secrets (via gh CLI)
+- 🔄 Syncs .env variables to Vercel environments (production, preview, development)
+- 🧪 Dry-run mode to preview changes
+- ✅ Validates authentication before syncing
+- 📋 Clear output showing what was synced
+
+**Usage**:
+```bash
+# Dry-run (preview changes)
+DRY_RUN=true ./scripts/sync-env-vars.sh
+
+# Sync to GitHub and Vercel
+./scripts/sync-env-vars.sh
+```
+
+**Variables synced**:
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+- VITE_GOOGLE_MAPS_API_KEY
+- VITE_APP_URL
+- VITE_XERO_CLIENT_ID
+- VITE_XERO_CLIENT_SECRET
+- VITE_RESEND_API_KEY
+- VITE_RESEND_FROM_EMAIL
+- VITE_GOOGLE_CLIENT_ID
+- VITE_OAUTH_REDIRECT_URL1
+- VITE_ENVIRONMENT
+- VITE_GTM_ID
 
 ### Step 3: Enable Branch Protection (CRITICAL)
 Go to GitHub repo → Settings → Branches → Add rule
@@ -280,13 +330,17 @@ git push origin dev
       └── ci.yml                     # Automated CI checks (lint, test, build, migrations)
 
 scripts/
-  └── safe-migrate.js                # Safe migration with backup, locking, guards
+  ├── safe-migrate.js                # Safe migration with backup, locking, guards
+  └── sync-env-vars.sh               # ✨ NEW: Automated env var sync to GitHub & Vercel
 
 backups/                             # Created automatically on first migration
   └── (migration backups stored here)
 
 package.json                         # Added migrate:safe and migrate:dry-run scripts
 package-lock.json                    # Added pg dependency
+
+.vercel/
+  └── project.json                   # Vercel project link (auto-generated)
 ```
 
 ---
@@ -295,19 +349,26 @@ package-lock.json                    # Added pg dependency
 
 Before considering Phase 1 complete:
 
+**Phase 1 Core Implementation**:
 - [x] CODEOWNERS file created
 - [x] PR template created with rollback section
 - [x] Safe migration script created
 - [x] CI workflow created
 - [x] npm scripts added (`migrate:safe`, `migrate:dry-run`)
 - [x] pg dependency installed
-- [ ] CODEOWNERS updated with actual GitHub username
-- [ ] GitHub secrets added (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+
+**Automated Setup (Completed)**:
+- [x] CODEOWNERS uses correct GitHub username (@chillz-id)
+- [x] GitHub secrets added automatically (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+- [x] Vercel environment variables verified (already configured 120 days ago)
+- [x] Automated sync script created (scripts/sync-env-vars.sh)
+- [x] All Phase 1 files committed to git (commit c7b2bdbe)
+
+**Remaining Manual Steps**:
 - [ ] Branch protection enabled on `main`
 - [ ] Branch protection enabled on `dev`
-- [ ] SUPABASE_DB_URL set in local .env.local
+- [ ] SUPABASE_DB_URL set in local .env (for migration testing)
 - [ ] Safe migration script tested locally (dry-run)
-- [ ] All files committed to git
 - [ ] First PR created to test workflow
 - [ ] CI runs successfully on PR
 - [ ] PR template appears correctly
