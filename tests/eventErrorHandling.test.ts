@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { parseEventError, validateEventData } from '../src/utils/eventErrorHandling';
 import { PostgrestError } from '@supabase/supabase-js';
 
@@ -6,6 +6,7 @@ describe('Event Error Handling', () => {
   describe('parseEventError', () => {
     it('should parse unique constraint violation correctly', () => {
       const error: PostgrestError = {
+        name: 'PostgrestError',
         code: '23505',
         message: 'duplicate key value violates unique constraint',
         details: 'Key (title, event_date, venue)=(Comedy Night, 2024-03-20, The Venue) already exists.',
@@ -21,6 +22,7 @@ describe('Event Error Handling', () => {
 
     it('should parse foreign key violation correctly', () => {
       const error: PostgrestError = {
+        name: 'PostgrestError',
         code: '23503',
         message: 'insert or update on table "events" violates foreign key constraint',
         details: 'Key (venue_id)=(invalid-id) is not present in table "venues".',
@@ -56,6 +58,7 @@ describe('Event Error Handling', () => {
 
     it('should handle permission errors as non-recoverable', () => {
       const error: PostgrestError = {
+        name: 'PostgrestError',
         code: '42501',
         message: 'permission denied',
         details: '',

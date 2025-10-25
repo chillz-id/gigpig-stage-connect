@@ -122,14 +122,14 @@ describe('Invoice UI Components Test Suite', () => {
     });
 
     mockUseInvoiceOperations.mockReturnValue({
-      createInvoice: { mutate: jest.fn(), isLoading: false },
-      createFromTicketSales: { mutate: jest.fn(), isLoading: false },
-      syncToXero: { mutate: jest.fn(), isLoading: false },
-      recordPayment: { mutate: jest.fn(), isLoading: false },
+      createInvoice: { mutate: jest.fn(), isPending: false },
+      createFromTicketSales: { mutate: jest.fn(), isPending: false },
+      syncToXero: { mutate: jest.fn(), isPending: false },
+      recordPayment: { mutate: jest.fn(), isPending: false },
       connectToXero: jest.fn(),
-      syncFromXero: { mutate: jest.fn(), isLoading: false },
-      generateRecurringInvoices: { mutate: jest.fn(), isLoading: false },
-      checkOverdueInvoices: { mutate: jest.fn(), isLoading: false }
+      syncFromXero: { mutate: jest.fn(), isPending: false },
+      generateRecurringInvoices: { mutate: jest.fn(), isPending: false },
+      checkOverdueInvoices: { mutate: jest.fn(), isPending: false }
     });
   });
 
@@ -450,7 +450,7 @@ describe('Invoice UI Components Test Suite', () => {
       const mockSyncToXero = jest.fn();
       mockUseInvoiceOperations.mockReturnValue({
         ...mockUseInvoiceOperations(),
-        syncToXero: { mutate: mockSyncToXero, isLoading: false }
+        syncToXero: { mutate: mockSyncToXero, isPending: false }
       });
 
       render(
@@ -473,7 +473,7 @@ describe('Invoice UI Components Test Suite', () => {
     test('should show loading state during Xero sync', () => {
       mockUseInvoiceOperations.mockReturnValue({
         ...mockUseInvoiceOperations(),
-        syncToXero: { mutate: jest.fn(), isLoading: true }
+        syncToXero: { mutate: jest.fn(), isPending: true }
       });
 
       render(
@@ -518,7 +518,7 @@ describe('Invoice UI Components Test Suite', () => {
       const mockRecordPayment = jest.fn();
       mockUseInvoiceOperations.mockReturnValue({
         ...mockUseInvoiceOperations(),
-        recordPayment: { mutate: mockRecordPayment, isLoading: false }
+        recordPayment: { mutate: mockRecordPayment, isPending: false }
       });
 
       const transformedInvoice = {

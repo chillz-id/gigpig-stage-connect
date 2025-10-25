@@ -60,7 +60,9 @@ export default defineConfig(({ mode }) => ({
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `assets/js/${facadeModuleId}-[hash].js`;
+          // Sanitize filename to remove invalid characters (colon, quotes, <, >, |, *, ?, \r, \n)
+          const sanitized = facadeModuleId.replace(/[:"<>|*?\r\n]/g, '-');
+          return `assets/js/${sanitized}-[hash].js`;
         },
       },
     },
