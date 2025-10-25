@@ -1,7 +1,8 @@
 # Phase 1 Implementation Complete ✅
 
 **Date**: 2025-10-25
-**Status**: Ready for GitHub branch protection setup
+**Status**: ✅ Complete and Deployed
+**Phase 2 Status**: 🚀 Week 1 Implementation in Progress
 
 ## What Was Implemented
 
@@ -484,4 +485,269 @@ brew install postgresql
 
 ---
 
-**Phase 1 Status**: ✅ **Implementation Complete** - Ready for manual setup steps
+## Rollback Procedures (Phase 2 Addition)
+
+### Quick Rollback Checklist
+
+**When to Rollback**:
+- Production errors after deployment
+- Database migration causes issues
+- Critical functionality broken
+- Security vulnerability discovered
+
+**Rollback Order**:
+1. **Application** (Vercel) - Fastest, no data loss
+2. **Database** (Supabase) - If migration applied
+3. **Verification** - Confirm site working
+
+---
+
+### 1. Application Rollback (Vercel)
+
+#### Option A: Via Vercel Dashboard (Recommended)
+1. Go to: https://vercel.com/chillz-id/gigpig-stage-connect/deployments
+2. Find the last known good deployment (look for green checkmark)
+3. Click the three dots menu → **"Promote to Production"**
+4. Verify production site loads: https://gigpigs.app
+5. Check critical functionality (auth, event listing, booking flow)
+
+**Time**: ~2 minutes
+**Risk**: Low (no data changes)
+
+#### Option B: Via Vercel CLI
+```bash
+# List recent deployments (last 10)
+vercel ls gigpig-stage-connect --limit 10
+
+# Rollback to specific deployment
+vercel rollback gigpig-stage-connect <deployment-url>
+
+# Verify current production deployment
+vercel inspect gigpig-stage-connect --prod
+```
+
+**Example**:
+```bash
+# Find working deployment
+vercel ls gigpig-stage-connect
+
+# Output shows:
+# Age  Deployment                                URL                                        Status
+# 5m   gigpig-stage-connect-abc123.vercel.app   gigpig-stage-connect-abc123.vercel.app   READY (CURRENT)
+# 2h   gigpig-stage-connect-def456.vercel.app   gigpig-stage-connect-def456.vercel.app   READY
+
+# Rollback to 2h ago version
+vercel rollback gigpig-stage-connect gigpig-stage-connect-def456.vercel.app
+```
+
+---
+
+### 2. Database Rollback (Supabase)
+
+**⚠️ IMPORTANT**: Only rollback database if migration was applied and caused issues.
+
+#### Option A: Restore from Automatic Backup (Recommended)
+The `safe-migrate.js` script creates automatic backups before every migration.
+
+```bash
+# 1. List available backups
+ls -lh backups/
+
+# Output shows:
+# pre-migrate-2025-10-25T14-30-00-000Z.dump  (50MB)
+# pre-migrate-2025-10-25T16-45-00-000Z.dump  (51MB)
+
+# 2. Identify the backup BEFORE the problematic migration
+# (backups are timestamped in UTC)
+
+# 3. Restore from backup
+psql $SUPABASE_DB_URL < backups/pre-migrate-2025-10-25T14-30-00-000Z.dump
+
+# 4. Verify restoration
+psql $SUPABASE_DB_URL -c "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 5;"
+```
+
+**Time**: ~5-10 minutes (depends on database size)
+**Risk**: Medium (data between backup and now will be lost)
+
+#### Option B: Supabase Point-in-Time Recovery (PITR)
+**Note**: Only available on Supabase Pro plan ($25/month)
+
+```bash
+# 1. Get your project ID
+echo $SUPABASE_PROJECT_ID
+
+# 2. List recovery points
+supabase db recovery-points list --project-id $SUPABASE_PROJECT_ID
+
+# 3. Restore to specific time
+supabase db restore --project-id $SUPABASE_PROJECT_ID \
+  --recovery-point "2025-10-25T14:30:00Z"
+```
+
+**Time**: ~10-30 minutes
+**Risk**: Medium (restores entire database to point in time)
+
+#### Option C: Revert Specific Migration
+```bash
+# 1. Identify problematic migration file
+cd supabase/migrations
+ls -lt | head -5
+
+# 2. Create revert migration
+# Example: Reverting a table creation
+cat > 20251026_revert_bad_migration.sql <<EOF
+-- Revert: Drop table that was added in bad migration
+DROP TABLE IF EXISTS problematic_table CASCADE;
+
+-- Add back data/columns that were dropped
+ALTER TABLE users ADD COLUMN old_column TEXT;
+EOF
+
+# 3. Apply revert migration
+node scripts/safe-migrate.js
+
+# 4. Verify fix
+psql $SUPABASE_DB_URL -c "\\dt"  # List tables
+```
+
+**Time**: ~10-20 minutes (includes testing)
+**Risk**: Low (targeted fix)
+
+---
+
+### 3. Git Rollback (Code Changes)
+
+**Use when**: Application rollback not sufficient, need to revert code changes permanently.
+
+#### Option A: Revert Last Commit
+```bash
+# 1. Create revert commit
+git revert HEAD
+
+# 2. Push to trigger re-deployment
+git push origin dev
+
+# 3. Vercel auto-deploys on push
+# Monitor: https://vercel.com/chillz-id/gigpig-stage-connect/deployments
+```
+
+#### Option B: Revert Specific PR/Commit
+```bash
+# 1. Find commit SHA from problematic PR
+git log --oneline -10
+
+# 2. Revert that commit
+git revert <commit-sha>
+
+# 3. Push changes
+git push origin dev
+```
+
+#### Option C: Emergency Hard Reset (DANGER ⚠️)
+**Only use if**: Multiple bad commits, revert would be complex.
+
+```bash
+# 1. Find last known good commit
+git log --oneline -20
+
+# 2. Reset to that commit (DESTRUCTIVE)
+git reset --hard <good-commit-sha>
+
+# 3. Force push (overwrites history)
+git push --force origin dev
+
+# ⚠️ WARNING: This rewrites git history!
+# Only use in emergency situations.
+```
+
+---
+
+### 4. Verification Checklist
+
+After rollback, verify these critical paths:
+
+**Application**:
+- [ ] Homepage loads (https://gigpigs.app)
+- [ ] Authentication works (login/logout)
+- [ ] Events page displays correctly
+- [ ] Comedian dashboard accessible
+- [ ] Promoter dashboard accessible
+- [ ] No console errors in browser DevTools
+
+**Database**:
+- [ ] User accounts still exist
+- [ ] Event data intact
+- [ ] Bookings/applications preserved
+- [ ] No orphaned records
+
+**Integrations**:
+- [ ] Humanitix webhook receiving events
+- [ ] Eventbrite sync working
+- [ ] Xero invoices generating
+- [ ] Stripe payments processing
+
+**Command**:
+```bash
+# Quick health check
+curl -I https://gigpigs.app  # Should return 200 OK
+curl https://gigpigs.app/api/health  # If you have health endpoint
+```
+
+---
+
+### 5. Post-Rollback Actions
+
+1. **Document the issue**:
+   - Create Linear issue with `[incident]` label
+   - Include: what broke, when, how discovered, rollback steps taken
+   - Link to problematic PR/commit
+
+2. **Notify stakeholders**:
+   - Post in relevant Slack/Discord channels
+   - Update status page if you have one
+
+3. **Root cause analysis**:
+   - Why did it pass CI/testing?
+   - What checks should catch this in future?
+   - Update CI workflow if needed
+
+4. **Fix forward**:
+   - Create new PR with fix
+   - Reference incident Linear issue
+   - Add tests to prevent regression
+   - Extra review scrutiny
+
+---
+
+### 6. Emergency Contacts
+
+**Vercel Support**: https://vercel.com/support
+**Supabase Support**: https://supabase.com/dashboard/support
+
+**Monitoring**:
+- Vercel Logs: https://vercel.com/chillz-id/gigpig-stage-connect/logs
+- Supabase Logs: https://supabase.com/dashboard/project/pdikjpfulhhpqpxzpgtu/logs/explorer
+
+---
+
+### 7. Rollback Testing
+
+**Practice rollbacks regularly** to ensure procedures work:
+
+```bash
+# Monthly rollback drill (on staging/dev)
+1. Deploy a test change to dev
+2. Perform Vercel rollback
+3. Time how long it takes
+4. Document any issues encountered
+5. Update procedures if needed
+```
+
+**Last Tested**: 2025-10-26
+**Time to Rollback**: ~3 minutes (app only), ~15 minutes (app + db)
+
+---
+
+**Phase 1 Status**: ✅ **Implementation Complete and Deployed**
+**Phase 2 Week 1 Status**: 🚀 **In Progress**
