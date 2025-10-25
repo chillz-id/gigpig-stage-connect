@@ -1,8 +1,8 @@
-const fromMock = jest.fn();
+const analyticsFromMock = jest.fn();
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    from: analyticsFromMock,
   },
 }));
 
@@ -25,7 +25,7 @@ describe('crmAnalyticsService', () => {
   };
 
   it('aggregates analytics data returned from Supabase', async () => {
-    fromMock.mockImplementation((table: string) => {
+    analyticsFromMock.mockImplementation((table: string) => {
       if (table === 'customers') {
         return {
           select: jest.fn(() => ({
@@ -112,7 +112,7 @@ describe('crmAnalyticsService', () => {
   });
 
   it('propagates Supabase errors', async () => {
-    fromMock.mockImplementation((table: string) => {
+    analyticsFromMock.mockImplementation((table: string) => {
       if (table === 'customers') {
         return {
           select: jest.fn(() => ({

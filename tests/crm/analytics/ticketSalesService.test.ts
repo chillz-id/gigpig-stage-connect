@@ -1,8 +1,8 @@
-const fromMock = jest.fn();
+const ticketSalesFromMock = jest.fn();
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    from: ticketSalesFromMock,
   },
 }));
 
@@ -20,11 +20,11 @@ describe('ticketSalesService', () => {
       order: orderMock,
     };
     const selectMock = jest.fn(() => queryBuilder);
-    fromMock.mockReturnValue({ select: selectMock });
+    ticketSalesFromMock.mockReturnValue({ select: selectMock });
 
     const results = await ticketSalesService.list('event-1');
 
-    expect(fromMock).toHaveBeenCalledWith('ticket_sales');
+    expect(ticketSalesFromMock).toHaveBeenCalledWith('ticket_sales');
     expect(queryBuilder.eq).toHaveBeenCalledWith('event_id', 'event-1');
     expect(results).toHaveLength(1);
   });
@@ -33,7 +33,7 @@ describe('ticketSalesService', () => {
     const successSingle: any = jest.fn(() => ({ data: { id: 'sale-2' }, error: null }));
     const successSelect: any = jest.fn(() => ({ single: successSingle }));
     const insertMock: any = jest.fn(() => ({ select: successSelect }));
-    fromMock.mockReturnValue({ insert: insertMock });
+    ticketSalesFromMock.mockReturnValue({ insert: insertMock });
 
     const created = await ticketSalesService.create({
       event_id: 'event-2',
@@ -62,7 +62,7 @@ describe('ticketSalesService', () => {
       select: jest.fn(() => ({ single: jest.fn(() => ({ data: { id: 'sale-3', total_amount: 50 }, error: null })) })),
     } as any;
     const updateMock = jest.fn(() => updateBuilder);
-    fromMock.mockReturnValue({ update: updateMock });
+    ticketSalesFromMock.mockReturnValue({ update: updateMock });
 
     const updated = await ticketSalesService.update('sale-3', { refund_status: 'refunded' });
     expect(updated).toEqual({ id: 'sale-3', total_amount: 50 });

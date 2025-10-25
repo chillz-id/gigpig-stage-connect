@@ -1,8 +1,8 @@
-const fromMock = jest.fn();
+const eventFromMock = jest.fn();
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    from: eventFromMock,
   },
 }));
 
@@ -21,11 +21,11 @@ describe('eventService', () => {
       limit: limitMock,
     };
     const selectMock = jest.fn(() => queryBuilder);
-    fromMock.mockReturnValue({ select: selectMock });
+    eventFromMock.mockReturnValue({ select: selectMock });
 
     const sessions = await eventService.listUpcomingSessions(5);
 
-    expect(fromMock).toHaveBeenCalledWith('session_financials');
+    expect(eventFromMock).toHaveBeenCalledWith('session_financials');
     expect(selectMock).toHaveBeenCalled();
     expect(sessions).toHaveLength(1);
   });
@@ -38,7 +38,7 @@ describe('eventService', () => {
       limit: jest.fn(() => ({ data: null, error: failure })),
     };
     const selectMock = jest.fn(() => queryBuilder);
-    fromMock.mockReturnValue({ select: selectMock });
+    eventFromMock.mockReturnValue({ select: selectMock });
 
     await expect(eventService.listUpcomingSessions()).rejects.toThrow('bad query');
   });
