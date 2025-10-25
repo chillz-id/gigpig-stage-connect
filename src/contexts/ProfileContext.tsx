@@ -175,3 +175,31 @@ export function useProfile() {
   }
   return context;
 }
+
+/**
+ * Helper type for base profile types
+ */
+export type BaseProfileType = ProfileTypeValue;
+
+/**
+ * Check if a profile type string represents an organization profile
+ * Organization profiles are in the format: "agency_<id>" or "venue_<id>"
+ */
+export function isOrganizationProfile(profileType: string): boolean {
+  return profileType.startsWith('agency_') || profileType.startsWith('venue_');
+}
+
+/**
+ * Extract organization ID from an organization profile type string
+ * @param profileType - Profile type string in format "agency_<id>" or "venue_<id>"
+ * @returns Organization ID or null if not an organization profile
+ */
+export function getOrganizationId(profileType: string): string | null {
+  if (!isOrganizationProfile(profileType)) {
+    return null;
+  }
+
+  // Extract ID from format like "agency_uuid" or "venue_uuid"
+  const parts = profileType.split('_');
+  return parts.slice(1).join('_') || null; // Join in case UUID has underscores
+}
