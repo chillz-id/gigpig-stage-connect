@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   eventApplicationService,
   type EventApplication,
-} from '@/services/event';
+} from '@/services/event/index';
 import type { ApplicationInsert, ApplicationUpdate } from '@/types/application';
 
 export const useEventApplications = (eventId?: string) => {
