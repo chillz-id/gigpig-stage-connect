@@ -9,10 +9,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarTrigger,
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useUserBranding } from '@/hooks/useUserBranding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -21,7 +25,8 @@ import { useUpcomingGigs } from '@/hooks/useUpcomingGigs';
 import { useSidebarPreferences } from '@/hooks/useSidebarPreferences';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { MENU_ITEMS, SECTION_LABELS, type UserRole, type MenuItem } from '@/config/sidebarMenuItems';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface UnifiedSidebarProps {
   activeProfile?: string;
@@ -157,11 +162,144 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  // Render a menu item
-  const renderMenuItem = (item: MenuItem) => {
+  // Track expanded state for nested items
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['profile']));
+
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  // Recursively filter children based on role and permissions
+  const filterChildren = (children: MenuItem[] | undefined): MenuItem[] => {
+    if (!children) return [];
+
+    return children.filter((child) => {
+      // Check if user's role is in the allowed roles
+      if (!child.roles.includes(primaryRole)) {
+        if (!hasAdminAccess) return false;
+      }
+
+      // Check if item requires special permissions
+      if (child.requiresPermission && !child.requiresPermission(permissions)) {
+        return false;
+      }
+
+      // Check if item is hidden by user preference
+      if (isItemHidden(child.id)) {
+        return false;
+      }
+
+      return true;
+    }).map((child) => ({
+      ...child,
+      children: filterChildren(child.children),
+    }));
+  };
+
+  // Render a menu item (with support for nested children)
+  const renderMenuItem = (item: MenuItem, depth: number = 0): React.ReactNode => {
     const badge = item.getBadge?.(badgeData);
     const active = isActive(item.path);
+    const filteredChildren = filterChildren(item.children);
+    const hasChildren = filteredChildren.length > 0;
+    const isExpanded = expandedItems.has(item.id);
 
+    // Check if any child is active
+    const hasActiveChild = filteredChildren.some((child) =>
+      isActive(child.path) || (child.children && child.children.some((c) => isActive(c.path)))
+    );
+
+    // External link
+    if (item.external) {
+      return (
+        <SidebarMenuItem key={item.id}>
+          <SidebarMenuButton
+            asChild
+            tooltip={item.label}
+            className="text-gray-100 hover:bg-gray-800"
+          >
+            <a
+              href={item.path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between w-full"
+            >
+              <div className="flex items-center gap-2">
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </div>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    }
+
+    // Item with children
+    if (hasChildren) {
+      return (
+        <Collapsible
+          key={item.id}
+          open={isExpanded}
+          onOpenChange={() => toggleExpanded(item.id)}
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                isActive={active || hasActiveChild}
+                tooltip={item.label}
+                className={
+                  active || hasActiveChild
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'text-gray-100 hover:bg-gray-800'
+                }
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {badge && (
+                      <Badge
+                        className={`text-xs ${
+                          badge.variant === 'destructive'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : badge.variant === 'secondary'
+                            ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                            : 'bg-gray-500 hover:bg-gray-600 text-white'
+                        }`}
+                      >
+                        {badge.count}
+                      </Badge>
+                    )}
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {filteredChildren.map((child) => renderNestedItem(child, depth + 1))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      );
+    }
+
+    // Regular item without children
     return (
       <SidebarMenuItem key={item.id}>
         <SidebarMenuButton
@@ -195,6 +333,106 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
+    );
+  };
+
+  // Render nested menu items
+  const renderNestedItem = (item: MenuItem, depth: number): React.ReactNode => {
+    const badge = item.getBadge?.(badgeData);
+    const active = isActive(item.path);
+    const filteredChildren = filterChildren(item.children);
+    const hasChildren = filteredChildren.length > 0;
+    const isExpanded = expandedItems.has(item.id);
+
+    // Nested item with children
+    if (hasChildren) {
+      return (
+        <Collapsible
+          key={item.id}
+          open={isExpanded}
+          onOpenChange={() => toggleExpanded(item.id)}
+        >
+          <SidebarMenuSubItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuSubButton
+                isActive={active}
+                className={
+                  active
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'text-gray-100 hover:bg-gray-800'
+                }
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {badge && (
+                      <Badge
+                        className={`text-xs ${
+                          badge.variant === 'destructive'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : badge.variant === 'secondary'
+                            ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                            : 'bg-gray-500 hover:bg-gray-600 text-white'
+                        }`}
+                      >
+                        {badge.count}
+                      </Badge>
+                    )}
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+              </SidebarMenuSubButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub className="ml-4">
+                {filteredChildren.map((child) => renderNestedItem(child, depth + 1))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuSubItem>
+        </Collapsible>
+      );
+    }
+
+    // Regular nested item without children
+    return (
+      <SidebarMenuSubItem key={item.id}>
+        <SidebarMenuSubButton
+          asChild
+          isActive={active}
+          className={
+            active
+              ? 'bg-purple-600 text-white hover:bg-purple-700'
+              : 'text-gray-100 hover:bg-gray-800'
+          }
+        >
+          <Link to={item.path} className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </div>
+            {badge && (
+              <Badge
+                className={`text-xs ml-auto ${
+                  badge.variant === 'destructive'
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : badge.variant === 'secondary'
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                    : 'bg-gray-500 hover:bg-gray-600 text-white'
+                }`}
+              >
+                {badge.count}
+              </Badge>
+            )}
+          </Link>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
     );
   };
 

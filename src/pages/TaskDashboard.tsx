@@ -1,6 +1,6 @@
 // Task Management Dashboard - Main page for task management
 import React, { useState, useMemo } from 'react';
-import { Plus, Filter, Calendar, BarChart3, Template, Search, SortAsc } from 'lucide-react';
+import { Plus, Filter, Calendar, BarChart3, FileText, Search, SortAsc } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,7 +150,7 @@ export default function TaskDashboard() {
           <Dialog open={templateLibraryOpen} onOpenChange={setTemplateLibraryOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
-                <Template className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
                 Templates
               </Button>
             </DialogTrigger>

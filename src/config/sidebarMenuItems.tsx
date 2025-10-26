@@ -16,6 +16,12 @@ import {
   Settings,
   CheckSquare,
   Video,
+  Image,
+  Crown,
+  ExternalLink,
+  Bell,
+  Eye,
+  Shield,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -39,6 +45,8 @@ export interface MenuItem {
     pendingConfirmations?: number;
     confirmedGigCount?: number;
   }) => { count: number; variant: 'default' | 'destructive' | 'secondary' } | null;
+  children?: MenuItem[]; // Nested menu items
+  external?: boolean; // External link (opens in new tab)
 }
 
 /**
@@ -56,15 +64,123 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined, // Standalone, no section
   },
 
-  // Opportunities Section
+  // Shows - NEW placeholder (will be implemented later)
   {
-    id: 'browse-shows',
-    label: 'Browse Shows',
+    id: 'shows',
+    label: 'Shows',
     path: '/shows',
+    icon: Drama,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    section: undefined, // Standalone, after Dashboard
+  },
+
+  // Gigs - renamed from "Browse Shows"
+  {
+    id: 'gigs',
+    label: 'Gigs',
+    path: '/gigs',
     icon: Search,
     roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
-    section: 'opportunities',
+    section: undefined, // Standalone, after Shows
   },
+
+  // Profile - now a parent item with nested children
+  {
+    id: 'profile',
+    label: 'Profile',
+    path: '/profile',
+    icon: User,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    section: undefined, // Standalone, with children
+    children: [
+      {
+        id: 'messages',
+        label: 'Messages',
+        path: '/messages',
+        icon: MessageCircle,
+        roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+        getBadge: (data) => {
+          if (data.unreadCount && data.unreadCount > 0) {
+            return { count: data.unreadCount, variant: 'destructive' };
+          }
+          return null;
+        },
+      },
+      {
+        id: 'vouches',
+        label: 'Vouches',
+        path: '/vouches',
+        icon: Crown,
+        roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        path: '/settings',
+        icon: Settings,
+        roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+        children: [
+          {
+            id: 'notification-settings',
+            label: 'Notification Settings',
+            path: '/settings?tab=notifications',
+            icon: Bell,
+            roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+          },
+          {
+            id: 'sidebar-customization',
+            label: 'Sidebar Customization',
+            path: '/settings?tab=sidebar',
+            icon: Settings,
+            roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+          },
+          {
+            id: 'privacy-settings',
+            label: 'Privacy',
+            path: '/settings?tab=privacy',
+            icon: Shield,
+            roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+            children: [
+              {
+                id: 'profile-visibility',
+                label: 'Profile Visibility',
+                path: '/settings?tab=privacy&section=visibility',
+                icon: Eye,
+                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+              },
+              {
+                id: 'data-privacy',
+                label: 'Data & Privacy',
+                path: '/settings?tab=privacy&section=data',
+                icon: Shield,
+                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+              },
+              {
+                id: 'messages-privacy',
+                label: 'Messages Privacy',
+                path: '/settings?tab=privacy&section=messages',
+                icon: MessageCircle,
+                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  // Social Media Manager - external link
+  {
+    id: 'social-media-manager',
+    label: 'Social Media Manager',
+    path: 'https://social.gigpigs.app',
+    icon: ExternalLink,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    section: undefined, // Standalone
+    external: true,
+  },
+
+  // Opportunities Section
   {
     id: 'browse-comedians',
     label: 'Browse Comedians',
@@ -112,7 +228,7 @@ export const MENU_ITEMS: MenuItem[] = [
     },
   },
   {
-    id: 'gigs',
+    id: 'my-gigs',
     label: 'My Gigs',
     path: '/profile?tab=gigs',
     icon: Calendar,
@@ -153,6 +269,14 @@ export const MENU_ITEMS: MenuItem[] = [
     roles: ['comedian', 'photographer', 'videographer'],
     section: 'business',
   },
+  {
+    id: 'media-library',
+    label: 'Media Library',
+    path: '/media-library',
+    icon: Image,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    section: 'business',
+  },
 
   // Manager Features Section
   {
@@ -191,38 +315,6 @@ export const MENU_ITEMS: MenuItem[] = [
     section: 'admin',
     requiresPermission: (permissions) => permissions.hasAdminAccess,
   },
-
-  // Account Section
-  {
-    id: 'messages',
-    label: 'Messages',
-    path: '/messages',
-    icon: MessageCircle,
-    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: 'account',
-    getBadge: (data) => {
-      if (data.unreadCount && data.unreadCount > 0) {
-        return { count: data.unreadCount, variant: 'destructive' };
-      }
-      return null;
-    },
-  },
-  {
-    id: 'profile',
-    label: 'Profile',
-    path: '/profile',
-    icon: User,
-    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: 'account',
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    path: '/settings',
-    icon: Settings,
-    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: 'account',
-  },
 ];
 
 /**
@@ -236,7 +328,7 @@ export const getDefaultHiddenItemsForRole = (role: UserRole): string[] => {
       return [];
     case 'promoter':
       // Promoters don't need comedian-specific features by default
-      return ['applications', 'gigs', 'add-gig', 'earnings'];
+      return ['applications', 'my-gigs', 'add-gig', 'earnings'];
     case 'photographer':
     case 'videographer':
       // Similar to comedians
