@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, ChevronDown, Plus, User, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,12 +17,14 @@ import {
   type ProfileTypeValue,
   type BaseProfileType,
 } from '@/contexts/ProfileContext';
+import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { ProfileCreationWizard } from '@/components/profile/ProfileCreationWizard';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDisplayName } from '@/utils/nameDisplay';
 import { useOrganizationProfiles, getOrganizationDisplayName } from '@/hooks/useOrganizationProfiles';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Profile Switcher Component
@@ -37,11 +40,99 @@ import { cn } from '@/lib/utils';
  * - Keyboard navigable
  * - Screen reader friendly
  */
+// Map of profile types to their table names and slug compatibility
+const PROFILE_TABLE_MAP = {
+  comedian: 'comedians',
+  manager: 'manager_profiles',
+  photographer: 'photographers',
+  videographer: 'videographers',
+  promoter: null, // Promoter doesn't have a profile table with slugs
+} as const;
+
+interface ProfileWithSlug {
+  id: string;
+  name: string;
+  url_slug?: string;
+  avatar_url?: string;
+  logo_url?: string;
+}
+
 export function ProfileSwitcher() {
   const { activeProfile, availableProfiles, switchProfile, isLoading } = useProfile();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { data: organizations, isLoading: orgsLoading } = useOrganizationProfiles();
+  const { activeProfile: activeProfileData, setActiveProfile } = useActiveProfile();
+  const navigate = useNavigate();
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [profileData, setProfileData] = useState<Record<string, ProfileWithSlug | null>>({});
+
+  // Fetch profile data with slugs for available profiles
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?.id || availableProfiles.length === 0) return;
+
+      const dataMap: Record<string, ProfileWithSlug | null> = {};
+
+      for (const profileType of availableProfiles) {
+        const tableName = PROFILE_TABLE_MAP[profileType as keyof typeof PROFILE_TABLE_MAP];
+
+        if (!tableName) {
+          dataMap[profileType] = null;
+          continue;
+        }
+
+        try {
+          // Fetch profile data with slug
+          const { data, error } = await supabase
+            .from(tableName as string)
+            .select('id, name, url_slug, avatar_url, logo_url')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (!error && data) {
+            dataMap[profileType] = data as ProfileWithSlug;
+          } else {
+            dataMap[profileType] = null;
+          }
+        } catch (err) {
+          console.error(`Error fetching ${profileType} profile:`, err);
+          dataMap[profileType] = null;
+        }
+      }
+
+      setProfileData(dataMap);
+    };
+
+    fetchProfileData();
+  }, [user?.id, availableProfiles]);
+
+  // Handle profile selection with ActiveProfileContext integration
+  const handleProfileSelect = (profileType: ProfileTypeValue) => {
+    // Switch the profile type in ProfileContext (existing behavior)
+    switchProfile(profileType);
+
+    // Get profile data with slug
+    const profileInfo = profileData[profileType];
+
+    if (profileInfo && profileInfo.url_slug) {
+      // Map ProfileTypeValue to ActiveProfile type
+      const activeProfileType = (['comedian', 'manager', 'organization', 'venue'].includes(profileType))
+        ? profileType as 'comedian' | 'manager' | 'organization' | 'venue'
+        : 'comedian'; // fallback
+
+      // Set active profile in ActiveProfileContext
+      setActiveProfile({
+        id: profileInfo.id,
+        type: activeProfileType,
+        slug: profileInfo.url_slug,
+        name: profileInfo.name,
+        avatarUrl: profileInfo.avatar_url || profileInfo.logo_url || undefined,
+      });
+
+      // Navigate to profile URL
+      navigate(`/${activeProfileType}/${profileInfo.url_slug}/dashboard`);
+    }
+  };
 
   if (isLoading || orgsLoading) {
     return (
@@ -138,25 +229,28 @@ export function ProfileSwitcher() {
             });
           }
 
+          // Check if this profile matches the active profile from ActiveProfileContext
+          const isActiveInContext = activeProfileData?.type === profileType;
+
           return (
             <DropdownMenuItem
               key={profileType}
-              onClick={() => switchProfile(profileType)}
+              onClick={() => handleProfileSelect(profileType)}
               className={cn(
                 "flex items-center gap-3 px-2 py-2 cursor-pointer",
                 "text-gray-100 hover:bg-gray-700 focus:bg-gray-700",
-                isActive && "bg-purple-600/20 hover:bg-purple-600/30"
+                (isActive || isActiveInContext) && "bg-purple-600/20 hover:bg-purple-600/30"
               )}
-              aria-current={isActive ? 'true' : undefined}
+              aria-current={(isActive || isActiveInContext) ? 'true' : undefined}
             >
               <ProfileIcon className={cn(
                 "h-5 w-5",
-                isActive ? "text-purple-400" : "text-gray-400"
+                (isActive || isActiveInContext) ? "text-purple-400" : "text-gray-400"
               )} />
               <span className="flex-1 text-sm font-medium">
                 {profileDisplayName}
               </span>
-              {isActive && (
+              {(isActive || isActiveInContext) && (
                 <Check className="h-4 w-4 text-purple-400" aria-label="Active profile" />
               )}
             </DropdownMenuItem>
