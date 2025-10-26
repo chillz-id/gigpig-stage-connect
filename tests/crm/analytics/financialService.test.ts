@@ -1,8 +1,8 @@
-const fromMock = jest.fn();
+const financialFromMock = jest.fn();
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    from: financialFromMock,
   },
 }));
 
@@ -35,7 +35,7 @@ describe('financialService', () => {
     const venueCosts = [{ amount: 80 }];
     const marketingCosts = [{ amount: 50 }];
 
-    fromMock.mockImplementation((table: string) => {
+    financialFromMock.mockImplementation((table: string) => {
       switch (table) {
         case 'ticket_sales':
           return buildRangeMock(ticketSales);
@@ -68,7 +68,7 @@ describe('financialService', () => {
 
   it('propagates Supabase errors', async () => {
     const failure = new Error('fetch failed');
-    fromMock.mockImplementation(() => buildRangeMock([], failure));
+    financialFromMock.mockImplementation(() => buildRangeMock([], failure));
 
     await expect(financialService.getMetrics()).rejects.toThrow('fetch failed');
   });

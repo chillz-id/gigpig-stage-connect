@@ -1,0 +1,123 @@
+name: Migration Safety
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'scripts/safe-migrate.js'
+      - 'scripts/test-migration-shadow.js'
+
+jobs:
+  test-migration:
+    name: Test Migration on Shadow Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run shadow migration test
+        id: shadow-test
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "Running shadow migration test..."
+          node scripts/test-migration-shadow.js 2>&1 | tee shadow-test-output.txt
+          echo "test_output<<EOF" >> $GITHUB_OUTPUT
+          cat shadow-test-output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR with test results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prNumber = context.payload.pull_request.number;
+
+            let output = '';
+            try {
+              output = fs.readFileSync('shadow-test-output.txt', 'utf-8');
+            } catch (error) {
+              output = 'Could not read test output';
+            }
+
+            const testPassed = '${{ steps.shadow-test.outcome }}' === 'success';
+            const emoji = testPassed ? '✅' : '⚠️';
+            const status = testPassed ? 'PASSED' : 'FAILED';
+
+            const comment = `## ${emoji} Migration Safety Check
+
+**Status**: ${status}
+
+### Shadow Database Test Results
+
+\`\`\`
+${output.slice(0, 3000)}
+\`\`\`
+
+${testPassed
+  ? '**Safe to merge** - Migrations have been validated on a test schema.'
+  : '**Review Required** - Shadow test encountered issues. Please review the output above.'}
+
+---
+<sub>This test runs on GitHub Actions (not on droplet) to ensure system stability.</sub>
+`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Migration Safety Check')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment,
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: comment,
+              });
+            }
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-migration-test-results
+          path: shadow-test-output.txt
+          retention-days: 7
+
+      - name: Fail if test failed
+        if: steps.shadow-test.outcome != 'success'
+        run: |
+          echo "❌ Shadow migration test failed"
+          exit 1

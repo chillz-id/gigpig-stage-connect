@@ -1,11 +1,11 @@
-const selectMock = jest.fn();
-const fromMock = jest.fn(() => ({
-  select: selectMock,
+const dealSelectMock = jest.fn();
+const dealFromMock = jest.fn(() => ({
+  select: dealSelectMock,
 }));
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: fromMock,
+    from: dealFromMock,
   },
 }));
 
@@ -18,7 +18,7 @@ describe('dealService.getStats', () => {
   });
 
   it('aggregates counts and monetary totals by status', async () => {
-    selectMock.mockResolvedValue({
+    dealSelectMock.mockResolvedValue({
       data: [
         { status: 'proposed', proposed_fee: 50 },
         { status: 'accepted', proposed_fee: 125 },
@@ -30,8 +30,8 @@ describe('dealService.getStats', () => {
 
     const stats = await dealService.getStats();
 
-    expect(fromMock).toHaveBeenCalledWith('deal_negotiations');
-    expect(selectMock).toHaveBeenCalledWith('status, proposed_fee');
+    expect(dealFromMock).toHaveBeenCalledWith('deal_negotiations');
+    expect(dealSelectMock).toHaveBeenCalledWith('status, proposed_fee');
     expect(stats.total).toBe(4);
     expect(stats.byStatus.proposed).toBe(1);
     expect(stats.byStatus.accepted).toBe(2);
@@ -42,7 +42,7 @@ describe('dealService.getStats', () => {
 
   it('throws when Supabase returns an error', async () => {
     const failure = new Error('boom');
-    selectMock.mockResolvedValue({
+    dealSelectMock.mockResolvedValue({
       data: null,
       error: failure,
     });

@@ -14,11 +14,9 @@ export interface CalendarIntegration {
 }
 
 class CalendarIntegrationService {
-  private tableName = 'calendar_integrations';
-
   async listByUser(userId: string): Promise<CalendarIntegration[]> {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('calendar_integrations')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -33,7 +31,7 @@ class CalendarIntegrationService {
 
   async upsertIntegration(integration: CalendarIntegration): Promise<CalendarIntegration> {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('calendar_integrations')
       .upsert(
         {
           user_id: integration.user_id,
@@ -62,7 +60,7 @@ class CalendarIntegrationService {
 
   async updateById(id: string, updates: Partial<CalendarIntegration>): Promise<CalendarIntegration> {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('calendar_integrations')
       .update({
         ...updates,
         updated_at: new Date().toISOString(),
@@ -81,7 +79,7 @@ class CalendarIntegrationService {
 
   async deleteById(id: string): Promise<void> {
     const { error } = await supabase
-      .from(this.tableName)
+      .from('calendar_integrations')
       .delete()
       .eq('id', id);
 
@@ -96,7 +94,7 @@ class CalendarIntegrationService {
     provider: 'google' | 'apple' | 'outlook'
   ): Promise<CalendarIntegration | null> {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('calendar_integrations')
       .select('*')
       .eq('user_id', userId)
       .eq('provider', provider)
