@@ -41,7 +41,7 @@
     "sitemap:monitor": "node scripts/monitor-sitemap.js",
     "migrate:safe": "node scripts/safe-migrate.js",
     "migrate:dry-run": "DRY_RUN=true node scripts/safe-migrate.js",
-    "migrate:test": "node scripts/test-migration-shadow.js",
+    "migrate:test": "node scripts/test-migration-shadow.cjs",
     "migrate:test-rollback": "node scripts/test-migration-rollback.js",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.test.ts"
   },
