@@ -26,6 +26,7 @@ import AuthCallback from '@/pages/AuthCallback';
 // Lazy load non-critical pages
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Gigs = lazy(() => import('@/pages/Gigs'));
+const Shows = lazy(() => import('@/pages/Shows'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const Applications = lazy(() => import('@/pages/Applications'));
@@ -177,8 +178,7 @@ function App() {
                             <Route path="/post-signup-setup" element={<PostSignupSetup />} />
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/gigs" element={<Gigs />} />
-                            {/* Legacy route redirects - /shows will be used for new Shows page later */}
-                            <Route path="/shows" element={<Navigate to="/gigs" replace />} />
+                            <Route path="/shows" element={<Shows />} />
                             <Route path="/browse" element={<Navigate to="/gigs" replace />} />
                             <Route path="/comedians" element={<Comedians />} />
                             <Route path="/book-comedian" element={<BookComedian />} />
