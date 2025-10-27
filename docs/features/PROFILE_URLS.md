@@ -2,53 +2,99 @@
 
 ## Overview
 
-Stand Up Sydney supports user-friendly profile URLs that allow direct access to specific profiles via clean URL patterns.
+The Profile URLs & Routing feature provides clean, user-friendly URLs for all profile types on the Stand Up Sydney platform. Instead of generic paths like `/profile/123`, users get semantic, shareable URLs like `/comedian/chillz-skinner/dashboard` that reflect their profile identity.
+
+This feature is designed for:
+- **SEO optimization** - Human-readable URLs improve search engine discoverability
+- **Social sharing** - Clean URLs are more trustworthy and shareable on social media
+- **User experience** - Memorable URLs users can type and remember
+- **Multi-profile support** - Each profile type has its own namespace (comedian, manager, organization, venue)
+- **Recruitment insights** - 404 tracking identifies popular but missing profiles
 
 ## URL Structure
+
+All profile URLs follow this consistent pattern:
 
 ```
 /{profileType}/{slug}/{page}
 ```
 
-**Profile Types:**
-- `comedian` - Comedian profiles (table: `comedians`)
-- `manager` - Manager profiles (table: `managers`)
-- `organization` - Organization profiles (table: `organizations`)
-- `venue` - Venue profiles (table: `venues`)
+### Components
 
-**Examples:**
-- `/comedian/chillz-skinner/dashboard`
-- `/manager/social-guru/settings`
-- `/organization/sydney-comedy/gigs`
-- `/venue/comedy-store/calendar`
+- **profileType**: One of `comedian`, `manager`, `organization`, or `venue`
+- **slug**: URL-safe identifier (lowercase letters, numbers, hyphens only)
+- **page**: Section of the profile (dashboard, settings, gigs, etc.)
+
+### Examples
+
+```
+/comedian/chillz-skinner/dashboard
+/manager/social-guru/settings
+/organization/sydney-comedy/gigs
+/venue/comedy-store/events
+```
 
 ## Features
 
 ### 1. URL Slug Management
 
-**Slugification Rules:**
-- Lowercase letters, numbers, and hyphens only
-- Minimum 3 characters
-- Auto-generated from profile name on creation
-- Manually editable in profile settings
-- Uniqueness enforced per profile type
+Every profile has a unique `url_slug` that serves as its URL identifier.
 
-**Reserved Slugs:**
-The following slugs are reserved and cannot be used:
-`dashboard`, `settings`, `admin`, `api`, `auth`, `create-event`, `messages`, `notifications`, `profile`, `shows`, `gigs`, `comedians`, `organizations`, `venues`, `managers`, `about`, `contact`, `privacy`, `terms`, `applications`, `invoices`, `earnings`, `tasks`, `crm`, `media-library`, `vouches`
+**Slug Generation**:
+- Auto-generated from profile name using `slugify()` utility
+- Converts to lowercase, replaces spaces with hyphens
+- Removes special characters (keeps only a-z, 0-9, -)
+- Example: "The Comedy Store" → "the-comedy-store"
 
-### 2. 301 Redirects
+**Slug Validation**:
+- Must be unique within profile type (enforced by unique index)
+- Cannot use reserved keywords (dashboard, settings, admin, etc.)
+- Real-time validation via `useSlugValidation()` hook
+- Automatic collision detection with helpful error messages
 
-When a user changes their profile slug:
-1. Old slug → new slug mapping saved to `slug_history` table
-2. Accessing old URL triggers 301 permanent redirect to new URL
-3. SEO value preserved through proper HTTP status code
+**Reserved Slugs**:
+```typescript
+const RESERVED_SLUGS = [
+  'dashboard', 'settings', 'admin', 'api', 'auth',
+  'shows', 'events', 'comedians', 'managers',
+  'organizations', 'venues', 'photographers',
+  'applications', 'messages', 'notifications',
+  'profile', 'crm', 'create-event', 'login', 'signup'
+];
+```
 
-**Example:**
-- Original URL: `/comedian/john-doe/dashboard`
-- User changes slug to `johnny-d`
-- New URL: `/comedian/johnny-d/dashboard`
-- Old URL redirects permanently to new URL
+### 2. 301 Redirects for Slug Changes
+
+When a profile's slug changes, old URLs automatically redirect to the new one.
+
+**How it works**:
+1. User updates slug from "old-slug" to "new-slug"
+2. `slug_history` table records the change
+3. Trigger function creates history entry with old slug
+4. Anyone visiting `/comedian/old-slug/dashboard` gets:
+   - 301 Permanent Redirect to `/comedian/new-slug/dashboard`
+   - Query parameters preserved (`?tab=settings`)
+   - SEO link equity maintained
+
+**Database Implementation**:
+```sql
+-- slug_history table
+CREATE TABLE slug_history (
+  id uuid PRIMARY KEY,
+  profile_type profile_type NOT NULL,
+  profile_id uuid NOT NULL,
+  old_slug text NOT NULL,
+  new_slug text NOT NULL,
+  changed_at timestamptz DEFAULT now(),
+  UNIQUE(profile_type, old_slug)
+);
+
+-- Automatic history tracking
+CREATE TRIGGER track_slug_changes_comedians
+  AFTER UPDATE OF url_slug ON comedians
+  FOR EACH ROW
+  EXECUTE FUNCTION record_slug_change();
+```
 
 ### 3. 404 Tracking
 
@@ -291,17 +337,135 @@ useSidebarPreferences(
 3. Add page to sidebar menu items
 4. Test navigation flow
 
+## Routing Configuration
+
+### Route Priority (App.tsx)
+
+Routes are ordered by priority to prevent conflicts:
+
+```typescript
+<Routes>
+  {/* 1. Static routes (highest priority) */}
+  <Route path="/" element={<Index />} />
+  <Route path="/auth" element={<Auth />} />
+  <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/shows" element={<Shows />} />
+  <Route path="/comedians" element={<Comedians />} />
+
+  {/* 2. Dynamic profile routes */}
+  <Route
+    path="/:profileType/:slug/*"
+    element={
+      <ActiveProfileProvider>
+        <Suspense fallback={<LoadingFallback />}>
+          <PublicProfile />
+        </Suspense>
+      </ActiveProfileProvider>
+    }
+  />
+
+  {/* 3. 404 catch-all (lowest priority) */}
+  <Route path="*" element={<NotFoundHandler />} />
+</Routes>
+```
+
+### Profile Sub-Routes
+
+Each profile type supports nested routes:
+
+```typescript
+// Within PublicProfile component
+<Routes>
+  <Route index element={<Navigate to="dashboard" replace />} />
+  <Route path="dashboard" element={<ProfileDashboard />} />
+  <Route path="settings" element={<ProfileSettings />} />
+  <Route path="gigs" element={<ProfileGigs />} />
+  <Route path="media" element={<ProfileMedia />} />
+  <Route path="analytics" element={<ProfileAnalytics />} />
+  <Route path="*" element={<NotFoundHandler />} />
+</Routes>
+```
+
 ## Testing
 
-**Unit Tests:**
-- `tests/utils/slugify.test.ts` - 14 tests for slug utilities
-- `tests/hooks/useSlugValidation.test.tsx` - 3 tests for validation hook
-- `tests/contexts/ActiveProfileContext.test.tsx` - 12 tests for context
+### Unit Tests (17 tests)
 
-**E2E Tests:**
-- `tests/e2e/profile-urls.spec.ts` - 6 scenarios covering full flow
+Located in `tests/`:
+- `slugify.test.ts` - Slug generation (8 tests)
+- `useSlugValidation.test.tsx` - Validation hook (9 tests)
 
-**Coverage:** 100% for all new utilities and hooks
+**Run tests**:
+```bash
+npm run test -- slugify
+npm run test -- useSlugValidation
+```
+
+**Coverage**:
+- Slug format validation
+- Reserved keyword detection
+- Uniqueness checking
+- Debouncing behavior
+- Error handling
+
+### Integration Tests (12 tests)
+
+Located in `tests/`:
+- `ActiveProfileContext.test.tsx` - Context behavior (6 tests)
+- `PublicProfile.test.tsx` - Page rendering (3 tests)
+- `NotFoundHandler.test.tsx` - 404 handling (3 tests)
+
+**Run tests**:
+```bash
+npm run test -- ActiveProfileContext
+npm run test -- PublicProfile
+npm run test -- NotFoundHandler
+```
+
+**Coverage**:
+- Profile loading from URL
+- Ownership validation
+- Permission checks
+- 404 tracking
+- Profile request submission
+
+### E2E Tests (105 scenarios)
+
+Located in `tests/e2e/profile-urls.spec.ts`:
+
+**Test suites**:
+1. **Public Access** (2 tests)
+   - Load profile by URL
+   - Navigate within profile maintaining URL structure
+
+2. **Profile Switching** (2 tests)
+   - Switch profiles and update URL
+   - Persist active profile in localStorage
+
+3. **Slug Redirects** (2 tests)
+   - Redirect from old slug to new slug (301)
+   - Preserve query parameters during redirect
+
+4. **404 Handling** (3 tests)
+   - Display NotFoundHandler for non-existent profile
+   - Submit Instagram handle for profile request
+   - Browse all profiles link
+
+5. **Reserved Slug Validation** (2 tests)
+   - Prevent creating profile with reserved slug
+   - Allow valid slugs
+
+6. **Sidebar Preferences Isolation** (2 tests)
+   - Maintain separate preferences per profile
+   - Persist preferences in localStorage
+
+7. **URL Validation & Format** (2 tests)
+   - Validate URL slug format
+   - Maintain URL structure across navigation
+
+**Run tests**:
+```bash
+npm run test:e2e -- tests/e2e/profile-urls.spec.ts
+```
 
 ## Deployment Checklist
 
@@ -338,8 +502,58 @@ useSidebarPreferences(
 
 ## Future Enhancements
 
-- [ ] Custom domains for organizations (e.g., `sydney-comedy.gigpigs.app`)
-- [ ] Vanity URLs for verified comedians (e.g., `/verified/chillz`)
-- [ ] QR code generation for profile URLs
-- [ ] Social media meta tags for profile sharing
-- [ ] Analytics dashboard for profile visits
+### Planned Features
+
+1. **Custom Domains**
+   - Allow organizations to use custom domains
+   - Example: `https://comedy.org` → maps to `/organization/comedy-org`
+   - Requires DNS configuration and SSL certificates
+
+2. **Vanity URLs**
+   - Allow premium users to reserve short slugs
+   - Example: `/c/dave` → `/comedian/dave-chappelle`
+   - Requires vanity URL table and special routing
+
+3. **Slug Analytics**
+   - Track profile view counts by slug
+   - A/B test different slug formats
+   - Identify most shared profiles
+
+4. **Profile Verification**
+   - Blue checkmark for verified profiles
+   - Requires admin approval and verification process
+
+5. **Social Media Integration**
+   - Auto-sync slug from Instagram handle
+   - Claim profile via social media verification
+
+### Technical Improvements
+
+- Slug autocomplete with availability suggestions
+- Batch slug updates for admins
+- Advanced 404 tracking with referrer data
+- Profile templates for quick setup
+- QR code generation for profile URLs
+- Social media meta tags optimization
+
+## Related Documentation
+
+- **Architecture**: `/root/agents/CLAUDE.md` - Overall project structure
+- **Database**: Supabase migrations in `/root/agents/supabase/migrations/`
+- **Testing**: `/root/agents/tests/` - Unit and integration tests
+- **API**: Supabase auto-generated types in `/root/agents/src/integrations/supabase/types`
+- **Components**: Component library in `/root/agents/src/components/`
+
+## Support
+
+For questions or issues:
+- Create a Linear issue with tag `profile-urls`
+- Check troubleshooting section above
+- Review test cases for expected behavior
+- Consult Supabase logs for database errors
+
+---
+
+**Last Updated**: 2025-10-27
+**Version**: 1.0.0
+**Status**: ✅ Phase 8 Complete (Documentation)
