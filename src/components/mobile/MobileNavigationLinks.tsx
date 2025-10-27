@@ -26,12 +26,12 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
     <div className="space-y-1 py-6">
       {/* Main Navigation */}
       <Link
-        to="/shows"
+        to="/gigs"
         className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
         onClick={handleLinkClick}
       >
         <Search className="w-5 h-5" />
-        <span className="font-medium">Shows</span>
+        <span className="font-medium">Gigs</span>
       </Link>
 
       <Link

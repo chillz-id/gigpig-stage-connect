@@ -4,11 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
-import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut } from 'lucide-react';
+import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut, Crown } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileUrlEditor } from '@/components/profile/ProfileUrlEditor';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ProfileHeaderProps {
   user: any;
@@ -23,6 +24,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const { uploadFile, uploading } = useFileUpload({
     bucket: 'profile-images',
     maxSize: 5 * 1024 * 1024, // 5MB
@@ -130,6 +132,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <Button variant="outline" size="sm">
               <Award className="w-4 h-4 mr-2" />
               Vouch
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/vouches')}>
+              <Crown className="w-4 h-4 mr-2 text-yellow-500" />
+              Vouches
             </Button>
             <Button variant="outline" size="sm" onClick={onLogout}>
               <LogOut className="w-4 h-4 mr-2" />

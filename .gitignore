@@ -46,6 +46,15 @@ SUPABASE_ACCESS_TOKEN_SETUP.md
 # Local configuration
 .claude/
 .claude-agents/
+.worktrees/
+
+# Generated artifacts (cleanup 2025)
+coverage/
+test-results/
+public/examples/
+supabase/.temp/
+data/reports/
+data/imports/
 
 # Files with hardcoded secrets (NEVER commit)
 scripts/legacy/setup-humanitix-env.cjs

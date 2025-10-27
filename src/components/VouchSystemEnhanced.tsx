@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, Plus, Search, Edit2, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { Award, Crown, Plus, Search, Edit2, Users, TrendingUp, AlertCircle } from 'lucide-react';
 import { VouchCard } from './VouchCard';
 import { useToast } from '@/hooks/use-toast';
 import { useVouches } from '@/hooks/useVouches';
@@ -45,7 +45,8 @@ export const VouchSystemEnhanced: React.FC = () => {
   } = useVouches();
 
   // Form state
-  const [rating, setRating] = useState(0);
+  const [hasVouch, setHasVouch] = useState(false); // Crown filled or not
+  const [isHovering, setIsHovering] = useState(false); // Crown hover state
   const [message, setMessage] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,12 +84,12 @@ export const VouchSystemEnhanced: React.FC = () => {
         const existing = await checkExistingVouch(selectedUser.id);
         setExistingVouch(existing);
         if (existing) {
-          setRating(existing.rating);
+          setHasVouch(true);
           setMessage(existing.message);
           setIsEditing(true);
         } else {
           setIsEditing(false);
-          setRating(0);
+          setHasVouch(false);
           setMessage('');
         }
       }
@@ -96,8 +97,8 @@ export const VouchSystemEnhanced: React.FC = () => {
     checkExisting();
   }, [selectedUser, checkExistingVouch]);
 
-  const handleStarClick = (starRating: number) => {
-    setRating(starRating);
+  const handleCrownClick = () => {
+    setHasVouch(!hasVouch);
   };
 
   const handleSubmitVouch = async () => {
@@ -110,10 +111,10 @@ export const VouchSystemEnhanced: React.FC = () => {
       return;
     }
 
-    if (rating === 0) {
+    if (!hasVouch) {
       toast({
-        title: "Rating Required",
-        description: "Please select a star rating before submitting.",
+        title: "Vouch Required",
+        description: "Please click the crown to give a vouch.",
         variant: "destructive",
       });
       return;
@@ -133,7 +134,7 @@ export const VouchSystemEnhanced: React.FC = () => {
       const formData: VouchFormData = {
         vouchee_id: selectedUser.id,
         message: message.trim(),
-        rating
+        rating: 5 // Always give 5 stars since we're using crown system
       };
 
       if (isEditing && existingVouch) {
@@ -143,7 +144,7 @@ export const VouchSystemEnhanced: React.FC = () => {
       }
 
       // Reset form
-      setRating(0);
+      setHasVouch(false);
       setMessage('');
       setSelectedUser(null);
       setSearchQuery('');
@@ -162,7 +163,7 @@ export const VouchSystemEnhanced: React.FC = () => {
 
   const handleEditVouch = (vouch: any) => {
     setEditingVouch(vouch);
-    setRating(vouch.rating);
+    setHasVouch(true); // Existing vouch means crown is filled
     setMessage(vouch.message);
     setIsEditDialogOpen(true);
   };
@@ -174,11 +175,11 @@ export const VouchSystemEnhanced: React.FC = () => {
     try {
       await updateVouch(editingVouch.id, {
         message: message.trim(),
-        rating
+        rating: 5 // Always 5 stars for crown system
       });
       setIsEditDialogOpen(false);
       setEditingVouch(null);
-      setRating(0);
+      setHasVouch(false);
       setMessage('');
     } catch (error: any) {
       toast({
@@ -214,20 +215,25 @@ export const VouchSystemEnhanced: React.FC = () => {
     setSearchQuery('');
     setExistingVouch(null);
     setIsEditing(false);
-    setRating(0);
+    setHasVouch(false);
     setMessage('');
   };
 
-  const renderStars = (interactive = false, currentRating = 0) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star 
-        key={i} 
-        className={`w-6 h-6 cursor-pointer transition-colors ${
-          i < currentRating ? 'text-yellow-400 fill-current' : 'text-gray-300 hover:text-yellow-200'
-        }`}
-        onClick={interactive ? () => handleStarClick(i + 1) : undefined}
-      />
-    ));
+  const renderCrown = (interactive = false, isFilled = false) => {
+    const crownClasses = isFilled || (interactive && isHovering)
+      ? 'h-10 w-10 text-yellow-500 fill-yellow-500 transition-all duration-300'
+      : 'h-10 w-10 text-muted-foreground transition-all duration-300';
+
+    return (
+      <div className="flex items-center justify-center">
+        <Crown
+          className={`${crownClasses} ${interactive ? 'cursor-pointer hover:text-yellow-500 hover:fill-yellow-500' : ''}`}
+          onClick={interactive ? handleCrownClick : undefined}
+          onMouseEnter={interactive ? () => setIsHovering(true) : undefined}
+          onMouseLeave={interactive ? () => setIsHovering(false) : undefined}
+        />
+      </div>
+    );
   };
 
   if (!user) {
@@ -248,7 +254,7 @@ export const VouchSystemEnhanced: React.FC = () => {
     <div className="space-y-6">
       {/* Vouch Stats */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center mb-2">
@@ -265,17 +271,6 @@ export const VouchSystemEnhanced: React.FC = () => {
                 <span className="text-2xl font-bold">{stats.total_given}</span>
               </div>
               <p className="text-sm text-muted-foreground">Given</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Star className="w-5 h-5 text-yellow-600 mr-2" />
-                <span className="text-2xl font-bold">
-                  {stats.average_rating_received > 0 ? stats.average_rating_received.toFixed(1) : '—'}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">Avg Rating</p>
             </CardContent>
           </Card>
           <Card>
@@ -391,9 +386,10 @@ export const VouchSystemEnhanced: React.FC = () => {
           </div>
           
           <div>
-            <Label>Rating</Label>
-            <div className="flex items-center gap-1 mt-2">
-              {renderStars(true, rating)}
+            <Label>Give Vouch</Label>
+            <p className="text-sm text-muted-foreground mb-2">Click the crown to vouch for this person</p>
+            <div className="flex items-center justify-start mt-2">
+              {renderCrown(true, hasVouch)}
             </div>
           </div>
 
@@ -403,15 +399,21 @@ export const VouchSystemEnhanced: React.FC = () => {
               id="vouchMessage"
               placeholder="Share your experience working with this person..."
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                // Auto-fill crown when user starts typing
+                if (e.target.value.trim().length > 0 && !hasVouch) {
+                  setHasVouch(true);
+                }
+              }}
               className="mt-1"
               rows={3}
             />
           </div>
 
-          <Button 
-            onClick={handleSubmitVouch} 
-            className="professional-button"
+          <Button
+            onClick={handleSubmitVouch}
+            variant="default"
             disabled={submitting || !selectedUser}
           >
             {submitting ? 'Submitting...' : (isEditing ? 'Update Vouch' : 'Submit Vouch')}
@@ -545,9 +547,10 @@ export const VouchSystemEnhanced: React.FC = () => {
             )}
             
             <div>
-              <Label>Rating</Label>
-              <div className="flex items-center gap-1 mt-2">
-                {renderStars(true, rating)}
+              <Label>Give Vouch</Label>
+              <p className="text-sm text-muted-foreground mb-2">Click the crown to vouch for this person</p>
+              <div className="flex items-center justify-start mt-2">
+                {renderCrown(true, hasVouch)}
               </div>
             </div>
 
