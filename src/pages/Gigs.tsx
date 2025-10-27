@@ -15,6 +15,8 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
+import { ShowTypeFilter, type ShowType } from '@/components/shows/ShowTypeFilter';
+import { AgeRestrictionToggle, type AgeRestriction } from '@/components/shows/AgeRestrictionToggle';
 
 // Gigs page - Browse and discover comedy gigs
 // Previously called "Shows" - renamed to "Gigs" for clarity
@@ -45,6 +47,8 @@ const Gigs = () => {
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [showMyDrafts, setShowMyDrafts] = useState(false);
   const [showOnlyMyEvents, setShowOnlyMyEvents] = useState(false);
+  const [showType, setShowType] = useState<ShowType>('all');
+  const [ageRestriction, setAgeRestriction] = useState<AgeRestriction>('all');
 
   // Check if user can see drafts (promoters and admins)
   const canSeeDrafts = hasRole('promoter') || hasRole('admin');
@@ -101,20 +105,34 @@ const Gigs = () => {
         matchesDate = false;
       }
       
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' ||
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.venue.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLocation = locationFilter === '' || 
+      const matchesLocation = locationFilter === '' ||
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
       const matchesType = typeFilter === '' || event.type === typeFilter;
       const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
       const matchesOwnership = !showOnlyMyEvents || event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '');
+
+      // Filter by show type
+      const matchesShowType = showType === 'all' || event.type?.toLowerCase() === showType;
+
+      // Filter by age restriction
+      let matchesAgeRestriction = true;
+      if (ageRestriction !== 'all') {
+        const eventAgeRestriction = event.age_restriction?.toLowerCase();
+        if (ageRestriction === 'over_18') {
+          matchesAgeRestriction = eventAgeRestriction?.includes('18+') || false;
+        } else if (ageRestriction === 'under_18') {
+          matchesAgeRestriction = !eventAgeRestriction || !eventAgeRestriction.includes('18+');
+        }
+      }
       
       // Filter drafts for non-owners
       const canViewEvent = event.status !== 'draft' || 
         (showMyDrafts && (event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '')));
       
-      return matchesDate && matchesSearch && matchesLocation && matchesType && matchesStatus && matchesOwnership && canViewEvent;
+      return matchesDate && matchesSearch && matchesLocation && matchesType && matchesStatus && matchesOwnership && canViewEvent && matchesShowType && matchesAgeRestriction;
   }).sort((a, b) => {
       const dateA = new Date(a.event_date).getTime();
       const dateB = new Date(b.event_date).getTime();
@@ -360,6 +378,12 @@ const Gigs = () => {
               activeFiltersCount={activeFiltersCount}
             />
           )}
+
+          {/* Show Type and Age Restriction Filters */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+            <ShowTypeFilter value={showType} onChange={setShowType} className="text-white" />
+            <AgeRestrictionToggle value={ageRestriction} onChange={setAgeRestriction} className="text-white" />
+          </div>
         </div>
 
         {/* Results Summary */}
