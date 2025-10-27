@@ -30,8 +30,15 @@ test.describe('Smoke Tests - Critical User Paths', () => {
     // Check essential elements
     await expect(page.locator('body')).toBeVisible();
 
-    // Navigation should be present
-    await expect(page.locator('nav, header')).toBeVisible();
+    // Main content should be present
+    await expect(page.locator('main')).toBeVisible();
+
+    // Hero section should be present
+    await expect(page.locator('h1')).toBeVisible();
+
+    // Call-to-action buttons should be present (at least one should exist)
+    const ctaButtons = page.locator('button, a[href="/auth"], a[href="/browse"]');
+    expect(await ctaButtons.count()).toBeGreaterThanOrEqual(1);
 
     // Page should have content
     const bodyText = await page.textContent('body');
