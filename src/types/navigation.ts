@@ -1,4 +1,5 @@
-export type NavigationTabType = 
+export type NavigationTabType =
+  | 'gigs'
   | 'shows'
   | 'calendar'
   | 'dashboard'
@@ -50,15 +51,15 @@ export interface NavigationCustomizationSettings {
 }
 
 export const DEFAULT_NAVIGATION_PREFERENCES: NavigationPreferences = {
-  tab_order: ['shows', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
-  visible_tabs: ['shows', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
+  tab_order: ['gigs', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
+  visible_tabs: ['gigs', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
   mandatory_tabs: ['settings', 'profile', 'signout'],
   dashboard_quick_links: []
 };
 
 export const COMEDIAN_DEFAULT_NAVIGATION: NavigationPreferences = {
-  tab_order: ['shows', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
-  visible_tabs: ['shows', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
+  tab_order: ['gigs', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
+  visible_tabs: ['gigs', 'calendar', 'dashboard', 'invoices', 'vouches', 'settings', 'profile', 'signout'],
   mandatory_tabs: ['settings', 'profile', 'signout'],
   dashboard_quick_links: []
 };
@@ -71,11 +72,11 @@ export const AVAILABLE_DASHBOARD_PAGES: Array<{
   description: string;
 }> = [
   {
-    id: 'shows',
-    label: 'Shows',
-    path: '/shows',
+    id: 'gigs',
+    label: 'Gigs',
+    path: '/gigs',
     icon: 'Calendar1',
-    description: 'Browse available shows'
+    description: 'Browse available gigs'
   },
   {
     id: 'applications',

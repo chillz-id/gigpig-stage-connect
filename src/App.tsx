@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
+import { ProfileProvider } from '@/contexts/ProfileContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PlatformLayout } from '@/components/layout/PlatformLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -24,7 +25,7 @@ import AuthCallback from '@/pages/AuthCallback';
 
 // Lazy load non-critical pages
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const Shows = lazy(() => import('@/pages/Shows'));
+const Gigs = lazy(() => import('@/pages/Gigs'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const Applications = lazy(() => import('@/pages/Applications'));
@@ -54,6 +55,10 @@ const SpotConfirmationPage = lazy(() => import('@/pages/SpotConfirmationPage'));
 const InvoicePaymentSuccess = lazy(() => import('@/pages/InvoicePaymentSuccess'));
 const InvoicePaymentCancelled = lazy(() => import('@/pages/InvoicePaymentCancelled'));
 const PostSignupSetup = lazy(() => import('@/pages/PostSignupSetup'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const MediaLibrary = lazy(() => import('@/pages/MediaLibrary'));
+const TaskDashboard = lazy(() => import('@/pages/TaskDashboard'));
+const Vouches = lazy(() => import('@/pages/Vouches'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -152,57 +157,70 @@ function App() {
           <ThemeProvider>
             <AuthProvider>
               <UserProvider>
-                <DesignSystemInitializer>
-                  <Router>
-                    <PWAIntegration />
-                    <PlatformLayout>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/auth/callback" element={<AuthCallback />} />
-                        <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
-                        <Route path="/auth/xero-callback" element={<XeroCallback />} />
-                        <Route path="/post-signup-setup" element={<PostSignupSetup />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/shows" element={<Shows />} />
-                        <Route path="/browse" element={<Navigate to="/shows" replace />} />
-                        <Route path="/comedians" element={<Comedians />} />
-                        <Route path="/book-comedian" element={<BookComedian />} />
-                        <Route path="/photographers" element={<Photographers />} />
-                        <Route path="/photographers/:id" element={<PhotographerProfile />} />
-                        <Route path="/messages" element={<Messages />} />
-                        <Route path="/notifications" element={<Notifications />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
-                        <Route path="/agency" element={<AgencyManagement />} />
-                        <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian']}><AddGig /></ProtectedRoute>} />
-                        {/* Invoice routes */}
-                        <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
-                        <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
-                        <Route path="/invoices/:invoiceId/payment-cancelled" element={<InvoicePaymentCancelled />} />
-                        <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
-                        <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/admin/ticket-sales" element={<ProtectedRoute roles={['admin']}><TicketSalesTestPage /></ProtectedRoute>} />
-                        <Route path="/design-system" element={<DesignSystem />} />
-                        <Route path="/test-events" element={<TestEventValidation />} />
-                        <Route path="/settings/pwa" element={<PWASettings />} />
-                        <Route path="/admin/events/:eventId" element={<EventDetail />} />
-                        <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
-                        <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian']}><EventApplicationPage /></ProtectedRoute>} />
-                        <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
-                        <Route path="/events/:eventId" element={<EventDetailPublic />} />
-                        <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
-                        <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                      </Suspense>
-                    </PlatformLayout>
-                    <Toaster />
-                  </Router>
-                </DesignSystemInitializer>
+                <ProfileProvider>
+                  <DesignSystemInitializer>
+                    <Router
+                      future={{
+                        v7_startTransition: true,
+                        v7_relativeSplatPath: true,
+                      }}
+                    >
+                      <PWAIntegration />
+                      <PlatformLayout>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/auth" element={<Auth />} />
+                            <Route path="/auth/callback" element={<AuthCallback />} />
+                            <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
+                            <Route path="/auth/xero-callback" element={<XeroCallback />} />
+                            <Route path="/post-signup-setup" element={<PostSignupSetup />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/gigs" element={<Gigs />} />
+                            {/* Legacy route redirects - /shows will be used for new Shows page later */}
+                            <Route path="/shows" element={<Navigate to="/gigs" replace />} />
+                            <Route path="/browse" element={<Navigate to="/gigs" replace />} />
+                            <Route path="/comedians" element={<Comedians />} />
+                            <Route path="/book-comedian" element={<BookComedian />} />
+                            <Route path="/photographers" element={<Photographers />} />
+                            <Route path="/photographers/:id" element={<PhotographerProfile />} />
+                            <Route path="/messages" element={<Messages />} />
+                            <Route path="/notifications" element={<Notifications />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                            <Route path="/media-library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
+                            <Route path="/tasks" element={<ProtectedRoute><TaskDashboard /></ProtectedRoute>} />
+                            <Route path="/vouches" element={<ProtectedRoute><Vouches /></ProtectedRoute>} />
+                            <Route path="/create-event" element={<CreateEvent />} />
+                            <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
+                            <Route path="/agency" element={<AgencyManagement />} />
+                            <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian']}><AddGig /></ProtectedRoute>} />
+                            {/* Invoice routes */}
+                            <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
+                            <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
+                            <Route path="/invoices/:invoiceId/payment-cancelled" element={<InvoicePaymentCancelled />} />
+                            <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
+                            <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
+                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/admin/ticket-sales" element={<ProtectedRoute roles={['admin']}><TicketSalesTestPage /></ProtectedRoute>} />
+                            <Route path="/design-system" element={<DesignSystem />} />
+                            <Route path="/test-events" element={<TestEventValidation />} />
+                            <Route path="/settings/pwa" element={<PWASettings />} />
+                            <Route path="/admin/events/:eventId" element={<EventDetail />} />
+                            <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
+                            <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian']}><EventApplicationPage /></ProtectedRoute>} />
+                            <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
+                            <Route path="/events/:eventId" element={<EventDetailPublic />} />
+                            <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
+                            <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                          </Routes>
+                        </Suspense>
+                      </PlatformLayout>
+                      <Toaster />
+                    </Router>
+                  </DesignSystemInitializer>
+                </ProfileProvider>
               </UserProvider>
             </AuthProvider>
           </ThemeProvider>

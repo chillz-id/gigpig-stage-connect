@@ -16,7 +16,10 @@ import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
 
-const Shows = () => {
+// Gigs page - Browse and discover comedy gigs
+// Previously called "Shows" - renamed to "Gigs" for clarity
+// The /shows route will be used for a new feature showing comedian shows + organization shows
+const Gigs = () => {
   const { theme } = useTheme();
   const { user, hasRole } = useAuth();
   const { activeProfile } = useProfile();
@@ -515,4 +518,4 @@ const Shows = () => {
   );
 };
 
-export default Shows;
+export default Gigs;

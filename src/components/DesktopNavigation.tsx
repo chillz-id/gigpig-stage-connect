@@ -17,11 +17,11 @@ const DesktopNavigation: React.FC = () => {
     <div className="hidden md:flex items-center space-x-6">
       {/* Main Navigation Links */}
       <div className="flex items-center space-x-6">
-        <Link 
-          to="/shows" 
+        <Link
+          to="/gigs"
           className="text-foreground hover:text-primary bg-transparent hover:bg-accent/50 transition-all duration-200 font-medium px-4 py-2 rounded-lg"
         >
-          Shows
+          Gigs
         </Link>
         <Link 
           to="/comedians" 
