@@ -77,6 +77,224 @@ export const eventSpotService = {
 
     if (firstError) throw firstError;
   },
+
+  // ============================================================================
+  // PAYMENT & TAX MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Update payment details for a spot with automatic tax calculation
+   * If tax_included is true: amount is gross (includes tax)
+   * If tax_included is false: amount is net (tax excluded)
+   */
+  async updatePayment(
+    spotId: string,
+    payment: {
+      payment_amount: number;
+      tax_included: boolean;
+      tax_rate: number;
+      payment_notes?: string;
+      payment_status?: 'unpaid' | 'pending' | 'paid' | 'partially_paid' | 'refunded';
+    }
+  ): Promise<EventSpot> {
+    // Calculate tax breakdown
+    const breakdown = this.calculateTaxBreakdown(
+      payment.payment_amount,
+      payment.tax_included,
+      payment.tax_rate
+    );
+
+    const { data, error } = await supabaseClient
+      .from('event_spots')
+      .update({
+        payment_amount: payment.payment_amount,
+        tax_included: payment.tax_included,
+        tax_rate: payment.tax_rate,
+        payment_gross: breakdown.gross,
+        payment_net: breakdown.net,
+        payment_tax: breakdown.tax,
+        payment_notes: payment.payment_notes,
+        payment_status: payment.payment_status || 'unpaid',
+        is_paid: payment.payment_status === 'paid'
+      })
+      .eq('id', spotId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as EventSpot;
+  },
+
+  /**
+   * Calculate tax breakdown
+   * Returns gross, net, and tax amounts
+   */
+  calculateTaxBreakdown(
+    amount: number,
+    taxIncluded: boolean,
+    taxRate: number
+  ): { gross: number; net: number; tax: number } {
+    if (taxIncluded) {
+      // Amount is gross, calculate net and tax
+      const net = Math.round((amount / (1 + taxRate / 100)) * 100) / 100;
+      const tax = Math.round((amount - net) * 100) / 100;
+      return { gross: amount, net, tax };
+    } else {
+      // Amount is net, calculate gross and tax
+      const tax = Math.round((amount * taxRate / 100) * 100) / 100;
+      const gross = Math.round((amount + tax) * 100) / 100;
+      return { gross, net: amount, tax };
+    }
+  },
+
+  /**
+   * Bulk update payment status for multiple spots
+   */
+  async bulkUpdatePaymentStatus(
+    spotIds: string[],
+    status: 'unpaid' | 'pending' | 'paid' | 'partially_paid' | 'refunded'
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from('event_spots')
+      .update({
+        payment_status: status,
+        is_paid: status === 'paid'
+      })
+      .in('id', spotIds);
+
+    if (error) throw error;
+  },
+
+  /**
+   * Mark spot as paid
+   */
+  async markAsPaid(spotId: string): Promise<EventSpot> {
+    const { data, error } = await supabaseClient
+      .from('event_spots')
+      .update({
+        payment_status: 'paid',
+        is_paid: true
+      })
+      .eq('id', spotId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as EventSpot;
+  },
+
+  /**
+   * Get unpaid spots for an event
+   */
+  async getUnpaidSpots(eventId: string): Promise<EventSpot[]> {
+    const { data, error } = await supabaseClient
+      .from('event_spots')
+      .select('*')
+      .eq('event_id', eventId)
+      .neq('payment_status', 'paid')
+      .order('spot_order', { ascending: true });
+
+    if (error) throw error;
+    return (data as EventSpot[] | null) ?? [];
+  },
+
+  /**
+   * Get payment statistics for an event
+   */
+  async getPaymentStats(eventId: string): Promise<{
+    total_spots: number;
+    paid_spots: number;
+    unpaid_spots: number;
+    total_gross: number;
+    total_net: number;
+    total_tax: number;
+    paid_gross: number;
+    unpaid_gross: number;
+  }> {
+    const spots = await this.listByEvent(eventId);
+
+    const stats = {
+      total_spots: spots.length,
+      paid_spots: 0,
+      unpaid_spots: 0,
+      total_gross: 0,
+      total_net: 0,
+      total_tax: 0,
+      paid_gross: 0,
+      unpaid_gross: 0
+    };
+
+    spots.forEach(spot => {
+      // Count payment status
+      if (spot.payment_status === 'paid') {
+        stats.paid_spots++;
+        stats.paid_gross += spot.payment_gross || 0;
+      } else {
+        stats.unpaid_spots++;
+        stats.unpaid_gross += spot.payment_gross || 0;
+      }
+
+      // Sum amounts
+      stats.total_gross += spot.payment_gross || 0;
+      stats.total_net += spot.payment_net || 0;
+      stats.total_tax += spot.payment_tax || 0;
+    });
+
+    return stats;
+  },
+
+  /**
+   * Toggle tax included/excluded for a spot
+   * Recalculates breakdown based on new setting
+   */
+  async toggleTaxIncluded(spotId: string): Promise<EventSpot> {
+    // Get current spot
+    const { data: spot, error: fetchError } = await supabaseClient
+      .from('event_spots')
+      .select('*')
+      .eq('id', spotId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentSpot = spot as EventSpot;
+    const newTaxIncluded = !currentSpot.tax_included;
+    const amount = currentSpot.payment_amount || 0;
+
+    // Recalculate with new tax setting
+    return this.updatePayment(spotId, {
+      payment_amount: amount,
+      tax_included: newTaxIncluded,
+      tax_rate: currentSpot.tax_rate || 10,
+      payment_notes: currentSpot.payment_notes || undefined,
+      payment_status: currentSpot.payment_status as any
+    });
+  },
+
+  /**
+   * Apply tax rate to all spots in an event
+   */
+  async applyTaxRateToEvent(
+    eventId: string,
+    taxRate: number,
+    taxIncluded: boolean
+  ): Promise<void> {
+    const spots = await this.listByEvent(eventId);
+
+    const updatePromises = spots
+      .filter(spot => spot.payment_amount && spot.payment_amount > 0)
+      .map(spot =>
+        this.updatePayment(spot.id, {
+          payment_amount: spot.payment_amount!,
+          tax_included: taxIncluded,
+          tax_rate: taxRate,
+          payment_notes: spot.payment_notes || undefined,
+          payment_status: spot.payment_status as any
+        })
+      );
+
+    await Promise.all(updatePromises);
+  },
 };
 
 export type EventSpotService = typeof eventSpotService;
