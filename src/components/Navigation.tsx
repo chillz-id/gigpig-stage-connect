@@ -89,7 +89,7 @@ const Navigation = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-2">
-              <Link to="/shows" className={getNavLinkClass('/shows')} title="Shows">
+              <Link to="/gigs" className={getNavLinkClass('/gigs')} title="Gigs">
                 <Search className="w-4 h-4" />
               </Link>
 
