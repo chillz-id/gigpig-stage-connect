@@ -1,6 +1,6 @@
 # Sidebar, Vouches & Shows/Gigs Updates
 Created: 2025-10-27
-Updated: 2025-10-27 - ALL TASKS COMPLETED ✅
+Updated: 2025-10-27 - ALL TASKS COMPLETED ✅ + E2E TEST FIX
 Status: Completed
 
 ## Overview
@@ -135,6 +135,14 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS show_type TEXT CHECK (show_type IN (
 ALTER TABLE events ADD COLUMN IF NOT EXISTS age_restriction TEXT CHECK (age_restriction IN ('over_18', 'under_18', 'all_ages'));
 ALTER TABLE events ADD COLUMN IF NOT EXISTS is_comedian_show BOOLEAN DEFAULT FALSE;
 ```
+
+## Bonus Task: E2E Smoke Test Fix (COMPLETED)
+- [x] Fixed homepage smoke test selectors to match actual Index page structure
+- [x] Replaced `nav, header` check with `main` element check
+- [x] Added h1 hero heading check
+- [x] Added CTA buttons check
+- [x] Commit: `fix(tests): update smoke test selectors to match Index page structure`
+- [x] CI E2E Smoke Tests now passing (3m31s)
 
 ## Testing Checklist
 ### Task 1: Sidebar Navigation (COMPLETED)
