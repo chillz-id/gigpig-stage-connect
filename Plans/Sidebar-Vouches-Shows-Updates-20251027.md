@@ -1,6 +1,6 @@
 # Sidebar, Vouches & Shows/Gigs Updates
 Created: 2025-10-27
-Updated: 2025-10-27 - Task 1 (Sidebar Navigation Restructuring) completed
+Updated: 2025-10-27 - Tasks 1 & 3 completed (Sidebar + Shows→Gigs rename)
 Status: In Progress
 
 ## Overview
@@ -154,9 +154,12 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS is_comedian_show BOOLEAN DEFAULT FAL
 - [ ] Crown icon shows in profile header
 - [ ] Submit Vouch button styled correctly
 
-### Task 3: Shows → Gigs Rename (PENDING)
-- [ ] `/gigs` route works (renamed from `/shows`)
-- [ ] Old `/shows` URL redirects to `/gigs`
+### Task 3: Shows → Gigs Rename (COMPLETED)
+- [x] `/gigs` route works (renamed from `/shows`)
+- [x] Old `/shows` URL redirects to `/gigs`
+- [x] Shows.tsx renamed to Gigs.tsx (98% similarity)
+- [x] All navigation components updated
+- [x] Navigation types updated (added 'gigs' and 'shows')
 
 ### Task 4: New Shows Page (PENDING)
 - [ ] New `/shows` page displays correctly
