@@ -1,7 +1,7 @@
 # Sidebar, Vouches & Shows/Gigs Updates
 Created: 2025-10-27
-Updated: 2025-10-27 - Tasks 1 & 3 completed (Sidebar + Shows→Gigs rename)
-Status: In Progress
+Updated: 2025-10-27 - Tasks 1, 2 & 3 completed (Sidebar + Vouches Crown + Shows→Gigs)
+Status: In Progress - Tasks 4 & 5 remaining
 
 ## Overview
 Implement UI/UX improvements from "BIG Updates Required 261025.txt" lines 1-12 and 49-53.
@@ -148,11 +148,13 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS is_comedian_show BOOLEAN DEFAULT FAL
 - [x] TypeScript compilation passes
 - [x] Production build succeeds
 
-### Task 2: Vouches UI (PENDING)
-- [ ] Crown icon displays on Vouches page
-- [ ] Crown fills/goes gold appropriately
-- [ ] Crown icon shows in profile header
-- [ ] Submit Vouch button styled correctly
+### Task 2: Vouches UI (COMPLETED)
+- [x] Crown icon displays on Vouches page
+- [x] Crown fills/goes gold appropriately (on hover, click, and typing)
+- [x] Crown icon shows in profile header (above Sign Out)
+- [x] Submit Vouch button styled correctly (standard styling)
+- [x] Removed 1-5 star rating system
+- [x] Backend compatibility maintained (crown = 5 stars)
 
 ### Task 3: Shows → Gigs Rename (COMPLETED)
 - [x] `/gigs` route works (renamed from `/shows`)
