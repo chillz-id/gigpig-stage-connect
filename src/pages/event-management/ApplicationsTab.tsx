@@ -1,5 +1,5 @@
 /**
- * ApplicationsTabPage Component
+ * ApplicationsTab Component
  *
  * Full page assembly for Applications Tab with all features:
  * - Header, Filters, List, Shortlist Panel, Bulk Actions
@@ -8,10 +8,10 @@
 
 import React, { useState } from 'react';
 import { EventManagementHeaderContainer } from '@/components/event-management/EventManagementHeaderContainer';
-import { ApplicationFilters, type FilterState } from './ApplicationFilters';
-import { ApplicationListContainer } from './ApplicationListContainer';
-import { ShortlistPanelContainer } from './ShortlistPanelContainer';
-import { ApplicationBulkActions } from './ApplicationBulkActions';
+import { ApplicationFilters, type FilterState } from '@/components/applications/ApplicationFilters';
+import { ApplicationListContainer } from '@/components/applications/ApplicationListContainer';
+import { ShortlistPanelContainer } from '@/components/applications/ShortlistPanelContainer';
+import { ApplicationBulkActions } from '@/components/applications/ApplicationBulkActions';
 import {
   useBulkApproveApplications,
   useBulkRejectApplications,
@@ -19,7 +19,7 @@ import {
 } from '@/hooks/useApplicationApproval';
 import { useToast } from '@/hooks/use-toast';
 
-interface ApplicationsTabPageProps {
+interface ApplicationsTabProps {
   eventId: string;
   userId: string;
   totalSpots?: number;
@@ -27,7 +27,7 @@ interface ApplicationsTabPageProps {
   onHideComedians?: (comedianIds: string[], scope: 'event' | 'global') => void;
 }
 
-export function ApplicationsTabPage({
+export default function ApplicationsTab({
   eventId,
   userId,
   totalSpots,
@@ -195,5 +195,3 @@ export function ApplicationsTabPage({
     </div>
   );
 }
-
-export default ApplicationsTabPage;
