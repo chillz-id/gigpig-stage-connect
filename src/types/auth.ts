@@ -30,9 +30,11 @@ export interface Profile {
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer';
+  role: 'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer';
   created_at: string;
 }
+
+export type RoleType = UserRole['role'];
 
 export interface AuthContextType {
   user: User | null;
@@ -44,7 +46,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => boolean;
-  hasAnyRole: (roles: Array<'member' | 'comedian' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => boolean;
+  hasRole: (role: 'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => boolean;
+  hasAnyRole: (roles: Array<'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => boolean;
   isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
 }

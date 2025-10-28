@@ -25,7 +25,14 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-export type UserRole = 'comedian' | 'promoter' | 'photographer' | 'videographer' | 'manager' | 'admin' | 'agency_manager' | 'venue_manager';
+export type UserRole = 'comedian' | 'comedian_lite' | 'promoter' | 'photographer' | 'videographer' | 'manager' | 'admin' | 'agency_manager' | 'venue_manager';
+
+export const getRoleDisplayName = (role: string): string => {
+  if (role === 'comedian_lite') return 'Comedian';
+  if (role === 'agency_manager') return 'Agency Manager';
+  if (role === 'venue_manager') return 'Venue Manager';
+  return role.charAt(0).toUpperCase() + role.slice(1);
+};
 
 export interface MenuItem {
   id: string;
