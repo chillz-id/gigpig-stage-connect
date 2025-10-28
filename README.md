@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to GigPigs
 
 ## 🎉 Multi-Profile Switching System - PRODUCTION READY
 
