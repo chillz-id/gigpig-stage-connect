@@ -31,6 +31,34 @@ describe('useApplicationStats', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
+  // Helper to mock both Supabase queries (applications + shortlisted count)
+  const mockSupabaseQueries = (applications: any[], shortlistedCount: number) => {
+    const mockSelectWithCount = jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({
+          count: shortlistedCount,
+          error: null,
+        }),
+      }),
+    });
+
+    const mockSelectNoCount = jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({
+        data: applications,
+        error: null,
+      }),
+    });
+
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockImplementation((fields: string, options?: any) => {
+        if (options?.count === 'exact') {
+          return mockSelectWithCount();
+        }
+        return mockSelectNoCount();
+      }),
+    });
+  };
+
   it('should fetch and calculate application statistics', async () => {
     const mockApplications = [
       {
@@ -65,14 +93,7 @@ describe('useApplicationStats', () => {
       },
     ];
 
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: mockApplications,
-          error: null,
-        }),
-      }),
-    });
+    mockSupabaseQueries(mockApplications, 2); // 2 shortlisted applications
 
     const { result } = renderHook(() => useApplicationStats('event-123'), { wrapper });
 
@@ -92,14 +113,7 @@ describe('useApplicationStats', () => {
   });
 
   it('should handle empty applications array', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      }),
-    });
+    mockSupabaseQueries([], 0); // No applications, no shortlisted
 
     const { result } = renderHook(() => useApplicationStats('event-123'), { wrapper });
 
@@ -134,14 +148,7 @@ describe('useApplicationStats', () => {
       },
     ];
 
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: mockApplications,
-          error: null,
-        }),
-      }),
-    });
+    mockSupabaseQueries(mockApplications, 1); // 1 shortlisted application
 
     const { result } = renderHook(() => useApplicationStats('event-123'), { wrapper });
 
@@ -170,14 +177,7 @@ describe('useApplicationStats', () => {
       },
     ];
 
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: mockApplications,
-          error: null,
-        }),
-      }),
-    });
+    mockSupabaseQueries(mockApplications, 0); // 0 shortlisted applications
 
     const { result } = renderHook(() => useApplicationStats('event-123'), { wrapper });
 

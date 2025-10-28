@@ -37,37 +37,37 @@ describe('useDealStats', () => {
         {
           id: '1',
           status: 'draft',
-          total_amount: 1000,
+          total_revenue: 1000,
           deal_participants: [
-            { user_id: 'user-1', status: 'pending' },
-            { user_id: 'user-2', status: 'pending' },
+            { participant_id: 'user-1', approval_status: 'pending' },
+            { participant_id: 'user-2', approval_status: 'pending' },
           ],
         },
         {
           id: '2',
           status: 'pending_approval',
-          total_amount: 2000,
+          total_revenue: 2000,
           deal_participants: [
-            { user_id: 'user-1', status: 'confirmed' },
-            { user_id: 'user-2', status: 'pending' },
+            { participant_id: 'user-1', approval_status: 'approved' },
+            { participant_id: 'user-2', approval_status: 'pending' },
           ],
         },
         {
           id: '3',
           status: 'fully_approved',
-          total_amount: 3000,
+          total_revenue: 3000,
           deal_participants: [
-            { user_id: 'user-1', status: 'confirmed' },
-            { user_id: 'user-2', status: 'confirmed' },
+            { participant_id: 'user-1', approval_status: 'approved' },
+            { participant_id: 'user-2', approval_status: 'approved' },
           ],
         },
         {
           id: '4',
           status: 'settled',
-          total_amount: 4000,
+          total_revenue: 4000,
           deal_participants: [
-            { user_id: 'user-1', status: 'confirmed' },
-            { user_id: 'user-2', status: 'confirmed' },
+            { participant_id: 'user-1', approval_status: 'approved' },
+            { participant_id: 'user-2', approval_status: 'approved' },
           ],
         },
       ];
@@ -96,7 +96,7 @@ describe('useDealStats', () => {
         settledDeals: 1,
         totalRevenue: 10000, // All deals visible to owner
         settledRevenue: 4000,
-        pendingRevenue: 6000, // draft + pending_approval + fully_approved
+        pendingRevenue: 5000, // pending_approval (2000) + fully_approved (3000)
       });
     });
   });
@@ -107,37 +107,37 @@ describe('useDealStats', () => {
         {
           id: '1',
           status: 'draft',
-          total_amount: 1000,
+          total_revenue: 1000,
           deal_participants: [
-            { user_id: 'user-1', status: 'pending' },
-            { user_id: 'user-2', status: 'pending' },
+            { participant_id: 'user-1', approval_status: 'pending' },
+            { participant_id: 'user-2', approval_status: 'pending' },
           ],
         },
         {
           id: '2',
           status: 'pending_approval',
-          total_amount: 2000,
+          total_revenue: 2000,
           deal_participants: [
-            { user_id: 'user-1', status: 'confirmed' },
-            { user_id: 'user-2', status: 'pending' }, // Not fully confirmed
+            { participant_id: 'user-1', approval_status: 'approved' },
+            { participant_id: 'user-2', approval_status: 'pending' }, // Not fully confirmed
           ],
         },
         {
           id: '3',
           status: 'fully_approved',
-          total_amount: 3000,
+          total_revenue: 3000,
           deal_participants: [
-            { user_id: 'user-1', status: 'confirmed' },
-            { user_id: 'user-2', status: 'confirmed' }, // Fully confirmed
+            { participant_id: 'user-1', approval_status: 'approved' },
+            { participant_id: 'user-2', approval_status: 'approved' }, // Fully confirmed
           ],
         },
         {
           id: '4',
           status: 'fully_approved',
-          total_amount: 4000,
+          total_revenue: 4000,
           deal_participants: [
-            { user_id: 'user-3', status: 'confirmed' }, // User not in this deal
-            { user_id: 'user-4', status: 'confirmed' },
+            { participant_id: 'user-3', approval_status: 'approved' }, // User not in this deal
+            { participant_id: 'user-4', approval_status: 'approved' },
           ],
         },
       ];
@@ -176,10 +176,10 @@ describe('useDealStats', () => {
         {
           id: '1',
           status: 'fully_approved',
-          total_amount: 1000,
+          total_revenue: 1000,
           deal_participants: [
-            { user_id: 'user-2', status: 'confirmed' },
-            { user_id: 'user-3', status: 'confirmed' },
+            { participant_id: 'user-2', approval_status: 'approved' },
+            { participant_id: 'user-3', approval_status: 'approved' },
           ],
         },
       ];

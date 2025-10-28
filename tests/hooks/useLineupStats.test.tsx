@@ -35,7 +35,7 @@ describe('useLineupStats', () => {
     const mockSpots = [
       {
         id: '1',
-        status: 'filled',
+        is_filled: true,
         duration_minutes: 20,
         payment_gross: 100,
         payment_tax: 10,
@@ -44,7 +44,7 @@ describe('useLineupStats', () => {
       },
       {
         id: '2',
-        status: 'confirmed',
+        is_filled: true,
         duration_minutes: 30,
         payment_gross: 150,
         payment_tax: 15,
@@ -53,7 +53,7 @@ describe('useLineupStats', () => {
       },
       {
         id: '3',
-        status: 'open',
+        is_filled: false,
         duration_minutes: 15,
         payment_gross: 0,
         payment_tax: 0,
@@ -77,12 +77,12 @@ describe('useLineupStats', () => {
 
     expect(result.current.data).toEqual({
       totalSpots: 3,
-      filledSpots: 2, // 'filled' and 'confirmed'
+      filledSpots: 2, // is_filled true for first 2 spots
       totalDuration: 65, // 20 + 30 + 15
       totalGross: 250, // 100 + 150 + 0
       totalTax: 25, // 10 + 15 + 0
       totalNet: 225, // 90 + 135 + 0
-      totalPaid: 90, // only first spot is paid
+      totalPaid: 100, // only first spot is paid (uses payment_gross)
     });
   });
 
@@ -115,7 +115,7 @@ describe('useLineupStats', () => {
     const mockSpots = [
       {
         id: '1',
-        status: 'filled',
+        is_filled: true,
         duration_minutes: null,
         payment_gross: null,
         payment_tax: null,
