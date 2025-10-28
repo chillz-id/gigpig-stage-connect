@@ -95,6 +95,27 @@ export default function EventManagement() {
     setHiddenComedianIds([...hiddenComedianIds, ...comedianIds]);
   };
 
+  // Auth guards
+  if (!eventId) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertDescription>Event ID is required.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!user?.id) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertDescription>You must be logged in to manage events.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   // Loading state
   if (eventLoading) {
     return (
@@ -199,26 +220,26 @@ export default function EventManagement() {
           {/* Tab Content */}
           <div className="mt-6">
             <TabsContent value="overview" className="space-y-6">
-              <EventOverviewTab eventId={eventId!} userId={user?.id!} />
+              <EventOverviewTab eventId={eventId} userId={user.id} />
             </TabsContent>
 
             <TabsContent value="applications" className="space-y-6">
               <ApplicationsTab
-                eventId={eventId!}
-                userId={user?.id!}
+                eventId={eventId}
+                userId={user.id}
                 hiddenComedianIds={hiddenComedianIds}
                 onHideComedians={handleHideComedians}
               />
             </TabsContent>
 
             <TabsContent value="lineup" className="space-y-6">
-              <LineupTab eventId={eventId!} userId={user?.id!} />
+              <LineupTab eventId={eventId} userId={user.id} />
             </TabsContent>
 
             <TabsContent value="deals" className="space-y-6">
               <DealsTab
-                eventId={eventId!}
-                userId={user?.id!}
+                eventId={eventId}
+                userId={user.id}
                 isOwner={isOwner}
               />
             </TabsContent>

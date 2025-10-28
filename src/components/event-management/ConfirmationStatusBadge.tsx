@@ -19,6 +19,11 @@ export function ConfirmationStatusBadge({
   const [status, setStatus] = useState(initialStatus);
   const [countdown, setCountdown] = useState<string>('');
 
+  // Sync status when prop changes
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
+
   // Calculate countdown time remaining
   const calculateCountdown = (deadlineTime: string): string => {
     const now = new Date().getTime();

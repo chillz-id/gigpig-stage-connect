@@ -47,14 +47,14 @@ export function useApplicationStats(eventId: string) {
       }
 
       // Query shortlisted applications via service query pattern
-      const { data: shortlistData, error: shortlistError } = await supabase
+      const { count: shortlistCount, error: shortlistError } = await supabase
         .from('applications')
         .select('id', { count: 'exact', head: true })
         .eq('event_id', eventId)
         .eq('is_shortlisted', true);
 
       // If is_shortlisted column doesn't exist, default to 0
-      const shortlistedApplications = shortlistError ? 0 : (shortlistData || 0);
+      const shortlistedApplications = shortlistError ? 0 : (shortlistCount || 0);
 
       const applications = (appsData || []) as ApplicationData[];
 
