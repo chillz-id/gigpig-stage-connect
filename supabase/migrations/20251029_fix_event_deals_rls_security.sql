@@ -30,11 +30,10 @@ USING (
   )
 )
 WITH CHECK (
-  -- Updated row must still belong to user's events
+  -- Updated row's new event_id must belong to the user
+  -- This prevents deal creators from changing event_id to other organizers' events
   auth.uid() IN (
     SELECT promoter_id FROM public.events WHERE id = event_deals.event_id
-    UNION
-    SELECT created_by FROM public.event_deals WHERE id = event_deals.id
   )
 );
 
@@ -59,7 +58,8 @@ USING (
   )
 )
 WITH CHECK (
-  -- Updated row must still belong to user's deals
+  -- Updated row's new deal_id must belong to a deal the user created
+  -- This prevents reassigning participants to other users' deals
   auth.uid() IN (
     SELECT created_by FROM public.event_deals WHERE id = deal_participants.deal_id
   )
