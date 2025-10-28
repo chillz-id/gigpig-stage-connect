@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate } from '@/utils/dateUtils';
-import { formatCurrency } from '@/utils/formatCurrency';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import type { EventData } from '@/types/event';
 
 interface EventOverviewTabProps {

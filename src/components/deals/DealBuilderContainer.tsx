@@ -7,7 +7,7 @@
 import React from 'react';
 import { useCreateDeal } from '@/hooks/useEventDeals';
 import { DealBuilder, type DealInput } from './DealBuilder';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface DealBuilderContainerProps {

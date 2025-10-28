@@ -35,6 +35,7 @@ const TicketSalesTestPage = lazy(() => import('@/pages/admin/TicketSalesTestPage
 const EventDetail = lazy(() => import('@/pages/EventDetail'));
 const EventDetailPublic = lazy(() => import('@/pages/EventDetailPublic'));
 const EditEvent = lazy(() => import('@/pages/EditEvent'));
+const EventManagement = lazy(() => import('@/pages/EventManagement'));
 const ComedianProfile = lazy(() => import('@/pages/ComedianProfile'));
 const ComedianProfileBySlug = lazy(() => import('@/pages/ComedianProfileBySlug'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
@@ -208,6 +209,7 @@ function App() {
                             <Route path="/settings/pwa" element={<PWASettings />} />
                             <Route path="/admin/events/:eventId" element={<EventDetail />} />
                             <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
+                            <Route path="/events/:eventId/manage" element={<ProtectedRoute roles={['promoter', 'admin']}><EventManagement /></ProtectedRoute>} />
                             <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian']}><EventApplicationPage /></ProtectedRoute>} />
                             <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
                             <Route path="/events/:eventId" element={<EventDetailPublic />} />
