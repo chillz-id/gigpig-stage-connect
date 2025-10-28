@@ -14,7 +14,7 @@ import EventTicketSalesTab from '@/components/admin/event-detail/EventTicketSale
 import EventLineupTab from '@/components/admin/event-detail/EventLineupTab';
 import EventSettlementsTab from '@/components/admin/event-detail/EventSettlementsTab';
 import EventDetailsTab from '@/components/admin/event-detail/EventDetailsTab';
-import { ArrowLeft, Edit, Trash2, Calendar, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, MapPin, Users, Settings } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -217,6 +217,15 @@ const EventDetail = () => {
                   <Badge variant={getStatusBadgeVariant(event.status)}>
                     {event.status}
                   </Badge>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => navigate(`/events/${eventId}/manage`)}
+                    className="bg-white text-purple-900 hover:bg-gray-100"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Event
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

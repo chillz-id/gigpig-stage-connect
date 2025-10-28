@@ -3512,6 +3512,14 @@ export type Database = {
           is_filled: boolean
           is_paid: boolean
           payment_amount: number | null
+          payment_gross: number | null
+          payment_net: number | null
+          payment_notes: string | null
+          payment_status: string | null
+          payment_tax: number | null
+          gst_mode: string
+          tax_included: boolean | null
+          tax_rate: number | null
           spot_name: string
           spot_order: number
           updated_at: string
@@ -3530,6 +3538,14 @@ export type Database = {
           is_filled?: boolean
           is_paid?: boolean
           payment_amount?: number | null
+          payment_gross?: number | null
+          payment_net?: number | null
+          payment_notes?: string | null
+          payment_status?: string | null
+          payment_tax?: number | null
+          gst_mode?: string
+          tax_included?: boolean | null
+          tax_rate?: number | null
           spot_name: string
           spot_order?: number
           updated_at?: string
@@ -3548,6 +3564,14 @@ export type Database = {
           is_filled?: boolean
           is_paid?: boolean
           payment_amount?: number | null
+          payment_gross?: number | null
+          payment_net?: number | null
+          payment_notes?: string | null
+          payment_status?: string | null
+          payment_tax?: number | null
+          gst_mode?: string
+          tax_included?: boolean | null
+          tax_rate?: number | null
           spot_name?: string
           spot_order?: number
           updated_at?: string
@@ -7419,6 +7443,7 @@ export type Database = {
           email: string
           facebook_url: string | null
           first_name: string | null
+          gst_registered: boolean
           id: string
           instagram_url: string | null
           is_verified: boolean | null
@@ -7447,6 +7472,7 @@ export type Database = {
           email: string
           facebook_url?: string | null
           first_name?: string | null
+          gst_registered?: boolean
           id: string
           instagram_url?: string | null
           is_verified?: boolean | null
@@ -7475,6 +7501,7 @@ export type Database = {
           email?: string
           facebook_url?: string | null
           first_name?: string | null
+          gst_registered?: boolean
           id?: string
           instagram_url?: string | null
           is_verified?: boolean | null
