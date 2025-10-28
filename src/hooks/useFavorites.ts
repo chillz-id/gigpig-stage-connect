@@ -18,7 +18,7 @@ export const useFavorites = () => {
   } = useQuery({
     queryKey: [FAVORITES_QUERY_KEY, user?.id],
     queryFn: async () => {
-      if (!user || !hasRole('comedian')) {
+      if (!user || !(hasRole('comedian') || hasRole('comedian_lite'))) {
         return [] as string[];
       }
 
@@ -36,7 +36,7 @@ export const useFavorites = () => {
         throw new Error('AUTH_REQUIRED');
       }
 
-      if (!hasRole('comedian')) {
+      if (!(hasRole('comedian') || hasRole('comedian_lite'))) {
         throw new Error('ONLY_COMEDIANS_CAN_FAVORITE');
       }
 
