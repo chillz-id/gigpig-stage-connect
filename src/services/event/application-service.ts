@@ -381,6 +381,98 @@ export const eventApplicationService = {
 
     return data?.name ?? null;
   },
+
+  // Application Approval Workflow (No reject - only shortlist and accept)
+
+  async approveApplication(applicationId: string): Promise<EventApplication> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .update({
+        status: 'accepted',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', applicationId)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data as EventApplication;
+  },
+
+  async addToShortlist(applicationId: string): Promise<void> {
+    const { error} = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: true,
+        shortlisted_at: new Date().toISOString(),
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+  },
+
+  async removeFromShortlist(applicationId: string): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: false,
+        shortlisted_at: null,
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+  },
+
+  // Bulk Operations
+
+  async bulkApprove(applicationIds: string[]): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        status: 'accepted',
+        responded_at: new Date().toISOString(),
+      })
+      .in('id', applicationIds);
+
+    if (error) throw error;
+  },
+
+  async bulkShortlist(applicationIds: string[]): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: true,
+        shortlisted_at: new Date().toISOString(),
+      })
+      .in('id', applicationIds);
+
+    if (error) throw error;
+  },
+
+  // Query Operations
+
+  async getShortlistedApplications(eventId: string): Promise<EventApplication[]> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('is_shortlisted', true)
+      .order('shortlisted_at', { ascending: false });
+
+    if (error) throw error;
+    return (data as EventApplication[] | null) ?? [];
+  },
+
+  // Cleanup (called after event ends)
+
+  async deleteApplicationsForEvent(eventId: string): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .delete()
+      .eq('event_id', eventId);
+
+    if (error) throw error;
+  },
 };
 
 export type EventApplicationService = typeof eventApplicationService;
