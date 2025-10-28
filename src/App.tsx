@@ -63,7 +63,7 @@ const MediaLibrary = lazy(() => import('@/pages/MediaLibrary'));
 const TaskDashboard = lazy(() => import('@/pages/TaskDashboard'));
 const Vouches = lazy(() => import('@/pages/Vouches'));
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
-const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler'));
+const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
