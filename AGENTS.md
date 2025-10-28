@@ -23,3 +23,87 @@ Follow Conventional Commits (`feat:`, `fix:`, `chore:`). Keep commits scoped, an
 
 ## Security & Configuration Tips
 Keep secrets in `.env.local` or gitignored `credentials/`. Validate automation touching Humanitix, Notion, or n8n in staging first and respect documented rate limits.
+
+## Profile URLs & Routing Development Notes
+
+### Route Architecture
+The app uses a **route-based architecture** with nested dynamic segments (`/:profileType/:slug/:page`). Static routes like `/dashboard`, `/shows`, `/comedians` must be declared **before** dynamic profile routes in `App.tsx` to ensure proper route matching priority.
+
+### Working with Profile Routes
+
+**Adding new profile pages:**
+1. Add route to nested routes in profile routing section of `App.tsx`
+2. Wrap with `<ProtectedRoute>` if page requires authentication
+3. Use `useActiveProfile()` hook to access profile state and ownership status
+4. Access profile data via `profileData` from context (no need for separate fetch)
+
+**Testing profile routing:**
+- Unit tests: `tests/utils/slugify.test.ts`, `tests/hooks/useSlugValidation.test.tsx`
+- Context tests: `tests/contexts/ActiveProfileContext.test.tsx`
+- E2E tests: `tests/e2e/profile-urls.spec.ts` (covers routing, 404s, profile switching)
+
+**Common pitfalls:**
+- Don't add static routes after dynamic `/:profileType/:slug` route (they'll never match)
+- Always validate slug format before database checks using `validateSlug()` utility
+- Check `isOwner` from `useActiveProfile()` before showing edit/delete actions
+- Remember to exclude current profile ID when checking slug uniqueness during edits
+
+### Database Considerations
+
+**Profile tables with url_slug:**
+- `comedians`, `managers`, `organizations`, `venues` all have `url_slug` column
+- `url_slug` is UNIQUE and NOT NULL per table
+- Use `generate_unique_slug()` PostgreSQL function for safe slug generation
+- Reserved slugs enforced at application layer (see `RESERVED_SLUGS` in `src/utils/slugify.ts`)
+
+**Slug history tracking:**
+- When updating `url_slug`, call `record_slug_change()` to create `slug_history` entry
+- Old URLs automatically redirect via 301 (preserves SEO value)
+- Check `slug_history` before showing 404 to handle old URLs gracefully
+
+**Requested profiles analytics:**
+- 404s on profile routes trigger `record_profile_request()` PostgreSQL function
+- Captures slug attempted, optional Instagram handle, requesting user ID
+- Admins can query `requested_profiles` table for recruitment insights
+
+### Per-Profile State Management
+
+**Sidebar preferences:**
+- Scoped to composite key: `(user_id, profile_type, profile_id)`
+- Each profile maintains independent sidebar state (hidden items, custom order)
+- Use `useSidebarPreferences()` hook with profile context for automatic scoping
+- Legacy global preferences have NULL `profile_type` and `profile_id`
+
+**Profile switching:**
+- Use `ActiveProfileContext` for profile-aware navigation
+- Profile switcher preserves current page context when switching (e.g., `/comedian/a/gigs` → `/manager/b/gigs`)
+- Sidebar state automatically switches when profile changes
+
+### ActiveProfileContext API
+
+```typescript
+const {
+  profileType,        // 'comedian' | 'manager' | 'organization' | 'venue' | null
+  slug,               // URL slug from params
+  profileData,        // Full profile data (id, name, avatar_url, user_id, etc.)
+  isOwner,            // true if current user owns this profile
+  isLoading,          // loading state
+  error,              // fetch error if any
+  permissions,        // array of permission strings (future use)
+  refreshProfile,     // manually refetch profile data
+} = useActiveProfile();
+```
+
+**Important:** Always check `isLoading` and `error` before using `profileData` to avoid null reference errors.
+
+### Migration Notes
+
+**Backfilling slugs:**
+- Existing profiles without `url_slug` auto-assigned during migration via `slugify(name)`
+- Duplicates get numeric suffix: `john-doe`, `john-doe-2`, `john-doe-3`
+- Users can customize slugs in profile settings
+
+**Testing migrations:**
+- Always test migrations locally with `npm run migrate:dry-run` first
+- Verify uniqueness constraints don't block migration with duplicate names
+- Check `generate_unique_slug()` function handles edge cases (empty names, special chars, etc.)
