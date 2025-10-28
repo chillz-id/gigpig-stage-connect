@@ -361,27 +361,33 @@ export function useSettleDeal() {
 
   return useMutation({
     mutationFn: async ({ dealId, userId }: { dealId: string; userId: string }) => {
-      // Validate before settlement
-      const validation = await validateDealForSettlement(dealId);
+      // Validate before settlement (pass userId for ownership check)
+      const validation = await validateDealForSettlement(dealId, userId);
       if (!validation.valid) {
         throw new Error(validation.errors.join(', '));
       }
       return settleDeal(dealId, userId);
     },
     onSuccess: (data) => {
-      // Update detail cache
-      queryClient.setQueryData(eventDealsKeys.detail(data.id), data);
+      // settleDeal now returns { deal, invoices }
+      const { deal, invoices } = data;
+
+      // Update detail cache with settled deal
+      queryClient.setQueryData(eventDealsKeys.detail(deal.id), deal);
+
       // Invalidate list
       queryClient.invalidateQueries({
-        queryKey: eventDealsKeys.byEvent(data.event_id)
+        queryKey: eventDealsKeys.byEvent(deal.event_id)
       });
+
       // Invalidate stats
       queryClient.invalidateQueries({
-        queryKey: eventDealsKeys.stats(data.event_id)
+        queryKey: eventDealsKeys.stats(deal.event_id)
       });
+
       toast({
         title: 'Deal settled',
-        description: 'Deal has been finalized and invoices will be generated.'
+        description: `Deal finalized. ${invoices.length} invoice(s) generated.`
       });
     },
     onError: (error: any) => {
