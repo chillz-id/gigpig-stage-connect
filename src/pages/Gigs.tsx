@@ -17,6 +17,10 @@ import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
 import { ShowTypeFilter, type ShowType } from '@/components/shows/ShowTypeFilter';
 import { AgeRestrictionToggle, type AgeRestriction } from '@/components/shows/AgeRestrictionToggle';
+import { formatEventTime } from '@/utils/formatEventTime';
+
+// Re-export for backwards compatibility
+export { formatEventTime };
 
 // Gigs page - Browse and discover comedy gigs
 // Previously called "Shows" - renamed to "Gigs" for clarity
