@@ -31,6 +31,8 @@ export interface ApplicationData {
   spot_type?: SpotType;
   availability_confirmed?: boolean;
   requirements_acknowledged?: boolean;
+  is_shortlisted?: boolean;
+  shortlisted_at?: string;
 }
 
 export interface ApplicationInsert {

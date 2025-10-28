@@ -193,3 +193,320 @@ export interface ApplicationSubmitData {
   availability_confirmed?: boolean;
   requirements_acknowledged?: boolean;
 }
+
+// ============================================================================
+// APPROVAL WORKFLOW
+// ============================================================================
+
+/**
+ * Approve an application
+ * Changes status from 'pending' to 'accepted'
+ */
+export async function approveApplication(applicationId: string): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      status: 'accepted',
+      responded_at: new Date().toISOString()
+    })
+    .eq('id', applicationId)
+    .eq('status', 'pending'); // Only approve pending applications
+
+  if (error) {
+    console.error('Error approving application:', error);
+    throw error;
+  }
+}
+
+/**
+ * Reject an application
+ * Changes status from 'pending' to 'rejected'
+ */
+export async function rejectApplication(applicationId: string, reason?: string): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      status: 'rejected',
+      responded_at: new Date().toISOString(),
+      ...(reason && { message: reason })
+    })
+    .eq('id', applicationId)
+    .eq('status', 'pending'); // Only reject pending applications
+
+  if (error) {
+    console.error('Error rejecting application:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk approve applications
+ */
+export async function bulkApproveApplications(applicationIds: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      status: 'accepted',
+      responded_at: new Date().toISOString()
+    })
+    .in('id', applicationIds)
+    .eq('status', 'pending');
+
+  if (error) {
+    console.error('Error bulk approving applications:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk reject applications
+ */
+export async function bulkRejectApplications(applicationIds: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      status: 'rejected',
+      responded_at: new Date().toISOString()
+    })
+    .in('id', applicationIds)
+    .eq('status', 'pending');
+
+  if (error) {
+    console.error('Error bulk rejecting applications:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// SHORTLIST FUNCTIONALITY
+// ============================================================================
+
+/**
+ * Add application to shortlist
+ */
+export async function addToShortlist(applicationId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      is_shortlisted: true,
+      shortlisted_at: new Date().toISOString(),
+      shortlisted_by: userId
+    })
+    .eq('id', applicationId);
+
+  if (error) {
+    console.error('Error adding to shortlist:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remove application from shortlist
+ */
+export async function removeFromShortlist(applicationId: string): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      is_shortlisted: false,
+      shortlisted_at: null,
+      shortlisted_by: null
+    })
+    .eq('id', applicationId);
+
+  if (error) {
+    console.error('Error removing from shortlist:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk add to shortlist
+ */
+export async function bulkAddToShortlist(applicationIds: string[], userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      is_shortlisted: true,
+      shortlisted_at: new Date().toISOString(),
+      shortlisted_by: userId
+    })
+    .in('id', applicationIds);
+
+  if (error) {
+    console.error('Error bulk adding to shortlist:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk remove from shortlist
+ */
+export async function bulkRemoveFromShortlist(applicationIds: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      is_shortlisted: false,
+      shortlisted_at: null,
+      shortlisted_by: null
+    })
+    .in('id', applicationIds);
+
+  if (error) {
+    console.error('Error bulk removing from shortlist:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get shortlisted applications for an event
+ */
+export async function getShortlistedApplications(eventId: string): Promise<ApplicationData[]> {
+  const { data, error } = await supabase
+    .from('applications')
+    .select(`
+      id,
+      comedian_id,
+      event_id,
+      status,
+      message,
+      spot_type,
+      availability_confirmed,
+      requirements_acknowledged,
+      applied_at,
+      responded_at,
+      is_shortlisted,
+      shortlisted_at,
+      events!inner (
+        id,
+        title,
+        venue,
+        event_date
+      ),
+      profiles!comedian_id (
+        id,
+        name,
+        avatar_url,
+        bio,
+        years_experience
+      )
+    `)
+    .eq('event_id', eventId)
+    .eq('is_shortlisted', true)
+    .order('shortlisted_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching shortlisted applications:', error);
+    throw error;
+  }
+
+  return (data || []).map(app => ({
+    id: app.id,
+    comedian_id: app.comedian_id,
+    comedian_name: app.profiles?.name || 'Unknown',
+    comedian_avatar: app.profiles?.avatar_url,
+    comedian_experience: app.profiles?.years_experience ? `${app.profiles.years_experience} years` : undefined,
+    comedian_rating: undefined,
+    event_id: app.event_id,
+    event_title: app.events?.title || 'Unknown Event',
+    event_venue: app.events?.venue || 'Unknown Venue',
+    event_date: app.events?.event_date || '',
+    applied_at: app.applied_at || '',
+    status: app.status || 'pending',
+    message: app.message,
+    spot_type: app.spot_type,
+    availability_confirmed: app.availability_confirmed,
+    requirements_acknowledged: app.requirements_acknowledged,
+  }));
+}
+
+/**
+ * Get applications by event (all or filtered by status)
+ */
+export async function getApplicationsByEvent(
+  eventId: string,
+  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'all'
+): Promise<ApplicationData[]> {
+  let query = supabase
+    .from('applications')
+    .select(`
+      id,
+      comedian_id,
+      event_id,
+      status,
+      message,
+      spot_type,
+      availability_confirmed,
+      requirements_acknowledged,
+      applied_at,
+      responded_at,
+      is_shortlisted,
+      shortlisted_at,
+      events!inner (
+        id,
+        title,
+        venue,
+        event_date
+      ),
+      profiles!comedian_id (
+        id,
+        name,
+        avatar_url,
+        bio,
+        years_experience
+      )
+    `)
+    .eq('event_id', eventId);
+
+  // Apply status filter if provided
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter);
+  }
+
+  const { data, error } = await query.order('applied_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching applications by event:', error);
+    throw error;
+  }
+
+  return (data || []).map(app => ({
+    id: app.id,
+    comedian_id: app.comedian_id,
+    comedian_name: app.profiles?.name || 'Unknown',
+    comedian_avatar: app.profiles?.avatar_url,
+    comedian_experience: app.profiles?.years_experience ? `${app.profiles.years_experience} years` : undefined,
+    comedian_rating: undefined,
+    event_id: app.event_id,
+    event_title: app.events?.title || 'Unknown Event',
+    event_venue: app.events?.venue || 'Unknown Venue',
+    event_date: app.events?.event_date || '',
+    applied_at: app.applied_at || '',
+    status: app.status || 'pending',
+    message: app.message,
+    spot_type: app.spot_type,
+    availability_confirmed: app.availability_confirmed,
+    requirements_acknowledged: app.requirements_acknowledged,
+  }));
+}
+
+/**
+ * Get shortlist statistics for an event
+ */
+export interface ShortlistStats {
+  total_applications: number;
+  shortlisted_count: number;
+  pending_shortlisted: number;
+  accepted_shortlisted: number;
+}
+
+export async function getShortlistStats(eventId: string): Promise<ShortlistStats> {
+  const applications = await getApplicationsByEvent(eventId);
+  const shortlisted = applications.filter(app => app.is_shortlisted);
+
+  return {
+    total_applications: applications.length,
+    shortlisted_count: shortlisted.length,
+    pending_shortlisted: shortlisted.filter(app => app.status === 'pending').length,
+    accepted_shortlisted: shortlisted.filter(app => app.status === 'accepted').length
+  };
+}

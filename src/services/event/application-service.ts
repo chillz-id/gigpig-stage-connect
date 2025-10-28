@@ -78,39 +78,47 @@ export interface ApplicationNotificationContext {
   promoter_id: string | null;
 }
 
-const mapComedianApplication = (row: any): ComedianApplicationRecord => ({
-  id: row.id,
-  event_id: row.event_id,
-  comedian_id: row.comedian_id,
-  status: row.status,
-  message: row.message,
-  spot_type: row.spot_type,
-  availability_confirmed: row.availability_confirmed,
-  requirements_acknowledged: row.requirements_acknowledged,
-  applied_at: row.applied_at,
-  responded_at: row.responded_at,
-  event: row.events
-    ? {
-        id: row.events.id,
-        title: row.events.title ?? '',
-        venue: row.events.venue ?? '',
-        address: row.events.address ?? row.events.venue_address ?? null,
-        event_date: row.events.event_date ?? '',
-        start_time: row.events.start_time ?? null,
-        city: row.events.city ?? '',
-        state: row.events.state ?? '',
-        status: row.events.status ?? null,
-        banner_url: row.events.banner_url ?? null,
-        promoter: row.events.promoter
-          ? {
-              id: row.events.promoter.id,
-              name: row.events.promoter.name ?? null,
-              avatar_url: row.events.promoter.avatar_url ?? null,
-            }
-          : null,
-      }
-    : undefined,
-});
+const mapComedianApplication = (row: any): ComedianApplicationRecord => {
+  const base: EventApplication = {
+    id: row.id,
+    event_id: row.event_id,
+    comedian_id: row.comedian_id,
+    status: row.status,
+    message: row.message,
+    spot_type: row.spot_type,
+    availability_confirmed: row.availability_confirmed,
+    requirements_acknowledged: row.requirements_acknowledged,
+    applied_at: row.applied_at,
+    responded_at: row.responded_at,
+  };
+
+  if (!row.events) {
+    return base;
+  }
+
+  return {
+    ...base,
+    event: {
+      id: row.events.id,
+      title: row.events.title ?? '',
+      venue: row.events.venue ?? '',
+      address: row.events.address ?? row.events.venue_address ?? null,
+      event_date: row.events.event_date ?? '',
+      start_time: row.events.start_time ?? null,
+      city: row.events.city ?? '',
+      state: row.events.state ?? '',
+      status: row.events.status ?? null,
+      banner_url: row.events.banner_url ?? null,
+      promoter: row.events.promoter
+        ? {
+            id: row.events.promoter.id,
+            name: row.events.promoter.name ?? null,
+            avatar_url: row.events.promoter.avatar_url ?? null,
+          }
+        : null,
+    },
+  };
+};
 
 export const eventApplicationService = {
   async listByEvent(eventId: string): Promise<EventApplication[]> {
@@ -380,6 +388,98 @@ export const eventApplicationService = {
     }
 
     return data?.name ?? null;
+  },
+
+  // Application Approval Workflow (No reject - only shortlist and accept)
+
+  async approveApplication(applicationId: string): Promise<EventApplication> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .update({
+        status: 'accepted',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', applicationId)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data as EventApplication;
+  },
+
+  async addToShortlist(applicationId: string): Promise<void> {
+    const { error} = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: true,
+        shortlisted_at: new Date().toISOString(),
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+  },
+
+  async removeFromShortlist(applicationId: string): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: false,
+        shortlisted_at: null,
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+  },
+
+  // Bulk Operations
+
+  async bulkApprove(applicationIds: string[]): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        status: 'accepted',
+        responded_at: new Date().toISOString(),
+      })
+      .in('id', applicationIds);
+
+    if (error) throw error;
+  },
+
+  async bulkShortlist(applicationIds: string[]): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .update({
+        is_shortlisted: true,
+        shortlisted_at: new Date().toISOString(),
+      })
+      .in('id', applicationIds);
+
+    if (error) throw error;
+  },
+
+  // Query Operations
+
+  async getShortlistedApplications(eventId: string): Promise<EventApplication[]> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('is_shortlisted', true)
+      .order('shortlisted_at', { ascending: false });
+
+    if (error) throw error;
+    return (data as EventApplication[] | null) ?? [];
+  },
+
+  // Cleanup (called after event ends)
+
+  async deleteApplicationsForEvent(eventId: string): Promise<void> {
+    const { error } = await supabaseClient
+      .from('applications')
+      .delete()
+      .eq('event_id', eventId);
+
+    if (error) throw error;
   },
 };
 

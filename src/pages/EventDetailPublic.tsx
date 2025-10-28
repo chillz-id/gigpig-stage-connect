@@ -13,7 +13,7 @@ import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 import { ApplicationForm } from '@/components/ApplicationForm';
 import { ApplicationFormData } from '@/types/application';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Calendar, MapPin, Clock, Users, DollarSign, Info, Edit } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, DollarSign, Info, Edit, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useEvent } from '@/hooks/data/useEvents';
@@ -236,15 +236,26 @@ const EventDetailPublic = () => {
                     </div>
                   </div>
                   {user && (event.promoter_id === user.id || hasRole('admin')) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/events/${eventId}/edit`)}
-                      className="flex items-center gap-2"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Edit Event
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => navigate(`/events/${eventId}/manage`)}
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Manage Event
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/events/${eventId}/edit`)}
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit Event
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
