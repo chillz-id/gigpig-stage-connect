@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExportMenu } from '@/components/event-management/ExportMenu';
 import SpotListContainer from '@/components/lineup/SpotListContainer';
 import SpotFilters from '@/components/lineup/SpotFilters';
 import LineupTimeline from '@/components/lineup/LineupTimeline';
+import { useLineupStats, formatDuration } from '@/hooks/useLineupStats';
+import { formatCurrency } from '@/lib/utils';
 import type { SpotType, SpotStatus } from '@/types/spot';
 
 interface LineupTabProps {
@@ -32,6 +38,24 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   });
   const [showAddSpotDialog, setShowAddSpotDialog] = useState(false);
 
+  // Fetch event title for export
+  const { data: event } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('title, organizer_id')
+        .eq('id', eventId)
+        .single();
+      return data;
+    },
+  });
+
+  // Fetch lineup statistics
+  const { data: stats, isLoading: statsLoading } = useLineupStats(eventId);
+
+  const isOwner = event?.organizer_id === userId;
+
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
@@ -47,6 +71,13 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportMenu
+            eventId={eventId}
+            eventTitle={event?.title || 'Event'}
+            userId={userId}
+            isOwner={isOwner}
+            exportType="lineup"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -117,15 +148,27 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Spots</p>
-              <p className="text-2xl font-bold">-</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{stats?.totalSpots || 0}</p>
+              )}
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Filled Spots</p>
-              <p className="text-2xl font-bold">-</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{stats?.filledSpots || 0}</p>
+              )}
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Duration</p>
-              <p className="text-2xl font-bold">- min</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <p className="text-2xl font-bold">{formatDuration(stats?.totalDuration || 0)}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -136,26 +179,42 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
         <CardHeader>
           <CardTitle>Payment Summary</CardTitle>
           <CardDescription>
-            Overview of all comedian payments for this event
+            Overview of all comedian payments for this event (including GST breakdown)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Gross</p>
-              <p className="text-xl font-bold">$-</p>
+              {statsLoading ? (
+                <Skeleton className="h-7 w-20" />
+              ) : (
+                <p className="text-xl font-bold">{formatCurrency(stats?.totalGross || 0)}</p>
+              )}
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Total Tax</p>
-              <p className="text-xl font-bold">$-</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Tax (GST)</p>
+              {statsLoading ? (
+                <Skeleton className="h-7 w-20" />
+              ) : (
+                <p className="text-xl font-bold text-muted-foreground">{formatCurrency(stats?.totalTax || 0)}</p>
+              )}
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Net</p>
-              <p className="text-xl font-bold">$-</p>
+              {statsLoading ? (
+                <Skeleton className="h-7 w-20" />
+              ) : (
+                <p className="text-xl font-bold">{formatCurrency(stats?.totalNet || 0)}</p>
+              )}
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Paid</p>
-              <p className="text-xl font-bold text-green-600">$-</p>
+              {statsLoading ? (
+                <Skeleton className="h-7 w-20" />
+              ) : (
+                <p className="text-xl font-bold text-green-600">{formatCurrency(stats?.totalPaid || 0)}</p>
+              )}
             </div>
           </div>
         </CardContent>

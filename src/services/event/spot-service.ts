@@ -60,7 +60,7 @@ export const eventSpotService = {
       .eq('performer_id', performerId);
 
     if (error) throw error;
-    return (data as Array<{ id: string }> | null)?.length > 0;
+    return data !== null && data.length > 0;
   },
 
   async reorder(spots: Array<{ id?: string | null; order: number }>): Promise<void> {
@@ -263,13 +263,26 @@ export const eventSpotService = {
     const amount = currentSpot.payment_amount || 0;
 
     // Recalculate with new tax setting
-    return this.updatePayment(spotId, {
+    const updatePayload: {
+      payment_amount: number;
+      tax_included: boolean;
+      tax_rate: number;
+      payment_notes?: string;
+      payment_status?: 'paid' | 'unpaid' | 'pending' | 'partially_paid' | 'refunded';
+    } = {
       payment_amount: amount,
       tax_included: newTaxIncluded,
       tax_rate: currentSpot.tax_rate || 10,
-      payment_notes: currentSpot.payment_notes || undefined,
-      payment_status: currentSpot.payment_status as any
-    });
+    };
+
+    if (currentSpot.payment_notes) {
+      updatePayload.payment_notes = currentSpot.payment_notes;
+    }
+    if (currentSpot.payment_status) {
+      updatePayload.payment_status = currentSpot.payment_status as any;
+    }
+
+    return this.updatePayment(spotId, updatePayload);
   },
 
   /**
@@ -284,15 +297,28 @@ export const eventSpotService = {
 
     const updatePromises = spots
       .filter(spot => spot.payment_amount && spot.payment_amount > 0)
-      .map(spot =>
-        this.updatePayment(spot.id, {
+      .map(spot => {
+        const updatePayload: {
+          payment_amount: number;
+          tax_included: boolean;
+          tax_rate: number;
+          payment_notes?: string;
+          payment_status?: 'paid' | 'unpaid' | 'pending' | 'partially_paid' | 'refunded';
+        } = {
           payment_amount: spot.payment_amount!,
           tax_included: taxIncluded,
           tax_rate: taxRate,
-          payment_notes: spot.payment_notes || undefined,
-          payment_status: spot.payment_status as any
-        })
-      );
+        };
+
+        if (spot.payment_notes) {
+          updatePayload.payment_notes = spot.payment_notes;
+        }
+        if (spot.payment_status) {
+          updatePayload.payment_status = spot.payment_status as any;
+        }
+
+        return this.updatePayment(spot.id, updatePayload);
+      });
 
     await Promise.all(updatePromises);
   },

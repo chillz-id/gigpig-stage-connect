@@ -16,6 +16,7 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json',
+      isolatedModules: true,
     }],
   },
   collectCoverageFrom: [
@@ -28,6 +29,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/integrations/supabase/client$': '<rootDir>/tests/helpers/supabase-mock.ts',
   },
   testTimeout: 10000, // 10 seconds (reduced from 30)
   maxWorkers: "50%", // Use 50% of available workers

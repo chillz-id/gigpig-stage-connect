@@ -21,6 +21,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeEventManagement } from '@/hooks/useRealtimeSync';
+import { RealtimeIndicator } from '@/components/event-management/RealtimeIndicator';
 import EventOverviewTab from './event-management/EventOverviewTab';
 import ApplicationsTab from './event-management/ApplicationsTab';
 import LineupTab from './event-management/LineupTab';
@@ -65,6 +67,12 @@ export default function EventManagement() {
 
   // Check if user is event owner
   const isOwner = event?.organizer_id === user?.id;
+
+  // Enable real-time subscriptions
+  const { isFullyConnected, connections } = useRealtimeEventManagement(
+    eventId || '',
+    user?.id || ''
+  );
 
   // Access control: redirect if not owner/admin
   useEffect(() => {
@@ -162,7 +170,11 @@ export default function EventManagement() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <RealtimeIndicator
+                isConnected={isFullyConnected}
+                connections={connections}
+              />
               <Button
                 variant="outline"
                 onClick={() => navigate(`/events/${eventId}`)}

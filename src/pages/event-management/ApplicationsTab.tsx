@@ -7,16 +7,23 @@
  */
 
 import React, { useState } from 'react';
+import { Users, CheckCircle, XCircle, Star } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { EventManagementHeaderContainer } from '@/components/event-management/EventManagementHeaderContainer';
+import { ExportMenu } from '@/components/event-management/ExportMenu';
 import { ApplicationFilters, type FilterState } from '@/components/applications/ApplicationFilters';
 import { ApplicationListContainer } from '@/components/applications/ApplicationListContainer';
 import { ShortlistPanelContainer } from '@/components/applications/ShortlistPanelContainer';
 import { ApplicationBulkActions } from '@/components/applications/ApplicationBulkActions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   useBulkApproveApplications,
   useBulkRejectApplications,
   useBulkAddToShortlist
 } from '@/hooks/useApplicationApproval';
+import { useApplicationStats } from '@/hooks/useApplicationStats';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationsTabProps {
@@ -33,8 +40,26 @@ export default function ApplicationsTab({
   totalSpots,
   hiddenComedianIds = [],
   onHideComedians
-}: ApplicationsTabPageProps) {
+}: ApplicationsTabProps) {
   const { toast } = useToast();
+
+  // Fetch event title for export
+  const { data: event } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('title, organizer_id')
+        .eq('id', eventId)
+        .single();
+      return data;
+    },
+  });
+
+  // Fetch application statistics
+  const { data: stats, isLoading: statsLoading } = useApplicationStats(eventId);
+
+  const isOwner = event?.organizer_id === userId;
 
   // State
   const [filters, setFilters] = useState<FilterState>({
@@ -155,13 +180,115 @@ export default function ApplicationsTab({
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Applications List */}
         <div className="flex flex-1 flex-col gap-4 overflow-auto p-6">
-          {/* Filters */}
-          <ApplicationFilters
-            filters={filters}
-            showHidden={showHidden}
-            onFilterChange={handleFilterChange}
-            onToggleShowHidden={handleToggleShowHidden}
-          />
+          {/* Filters and Export */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <ApplicationFilters
+                filters={filters}
+                showHidden={showHidden}
+                onFilterChange={handleFilterChange}
+                onToggleShowHidden={handleToggleShowHidden}
+              />
+            </div>
+            <ExportMenu
+              eventId={eventId}
+              eventTitle={event?.title || 'Event'}
+              userId={userId}
+              isOwner={isOwner}
+              exportType="applications"
+            />
+          </div>
+
+          {/* Application Statistics */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <div className="text-2xl font-bold">{stats?.totalApplications || 0}</div>
+                )}
+                {statsLoading ? (
+                  <Skeleton className="mt-1 h-4 w-24" />
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.pendingApplications || 0} pending
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats?.confirmedApplications || 0}
+                  </div>
+                )}
+                {statsLoading ? (
+                  <Skeleton className="mt-1 h-4 w-24" />
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.rejectedApplications || 0} rejected
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Shortlisted</CardTitle>
+                <Star className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {stats?.shortlistedApplications || 0}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Favorites</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">By Type</CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-full" />
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">MC:</span>
+                      <span className="font-medium">{stats?.mcApplications || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Feature:</span>
+                      <span className="font-medium">{stats?.featureApplications || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Headliner:</span>
+                      <span className="font-medium">{stats?.headlinerApplications || 0}</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Applications List with Multi-Select */}
           <ApplicationListContainer

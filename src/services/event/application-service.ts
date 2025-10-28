@@ -78,39 +78,47 @@ export interface ApplicationNotificationContext {
   promoter_id: string | null;
 }
 
-const mapComedianApplication = (row: any): ComedianApplicationRecord => ({
-  id: row.id,
-  event_id: row.event_id,
-  comedian_id: row.comedian_id,
-  status: row.status,
-  message: row.message,
-  spot_type: row.spot_type,
-  availability_confirmed: row.availability_confirmed,
-  requirements_acknowledged: row.requirements_acknowledged,
-  applied_at: row.applied_at,
-  responded_at: row.responded_at,
-  event: row.events
-    ? {
-        id: row.events.id,
-        title: row.events.title ?? '',
-        venue: row.events.venue ?? '',
-        address: row.events.address ?? row.events.venue_address ?? null,
-        event_date: row.events.event_date ?? '',
-        start_time: row.events.start_time ?? null,
-        city: row.events.city ?? '',
-        state: row.events.state ?? '',
-        status: row.events.status ?? null,
-        banner_url: row.events.banner_url ?? null,
-        promoter: row.events.promoter
-          ? {
-              id: row.events.promoter.id,
-              name: row.events.promoter.name ?? null,
-              avatar_url: row.events.promoter.avatar_url ?? null,
-            }
-          : null,
-      }
-    : undefined,
-});
+const mapComedianApplication = (row: any): ComedianApplicationRecord => {
+  const base: EventApplication = {
+    id: row.id,
+    event_id: row.event_id,
+    comedian_id: row.comedian_id,
+    status: row.status,
+    message: row.message,
+    spot_type: row.spot_type,
+    availability_confirmed: row.availability_confirmed,
+    requirements_acknowledged: row.requirements_acknowledged,
+    applied_at: row.applied_at,
+    responded_at: row.responded_at,
+  };
+
+  if (!row.events) {
+    return base;
+  }
+
+  return {
+    ...base,
+    event: {
+      id: row.events.id,
+      title: row.events.title ?? '',
+      venue: row.events.venue ?? '',
+      address: row.events.address ?? row.events.venue_address ?? null,
+      event_date: row.events.event_date ?? '',
+      start_time: row.events.start_time ?? null,
+      city: row.events.city ?? '',
+      state: row.events.state ?? '',
+      status: row.events.status ?? null,
+      banner_url: row.events.banner_url ?? null,
+      promoter: row.events.promoter
+        ? {
+            id: row.events.promoter.id,
+            name: row.events.promoter.name ?? null,
+            avatar_url: row.events.promoter.avatar_url ?? null,
+          }
+        : null,
+    },
+  };
+};
 
 export const eventApplicationService = {
   async listByEvent(eventId: string): Promise<EventApplication[]> {

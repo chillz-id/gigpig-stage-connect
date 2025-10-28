@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Plus, DollarSign, Users, CheckCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExportMenu } from '@/components/event-management/ExportMenu';
 import DealListContainer from '@/components/deals/DealListContainer';
 import DealBuilderContainer from '@/components/deals/DealBuilderContainer';
+import { useDealStats } from '@/hooks/useDealStats';
+import { formatCurrency } from '@/lib/utils';
 import type { DealStatus, DealType } from '@/types/deal';
 
 interface DealsTabProps {
@@ -26,6 +32,22 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
     type: 'all',
   });
 
+  // Fetch event title for export
+  const { data: event } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('title')
+        .eq('id', eventId)
+        .single();
+      return data;
+    },
+  });
+
+  // Fetch deal statistics
+  const { data: stats, isLoading: statsLoading } = useDealStats(eventId, userId, isOwner);
+
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
@@ -40,12 +62,21 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
             Manage revenue shares, payment splits, and financial agreements
           </p>
         </div>
-        {isOwner && (
-          <Button onClick={() => setShowDealBuilder(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Deal
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportMenu
+            eventId={eventId}
+            eventTitle={event?.title || 'Event'}
+            userId={userId}
+            isOwner={isOwner}
+            exportType="financial"
+          />
+          {isOwner && (
+            <Button onClick={() => setShowDealBuilder(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Deal
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Revenue Visibility Alert */}
@@ -78,10 +109,18 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              - draft, - pending, - approved
-            </p>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.totalDeals || 0}</div>
+            )}
+            {statsLoading ? (
+              <Skeleton className="mt-1 h-4 w-40" />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {stats?.draftDeals || 0} draft, {stats?.pendingDeals || 0} pending, {stats?.approvedDeals || 0} approved
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -91,7 +130,11 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$-</div>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <div className="text-2xl font-bold">{formatCurrency(stats?.totalRevenue || 0)}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               {isOwner ? 'All deals' : 'Your confirmed deals'}
             </p>
@@ -104,10 +147,18 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              $- settled, $- pending
-            </p>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.settledDeals || 0}</div>
+            )}
+            {statsLoading ? (
+              <Skeleton className="mt-1 h-4 w-48" />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(stats?.settledRevenue || 0)} settled, {formatCurrency(stats?.pendingRevenue || 0)} pending
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
