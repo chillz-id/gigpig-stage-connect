@@ -111,4 +111,51 @@ describe('availabilityService', () => {
       ]);
     });
   });
+
+  describe('toggleEvent', () => {
+    it('should insert event when isSelected is true', async () => {
+      const insertMock = jest.fn().mockResolvedValue({ error: null });
+      fromMock.mockReturnValue({ insert: insertMock });
+
+      await availabilityService.toggleEvent('user-123', 'event-1', true);
+
+      expect(insertMock).toHaveBeenCalledWith({
+        user_id: 'user-123',
+        event_id: 'event-1'
+      });
+    });
+
+    it('should delete event when isSelected is false', async () => {
+      const eqEventMock = jest.fn().mockResolvedValue({ error: null });
+      const eqUserMock = jest.fn().mockReturnValue({ eq: eqEventMock });
+      const deleteMock = jest.fn().mockReturnValue({ eq: eqUserMock });
+      fromMock.mockReturnValue({ delete: deleteMock });
+
+      await availabilityService.toggleEvent('user-123', 'event-1', false);
+
+      expect(deleteMock).toHaveBeenCalled();
+      expect(eqUserMock).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(eqEventMock).toHaveBeenCalledWith('event_id', 'event-1');
+    });
+
+    it('should ignore duplicate key errors (23505)', async () => {
+      const duplicateError = { code: '23505', message: 'duplicate key' };
+      const insertMock = jest.fn().mockResolvedValue({ error: duplicateError });
+      fromMock.mockReturnValue({ insert: insertMock });
+
+      await expect(
+        availabilityService.toggleEvent('user-123', 'event-1', true)
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw non-duplicate errors', async () => {
+      const otherError = new Error('Network error');
+      const insertMock = jest.fn().mockResolvedValue({ error: otherError });
+      fromMock.mockReturnValue({ insert: insertMock });
+
+      await expect(
+        availabilityService.toggleEvent('user-123', 'event-1', true)
+      ).rejects.toThrow('Network error');
+    });
+  });
 });
