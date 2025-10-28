@@ -126,17 +126,17 @@ export function ApplicationCard({
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-2 pt-4 border-t">
-        {/* Approve Button */}
+        {/* Confirm Button */}
         <Button
           onClick={onApprove}
           disabled={isLoading || application.status === 'accepted'}
           size="sm"
           variant="default"
           className="gap-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
-          aria-label="Approve application"
+          aria-label="Confirm application"
         >
           <CheckCircle className="h-4 w-4" />
-          Approve
+          Confirm
         </Button>
 
         {/* Add to Shortlist Button */}

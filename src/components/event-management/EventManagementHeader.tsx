@@ -85,12 +85,12 @@ export function EventManagementHeader({
           </CardContent>
         </Card>
 
-        {/* Approved */}
+        {/* Confirmed */}
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex flex-col space-y-1">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Approved
+                Confirmed
               </span>
               <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {stats.accepted_shortlisted}
