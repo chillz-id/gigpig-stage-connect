@@ -48,12 +48,13 @@ export function DealCardContainer({
   const canConfirm = !!userParticipant;
   const hasConfirmed = userParticipant?.status === 'confirmed';
 
-  // Check if user has 100% confirmed deal (becomes partner)
-  const hasFullyConfirmedDeal = deal.participants.some(
-    (p) => p.user_id === userId && p.status === 'confirmed' && p.split_percentage === 100
-  );
+  // Check if user is participant in a fully confirmed deal (all participants confirmed)
+  // When all participants confirm, user becomes a "partner" and can view event financials
+  const hasFullyConfirmedDeal = deal.participants.every(
+    (p) => p.status === 'confirmed'
+  ) && deal.participants.some((p) => p.user_id === userId);
 
-  // User can view financials if they are event owner OR have a 100% confirmed deal
+  // User can view financials if they are event owner OR are a partner in a fully confirmed deal
   const canViewFinancials = userId === eventOwnerId || hasFullyConfirmedDeal;
 
   const handleConfirm = () => {

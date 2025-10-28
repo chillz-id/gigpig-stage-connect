@@ -29,8 +29,11 @@ export function EventManagementHeaderContainer({
   const { data: stats, isLoading, isError, error } = useShortlistStats(eventId);
 
   // Check if user can view financials
-  // User is event owner = can view financials
-  // Future enhancement: Check for 100% approved deals (partner status)
+  // User can view financials if they are:
+  // 1. Event owner
+  // 2. Partner in a fully confirmed deal (all participants have confirmed)
+  // Note: Deal checking requires deal data to be passed or fetched
+  // For now, only event owner check is implemented
   const canViewFinancials = userId === eventOwnerId;
 
   // Loading state
