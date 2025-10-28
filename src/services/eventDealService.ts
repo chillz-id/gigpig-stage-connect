@@ -7,6 +7,11 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import {
+  validateDealForSettlement as validateDeal,
+  calculateInvoiceDirection,
+  generateSplitDescription
+} from './settlement';
 
 // ============================================================================
 // TYPES
@@ -374,34 +379,238 @@ export async function updateParticipantCalculations(dealId: string): Promise<voi
 }
 
 /**
- * Settle a deal and trigger invoice generation
+ * Settle a deal and trigger invoice generation with transaction rollback
+ *
+ * Pre-conditions:
+ * - Deal must be in 'fully_approved' status
+ * - All participants must have approval_status = 'approved'
+ * - total_revenue must be set
+ * - Only event owner can settle
+ *
+ * Post-conditions:
+ * - Deal status changes to 'settled'
+ * - Invoice created for each participant
+ * - invoice_id set in deal_participants
+ * - Notifications sent to all participants
  */
-export async function settleDeal(dealId: string, userId: string): Promise<EventDeal> {
-  // First, ensure all calculations are up to date
-  await updateParticipantCalculations(dealId);
+export async function settleDeal(dealId: string, userId: string): Promise<{
+  deal: EventDeal;
+  invoices: Array<{ participant_id: string; invoice_id: string; invoice_number: string }>;
+}> {
+  // Get deal with all participants and event details
+  const { data: deal, error: dealError } = await supabase
+    .from('event_deals')
+    .select(`
+      *,
+      deal_participants (
+        id,
+        participant_id,
+        participant_name,
+        participant_type,
+        split_type,
+        split_percentage,
+        flat_fee_amount,
+        calculated_amount,
+        approval_status,
+        invoice_id
+      ),
+      events (
+        id,
+        title,
+        venue,
+        event_date,
+        promoter_id
+      )
+    `)
+    .eq('id', dealId)
+    .single();
 
-  // Mark deal as settled
-  const { data, error } = await supabase
+  if (dealError) throw dealError;
+  if (!deal) throw new Error('Deal not found');
+
+  // Validate using pure function
+  const validation = validateDeal(deal as any, userId);
+  if (!validation.isValid) {
+    throw new Error(validation.errors.join('. '));
+  }
+
+  // Generate invoices for each participant (with transaction safety)
+  let invoices: Array<{ participant_id: string; invoice_id: string; invoice_number: string }> = [];
+  try {
+    invoices = await generateInvoicesForDeal(deal);
+  } catch (error) {
+    console.error('Invoice generation failed, settlement aborted:', error);
+    throw new Error('Failed to generate invoices. Settlement aborted. ' + (error as Error).message);
+  }
+
+  // Only update deal status AFTER all invoices succeed
+  const { error: updateError } = await supabase
     .from('event_deals')
     .update({
       status: 'settled',
       settled_at: new Date().toISOString(),
       settled_by: userId
     })
-    .eq('id', dealId)
-    .eq('status', 'fully_approved') // Can only settle if fully approved
-    .select()
-    .single();
+    .eq('id', dealId);
 
-  if (error) {
-    console.error('Error settling deal:', error);
-    throw error;
+  if (updateError) {
+    // Rollback: Delete generated invoices
+    console.error('Deal status update failed, rolling back invoices:', updateError);
+    for (const invoice of invoices) {
+      await supabase.from('invoices').delete().eq('id', invoice.invoice_id);
+    }
+    throw new Error('Failed to update deal status. Invoices rolled back.');
   }
 
-  // TODO: Trigger invoice generation
-  // This will be implemented in Phase 6
+  // Update participants with invoice IDs
+  for (const invoice of invoices) {
+    await supabase
+      .from('deal_participants')
+      .update({ invoice_id: invoice.invoice_id })
+      .eq('participant_id', invoice.participant_id)
+      .eq('deal_id', dealId);
+  }
 
-  return data as EventDeal;
+  // Send notifications (non-blocking, use existing notification system)
+  try {
+    await notifyDealParticipants(dealId, 'settled', invoices);
+  } catch (notifError) {
+    console.error('Notification failed (non-blocking):', notifError);
+    // Don't throw - settlement succeeded even if notifications fail
+  }
+
+  return {
+    deal: { ...deal, status: 'settled', settled_at: new Date().toISOString(), settled_by: userId } as EventDeal,
+    invoices
+  };
+}
+
+/**
+ * Generate invoices for all participants in a deal
+ */
+async function generateInvoicesForDeal(deal: any): Promise<Array<{
+  participant_id: string;
+  invoice_id: string;
+  invoice_number: string;
+}>> {
+  const { invoiceService } = await import('./invoiceService');
+  const invoices = [];
+
+  for (const participant of deal.deal_participants || []) {
+    // Use pure function to determine if invoice should be generated
+    const direction = calculateInvoiceDirection(participant.calculated_amount || 0);
+
+    if (!direction.shouldGenerate) {
+      console.warn(`Skipping invoice for participant ${participant.participant_id} - zero amount`);
+      continue;
+    }
+
+    // Create invoice from deal participant
+    const invoice = await invoiceService.createInvoiceFromDeal({
+      deal_id: deal.id,
+      participant_id: participant.participant_id,
+      participant_name: participant.participant_name,
+      participant_type: participant.participant_type,
+      amount: participant.calculated_amount,
+      event_title: deal.events?.title || 'Event',
+      event_date: deal.events?.event_date,
+      venue: deal.events?.venue,
+      deal_name: deal.deal_name,
+      deal_type: deal.deal_type,
+      split_description: generateSplitDescription(participant) // Use pure function
+    });
+
+    invoices.push({
+      participant_id: participant.participant_id,
+      invoice_id: invoice.id,
+      invoice_number: invoice.invoice_number
+    });
+  }
+
+  return invoices;
+}
+
+/**
+ * Send notifications to participants using existing notification system
+ */
+async function notifyDealParticipants(
+  dealId: string,
+  eventType: 'submitted' | 'approved' | 'settled' | 'cancelled',
+  invoices?: Array<{ participant_id: string; invoice_id: string; invoice_number: string }>
+): Promise<void> {
+  // Import existing notification service
+  const { notificationService } = await import('./notificationService');
+
+  // Get deal and participants
+  const { data: deal } = await supabase
+    .from('event_deals')
+    .select(`
+      *,
+      deal_participants (participant_id, participant_name),
+      events (title, event_date, venue)
+    `)
+    .eq('id', dealId)
+    .single();
+
+  if (!deal) return;
+
+  const events = deal.events as any;
+  const dealParticipants = deal.deal_participants as any[];
+
+  for (const participant of dealParticipants) {
+    let notificationTitle = '';
+    let notificationMessage = '';
+    let actionUrl = '';
+    let notificationType: 'payment_received' | 'event_booking' | 'general' = 'general';
+    let priority: 'low' | 'medium' | 'high' | 'urgent' = 'medium';
+
+    switch (eventType) {
+      case 'submitted':
+        notificationTitle = 'Deal Approval Required';
+        notificationMessage = `You've been added to a deal for ${events?.title}. Please review and approve.`;
+        actionUrl = `/events/${deal.event_id}/manage?tab=deals`;
+        notificationType = 'event_booking';
+        priority = 'high';
+        break;
+
+      case 'approved':
+        notificationTitle = 'Deal Approved';
+        notificationMessage = `Deal for ${events?.title} has been approved by all participants.`;
+        actionUrl = `/events/${deal.event_id}/manage?tab=deals`;
+        notificationType = 'event_booking';
+        priority = 'medium';
+        break;
+
+      case 'settled':
+        const invoice = invoices?.find(i => i.participant_id === participant.participant_id);
+        notificationTitle = 'Deal Settled - Invoice Generated';
+        notificationMessage = `The deal for ${events?.title} has been settled. Invoice ${invoice?.invoice_number} has been generated.`;
+        actionUrl = invoice ? `/profile?tab=invoices&invoice=${invoice.invoice_id}` : `/events/${deal.event_id}/manage?tab=deals`;
+        notificationType = 'payment_received';
+        priority = 'high';
+        break;
+
+      case 'cancelled':
+        notificationTitle = 'Deal Cancelled';
+        notificationMessage = `The deal for ${events?.title} has been cancelled.`;
+        actionUrl = `/events/${deal.event_id}/manage?tab=deals`;
+        notificationType = 'event_booking';
+        priority = 'medium';
+        break;
+    }
+
+    // Create notification using existing notification system
+    // This respects user preferences for email/SMS/push delivery
+    await notificationService.createNotification({
+      user_id: participant.participant_id,
+      type: notificationType,
+      title: notificationTitle,
+      message: notificationMessage,
+      priority,
+      action_url: actionUrl,
+      action_label: eventType === 'settled' ? 'View Invoice' : 'View Deal'
+    });
+  }
 }
 
 // ============================================================================
@@ -564,44 +773,40 @@ export async function validateDealForSubmission(dealId: string): Promise<{
 }
 
 /**
- * Validate deal can be settled
+ * Validate deal can be settled (async wrapper for UI validation)
+ * For internal use, the settleDeal() function uses the pure validation function
  */
-export async function validateDealForSettlement(dealId: string): Promise<{
+export async function validateDealForSettlement(dealId: string, userId: string): Promise<{
   valid: boolean;
   errors: string[];
 }> {
-  const errors: string[] = [];
+  // Get deal with details
+  const { data: deal, error } = await supabase
+    .from('event_deals')
+    .select(`
+      *,
+      deal_participants (
+        id,
+        participant_id,
+        approval_status
+      ),
+      events (
+        id,
+        promoter_id
+      )
+    `)
+    .eq('id', dealId)
+    .single();
 
-  // Get deal
-  const deal = await getDealById(dealId);
-  if (!deal) {
+  if (error || !deal) {
     return { valid: false, errors: ['Deal not found'] };
   }
 
-  // Check status
-  if (deal.status !== 'fully_approved') {
-    errors.push('Deal must be fully approved to settle');
-  }
-
-  // Check total_revenue is entered
-  if (!deal.total_revenue || deal.total_revenue <= 0) {
-    errors.push('Total revenue must be entered before settlement');
-  }
-
-  // Check all participants have calculated amounts
-  const { data: participants, error } = await supabase
-    .from('deal_participants')
-    .select('calculated_amount')
-    .eq('deal_id', dealId);
-
-  if (error) {
-    errors.push('Error checking participant calculations');
-  } else if (participants?.some(p => !p.calculated_amount)) {
-    errors.push('All participants must have calculated amounts');
-  }
+  // Use pure validation function
+  const validation = validateDeal(deal as any, userId);
 
   return {
-    valid: errors.length === 0,
-    errors
+    valid: validation.isValid,
+    errors: validation.errors
   };
 }
