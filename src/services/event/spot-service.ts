@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { calculateGST, type GSTMode } from '@/utils/gst-calculator';
 
 const supabaseClient = supabase as any;
 
@@ -294,6 +295,61 @@ export const eventSpotService = {
       );
 
     await Promise.all(updatePromises);
+  },
+
+  // ============================================================================
+  // GST-SPECIFIC PAYMENT METHODS
+  // ============================================================================
+
+  async updateSpotPayment(
+    spotId: string,
+    paymentData: {
+      payment_gross?: number;
+      payment_tax?: number;
+      payment_net?: number;
+      payment_status?: 'unpaid' | 'pending' | 'paid';
+      gst_mode?: GSTMode;
+      payment_notes?: string;
+    }
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from('event_spots')
+      .update(paymentData)
+      .eq('id', spotId);
+
+    if (error) throw error;
+  },
+
+  async updatePaymentStatus(
+    spotId: string,
+    status: 'unpaid' | 'pending' | 'paid'
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from('event_spots')
+      .update({ payment_status: status })
+      .eq('id', spotId);
+
+    if (error) throw error;
+  },
+
+  async calculateAndSetSpotPayment(
+    spotId: string,
+    amount: number,
+    gstMode: GSTMode
+  ): Promise<void> {
+    const gstCalc = calculateGST(amount, gstMode);
+
+    const { error } = await supabaseClient
+      .from('event_spots')
+      .update({
+        payment_gross: gstCalc.gross,
+        payment_tax: gstCalc.tax,
+        payment_net: gstCalc.net,
+        gst_mode: gstMode,
+      })
+      .eq('id', spotId);
+
+    if (error) throw error;
   },
 };
 
