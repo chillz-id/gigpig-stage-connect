@@ -45,4 +45,5 @@ export interface UserSearchResult {
   stage_name?: string;
   avatar_url?: string;
   roles: string[];
+  type?: 'profile' | 'organization';
 }
