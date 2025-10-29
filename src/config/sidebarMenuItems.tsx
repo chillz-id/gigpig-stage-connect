@@ -84,85 +84,92 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined, // Standalone, after Shows
   },
 
-  // Profile - now a parent item with nested children
+  // Messages - top-level item
+  {
+    id: 'messages',
+    label: 'Messages',
+    path: '/messages',
+    icon: MessageCircle,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    section: undefined,
+    getBadge: (data) => {
+      if (data.unreadCount && data.unreadCount > 0) {
+        return { count: data.unreadCount, variant: 'destructive' };
+      }
+      return null;
+    },
+  },
+
+  // Profile - standalone item (no children)
   {
     id: 'profile',
     label: 'Profile',
     path: '/profile',
     icon: User,
     roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined, // Standalone, with children
+    section: undefined,
+  },
+
+  // Vouches - top-level item
+  {
+    id: 'vouches',
+    label: 'Vouches',
+    path: '/vouches',
+    icon: Crown,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    section: undefined,
+  },
+
+  // Settings - top-level item with nested children
+  {
+    id: 'settings',
+    label: 'Settings',
+    path: '/settings',
+    icon: Settings,
+    roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    section: undefined,
     children: [
       {
-        id: 'messages',
-        label: 'Messages',
-        path: '/messages',
-        icon: MessageCircle,
+        id: 'notification-settings',
+        label: 'Notification Settings',
+        path: '/settings?tab=notifications',
+        icon: Bell,
         roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-        getBadge: (data) => {
-          if (data.unreadCount && data.unreadCount > 0) {
-            return { count: data.unreadCount, variant: 'destructive' };
-          }
-          return null;
-        },
       },
       {
-        id: 'vouches',
-        label: 'Vouches',
-        path: '/vouches',
-        icon: Crown,
-        roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        path: '/settings',
+        id: 'sidebar-customization',
+        label: 'Sidebar Customization',
+        path: '/settings?tab=sidebar',
         icon: Settings,
+        roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+      },
+      {
+        id: 'privacy-settings',
+        label: 'Privacy',
+        path: '/settings?tab=privacy',
+        icon: Shield,
         roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
         children: [
           {
-            id: 'notification-settings',
-            label: 'Notification Settings',
-            path: '/settings?tab=notifications',
-            icon: Bell,
+            id: 'profile-visibility',
+            label: 'Profile Visibility',
+            path: '/settings?tab=privacy&section=visibility',
+            icon: Eye,
             roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
           },
           {
-            id: 'sidebar-customization',
-            label: 'Sidebar Customization',
-            path: '/settings?tab=sidebar',
-            icon: Settings,
-            roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-          },
-          {
-            id: 'privacy-settings',
-            label: 'Privacy',
-            path: '/settings?tab=privacy',
+            id: 'data-privacy',
+            label: 'Data & Privacy',
+            path: '/settings?tab=privacy&section=data',
             icon: Shield,
             roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-            children: [
-              {
-                id: 'profile-visibility',
-                label: 'Profile Visibility',
-                path: '/settings?tab=privacy&section=visibility',
-                icon: Eye,
-                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-              },
-              {
-                id: 'data-privacy',
-                label: 'Data & Privacy',
-                path: '/settings?tab=privacy&section=data',
-                icon: Shield,
-                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-              },
-              {
-                id: 'messages-privacy',
-                label: 'Messages Privacy',
-                path: '/settings?tab=privacy&section=messages',
-                icon: MessageCircle,
-                roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-              },
-            ],
+          },
+          {
+            id: 'messages-privacy',
+            label: 'Messages Privacy',
+            path: '/settings?tab=privacy&section=messages',
+            icon: MessageCircle,
+            roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
           },
         ],
       },
