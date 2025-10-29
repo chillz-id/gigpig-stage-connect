@@ -177,31 +177,19 @@ describe('useAvailabilitySelection', () => {
         expect(result.current.selectedEvents.size).toBe(0);
       });
 
-      // Toggle multiple events
+      // Toggle multiple events within debounce window
       act(() => {
         result.current.toggleEvent('event1');
-      });
-
-      act(() => {
         jest.advanceTimersByTime(500);
-      });
-
-      act(() => {
         result.current.toggleEvent('event2');
-      });
-
-      act(() => {
         jest.advanceTimersByTime(500);
-      });
-
-      act(() => {
         result.current.toggleEvent('event3');
       });
 
-      // Should only be called once after full delay
+      // Should not be called yet (only 1000ms elapsed, need 2000ms from last toggle)
       expect(availabilityService.batchUpdateAvailability).not.toHaveBeenCalled();
 
-      // Advance remaining time
+      // Advance remaining time to trigger debounced save (1000ms more to reach 2000ms from last toggle)
       act(() => {
         jest.advanceTimersByTime(1000);
       });
