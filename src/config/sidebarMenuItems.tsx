@@ -176,15 +176,14 @@ export const MENU_ITEMS: MenuItem[] = [
     ],
   },
 
-  // Social Media Manager - external link
+  // Social Media Manager - internal route
   {
     id: 'social-media-manager',
     label: 'Social Media Manager',
-    path: 'https://social.gigpigs.app',
+    path: '/social-media',
     icon: ExternalLink,
     roles: ['comedian', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
     section: undefined, // Standalone
-    external: true,
   },
 
   // Opportunities Section
