@@ -5,7 +5,7 @@ import React from 'react';
 
 // Mock the hook BEFORE importing the component
 jest.mock('@/hooks/useCalendarSubscription', () => ({
-  getBaseUrl: jest.fn(() => 'http://localhost:8080'),
+  getSupabaseUrl: jest.fn(() => 'http://localhost:54321'),
   useCalendarSubscription: jest.fn(),
 }));
 
@@ -38,7 +38,7 @@ describe('CalendarSubscriptionDialog', () => {
     isRegenerating: false,
     getSubscriptionUrl: jest.fn((token: string, format: 'webcal' | 'https' = 'webcal') => {
       const protocol = format === 'webcal' ? 'webcal://' : 'https://';
-      return `${protocol}localhost:8080/api/calendar/feed/${token}.ics`;
+      return `${protocol}localhost:54321/functions/v1/calendar-feed/${token}.ics`;
     }),
   };
 
@@ -85,7 +85,7 @@ describe('CalendarSubscriptionDialog', () => {
     renderWithProviders(<CalendarSubscriptionDialog open={true} onOpenChange={jest.fn()} />);
 
     expect(screen.getByText('Subscribe to Your Calendar')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('webcal://localhost:8080/api/calendar/feed/test-token-456.ics')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('webcal://localhost:54321/functions/v1/calendar-feed/test-token-456.ics')).toBeInTheDocument();
   });
 
   it('should have copy button present', () => {
@@ -147,7 +147,7 @@ describe('CalendarSubscriptionDialog', () => {
 
     // The HTTPS URL should be in the Google tab content
     await waitFor(() => {
-      const httpsUrl = 'https://localhost:8080/api/calendar/feed/test-token-456.ics';
+      const httpsUrl = 'https://localhost:54321/functions/v1/calendar-feed/test-token-456.ics';
       expect(screen.getByText(httpsUrl, { exact: false })).toBeInTheDocument();
     });
   });

@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
-// Helper function to get base URL - extracted for testability
-export const getBaseUrl = (): string => {
-  // In tests, this will be mocked; in production it uses env variable
-  if (typeof window !== 'undefined' && (window as any).__CALENDAR_BASE_URL__) {
-    return (window as any).__CALENDAR_BASE_URL__;
+// Helper function to get Supabase Edge Function URL - extracted for testability
+export const getSupabaseUrl = (): string => {
+  // In tests, this will be mocked
+  if (typeof window !== 'undefined' && (window as any).__SUPABASE_URL__) {
+    return (window as any).__SUPABASE_URL__;
   }
-  return import.meta.env.VITE_APP_URL || 'https://standupsydney.com';
+  return import.meta.env.VITE_SUPABASE_URL || '';
 };
 
 export function useCalendarSubscription() {
@@ -79,9 +79,12 @@ export function useCalendarSubscription() {
 
   // Generate subscription URL
   const getSubscriptionUrl = (token: string, format: 'webcal' | 'https' = 'webcal'): string => {
-    const baseUrl = getBaseUrl();
+    const supabaseUrl = getSupabaseUrl();
+    // Supabase Edge Functions URL format: https://PROJECT_REF.supabase.co/functions/v1/FUNCTION_NAME
+    // Extract the base domain and construct the Edge Function URL
+    const baseUrl = supabaseUrl.replace(/^https?:\/\//, '');
     const protocol = format === 'webcal' ? 'webcal://' : 'https://';
-    return `${protocol}${baseUrl.replace(/^https?:\/\//, '')}/api/calendar/feed/${token}.ics`;
+    return `${protocol}${baseUrl}/functions/v1/calendar-feed/${token}.ics`;
   };
 
   return {
