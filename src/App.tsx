@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
+import { ActiveProfileProvider } from '@/contexts/ActiveProfileContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PlatformLayout } from '@/components/layout/PlatformLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
