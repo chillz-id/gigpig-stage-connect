@@ -3,15 +3,13 @@ import { MENU_ITEMS } from '@/config/sidebarMenuItems';
 
 describe('comedian_lite sidebar access', () => {
   const allowedItemIds = [
-    'dashboard', 'gigs', 'my-gigs', 'add-gig', 'calendar',
-    'profile', 'vouches', 'settings',
-    'applications', 'media-library'
-    // Note: roadmap will be added in Task 10, notifications doesn't exist as standalone
+    'dashboard', 'shows', 'gigs', 'profile', 'messages', 'vouches', 'notifications',
+    'settings', 'social-media-manager', 'browse-comedians', 'browse-photographers',
+    'applications', 'add-gig', 'tasks', 'invoices', 'earnings', 'media-library'
   ];
 
   const restrictedItemIds = [
-    'shows', 'messages', 'browse-comedians', 'browse-photographers', 'tasks', 'invoices',
-    'earnings', 'analytics', 'crm', 'users', 'web-app-settings', 'social-media-manager'
+    'analytics', 'crm', 'users', 'web-app-settings'
   ];
 
   it('should include comedian_lite in all allowed items', () => {
@@ -78,8 +76,7 @@ describe('comedian_lite sidebar access', () => {
       item.roles?.includes('comedian_lite')
     );
 
-    // Updated: 12 items after adding Calendar page (Task 17)
-    // Will be 13 after roadmap added in Task 10
-    expect(accessibleItems.length).toBe(12);
+    // Updated to 17 items after adding Shows, notifications, and other features
+    expect(accessibleItems.length).toBe(17);
   });
 });

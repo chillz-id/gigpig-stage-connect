@@ -36,6 +36,7 @@ describe('useAvailabilitySelection', () => {
   beforeEach(() => {
     jest.clearAllTimers();
     jest.useFakeTimers();
+    jest.clearAllMocks(); // Clear all mock call history
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -177,21 +178,37 @@ describe('useAvailabilitySelection', () => {
         expect(result.current.selectedEvents.size).toBe(0);
       });
 
-      // Toggle multiple events within debounce window
+      // Toggle first event
       act(() => {
         result.current.toggleEvent('event1');
+      });
+
+      // Advance 500ms
+      act(() => {
         jest.advanceTimersByTime(500);
+      });
+
+      // Toggle second event
+      act(() => {
         result.current.toggleEvent('event2');
+      });
+
+      // Advance 500ms
+      act(() => {
         jest.advanceTimersByTime(500);
+      });
+
+      // Toggle third event
+      act(() => {
         result.current.toggleEvent('event3');
       });
 
-      // Should not be called yet (only 1000ms elapsed, need 2000ms from last toggle)
+      // Should not be called yet (only 1000ms elapsed since first toggle, need 2000ms from last toggle)
       expect(availabilityService.batchUpdateAvailability).not.toHaveBeenCalled();
 
-      // Advance remaining time to trigger debounced save (1000ms more to reach 2000ms from last toggle)
+      // Advance full 2000ms from last toggle to trigger debounced save
       act(() => {
-        jest.advanceTimersByTime(1000);
+        jest.advanceTimersByTime(2000);
       });
 
       await waitFor(() => {
