@@ -62,6 +62,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const MediaLibrary = lazy(() => import('@/pages/MediaLibrary'));
 const TaskDashboard = lazy(() => import('@/pages/TaskDashboard'));
 const Vouches = lazy(() => import('@/pages/Vouches'));
+const SocialMedia = lazy(() => import('@/pages/SocialMedia'));
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
 const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
 
@@ -201,6 +202,7 @@ function App() {
                               <Route path="/profile" element={<Profile />} />
                               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                               <Route path="/media-library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
+                              <Route path="/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
                               <Route path="/tasks" element={<ProtectedRoute><TaskDashboard /></ProtectedRoute>} />
                               <Route path="/vouches" element={<ProtectedRoute><Vouches /></ProtectedRoute>} />
                               <Route path="/create-event" element={<CreateEvent />} />
