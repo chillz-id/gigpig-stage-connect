@@ -382,13 +382,27 @@ git push origin fix/comedian-lite-merge-issues
 - [ ] Verify dev branch builds successfully
 - [ ] Run full test suite on dev
 - [ ] Deploy dev to staging environment
-- [ ] Run database migrations in staging
+- [ ] Run database migrations in staging (4 migrations in order)
+- [ ] **Deploy Supabase Edge Function:**
+  ```bash
+  npx supabase functions deploy calendar-feed --project-ref YOUR_PROJECT_REF
+  ```
+- [ ] Verify Edge Function deployed successfully:
+  ```bash
+  curl https://YOUR_PROJECT_REF.supabase.co/functions/v1/calendar-feed/test.ics
+  # Should return 401 (invalid token) confirming endpoint is live
+  ```
 - [ ] Smoke test all features in staging:
   - [ ] Anonymous user can sign up on /gigs
   - [ ] Comedian can mark availability
   - [ ] My Gigs page works
   - [ ] Calendar page displays
   - [ ] Calendar subscription dialog functions
+  - [ ] **Calendar feed endpoint returns valid iCal:**
+    - Copy subscription URL from dialog
+    - Test in browser or with curl
+    - Verify iCalendar format (BEGIN:VCALENDAR)
+    - Test importing into Apple Calendar or Google Calendar
 
 ### Short-term (Week 1)
 
