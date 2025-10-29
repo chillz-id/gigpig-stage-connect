@@ -85,11 +85,11 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
     .from('comedian_bookings')
     .select(`
       fee,
-      events!inner(title, date)
+      events!inner(title, event_date)
     `)
     .eq('comedian_id', userId)
-    .gte('events.date', startDate.toISOString())
-    .lte('events.date', endDate.toISOString())
+    .gte('events.event_date', startDate.toISOString())
+    .lte('events.event_date', endDate.toISOString())
     .eq('status', 'confirmed');
 
   if (bookingsError) {
@@ -120,7 +120,7 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
     ...(bookings || []).map(booking => ({
       eventTitle: booking.events?.title || 'Unknown Event',
       amount: booking.fee || 0,
-      date: booking.events?.date || '',
+      date: booking.events?.event_date || '',
       type: 'performance' as const
     })),
     ...(invoices || []).map(invoice => ({
