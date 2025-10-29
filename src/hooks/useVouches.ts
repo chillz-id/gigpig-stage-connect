@@ -32,14 +32,18 @@ export const useVouches = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      // Empty array is a valid state, not an error
       setVouches(data || []);
     } catch (error) {
       console.error('Error fetching vouches:', error);
+      // Only show error toast if there's an actual error, not just empty results
       toastRef.current({
         title: "Error",
         description: "Failed to load vouches",
         variant: "destructive",
       });
+      // Set empty array on error to prevent undefined state
+      setVouches([]);
     } finally {
       setLoading(false);
     }

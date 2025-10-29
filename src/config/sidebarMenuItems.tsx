@@ -127,72 +127,22 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined,
   },
 
-  // Settings - standalone
+  // Notifications - standalone (above Settings)
   {
-    id: 'settings',
-    label: 'Settings',
-    path: '/settings',
-    icon: Settings,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined,
-  },
-
-  // Notification Settings - standalone
-  {
-    id: 'notification-settings',
-    label: 'Notification Settings',
-    path: '/settings?tab=notifications',
+    id: 'notifications',
+    label: 'Notifications',
+    path: '/notifications',
     icon: Bell,
     roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
     section: undefined,
   },
 
-  // Sidebar Customization - standalone
+  // Settings - standalone (all settings are tabs within this page)
   {
-    id: 'sidebar-customization',
-    label: 'Sidebar Customization',
-    path: '/settings?tab=sidebar',
+    id: 'settings',
+    label: 'Settings',
+    path: '/settings',
     icon: Settings,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined,
-  },
-
-  // Privacy - standalone
-  {
-    id: 'privacy-settings',
-    label: 'Privacy',
-    path: '/settings?tab=privacy',
-    icon: Shield,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined,
-  },
-
-  // Profile Visibility - standalone
-  {
-    id: 'profile-visibility',
-    label: 'Profile Visibility',
-    path: '/settings?tab=privacy&section=visibility',
-    icon: Eye,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined,
-  },
-
-  // Data & Privacy - standalone
-  {
-    id: 'data-privacy',
-    label: 'Data & Privacy',
-    path: '/settings?tab=privacy&section=data',
-    icon: Shield,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
-    section: undefined,
-  },
-
-  // Messages Privacy - standalone
-  {
-    id: 'messages-privacy',
-    label: 'Messages Privacy',
-    path: '/settings?tab=privacy&section=messages',
-    icon: MessageCircle,
     roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
     section: undefined,
   },
