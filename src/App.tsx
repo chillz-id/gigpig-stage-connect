@@ -61,6 +61,8 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const MediaLibrary = lazy(() => import('@/pages/MediaLibrary'));
 const TaskDashboard = lazy(() => import('@/pages/TaskDashboard'));
 const Vouches = lazy(() => import('@/pages/Vouches'));
+const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
+const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
 const SUSGigs = lazy(() => import('@/pages/SUSGigs'));
 const SocialMedia = lazy(() => import('@/pages/SocialMedia'));
 
