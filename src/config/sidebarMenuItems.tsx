@@ -91,6 +91,16 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined, // Standalone, after Shows
   },
 
+  // My Gigs - personal gig management for comedians
+  {
+    id: 'my-gigs',
+    label: 'My Gigs',
+    path: '/my-gigs',
+    icon: Calendar,
+    roles: ['comedian', 'comedian_lite'],
+    section: undefined, // Standalone, after Gigs
+  },
+
   // Profile - now a parent item with nested children
   {
     id: 'profile',

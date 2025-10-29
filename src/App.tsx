@@ -45,6 +45,7 @@ const Messages = lazy(() => import('@/pages/Messages'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const AgencyManagement = lazy(() => import('@/pages/AgencyManagement'));
 const AddGig = lazy(() => import('@/pages/AddGig'));
+const MyGigs = lazy(() => import('@/pages/MyGigs'));
 const GoogleCalendarCallback = lazy(() => import('@/pages/GoogleCalendarCallback'));
 const PWASettings = lazy(() => import('@/pages/PWASettings'));
 const InvoiceForm = lazy(() => import('@/components/InvoiceForm'));
@@ -207,6 +208,7 @@ function App() {
                               <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
                               <Route path="/agency" element={<AgencyManagement />} />
                               <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><AddGig /></ProtectedRoute>} />
+                              <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
                               {/* Invoice routes */}
                               <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                               <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
