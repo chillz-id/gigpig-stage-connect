@@ -1,5 +1,6 @@
 import { useUnifiedGigs } from '@/hooks/useUnifiedGigs';
 import { GigCalendar } from '@/components/comedian/GigCalendar';
+import { CalendarSubscriptionDialog } from '@/components/calendar/CalendarSubscriptionDialog';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -17,6 +18,7 @@ export default function Calendar() {
   const { data: gigs, isLoading, isError } = useUnifiedGigs();
   const { user } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
   const handleDownloadICS = async () => {
     if (!user) {
@@ -138,12 +140,21 @@ export default function Calendar() {
             )}
             Download .ics
           </Button>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => setSubscriptionDialogOpen(true)}
+          >
             <CalendarIcon className="mr-2 h-4 w-4" />
             Subscribe to Calendar
           </Button>
         </div>
       </div>
+
+      {/* Calendar Subscription Dialog */}
+      <CalendarSubscriptionDialog
+        open={subscriptionDialogOpen}
+        onOpenChange={setSubscriptionDialogOpen}
+      />
 
       {/* Color Legend */}
       <div className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg">

@@ -1,6 +1,18 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import MyGigs from '@/pages/MyGigs';
 
+// Mock the calendar subscription hook
+jest.mock('@/hooks/useCalendarSubscription', () => ({
+  getBaseUrl: jest.fn(() => 'http://localhost:8080'),
+  useCalendarSubscription: jest.fn(() => ({
+    subscription: null,
+    isLoading: true,
+    regenerateToken: jest.fn(),
+    isRegenerating: false,
+    getSubscriptionUrl: jest.fn(),
+  })),
+}));
+
 // Mock hooks
 const mockManualGigs = [];
 const mockDeleteGig = jest.fn();

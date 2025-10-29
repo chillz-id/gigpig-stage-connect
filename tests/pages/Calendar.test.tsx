@@ -1,6 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import Calendar from '@/pages/Calendar';
 
+// Mock the calendar subscription hook
+jest.mock('@/hooks/useCalendarSubscription', () => ({
+  getBaseUrl: jest.fn(() => 'http://localhost:8080'),
+  useCalendarSubscription: jest.fn(() => ({
+    subscription: null,
+    isLoading: true,
+    regenerateToken: jest.fn(),
+    isRegenerating: false,
+    getSubscriptionUrl: jest.fn(),
+  })),
+}));
+
 // Mock dependencies
 const mockGigs = [
   {

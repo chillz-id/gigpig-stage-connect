@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AddGigDialog } from '@/components/comedian/AddGigDialog';
+import { CalendarSubscriptionDialog } from '@/components/calendar/CalendarSubscriptionDialog';
 import { useMyGigs } from '@/hooks/useMyGigs';
 import { Plus, Calendar, MapPin, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function MyGigs() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const { manualGigs, isLoading, deleteGig, isDeleting } = useMyGigs();
 
   const formatDate = (dateString: string) => {
@@ -28,7 +30,10 @@ export default function MyGigs() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => setSubscriptionDialogOpen(true)}
+          >
             <Calendar className="mr-2 h-4 w-4" />
             Subscribe to Calendar
           </Button>
@@ -38,6 +43,12 @@ export default function MyGigs() {
           </Button>
         </div>
       </div>
+
+      {/* Calendar Subscription Dialog */}
+      <CalendarSubscriptionDialog
+        open={subscriptionDialogOpen}
+        onOpenChange={setSubscriptionDialogOpen}
+      />
 
       {/* Confirmed Platform Gigs Section */}
       <Card>
