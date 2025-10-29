@@ -38,11 +38,12 @@ async function getPRStats(owner, repo, prNumber, token) {
     deletions: data.deletions,
     changedFiles: data.changed_files,
     totalChanges: data.additions + data.deletions,
+    labels: data.labels ? data.labels.map(l => l.name) : [],
   };
 }
 
 function analyzeSize(stats) {
-  const { additions, deletions, changedFiles, totalChanges } = stats;
+  const { additions, deletions, changedFiles, totalChanges, labels } = stats;
 
   console.log(`\n📊 PR Size Analysis:`);
   console.log(`  • Files changed: ${changedFiles}`);
@@ -50,15 +51,29 @@ function analyzeSize(stats) {
   console.log(`  • Lines removed: -${deletions}`);
   console.log(`  • Total changes: ${totalChanges} lines\n`);
 
+  // Check if large-pr label is present
+  const hasLargePRLabel = labels.includes('large-pr');
+
   if (totalChanges >= ERROR_THRESHOLD) {
-    console.error(`❌ PR is too large (${totalChanges} lines changed)`);
-    console.error(`   Maximum allowed: ${ERROR_THRESHOLD} lines\n`);
-    console.error('💡 This PR is very large and difficult to review. Please consider:');
-    console.error('  • Breaking it into smaller, focused PRs');
-    console.error('  • Splitting by feature or component');
-    console.error('  • Separating refactoring from feature work');
-    console.error('  • Adding the "[large-pr]" label if this size is unavoidable\n');
-    return { status: 'error', totalChanges };
+    if (hasLargePRLabel) {
+      console.warn(`⚠️  PR is large (${totalChanges} lines changed)`);
+      console.warn(`   Maximum recommended: ${ERROR_THRESHOLD} lines`);
+      console.warn(`✅ [large-pr] label found - size check bypassed\n`);
+      console.warn('💡 Large PRs acknowledged. Please ensure:');
+      console.warn('  • Comprehensive testing has been done');
+      console.warn('  • PR description explains why size is necessary');
+      console.warn('  • Reviewers have sufficient context\n');
+      return { status: 'warning', totalChanges };
+    } else {
+      console.error(`❌ PR is too large (${totalChanges} lines changed)`);
+      console.error(`   Maximum allowed: ${ERROR_THRESHOLD} lines\n`);
+      console.error('💡 This PR is very large and difficult to review. Please consider:');
+      console.error('  • Breaking it into smaller, focused PRs');
+      console.error('  • Splitting by feature or component');
+      console.error('  • Separating refactoring from feature work');
+      console.error('  • Adding the "[large-pr]" label if this size is unavoidable\n');
+      return { status: 'error', totalChanges };
+    }
   }
 
   if (totalChanges >= WARN_THRESHOLD) {

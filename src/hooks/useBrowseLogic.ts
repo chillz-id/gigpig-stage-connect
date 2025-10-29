@@ -21,7 +21,7 @@ export const useBrowseLogic = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
 
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
 
   // Check if user has already applied to an event
@@ -45,7 +45,7 @@ export const useBrowseLogic = () => {
       return;
     }
 
-    if (!hasRole('comedian')) {
+    if (!(hasRole('comedian') || hasRole('comedian_lite'))) {
       toast({
         title: "Comedian access required",
         description: "Only comedians can apply to perform at shows.",

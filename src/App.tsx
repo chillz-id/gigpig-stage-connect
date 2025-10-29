@@ -45,6 +45,8 @@ const Messages = lazy(() => import('@/pages/Messages'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const AgencyManagement = lazy(() => import('@/pages/AgencyManagement'));
 const AddGig = lazy(() => import('@/pages/AddGig'));
+const MyGigs = lazy(() => import('@/pages/MyGigs'));
+const Calendar = lazy(() => import('@/pages/Calendar'));
 const GoogleCalendarCallback = lazy(() => import('@/pages/GoogleCalendarCallback'));
 const PWASettings = lazy(() => import('@/pages/PWASettings'));
 const InvoiceForm = lazy(() => import('@/components/InvoiceForm'));
@@ -206,7 +208,9 @@ function App() {
                               <Route path="/create-event" element={<CreateEvent />} />
                               <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
                               <Route path="/agency" element={<AgencyManagement />} />
-                              <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian']}><AddGig /></ProtectedRoute>} />
+                              <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><AddGig /></ProtectedRoute>} />
+                              <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
+                              <Route path="/calendar" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Calendar /></ProtectedRoute>} />
                               {/* Invoice routes */}
                               <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                               <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
@@ -221,10 +225,10 @@ function App() {
                               <Route path="/admin/events/:eventId" element={<EventDetail />} />
                               <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
                               <Route path="/events/:eventId/manage" element={<ProtectedRoute roles={['promoter', 'admin']}><EventManagement /></ProtectedRoute>} />
-                              <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian']}><EventApplicationPage /></ProtectedRoute>} />
-                              <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
+                              <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><EventApplicationPage /></ProtectedRoute>} />
+                              <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
                               <Route path="/events/:eventId" element={<EventDetailPublic />} />
-                              <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian']}><SpotConfirmationPage /></ProtectedRoute>} />
+                              <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
                               <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
                               {/* 404 handler with profile request tracking */}
                               <Route path="*" element={<NotFoundHandler />} />

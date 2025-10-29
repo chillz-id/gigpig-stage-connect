@@ -17,6 +17,15 @@ import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
 import { ShowTypeFilter, type ShowType } from '@/components/shows/ShowTypeFilter';
 import { AgeRestrictionToggle, type AgeRestriction } from '@/components/shows/AgeRestrictionToggle';
+import { formatEventTime } from '@/utils/formatEventTime';
+import { QuickSignUpCard } from '@/components/auth/QuickSignUpCard';
+import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
+import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
+import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+
+// Re-export for backwards compatibility
+export { formatEventTime };
 
 // Gigs page - Browse and discover comedy gigs
 // Previously called "Shows" - renamed to "Gigs" for clarity
@@ -76,6 +85,17 @@ const Gigs = () => {
     handleSubmitApplication,
     setShowApplicationForm
   } = useBrowseLogic();
+
+  // Availability selection hook (only for authenticated comedians)
+  const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
+  const availabilityHook = isComedian && user ? useAvailabilitySelection(user.id) : null;
+  const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved } = availabilityHook || {
+    selectedEvents: new Set(),
+    toggleEvent: () => {},
+    selectWeekday: () => {},
+    isSaving: false,
+    lastSaved: null,
+  };
 
   // Filter events based on selected month/year, date range, and other filters
   const filteredEvents = React.useMemo(() => {
@@ -260,6 +280,13 @@ const Gigs = () => {
           <FeaturedEventsCarousel />
         </div>
 
+        {/* Quick Sign Up Card (for anonymous users) */}
+        {!user && (
+          <div className="mb-6">
+            <QuickSignUpCard />
+          </div>
+        )}
+
         {/* Filter Mode Toggle */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
@@ -406,50 +433,82 @@ const Gigs = () => {
 
         {/* Events Grid */}
         {filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {filteredEvents.map((event) => {
-              const isPast = event.is_past;
-              const isDraft = event.status === 'draft';
-              const isCancelled = event.status === 'cancelled';
-              
-              return (
-                <div key={event.id} className="relative">
-                  {/* Status badges */}
-                  {(isPast || isDraft || isCancelled) && (
-                    <div className="absolute top-2 left-2 z-10 flex gap-2">
-                      {isPast && (
-                        <span className="px-2 py-1 text-xs font-medium bg-gray-800/80 text-gray-300 rounded-full backdrop-blur-sm">
-                          Past Event
-                        </span>
-                      )}
-                      {isDraft && (
-                        <span className="px-2 py-1 text-xs font-medium bg-yellow-600/80 text-yellow-100 rounded-full backdrop-blur-sm">
-                          Draft
-                        </span>
-                      )}
-                      {isCancelled && (
-                        <span className="px-2 py-1 text-xs font-medium bg-red-600/80 text-white rounded-full backdrop-blur-sm">
-                          Cancelled
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <ShowCard 
-                    show={event}
-                    interestedEvents={interestedEvents}
-                    onToggleInterested={handleToggleInterested}
-                    onApply={handleApply}
-                    onBuyTickets={handleBuyTickets}
-                    onShowDetails={handleShowDetails}
-                    onGetDirections={handleGetDirections}
-                    hasAppliedToEvent={hasAppliedToEvent}
-                    getApplicationStatus={getApplicationStatus}
-                    isApplying={isApplying}
+          <>
+            {/* Save Status Indicator (for comedians only) */}
+            {isComedian && (
+              <div className="mb-4">
+                {isSaving && (
+                  <div className="flex items-center gap-2 text-sm text-white/70">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Autosaving...</span>
+                  </div>
+                )}
+                {!isSaving && lastSaved && (
+                  <div className="text-sm text-white/70">
+                    Saved at {format(lastSaved, 'h:mma')}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Event Cards - use availability cards for comedians, regular cards for others */}
+            {isComedian && user ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {filteredEvents.map((event) => (
+                  <EventAvailabilityCard
+                    key={event.id}
+                    event={event}
+                    userId={user.id}
                   />
-                </div>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {filteredEvents.map((event) => {
+                  const isPast = event.is_past;
+                  const isDraft = event.status === 'draft';
+                  const isCancelled = event.status === 'cancelled';
+
+                  return (
+                    <div key={event.id} className="relative">
+                      {/* Status badges */}
+                      {(isPast || isDraft || isCancelled) && (
+                        <div className="absolute top-2 left-2 z-10 flex gap-2">
+                          {isPast && (
+                            <span className="px-2 py-1 text-xs font-medium bg-gray-800/80 text-gray-300 rounded-full backdrop-blur-sm">
+                              Past Event
+                            </span>
+                          )}
+                          {isDraft && (
+                            <span className="px-2 py-1 text-xs font-medium bg-yellow-600/80 text-yellow-100 rounded-full backdrop-blur-sm">
+                              Draft
+                            </span>
+                          )}
+                          {isCancelled && (
+                            <span className="px-2 py-1 text-xs font-medium bg-red-600/80 text-white rounded-full backdrop-blur-sm">
+                              Cancelled
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <ShowCard
+                        show={event}
+                        interestedEvents={interestedEvents}
+                        onToggleInterested={handleToggleInterested}
+                        onApply={handleApply}
+                        onBuyTickets={handleBuyTickets}
+                        onShowDetails={handleShowDetails}
+                        onGetDirections={handleGetDirections}
+                        hasAppliedToEvent={hasAppliedToEvent}
+                        getApplicationStatus={getApplicationStatus}
+                        isApplying={isApplying}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <div className={cn(
