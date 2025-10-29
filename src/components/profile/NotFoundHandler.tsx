@@ -8,8 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Instagram, Search } from 'lucide-react';
 
 interface NotFoundHandlerProps {
-  profileType: 'comedian' | 'manager' | 'organization' | 'venue';
-  attemptedSlug: string;
+  profileType?: 'comedian' | 'manager' | 'organization' | 'venue';
+  attemptedSlug?: string;
 }
 
 export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerProps) {
@@ -18,7 +18,7 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
   const { toast } = useToast();
 
   const handleRequestProfile = async () => {
-    if (!attemptedSlug) {
+    if (!attemptedSlug || !profileType) {
       toast({
         title: 'Error',
         description: 'No profile slug provided',
@@ -57,8 +57,8 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
     }
   };
 
-  const profileTypeLabel = profileType.charAt(0).toUpperCase() + profileType.slice(1);
-  const browsePath = `/${profileType}s`;
+  const profileTypeLabel = profileType ? profileType.charAt(0).toUpperCase() + profileType.slice(1) : 'Page';
+  const browsePath = profileType ? `/${profileType}s` : '/dashboard';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center p-4">
@@ -67,70 +67,79 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
           <div className="flex justify-center mb-4">
             <AlertCircle className="h-16 w-16 text-destructive" />
           </div>
-          <CardTitle className="text-3xl">Profile Not Found</CardTitle>
+          <CardTitle className="text-3xl">{profileType ? 'Profile Not Found' : 'Page Not Found'}</CardTitle>
           <CardDescription className="text-lg mt-2">
-            We couldn't find a {profileTypeLabel.toLowerCase()} profile with the handle "{attemptedSlug}"
+            {profileType && attemptedSlug
+              ? `We couldn't find a ${profileTypeLabel.toLowerCase()} profile with the handle "${attemptedSlug}"`
+              : "The page you're looking for doesn't exist or has been moved."
+            }
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Request Profile Section */}
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Know this {profileTypeLabel.toLowerCase()}?</h3>
-              <p className="text-sm text-muted-foreground">
-                Help us find them! If you know their Instagram handle, let us know and we'll try to reach out.
-              </p>
-            </div>
+          {/* Request Profile Section - only show for profile 404s */}
+          {profileType && attemptedSlug && (
+            <>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold mb-2">Know this {profileTypeLabel.toLowerCase()}?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Help us find them! If you know their Instagram handle, let us know and we'll try to reach out.
+                  </p>
+                </div>
 
-            <div className="space-y-3">
-              <div className="relative">
-                <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="@instagram_handle (optional)"
-                  value={instagramHandle}
-                  onChange={(e) => setInstagramHandle(e.target.value)}
-                  className="pl-10"
-                  disabled={isSubmitting}
-                />
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="@instagram_handle (optional)"
+                      value={instagramHandle}
+                      onChange={(e) => setInstagramHandle(e.target.value)}
+                      className="pl-10"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleRequestProfile}
+                    disabled={isSubmitting}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isSubmitting ? 'Recording Request...' : 'Request This Profile'}
+                  </Button>
+                </div>
               </div>
 
-              <Button
-                onClick={handleRequestProfile}
-                disabled={isSubmitting}
-                className="w-full"
-                size="lg"
-              >
-                {isSubmitting ? 'Recording Request...' : 'Request This Profile'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-card text-muted-foreground">or</span>
-            </div>
-          </div>
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-card text-muted-foreground">or</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Browse Section */}
-          <div className="text-center space-y-4">
-            <h3 className="text-lg font-semibold">Browse All {profileTypeLabel}s</h3>
-            <p className="text-sm text-muted-foreground">
-              Check out other {profileTypeLabel.toLowerCase()} profiles on our platform
-            </p>
+          {profileType && (
+            <div className="text-center space-y-4">
+              <h3 className="text-lg font-semibold">Browse All {profileTypeLabel}s</h3>
+              <p className="text-sm text-muted-foreground">
+                Check out other {profileTypeLabel.toLowerCase()} profiles on our platform
+              </p>
 
-            <Button asChild variant="outline" size="lg" className="w-full">
-              <Link to={browsePath}>
-                <Search className="mr-2 h-4 w-4" />
-                Browse {profileTypeLabel}s
-              </Link>
-            </Button>
-          </div>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link to={browsePath}>
+                  <Search className="mr-2 h-4 w-4" />
+                  Browse {profileTypeLabel}s
+                </Link>
+              </Button>
+            </div>
+          )}
 
           {/* Back to Home */}
           <div className="text-center pt-4 border-t border-border">
