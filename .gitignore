@@ -67,3 +67,4 @@ docs/archive/MCP_AUTHENTICATION_SETUP.md
 n8n-workflows/FINAL-COMPLETE-orders-tickets-sync.json
 n8n-workflows/FINAL-FIXED-complete-sync.json
 n8n-workflows/FIXED-complete-sync.json
+.worktrees/
