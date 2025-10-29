@@ -15,16 +15,16 @@ interface EventHtx {
   created_at: string | null;
 }
 
-interface QuickSignUpCardProps {
+interface EventAvailabilityCardProps {
   event: EventHtx;
   userId: string;
 }
 
 /**
- * QuickSignUpCard - A card component for displaying events with availability selection
+ * EventAvailabilityCard - A card component for displaying events with availability selection
  * Allows comedians to quickly indicate their availability for upcoming shows
  */
-export function QuickSignUpCard({ event, userId }: QuickSignUpCardProps) {
+export function EventAvailabilityCard({ event, userId }: EventAvailabilityCardProps) {
   const { selectedEvents, toggleEvent, isSaving, lastSaved } = useAvailabilitySelection(userId);
 
   const isSelected = selectedEvents.has(event.id);
@@ -48,7 +48,7 @@ export function QuickSignUpCard({ event, userId }: QuickSignUpCardProps) {
 
   return (
     <Card
-      data-testid="quick-signup-card"
+      data-testid="event-availability-card"
       className={cn(
         'border-2 transition-all duration-200',
         isSelected

@@ -1,10 +1,10 @@
 /**
- * Unit tests for QuickSignUpCard component
+ * Unit tests for EventAvailabilityCard component
  */
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { QuickSignUpCard } from '@/components/comedian/QuickSignUpCard';
+import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
 import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 
 // Mock Supabase client
@@ -37,7 +37,7 @@ const mockUseAvailabilitySelection = useAvailabilitySelection as jest.MockedFunc
   typeof useAvailabilitySelection
 >;
 
-describe('QuickSignUpCard', () => {
+describe('EventAvailabilityCard', () => {
   const mockEvent = {
     id: 'event-123',
     name: 'Comedy Night at The Laugh Factory',
@@ -65,7 +65,7 @@ describe('QuickSignUpCard', () => {
 
   describe('Rendering', () => {
     it('should render event details correctly', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       expect(screen.getByText('Comedy Night at The Laugh Factory')).toBeInTheDocument();
       expect(screen.getByText('The Laugh Factory')).toBeInTheDocument();
@@ -74,9 +74,9 @@ describe('QuickSignUpCard', () => {
     });
 
     it('should render with default border when not selected', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
-      const card = screen.getByTestId('quick-signup-card');
+      const card = screen.getByTestId('event-availability-card');
       expect(card).toHaveClass('border-2');
       expect(card).not.toHaveClass('border-primary');
     });
@@ -90,16 +90,16 @@ describe('QuickSignUpCard', () => {
         lastSaved: null,
       });
 
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
-      const card = screen.getByTestId('quick-signup-card');
+      const card = screen.getByTestId('event-availability-card');
       expect(card).toHaveClass('border-primary');
     });
   });
 
   describe('Checkbox Interaction', () => {
     it('should have unchecked checkbox when event not selected', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).not.toBeChecked();
@@ -114,14 +114,14 @@ describe('QuickSignUpCard', () => {
         lastSaved: null,
       });
 
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).toBeChecked();
     });
 
     it('should call toggleEvent with correct event ID when checkbox clicked', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       fireEvent.click(checkbox);
@@ -139,7 +139,7 @@ describe('QuickSignUpCard', () => {
         lastSaved: null,
       });
 
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).toBeDisabled();
@@ -156,7 +156,7 @@ describe('QuickSignUpCard', () => {
         lastSaved: null,
       });
 
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       expect(screen.getByText('Saving...')).toBeInTheDocument();
     });
@@ -171,14 +171,14 @@ describe('QuickSignUpCard', () => {
         lastSaved: savedDate,
       });
 
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       expect(screen.getByText(/Saved at/)).toBeInTheDocument();
       expect(screen.getByText(/3:45pm/)).toBeInTheDocument();
     });
 
     it('should not show save status when not saving and no lastSaved', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       expect(screen.queryByText('Saving...')).not.toBeInTheDocument();
       expect(screen.queryByText(/Saved at/)).not.toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('QuickSignUpCard', () => {
 
   describe('Date Formatting', () => {
     it('should format date correctly', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       // Check that the date is displayed (format: "Fri, Nov 15")
       expect(screen.getByText(/Nov 15/)).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('QuickSignUpCard', () => {
         start_date: null,
       };
 
-      render(<QuickSignUpCard event={eventWithNullDate} userId="user-123" />);
+      render(<EventAvailabilityCard event={eventWithNullDate} userId="user-123" />);
 
       // Both date and time show "TBC" when start_date is null
       const tbcElements = screen.getAllByText('TBC');
@@ -209,14 +209,14 @@ describe('QuickSignUpCard', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA labels', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).toHaveAccessibleName(/Comedy Night at The Laugh Factory/);
     });
 
     it('should support keyboard navigation', () => {
-      render(<QuickSignUpCard event={mockEvent} userId="user-123" />);
+      render(<EventAvailabilityCard event={mockEvent} userId="user-123" />);
 
       const checkbox = screen.getByRole('checkbox');
       checkbox.focus();
