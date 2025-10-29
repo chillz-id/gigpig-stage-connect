@@ -33,13 +33,16 @@ export const useVouches = () => {
 
       if (error) throw error;
       setVouches(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching vouches:', error);
-      toastRef.current({
-        title: "Error",
-        description: "Failed to load vouches",
-        variant: "destructive",
-      });
+      // Only show error toast for real errors (not "no rows" situations)
+      if (error?.code && error.code !== 'PGRST116') {
+        toastRef.current({
+          title: "Error",
+          description: "Unable to load vouches. Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -60,12 +63,13 @@ export const useVouches = () => {
     }
   }, [user?.id]);
 
-  // Search for users to vouch for
+  // Search for users and organizations to vouch for
   const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
     if (!query.trim() || !user?.id) return [];
 
     try {
-      const { data, error } = await supabase
+      // Search profiles
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -74,19 +78,43 @@ export const useVouches = () => {
           avatar_url,
           user_roles!inner(role)
         `)
-        .neq('id', user.id) // Exclude current user
+        .neq('id', user.id)
         .or(`name.ilike.%${query}%,stage_name.ilike.%${query}%`)
-        .limit(10);
+        .limit(8);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      return (data || []).map(profile => ({
+      // Search organizations
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('id, name, logo_url, description, is_active')
+        .ilike('name', `%${query}%`)
+        .eq('is_active', true)
+        .limit(5);
+
+      if (orgError) console.error('Error searching organizations:', orgError);
+
+      // Map profiles
+      const profileResults: UserSearchResult[] = (profileData || []).map(profile => ({
         id: profile.id,
         name: profile.name || '',
         stage_name: profile.stage_name,
         avatar_url: profile.avatar_url,
-        roles: profile.user_roles.map((r: any) => r.role)
+        roles: profile.user_roles.map((r: any) => r.role),
+        type: 'profile' as const
       }));
+
+      // Map organizations
+      const orgResults: UserSearchResult[] = (orgData || []).map(org => ({
+        id: org.id,
+        name: org.name,
+        stage_name: null,
+        avatar_url: org.logo_url,
+        roles: ['organization'],
+        type: 'organization' as const
+      }));
+
+      return [...profileResults, ...orgResults];
     } catch (error) {
       console.error('Error searching users:', error);
       return [];
