@@ -19,7 +19,7 @@ export const useUpcomingGigs = () => {
   const { data: upcomingGigs = [], isLoading, error } = useQuery({
     queryKey: ['upcoming-gigs', user?.id],
     queryFn: async () => {
-      if (!user?.id || !hasRole('comedian')) {
+      if (!user?.id || !(hasRole('comedian') || hasRole('comedian_lite'))) {
         return [];
       }
 
@@ -68,7 +68,7 @@ export const useUpcomingGigs = () => {
           return dateA - dateB;
         }) as UpcomingGig[];
     },
-    enabled: !!user?.id && hasRole('comedian'),
+    enabled: !!user?.id && (hasRole('comedian') || hasRole('comedian_lite')),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000 // 10 minutes
   });
