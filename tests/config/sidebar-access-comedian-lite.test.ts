@@ -61,7 +61,7 @@ describe('comedian_lite sidebar access', () => {
     });
   });
 
-  it('should have exactly 10 accessible items for comedian_lite (11 after roadmap added)', () => {
+  it('should have expected accessible items for comedian_lite', () => {
     const getAllMenuItems = (items: typeof MENU_ITEMS): typeof MENU_ITEMS => {
       const result: typeof MENU_ITEMS = [];
       items.forEach(item => {
@@ -78,6 +78,8 @@ describe('comedian_lite sidebar access', () => {
       item.roles?.includes('comedian_lite')
     );
 
-    expect(accessibleItems.length).toBe(10); // Currently 10, will be 11 after roadmap added in Task 10
+    // Updated: 12 items after adding Calendar page (Task 17)
+    // Will be 13 after roadmap added in Task 10
+    expect(accessibleItems.length).toBe(12);
   });
 });

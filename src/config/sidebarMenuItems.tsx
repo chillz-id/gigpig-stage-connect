@@ -101,6 +101,22 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined, // Standalone, after Gigs
   },
 
+  // Calendar - unified view of all gigs
+  {
+    id: 'calendar',
+    label: 'Calendar',
+    path: '/calendar',
+    icon: Calendar,
+    roles: ['comedian', 'comedian_lite'],
+    section: undefined, // Standalone, after My Gigs
+    getBadge: (data) => {
+      if (data.confirmedGigCount && data.confirmedGigCount > 0) {
+        return { count: data.confirmedGigCount, variant: 'secondary' };
+      }
+      return null;
+    },
+  },
+
   // Profile - now a parent item with nested children
   {
     id: 'profile',
