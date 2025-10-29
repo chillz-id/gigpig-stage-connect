@@ -55,6 +55,34 @@ jest.mock('react-helmet-async', () => ({
   Helmet: ({ children }: any) => children,
 }));
 
+jest.mock('@/services/calendar/ical-service', () => ({
+  icalService: {
+    generateFeedForToken: jest.fn(),
+    downloadICalFile: jest.fn(),
+  },
+}));
+
+jest.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn(() => ({
+              data: { token: 'test-token-123' },
+              error: null,
+            })),
+          })),
+        })),
+      })),
+    })),
+  },
+}));
+
+jest.mock('@/hooks/use-toast', () => ({
+  toast: jest.fn(),
+}));
+
 describe('Calendar Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();

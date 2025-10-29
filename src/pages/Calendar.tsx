@@ -1,8 +1,13 @@
 import { useUnifiedGigs } from '@/hooks/useUnifiedGigs';
 import { GigCalendar } from '@/components/comedian/GigCalendar';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { icalService } from '@/services/calendar/ical-service';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 /**
  * Calendar Page - Unified view of all comedian's gigs
@@ -10,6 +15,71 @@ import { Helmet } from 'react-helmet-async';
  */
 export default function Calendar() {
   const { data: gigs, isLoading, isError } = useUnifiedGigs();
+  const { user } = useAuth();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadICS = async () => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to download calendar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      // Get user's calendar subscription token
+      const { data: subscription } = await supabase
+        .from('calendar_subscriptions')
+        .select('token')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (!subscription?.token) {
+        toast({
+          title: 'Error',
+          description: 'Calendar subscription not found',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Generate iCal feed
+      const icalContent = await icalService.generateFeedForToken(
+        subscription.token
+      );
+
+      if (!icalContent) {
+        toast({
+          title: 'Error',
+          description: 'Failed to generate calendar feed',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Trigger download
+      icalService.downloadICalFile(icalContent);
+
+      toast({
+        title: 'Success',
+        description: 'Calendar downloaded successfully',
+      });
+    } catch (error) {
+      console.error('Error downloading calendar:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to download calendar',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -54,11 +124,25 @@ export default function Calendar() {
           </p>
         </div>
 
-        {/* Subscribe button - placeholder for Task 19 */}
-        <Button variant="outline">
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          Subscribe to Calendar
-        </Button>
+        {/* Download and Subscribe buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDownloadICS}
+            disabled={isDownloading || !gigs || gigs.length === 0}
+          >
+            {isDownloading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Download .ics
+          </Button>
+          <Button variant="outline">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Subscribe to Calendar
+          </Button>
+        </div>
       </div>
 
       {/* Color Legend */}
