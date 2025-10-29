@@ -264,7 +264,7 @@ serve(async (req) => {
     // Add platform gigs
     if (platformGigs && platformGigs.length > 0) {
       for (const application of platformGigs) {
-        // @ts-ignore - Supabase typing issue with nested selects
+        // @ts-expect-error - Supabase typing issue with nested selects
         const event = application.event;
 
         if (!event) continue;
