@@ -13,10 +13,10 @@ interface UseAvailabilitySelectionReturn {
 
 /**
  * Hook for managing availability selection with optimistic updates and debounced saving
- * @param userId - The user ID to manage availability for
+ * @param userId - The user ID to manage availability for (null if not authenticated/not comedian)
  * @returns Selection state and mutation functions
  */
-export function useAvailabilitySelection(userId: string): UseAvailabilitySelectionReturn {
+export function useAvailabilitySelection(userId: string | null): UseAvailabilitySelectionReturn {
   const { toast } = useToast();
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -26,11 +26,12 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
   const currentStateRef = useRef<Set<string>>(new Set());
   const hasInitializedRef = useRef<boolean>(false);
 
-  // Load initial availability
+  // Load initial availability (only when userId is available)
   const { data: initialAvailability } = useQuery({
     queryKey: ['availability', userId],
-    queryFn: () => availabilityService.getUserAvailability(userId),
+    queryFn: () => availabilityService.getUserAvailability(userId!),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: Boolean(userId), // Only run query when userId is not null
   });
 
   // Keep currentStateRef in sync with selectedEvents
@@ -59,6 +60,11 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Skip if no userId
+      if (!userId) {
+        return;
+      }
+
       const toRemove = new Set<string>();
       const toAdd = new Set<string>();
 
