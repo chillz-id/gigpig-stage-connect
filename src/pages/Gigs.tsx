@@ -24,9 +24,6 @@ import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Re-export for backwards compatibility
-export { formatEventTime };
-
 // Gigs page - Browse and discover comedy gigs
 // Previously called "Shows" - renamed to "Gigs" for clarity
 // The /shows route will be used for a new feature showing comedian shows + organization shows
@@ -88,14 +85,9 @@ const Gigs = () => {
 
   // Availability selection hook (only for authenticated comedians)
   const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
-  const availabilityHook = isComedian && user ? useAvailabilitySelection(user.id) : null;
-  const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved } = availabilityHook || {
-    selectedEvents: new Set(),
-    toggleEvent: () => {},
-    selectWeekday: () => {},
-    isSaving: false,
-    lastSaved: null,
-  };
+  const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved } = useAvailabilitySelection(
+    isComedian && user ? user.id : null
+  );
 
   // Filter events based on selected month/year, date range, and other filters
   const filteredEvents = React.useMemo(() => {
@@ -177,7 +169,7 @@ const Gigs = () => {
           return dateA - dateB;
       }
     });
-  }, [dateRange, events, locationFilter, selectedMonth, selectedYear, showMyDrafts, showOnlyMyEvents, showPastEvents, sortBy, statusFilter, typeFilter, useAdvancedFilters, user?.id, searchTerm]);
+  }, [dateRange, events, locationFilter, selectedMonth, selectedYear, showMyDrafts, showOnlyMyEvents, showPastEvents, sortBy, statusFilter, typeFilter, useAdvancedFilters, user?.id, searchTerm, showType, ageRestriction, canSeeDrafts]);
 
   const clearFilters = () => {
     setSearchTerm('');
