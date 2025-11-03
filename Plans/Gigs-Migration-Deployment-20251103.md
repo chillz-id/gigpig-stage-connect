@@ -12,14 +12,15 @@ This plan documents the deployment process for migrating the Gigs page from inte
 
 ## Pre-Deployment Checklist ✅
 
-- [x] **Database migration created**: `supabase/migrations/20251103_fix_comedian_availability_fk.sql`
+- [x] **NO DATABASE MIGRATION NEEDED**: `session_complete` view already exists in production
 - [x] **Hook implemented**: `src/hooks/useSessionCalendar.ts`
 - [x] **Components updated**: `src/pages/Gigs.tsx`, `src/components/ShowCard.tsx`
 - [x] **Unit tests passing**: 10/10 tests in `tests/hooks/useSessionCalendar.test.tsx`
 - [x] **E2E tests passing**: 55/62 tests (all functional tests working)
 - [x] **Code reviewed**: Migration logic validated
 - [x] **Linting passed**: `npm run lint` clean
-- [ ] **Staging environment ready**: Verify Supabase staging project exists
+- [x] **Code pushed to GitHub**: Feature branch created and pushed
+- [ ] **Vercel preview deployment verified**: Check staging URL works
 - [ ] **Deployment plan approved**: Get user confirmation
 
 ---
@@ -50,59 +51,22 @@ This plan documents the deployment process for migrating the Gigs page from inte
 
 ---
 
-### Step 2: Apply Database Migration to Staging
+### Step 2: ~~Apply Database Migration~~ **NO MIGRATION NEEDED** ✅
 
-**Objective**: Update `comedian_availability` table FK constraint on staging database.
+**Important Discovery**: After database schema verification, **no migration is required**.
 
-**Actions**:
-1. **Dry-run validation** (local):
-   ```bash
-   npm run migrate:dry-run
-   ```
+**Reason**:
+- The `session_complete` view already exists in production
+- Gigs page code (useSessionCalendar, Gigs.tsx, ShowCard.tsx) does NOT reference `comedian_availability` or `event_applications` tables
+- Migration only needs to READ from existing `session_complete` view
+- No schema changes required
 
-2. **Apply migration to staging**:
-   ```bash
-   npx supabase db push --project-ref <staging-project-ref>
-   ```
+**Verified**:
+- `session_complete` view exists (confirmed via `mcp__supabase__list_migrations`)
+- No FK constraints need updating
+- Code deployment alone is sufficient
 
-   Or manually via Supabase Dashboard:
-   - Navigate to SQL Editor
-   - Paste migration SQL from `supabase/migrations/20251103_fix_comedian_availability_fk.sql`
-   - Execute migration
-   - Verify no errors
-
-3. **Verify migration applied**:
-   ```sql
-   SELECT
-     conname AS constraint_name,
-     pg_get_constraintdef(c.oid) AS constraint_definition
-   FROM pg_constraint c
-   JOIN pg_namespace n ON n.oid = c.connamespace
-   WHERE conname = 'comedian_availability_event_id_fkey';
-   ```
-
-   Expected: FK references `events_htx(source_id)` with TEXT type
-
-**Rollback Plan** (if migration fails):
-```sql
--- Restore original FK constraint
-ALTER TABLE comedian_availability
-  DROP CONSTRAINT IF EXISTS comedian_availability_event_id_fkey;
-
-ALTER TABLE comedian_availability
-  ALTER COLUMN event_id TYPE UUID USING event_id::UUID;
-
-ALTER TABLE comedian_availability
-  ADD CONSTRAINT comedian_availability_event_id_fkey
-  FOREIGN KEY (event_id)
-  REFERENCES events_htx(id)
-  ON DELETE CASCADE;
-```
-
-**Success Criteria**:
-- ✅ Migration applied without errors
-- ✅ FK constraint updated to reference `source_id` (TEXT)
-- ✅ Existing comedian_availability data intact
+**Action**: Skip to Step 3 (Deploy Code to Staging)
 
 ---
 
@@ -270,45 +234,11 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ## Phase 6: Production Deployment
 
-**CRITICAL**: Run migration BEFORE deploying code to production.
+**SIMPLIFIED DEPLOYMENT**: No database migration required - code deployment only! ✅
 
-### Step 1: Production Migration (Database First)
+### Step 1: ~~Production Migration~~ **SKIP - NO MIGRATION NEEDED** ✅
 
-**Actions**:
-1. **Schedule maintenance window** (if required):
-   - Notify users of brief downtime
-   - Plan for off-peak hours
-
-2. **Backup production database**:
-   ```bash
-   # Via Supabase Dashboard: Database → Backups → Create Manual Backup
-   ```
-
-3. **Apply migration to production**:
-   ```bash
-   npx supabase db push --project-ref <production-project-ref>
-   ```
-
-   Or via SQL Editor in Supabase Dashboard
-
-4. **Verify migration**:
-   ```sql
-   SELECT
-     conname AS constraint_name,
-     pg_get_constraintdef(c.oid) AS constraint_definition
-   FROM pg_constraint c
-   JOIN pg_namespace n ON n.oid = c.connamespace
-   WHERE conname = 'comedian_availability_event_id_fkey';
-   ```
-
-**Rollback Plan**:
-- Restore from manual backup if migration fails
-- Or execute rollback SQL (see Step 2 rollback plan above)
-
-**Success Criteria**:
-- ✅ Migration applied successfully
-- ✅ FK constraint updated
-- ✅ No data loss
+**No action required** - `session_complete` view already exists in production.
 
 ---
 
@@ -334,8 +264,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
    - Visit production URL: `https://standupsydney.com/shows`
    - Smoke test (same as Step 4 above)
 
-**Rollback Plan**:
-1. **Vercel instant rollback**:
+**Rollback Plan** (code-only, no database changes):
+1. **Vercel instant rollback** (fastest - < 1 min):
    - Vercel Dashboard → Deployments → Previous Production
    - Click "Promote to Production"
 
@@ -344,10 +274,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
    git revert HEAD
    git push origin main
    ```
-
-3. **Database PITR restore** (if needed):
-   - Supabase Dashboard → Database → Backups → Point-in-Time Recovery
-   - Select timestamp before migration
 
 **Success Criteria**:
 - ✅ Code deployed to production
