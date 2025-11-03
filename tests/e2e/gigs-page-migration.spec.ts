@@ -17,13 +17,23 @@ import { test, expect } from '@playwright/test';
 test.describe('Gigs Page - Event Display', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to Gigs page
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
   });
 
   test('loads and displays events from session_complete view', async ({ page }) => {
-    // Wait for events to load
-    await page.waitForTimeout(2000); // Give time for API call
+    // Wait for loading spinner to disappear OR content to appear (max 10s for cold start)
+    await page.waitForFunction(
+      () => {
+        const loadingText = document.body.textContent?.includes('Loading');
+        const hasEventCards = document.querySelectorAll('[class*="group"]').length > 0;
+        const hasEmptyState = document.body.textContent?.match(/no.*events|no.*results/i);
+        return !loadingText && (hasEventCards || hasEmptyState);
+      },
+      { timeout: 10000 }
+    ).catch(() => {
+      // If timeout, continue anyway - the expect will catch the failure
+    });
 
     // Check if any event cards are displayed
     // Events are wrapped in Card components which render as articles or divs
@@ -62,7 +72,7 @@ test.describe('Gigs Page - Event Display', () => {
 
 test.describe('Gigs Page - Event Filtering', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
   });
@@ -127,7 +137,7 @@ test.describe('Gigs Page - Event Filtering', () => {
 
 test.describe('Gigs Page - Date Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
   });
@@ -169,7 +179,7 @@ test.describe('Gigs Page - Date Navigation', () => {
 
 test.describe('Gigs Page - ShowCard Integration', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
   });
@@ -221,7 +231,7 @@ test.describe('Gigs Page - ShowCard Integration', () => {
 
 test.describe('Gigs Page - Past Events Toggle', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
   });
@@ -256,7 +266,7 @@ test.describe('Gigs Page - Error Handling', () => {
       route.abort('failed');
     });
 
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -282,7 +292,7 @@ test.describe('Gigs Page - Error Handling', () => {
       });
     });
 
-    await page.goto('/shows');
+    await page.goto('/gigs');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
 
