@@ -46,7 +46,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   const supabaseEventId: string | null = show?.supabaseEventId ?? null;
   const hasInternalEvent = Boolean(supabaseEventId);
 
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('promoter') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
   const rawAvailableSpots = typeof show.available_spots === 'number'
     ? show.available_spots
@@ -55,8 +55,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({
   const isShowFull = availableSpots <= 0 || show.status === 'closed' || show.is_full;
   const hasApplied = hasAppliedToEvent ? hasAppliedToEvent(supabaseEventId) : false;
   const applicationStatus = getApplicationStatus ? getApplicationStatus(supabaseEventId) : null;
-  const isComedian = user && hasRole('comedian');
+  const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
   const isSoldOut = show.status === 'closed';
+
+  // Scraped events (from session_complete) don't have internal application system
+  // These are external Humanitix/Eventbrite events, so comedians can only buy tickets
+  const isScrapedEvent = !show.promoter_id; // No promoter = scraped external event
 
   // Date formatting removed - dates shown in footer
 
@@ -145,10 +149,15 @@ export const ShowCard: React.FC<ShowCardProps> = ({
         <div className="flex w-full items-center justify-between gap-3 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            <span>{show.session_status ?? show.status ?? 'Scheduled'}</span>
+            <span>
+              {isScrapedEvent
+                ? (show.is_past ? 'Past Event' : 'Upcoming')
+                : (show.session_status ?? show.status ?? 'Scheduled')}
+            </span>
           </div>
 
-          {isComedian ? (
+          {isComedian && !isScrapedEvent ? (
+            // Internal events: Show apply button for comedians
             <Button
               size="sm"
               variant={hasApplied ? 'ghost' : 'default'}
@@ -175,6 +184,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({
               {isApplying ? 'Applying…' : hasApplied ? 'Applied' : 'Apply'}
             </Button>
           ) : (
+            // Scraped events or non-comedians: Show ticket button
             <Button
               size="sm"
               variant="secondary"

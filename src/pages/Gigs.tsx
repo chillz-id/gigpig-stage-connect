@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useEventsForListing } from '@/hooks/data/useEvents';
+import { useSessionCalendar } from '@/hooks/useSessionCalendar';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { EventFilters } from '@/components/events/EventFilters';
@@ -14,9 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
-import { Calendar, MapPin, Users, AlertCircle, Clock, Filter, Eye } from 'lucide-react';
-import { ShowTypeFilter, type ShowType } from '@/components/shows/ShowTypeFilter';
-import { AgeRestrictionToggle, type AgeRestriction } from '@/components/shows/AgeRestrictionToggle';
+import { Calendar, MapPin, Users, AlertCircle, Clock } from 'lucide-react';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { QuickSignUpCard } from '@/components/auth/QuickSignUpCard';
 import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
@@ -44,26 +42,40 @@ const Gigs = () => {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [showDateRange, setShowDateRange] = useState(false);
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
-  const [showMyDrafts, setShowMyDrafts] = useState(false);
-  const [showOnlyMyEvents, setShowOnlyMyEvents] = useState(false);
-  const [showType, setShowType] = useState<ShowType>('all');
-  const [ageRestriction, setAgeRestriction] = useState<AgeRestriction>('all');
 
-  // Check if user can see drafts (promoters and admins)
-  const canSeeDrafts = hasRole('promoter') || hasRole('admin');
+  // Calculate date range for session calendar based on month/year or custom range
+  const getDateRange = () => {
+    if (useAdvancedFilters && (dateRange.start || dateRange.end)) {
+      // Use custom date range
+      const start = dateRange.start || new Date(selectedYear, selectedMonth, 1);
+      const end = dateRange.end || new Date(selectedYear, selectedMonth + 1, 0);
+      return {
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
+      };
+    } else {
+      // Use month/year range
+      const start = new Date(selectedYear, selectedMonth, 1);
+      const end = new Date(selectedYear, selectedMonth + 1, 0);
+      return {
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
+      };
+    }
+  };
 
-  const { events, isLoading, error } = useEventsForListing({
-    include_past: showPastEvents,
-    include_drafts: showMyDrafts && canSeeDrafts,
-    owner_id: showMyDrafts ? user?.id : undefined,
-    my_events: showOnlyMyEvents
+  const { startDate, endDate } = getDateRange();
+
+  const { events, isLoading, error } = useSessionCalendar({
+    startDate,
+    endDate,
+    includePast: showPastEvents,
+    timezone: 'Australia/Sydney'
   });
   
   // Get browse logic handlers
@@ -92,63 +104,31 @@ const Gigs = () => {
   // Filter events based on selected month/year, date range, and other filters
   const filteredEvents = React.useMemo(() => {
     if (!events) return [];
-    
+
     return events.filter(event => {
       const eventDate = new Date(event.event_date);
-      
+
       const now = new Date();
 
-      // Date filtering logic - use date range if set, otherwise use month/year
-      let matchesDate = true;
-      if (useAdvancedFilters && (dateRange.start || dateRange.end)) {
-        // Custom date range filtering
-        if (dateRange.start && eventDate < dateRange.start) {
-          matchesDate = false;
-        }
-        if (dateRange.end && eventDate > dateRange.end) {
-          matchesDate = false;
-        }
-      } else if (!useAdvancedFilters) {
-        // Month/year filtering (default behavior)
-        matchesDate = eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
-      }
+      // Date filtering already handled by useSessionCalendar (startDate/endDate)
+      // No need for additional date filtering here
 
-      if (!showPastEvents && eventDate < now) {
-        matchesDate = false;
-      }
-      
+      // Note: Past events filtering is handled by useSessionCalendar via includePast option
+
       const matchesSearch = searchTerm === '' ||
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.venue.toLowerCase().includes(searchTerm.toLowerCase());
+        (event.venue?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       const matchesLocation = locationFilter === '' ||
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
-      const matchesType = typeFilter === '' || event.type === typeFilter;
-      const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
-      const matchesOwnership = !showOnlyMyEvents || event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '');
 
-      // Filter by show type
-      const matchesShowType = showType === 'all' || event.type?.toLowerCase() === showType;
+      // Note: Scraped events don't have show type or age restriction data
+      // These filters are not applicable for session_complete events
 
-      // Filter by age restriction
-      let matchesAgeRestriction = true;
-      if (ageRestriction !== 'all') {
-        const eventAgeRestriction = event.age_restriction?.toLowerCase();
-        if (ageRestriction === 'over_18') {
-          matchesAgeRestriction = eventAgeRestriction?.includes('18+') || false;
-        } else if (ageRestriction === 'under_18') {
-          matchesAgeRestriction = !eventAgeRestriction || !eventAgeRestriction.includes('18+');
-        }
-      }
-      
-      // Filter drafts for non-owners
-      const canViewEvent = event.status !== 'draft' || 
-        (showMyDrafts && (event.promoter_id === user?.id || event.co_promoter_ids?.includes(user?.id || '')));
-      
-      return matchesDate && matchesSearch && matchesLocation && matchesType && matchesStatus && matchesOwnership && canViewEvent && matchesShowType && matchesAgeRestriction;
+      return matchesSearch && matchesLocation;
   }).sort((a, b) => {
       const dateA = new Date(a.event_date).getTime();
       const dateB = new Date(b.event_date).getTime();
-      
+
       switch (sortBy) {
         case 'date':
           return dateA - dateB;
@@ -159,30 +139,24 @@ const Gigs = () => {
         case 'title-desc':
           return b.title.localeCompare(a.title);
         case 'popularity':
-          // Sort by tickets sold or applications count
-          const popularityA = (a.tickets_sold || 0) + (a.applications?.length || 0);
-          const popularityB = (b.tickets_sold || 0) + (b.applications?.length || 0);
-          return popularityB - popularityA;
-        case 'applications':
-          return (b.applications?.length || 0) - (a.applications?.length || 0);
+          // Sort by tickets sold (from session_complete)
+          const ticketsA = (a as any).total_ticket_count || 0;
+          const ticketsB = (b as any).total_ticket_count || 0;
+          return ticketsB - ticketsA;
         default:
           return dateA - dateB;
       }
     });
-  }, [dateRange, events, locationFilter, selectedMonth, selectedYear, showMyDrafts, showOnlyMyEvents, showPastEvents, sortBy, statusFilter, typeFilter, useAdvancedFilters, user?.id, searchTerm, showType, ageRestriction, canSeeDrafts]);
+  }, [events, locationFilter, showPastEvents, sortBy, useAdvancedFilters, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setLocationFilter('');
-    setTypeFilter('');
-    setStatusFilter('all');
     setSortBy('date');
     setDateRange({ start: null, end: null });
     setShowDateRange(false);
     setUseAdvancedFilters(false);
     setShowPastEvents(false);
-    setShowMyDrafts(false);
-    setShowOnlyMyEvents(false);
   };
 
   // Calculate active filters count
@@ -190,12 +164,10 @@ const Gigs = () => {
     let count = 0;
     if (searchTerm) count++;
     if (locationFilter) count++;
-    if (typeFilter) count++;
-    if (statusFilter !== 'all') count++;
     if (sortBy !== 'date') count++;
     if (dateRange.start || dateRange.end) count++;
     return count;
-  }, [searchTerm, locationFilter, typeFilter, statusFilter, sortBy, dateRange]);
+  }, [searchTerm, locationFilter, sortBy, dateRange]);
 
   const handleDateRangeChange = (range: { start: Date | null; end: Date | null }) => {
     setDateRange(range);
@@ -301,10 +273,10 @@ const Gigs = () => {
                 className={cn(
                   "px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2",
                   showPastEvents
-                    ? theme === 'pleasure' 
+                    ? theme === 'pleasure'
                       ? 'bg-purple-500/30 hover:bg-purple-500/40 text-white border border-purple-400/30'
                       : 'bg-red-600/30 hover:bg-red-600/40 text-white border border-red-600/30'
-                    : theme === 'pleasure' 
+                    : theme === 'pleasure'
                       ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                       : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
                 )}
@@ -312,45 +284,7 @@ const Gigs = () => {
                 <Clock size={14} />
                 {showPastEvents ? 'Hide Past' : 'Show Past'}
               </button>
-              
-              {canSeeDrafts && (
-                <button
-                  onClick={() => setShowMyDrafts(!showMyDrafts)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2",
-                    showMyDrafts
-                      ? theme === 'pleasure' 
-                        ? 'bg-purple-500/30 hover:bg-purple-500/40 text-white border border-purple-400/30'
-                        : 'bg-red-600/30 hover:bg-red-600/40 text-white border border-red-600/30'
-                      : theme === 'pleasure' 
-                        ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                        : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
-                  )}
-                >
-                  <Eye size={14} />
-                  {showMyDrafts ? 'Hide Drafts' : 'My Drafts'}
-                </button>
-              )}
-              
-              {user && (
-                <button
-                  onClick={() => setShowOnlyMyEvents(!showOnlyMyEvents)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2",
-                    showOnlyMyEvents
-                      ? theme === 'pleasure' 
-                        ? 'bg-purple-500/30 hover:bg-purple-500/40 text-white border border-purple-400/30'
-                        : 'bg-red-600/30 hover:bg-red-600/40 text-white border border-red-600/30'
-                      : theme === 'pleasure' 
-                        ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                        : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
-                  )}
-                >
-                  <Filter size={14} />
-                  {showOnlyMyEvents ? 'All Events' : 'My Events'}
-                </button>
-              )}
-              
+
               <button
                 onClick={() => {
                   setUseAdvancedFilters(!useAdvancedFilters);
@@ -383,12 +317,8 @@ const Gigs = () => {
             <EventFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
               locationFilter={locationFilter}
               setLocationFilter={setLocationFilter}
-              typeFilter={typeFilter}
-              setTypeFilter={setTypeFilter}
               sortBy={sortBy}
               setSortBy={setSortBy}
               dateRange={dateRange}
@@ -397,12 +327,6 @@ const Gigs = () => {
               activeFiltersCount={activeFiltersCount}
             />
           )}
-
-          {/* Show Type and Age Restriction Filters */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-            <ShowTypeFilter value={showType} onChange={setShowType} className="text-white" />
-            <AgeRestrictionToggle value={ageRestriction} onChange={setAgeRestriction} className="text-white" />
-          </div>
         </div>
 
         {/* Results Summary */}
@@ -412,8 +336,6 @@ const Gigs = () => {
               Found <span className="font-semibold">{filteredEvents.length}</span> events
               {activeFiltersCount > 0 && ` matching your filters`}
               {showPastEvents && ' (including past events)'}
-              {showMyDrafts && ' (including your drafts)'}
-              {showOnlyMyEvents && ' (your events only)'}
             </p>
             {filteredEvents.length > 10 && (
               <p className="text-white/60 text-sm">
@@ -458,29 +380,15 @@ const Gigs = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {filteredEvents.map((event) => {
                   const isPast = event.is_past;
-                  const isDraft = event.status === 'draft';
-                  const isCancelled = event.status === 'cancelled';
 
                   return (
                     <div key={event.id} className="relative">
-                      {/* Status badges */}
-                      {(isPast || isDraft || isCancelled) && (
-                        <div className="absolute top-2 left-2 z-10 flex gap-2">
-                          {isPast && (
-                            <span className="px-2 py-1 text-xs font-medium bg-gray-800/80 text-gray-300 rounded-full backdrop-blur-sm">
-                              Past Event
-                            </span>
-                          )}
-                          {isDraft && (
-                            <span className="px-2 py-1 text-xs font-medium bg-yellow-600/80 text-yellow-100 rounded-full backdrop-blur-sm">
-                              Draft
-                            </span>
-                          )}
-                          {isCancelled && (
-                            <span className="px-2 py-1 text-xs font-medium bg-red-600/80 text-white rounded-full backdrop-blur-sm">
-                              Cancelled
-                            </span>
-                          )}
+                      {/* Status badge for past events */}
+                      {isPast && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="px-2 py-1 text-xs font-medium bg-gray-800/80 text-gray-300 rounded-full backdrop-blur-sm">
+                            Past Event
+                          </span>
                         </div>
                       )}
                       <ShowCard
@@ -518,15 +426,11 @@ const Gigs = () => {
               <p className={cn("text-base mb-6 max-w-md mx-auto",
                 theme === 'pleasure' ? 'text-purple-200' : 'text-gray-400'
               )}>
-                {activeFiltersCount > 0 
+                {activeFiltersCount > 0
                   ? "No events match your current filters. Try adjusting your search criteria."
                   : showPastEvents
                     ? "No past or upcoming events found. Check back later for new shows!"
-                    : showOnlyMyEvents
-                      ? "You don't have any events yet. Create your first event to get started!"
-                      : showMyDrafts
-                        ? "You don't have any draft events. Start creating an event to see it here!"
-                        : "No upcoming events found for this period. Try showing past events or selecting a different date range."}
+                    : "No upcoming events found for this period. Try showing past events or selecting a different date range."}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
