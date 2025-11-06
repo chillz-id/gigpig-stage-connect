@@ -31,7 +31,7 @@ export const useUpcomingGigs = () => {
           event_id,
           status,
           applied_at,
-          events (
+          events!applications_event_id_fkey (
             id,
             title,
             venue,
@@ -42,24 +42,31 @@ export const useUpcomingGigs = () => {
         `)
         .eq('comedian_id', user.id)
         .eq('status', 'accepted')
-        .gte('events.event_date', new Date().toISOString())
-        .order('events.event_date', { ascending: true });
+        .gte('events.event_date', new Date().toISOString());
 
       if (error) {
         console.error('Error fetching upcoming gigs:', error);
         throw error;
       }
 
-      return (data || []).map((application: any) => ({
-        id: application.id,
-        event_id: application.event_id,
-        title: application.events?.title || 'Untitled Event',
-        venue: application.events?.venue || 'Venue TBA',
-        event_date: application.events?.event_date,
-        status: application.status,
-        payment_amount: application.events?.pay_per_comedian,
-        payment_status: 'pending' // Default status
-      })) as UpcomingGig[];
+      // Map and sort by event date in JavaScript (can't order by nested field in PostgREST)
+      return (data || [])
+        .map((application: any) => ({
+          id: application.id,
+          event_id: application.event_id,
+          title: application.events?.title || 'Untitled Event',
+          venue: application.events?.venue || 'Venue TBA',
+          event_date: application.events?.event_date,
+          status: application.status,
+          payment_amount: application.events?.pay_per_comedian,
+          payment_status: 'pending' // Default status
+        }))
+        .sort((a, b) => {
+          // Sort by event_date ascending
+          const dateA = a.event_date ? new Date(a.event_date).getTime() : 0;
+          const dateB = b.event_date ? new Date(b.event_date).getTime() : 0;
+          return dateA - dateB;
+        }) as UpcomingGig[];
     },
     enabled: !!user?.id && (hasRole('comedian') || hasRole('comedian_lite')),
     staleTime: 5 * 60 * 1000, // 5 minutes

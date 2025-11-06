@@ -32,9 +32,15 @@ export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
   const { user } = useAuth();
   const location = useLocation();
 
+  const currentPath = location.pathname.toLowerCase();
+
   // Hide platform sidebar on CRM routes, homepage, and when not authenticated
   // CRM has its own layout, homepage is public marketing page
-  const hidesSidebar = !user || location.pathname === '/' || location.pathname.startsWith('/crm');
+  const hidesSidebar =
+    !user ||
+    currentPath === '/' ||
+    currentPath.startsWith('/crm') ||
+    currentPath === '/susgigs';
 
   // If sidebar should be hidden, render outlet without sidebar
   if (hidesSidebar) {
