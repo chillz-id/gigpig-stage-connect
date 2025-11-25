@@ -17,8 +17,8 @@ else
     exit 1
 fi
 
-# Check if critical documentation exists
-if [ -f "VERIFIED_DATABASE_SCHEMA.md" ]; then
+# Check if critical documentation exists (check archive location too)
+if [ -f "VERIFIED_DATABASE_SCHEMA.md" ] || [ -f "docs/archive/VERIFIED_DATABASE_SCHEMA.md" ]; then
     echo -e "${GREEN}✅ Database schema documentation found${NC}"
 else
     echo "❌ Database schema documentation missing"
