@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 
 export interface ActiveProfile {
   id: string;
-  type: 'comedian' | 'manager' | 'organization' | 'venue' | 'photographer';
+  type: 'comedian' | 'comedian_lite' | 'manager' | 'organization' | 'venue' | 'photographer' | 'videographer';
   slug: string;
   name: string;
   avatarUrl?: string;
@@ -24,7 +24,7 @@ const STORAGE_KEY = 'activeProfile';
 const isValidProfileType = (
   type: string
 ): type is ActiveProfile['type'] => {
-  return ['comedian', 'manager', 'organization', 'venue', 'photographer'].includes(type);
+  return ['comedian', 'comedian_lite', 'manager', 'organization', 'venue', 'photographer', 'videographer'].includes(type);
 };
 
 const isValidActiveProfile = (data: unknown): data is ActiveProfile => {
@@ -88,8 +88,21 @@ export function ActiveProfileProvider({
       return '/';
     }
 
-    // Map 'organization' to 'org' for shorter URLs
-    const urlType = activeProfile.type === 'organization' ? 'org' : activeProfile.type;
+    // Map profile types to URL paths
+    // - 'organization' -> 'org' for shorter URLs
+    // - 'comedian_lite' -> 'comedian' (they share routes)
+    let urlType: string;
+    switch (activeProfile.type) {
+      case 'organization':
+        urlType = 'org';
+        break;
+      case 'comedian_lite':
+        urlType = 'comedian';
+        break;
+      default:
+        urlType = activeProfile.type;
+    }
+
     const basePath = `/${urlType}/${activeProfile.slug}`;
     const pagePath = page || 'dashboard';
 
