@@ -1,5 +1,7 @@
 # Stand Up Sydney - Platform Features Documentation
 
+> **DEPRECATED:** This monolithic document is superseded by the modular feature docs in `/Features/`. See [`/Features/README.md`](/Features/README.md) for the current source of truth. This file is kept for historical reference.
+
 **Last Updated:** 2025-11-24
 **Purpose:** Comprehensive inventory of all implemented features in the Stand Up Sydney comedy platform
 

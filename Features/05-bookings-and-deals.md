@@ -16,10 +16,10 @@ Bookings let promoters/organizations request comedians; accepted applications ca
 - Lineup/spots: lineup widgets inside event detail pages, using `event-lineup-service.ts` and `spot-service.ts`.
 
 ## Services / hooks
+- `src/services/bookingRequestService.ts` – centralized CRUD for booking requests and responses; handles request creation, status updates, comedian responses, and acceptance workflows.
 - `src/services/event/spot-service.ts` – CRUD for spots, assignment helpers, status transitions.
 - `src/services/event/event-lineup-service.ts` – combined lineup operations and validation.
 - `src/services/eventDealService.ts` and `dealParticipantService.ts` – create/update deals and participants; enforce GST flags and payer/payee roles.
-- `src/services/booking` functionality lives inline in components via Supabase client inserts/updates for `booking_requests`.
 
 ## Flow
 1) Promoter sends booking request → stored in `booking_requests`; comedian sees request in dashboard section and can accept/decline (updates status field).
@@ -30,3 +30,6 @@ Bookings let promoters/organizations request comedians; accepted applications ca
 - Booking inquiries table exists but UI is minimal; consolidate with booking requests or remove.
 - Ensure deal creation is triggered when a booking is confirmed; currently often manual via Deal pages.
 - Lineup UI and booking state are loosely coupled—confirm `event_spots.assigned_comedian_id` stays in sync with bookings/deals when editing lineups.
+
+## Recent changes
+- 2025-11-25: Created centralized `bookingRequestService.ts` replacing inline Supabase calls in BookComedianForm, BookingRequestsSection, and BookingManagementDashboard.
