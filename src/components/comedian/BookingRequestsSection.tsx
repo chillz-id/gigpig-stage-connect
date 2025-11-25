@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  DollarSign, 
-  User, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  DollarSign,
   MessageCircle,
   Check,
   X,
@@ -22,27 +20,13 @@ import {
   Timer
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { bookingRequestService, BookingRequest as BaseBookingRequest } from '@/services/bookingRequestService';
 
-interface BookingRequest {
-  id: string;
-  requester_id: string;
-  event_date: string;
-  event_time: string;
-  venue: string;
-  budget?: number;
-  requested_comedian_id?: string;
-  notes?: string;
-  status: string;
-  created_at: string;
-  event_title?: string;
-  event_type?: string;
-  expected_audience_size?: number;
-  performance_duration?: number;
-  technical_requirements?: string;
+// Extended interface for UI display
+interface BookingRequestDisplay extends BaseBookingRequest {
   requester?: {
     id: string;
     name: string;
@@ -61,7 +45,7 @@ export const BookingRequestsSection: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<BookingRequestDisplay | null>(null);
   const [responseForm, setResponseForm] = useState({
     response_type: '',
     proposed_fee: '',
@@ -69,49 +53,32 @@ export const BookingRequestsSection: React.FC = () => {
     response_message: ''
   });
 
-  // Fetch booking requests
+  // Fetch booking requests using centralized service
   const { data: bookingRequests = [], isLoading } = useQuery({
     queryKey: ['comedian-booking-requests', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-
-      // Fetch general requests and specific requests for this comedian
-      const { data, error } = await supabase
-        .from('booking_requests')
-        .select('*')
-        .or(`requested_comedian_id.eq.${user.id},requested_comedian_id.is.null`)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Return requests without attempting to join non-existent foreign keys
-      return data || [];
+      return bookingRequestService.listForComedian(user.id, 'pending');
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Respond to booking request
+  // Respond to booking request using centralized service
   const respondToRequest = useMutation({
     mutationFn: async (data: {
       booking_request_id: string;
-      response_type: string;
+      response_type: 'accepted' | 'declined' | 'negotiating' | 'interested';
       proposed_fee?: number;
       counter_offer_notes?: string;
       response_message?: string;
     }) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const { error } = await supabase
-        .from('booking_request_responses')
-        .upsert({
-          comedian_id: user.id,
-          ...data
-        }, {
-          onConflict: 'booking_request_id,comedian_id'
-        });
-
-      if (error) throw error;
+      return bookingRequestService.submitResponse({
+        comedian_id: user.id,
+        ...data,
+      });
     },
     onSuccess: () => {
       toast({
@@ -156,11 +123,11 @@ export const BookingRequestsSection: React.FC = () => {
     });
   };
 
-  const getRequestTypeLabel = (request: BookingRequest) => {
+  const getRequestTypeLabel = (request: BookingRequestDisplay) => {
     return request.requested_comedian_id === user?.id ? 'Direct Request' : 'Open Request';
   };
 
-  const getRequestTypeBadgeColor = (request: BookingRequest) => {
+  const getRequestTypeBadgeColor = (request: BookingRequestDisplay) => {
     return request.requested_comedian_id === user?.id ? 'bg-purple-500' : 'bg-blue-500';
   };
 
