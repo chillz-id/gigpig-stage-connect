@@ -237,9 +237,13 @@ export const CreateEventFormEnhanced: React.FC = () => {
             <EventTemplateLoader onLoadTemplate={loadTemplate} />
           </div>
 
-          <EventBannerUpload 
-            imageUrl={form.watch('imageUrl') || ''}
-            onImageChange={(url) => form.setValue('imageUrl', url)}
+          <EventBannerUpload
+            bannerUrl={form.watch('imageUrl') || ''}
+            bannerPosition={form.watch('bannerPosition')}
+            onBannerChange={(data) => {
+              form.setValue('imageUrl', data.url);
+              form.setValue('bannerPosition', data.position);
+            }}
           />
 
           <BasicEventInfoEnhanced
@@ -299,7 +303,7 @@ export const CreateEventFormEnhanced: React.FC = () => {
             
             <Button 
               type="button"
-              variant="outline"
+              className="professional-button"
               disabled={isCreating}
               onClick={handleSubmit(handleSaveDraftWithValidation)}
               className="border-gray-300 hover:bg-gray-100"
@@ -309,7 +313,7 @@ export const CreateEventFormEnhanced: React.FC = () => {
             
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => setShowPreview(true)}
               className="border-blue-300 hover:bg-blue-50"
             >

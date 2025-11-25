@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useMobileLayout } from "@/hooks/useMobileLayout"
 
 const Dialog = DialogPrimitive.Root
 
@@ -19,7 +20,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-[9999] bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-[9999] bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -27,28 +28,81 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+/**
+ * Mobile variant types for responsive dialog behavior
+ * - "default": Centered modal on all devices
+ * - "fullscreen": Full-screen on mobile, centered modal on desktop
+ * - "bottomSheet": Slide-up sheet on mobile, centered modal on desktop
+ */
+export type DialogMobileVariant = "default" | "fullscreen" | "bottomSheet"
+
+interface DialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  /** Mobile display variant */
+  mobileVariant?: DialogMobileVariant
+  /** Hide the close button */
+  hideCloseButton?: boolean
+}
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-[10000] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-))
+  DialogContentProps
+>(({ className, children, mobileVariant = "default", hideCloseButton = false, ...props }, ref) => {
+  const { isMobile } = useMobileLayout()
+
+  // Determine styling based on mobile variant
+  const getMobileStyles = () => {
+    if (!isMobile || mobileVariant === "default") {
+      // Default centered modal
+      return "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] max-w-lg sm:rounded-lg data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
+    }
+
+    if (mobileVariant === "fullscreen") {
+      // Full-screen on mobile
+      return "fixed inset-0 rounded-none max-w-none data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+    }
+
+    if (mobileVariant === "bottomSheet") {
+      // Bottom sheet on mobile
+      return "fixed inset-x-0 bottom-0 top-auto rounded-t-xl max-w-none max-h-[90vh] overflow-y-auto data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom pb-safe"
+    }
+
+    return ""
+  }
+
+  // Close button sizing - larger on mobile for 44px touch target
+  const closeButtonClasses = cn(
+    "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
+    isMobile
+      ? "right-3 top-3 p-2 -m-2 touch-target-44" // Larger touch target on mobile
+      : "right-4 top-4"
+  )
+
+  return (
+    <DialogPortal>
+      <DialogOverlay className={cn(isMobile && mobileVariant === "bottomSheet" && "backdrop-blur-sm")} />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "z-[10000] grid w-full gap-4 border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          // Padding: less on mobile fullscreen to maximize space
+          isMobile && mobileVariant === "fullscreen" ? "p-4" : "p-6",
+          getMobileStyles(),
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {!hideCloseButton && (
+          <DialogPrimitive.Close className={closeButtonClasses}>
+            <X className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+})
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({

@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 
 export default function OrganizationBookComedian() {
-  const { organization, orgId } = useOrganization();
+  const { organization } = useOrganization();
   const navigate = useNavigate();
+
+  // Use slug-based URLs for navigation
+  const orgSlug = organization?.url_slug;
 
   if (!organization) {
     return (
@@ -31,7 +34,7 @@ export default function OrganizationBookComedian() {
             Organization comedian booking form will be available here
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate(`/org/${orgId}/dashboard`)}>
+            <Button className="professional-button" onClick={() => navigate(`/org/${orgSlug}/dashboard`)}>
               Cancel
             </Button>
             <Button>Book Comedian</Button>

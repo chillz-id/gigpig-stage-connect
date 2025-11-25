@@ -141,7 +141,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
           <div className="text-center py-8">
             <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={loadPaymentHistory} variant="outline" size="sm">
+            <Button onClick={loadPaymentHistory} className="professional-button" size="sm">
               <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>
@@ -177,7 +177,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
           <CreditCard className="w-5 h-5" />
           Payment History
         </CardTitle>
-        <Button onClick={loadPaymentHistory} variant="outline" size="sm">
+        <Button onClick={loadPaymentHistory} className="professional-button" size="sm">
           <RefreshCw className="w-4 h-4" />
         </Button>
       </CardHeader>

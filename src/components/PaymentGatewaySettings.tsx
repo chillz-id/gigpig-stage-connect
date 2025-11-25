@@ -200,7 +200,7 @@ export const PaymentGatewaySettings: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Badge 
-                variant={status === 'configured' ? 'default' : status === 'incomplete' ? 'secondary' : 'outline'}
+                variant={status === 'configured' ? 'default' : status === 'incomplete' ? 'secondary' : 'secondary'}
                 className="capitalize"
               >
                 {status === 'configured' && <Check className="w-3 h-3 mr-1" />}
@@ -209,7 +209,7 @@ export const PaymentGatewaySettings: React.FC = () => {
                 {status}
               </Badge>
               {config.isDefault && (
-                <Badge variant="outline">Default</Badge>
+                <Badge className="professional-button">Default</Badge>
               )}
             </div>
           </div>
@@ -310,7 +310,7 @@ export const PaymentGatewaySettings: React.FC = () => {
           <div className="flex justify-end space-x-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" disabled={!config.isEnabled}>
+                <Button className="professional-button" disabled={!config.isEnabled}>
                   Test Connection
                 </Button>
               </AlertDialogTrigger>

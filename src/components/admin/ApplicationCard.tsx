@@ -269,7 +269,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => onHide(application.id)}
                       className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                     >
@@ -290,7 +290,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 )}
                 <Button
                   size="sm"
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => onViewProfile(application.comedian_id)}
                   className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                 >

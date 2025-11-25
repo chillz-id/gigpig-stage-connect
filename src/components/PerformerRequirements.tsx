@@ -234,7 +234,7 @@ export const PerformerRequirements: React.FC<PerformerRequirementsProps> = ({
               type="button"
               onClick={addRequirement}
               size="sm"
-              variant="outline"
+              className="professional-button"
               className="border-white/20 text-white hover:bg-white/10"
             >
               <Plus className="w-4 h-4" />

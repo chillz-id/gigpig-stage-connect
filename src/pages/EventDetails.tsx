@@ -198,14 +198,14 @@ const EventDetails = () => {
 
                   <div className="flex flex-wrap gap-2">
                     {event.type && (
-                      <Badge variant="outline" className="text-white border-white/30">
+                      <Badge className="professional-button text-white border-white/30">
                         {event.type}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-white border-white/30">
+                    <Badge className="professional-button text-white border-white/30">
                       {event.age_restriction}
                     </Badge>
-                    <Badge variant="outline" className="text-white border-white/30">
+                    <Badge className="professional-button text-white border-white/30">
                       {event.dress_code}
                     </Badge>
                     {event.is_verified_only && (
@@ -215,7 +215,7 @@ const EventDetails = () => {
                       </Badge>
                     )}
                     {event.allow_recording && (
-                      <Badge variant="outline" className="text-green-400 border-green-400">
+                      <Badge className="professional-button text-green-400 border-green-400">
                         Recording Allowed
                       </Badge>
                     )}
@@ -314,7 +314,7 @@ const EventDetails = () => {
                               eventId={event.id}
                               eventTitle={event.title}
                               trigger={
-                                <Button variant="outline" className="w-full text-white border-white/30 hover:bg-white/10">
+                                <Button className="professional-button w-full text-white border-white/30 hover:bg-white/10">
                                   <Users className="w-4 h-4 mr-2" />
                                   Join Waitlist
                                 </Button>
@@ -329,7 +329,7 @@ const EventDetails = () => {
                           Past Event
                         </div>
                         <p className="text-gray-300">This event has concluded</p>
-                        <Badge variant="outline" className="mt-4 text-gray-400 border-gray-400">
+                        <Badge className="professional-button mt-4 text-gray-400 border-gray-400">
                           Event Completed
                         </Badge>
                       </>
@@ -411,7 +411,7 @@ const EventDetails = () => {
                   {event.is_recurring && (
                     <div className="flex justify-between">
                       <span className="text-gray-300">Recurring:</span>
-                      <Badge variant="outline" className="text-blue-400 border-blue-400">
+                      <Badge className="professional-button text-blue-400 border-blue-400">
                         {event.recurrence_pattern}
                       </Badge>
                     </div>

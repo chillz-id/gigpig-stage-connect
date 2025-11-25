@@ -83,7 +83,7 @@ export const TaskList = ({
 
         {hasMore && onLoadMore && (
           <div className="flex justify-center">
-            <Button onClick={() => onLoadMore()} disabled={isLoadingMore} variant="outline">
+            <Button onClick={() => onLoadMore()} disabled={isLoadingMore} className="professional-button">
               {isLoadingMore ? 'Loading…' : 'Load more'}
             </Button>
           </div>
@@ -177,7 +177,7 @@ export const TaskList = ({
                   )}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {task.tags?.slice(0, 2).map((tag) => (
-                      <Badge key={tag} variant="outline">
+                      <Badge key={tag} className="professional-button">
                         {tag}
                       </Badge>
                     ))}
@@ -185,7 +185,7 @@ export const TaskList = ({
                       <span>+{task.tags.length - 2} more</span>
                     )}
                     {(task.is_recurring || task.recurrence_pattern) && (
-                      <Badge variant="outline" className="gap-1">
+                      <Badge className="professional-button gap-1">
                         <Repeat className="h-3 w-3" />
                         Recurring
                       </Badge>
@@ -235,7 +235,7 @@ export const TaskList = ({
 
       {hasMore && onLoadMore && (
         <div className="flex items-center justify-center border-t bg-background p-4">
-          <Button onClick={onLoadMore} variant="outline" disabled={isLoadingMore}>
+          <Button onClick={onLoadMore} className="professional-button" disabled={isLoadingMore}>
             {isLoadingMore ? 'Loading…' : 'Load more'}
           </Button>
         </div>

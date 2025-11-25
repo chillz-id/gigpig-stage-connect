@@ -20,7 +20,7 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0, width: 200, height: 200 });
+  const [crop, setCrop] = useState({ x: 0, y: 0, width: 300, height: 300 });
   const [scale, setScale]= useState([1]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -37,13 +37,13 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     // Clear canvas with a neutral background
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // Calculate dimensions to fit image in canvas while maintaining aspect ratio
-    const containerWidth = 400;
-    const containerHeight = 400;
+    const containerWidth = 600;
+    const containerHeight = 600;
     const imageAspect = image.naturalWidth / image.naturalHeight;
     const containerAspect = containerWidth / containerHeight;
-    
+
     let displayWidth, displayHeight;
     if (imageAspect > containerAspect) {
       displayWidth = containerWidth * scale[0];
@@ -57,8 +57,8 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     const x = (containerWidth - displayWidth) / 2 + crop.x;
     const y = (containerHeight - displayHeight) / 2 + crop.y;
 
-    // Define the crop circle
-    const cropSize = 200;
+    // Define the crop circle (increased from 200 to 300 for better visibility)
+    const cropSize = 300;
     const cropX = (containerWidth - cropSize) / 2;
     const cropY = (containerHeight - cropSize) / 2;
     
@@ -130,13 +130,13 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
     const cropCtx = cropCanvas.getContext('2d');
     if (!cropCtx) return;
 
-    const cropSize = 200;
+    const cropSize = 300;
     cropCanvas.width = cropSize;
     cropCanvas.height = cropSize;
 
     // Calculate the crop area on the original image
-    const containerWidth = 400;
-    const containerHeight = 400;
+    const containerWidth = 600;
+    const containerHeight = 600;
     const imageAspect = image.naturalWidth / image.naturalHeight;
     const containerAspect = containerWidth / containerHeight;
     
@@ -186,13 +186,13 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
   };
 
   const resetCrop = () => {
-    setCrop({ x: 0, y: 0, width: 200, height: 200 });
+    setCrop({ x: 0, y: 0, width: 300, height: 300 });
     setScale([1]);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Crop Profile Picture</DialogTitle>
         </DialogHeader>
@@ -200,9 +200,9 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
           <div className="relative">
             <canvas
               ref={canvasRef}
-              width={400}
-              height={400}
-              className="border rounded-lg cursor-move"
+              width={600}
+              height={600}
+              className="border rounded-lg cursor-move w-full"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -230,11 +230,11 @@ export const ImageCrop: React.FC<ImageCropProps> = ({
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={resetCrop} className="flex-1">
+            <Button onClick={resetCrop} className="professional-button flex-1">
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button onClick={onClose} className="professional-button flex-1">
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>

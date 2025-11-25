@@ -14,15 +14,18 @@ import {
   SidebarMenuSubButton,
   SidebarTrigger,
   SidebarHeader,
+  SidebarFooter,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useUserBranding } from '@/hooks/useUserBranding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEventApplications } from '@/hooks/useEventApplications';
 import { useUpcomingGigs } from '@/hooks/useUpcomingGigs';
 import { useSidebarPreferences } from '@/hooks/useSidebarPreferences';
+import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { MENU_ITEMS, SECTION_LABELS, type UserRole, type MenuItem } from '@/config/sidebarMenuItems';
 import { useMemo, useState } from 'react';
@@ -45,34 +48,90 @@ interface UnifiedSidebarProps {
 export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   const location = useLocation();
   const { logoUrl, brandName, isLoading } = useUserBranding();
-  const { hasRole } = useAuth();
+  const { hasRole, signOut, profile } = useAuth();
   const { unreadCount } = useNotifications();
   const { userApplications } = useEventApplications();
   const { confirmedGigCount } = useUpcomingGigs();
   const { isItemHidden, getItemOrder } = useSidebarPreferences();
+  const { activeProfile: activeProfileData } = useActiveProfile();
+
+  // Removed navigation debounce - was causing issues with navigation
 
   // Count pending confirmations
   const pendingConfirmations = userApplications?.filter(
     (app) => app.status === 'accepted' && !app.availability_confirmed
   ) || [];
 
-  // Determine user's primary role from active profile
+  // Determine user's primary role from actual user roles (not activeProfile)
   const primaryRole: UserRole = useMemo(() => {
-    if (activeProfile?.startsWith('org:')) return 'admin';
-    return (activeProfile as UserRole) || 'comedian';
-  }, [activeProfile]);
+    // Check actual user roles from auth context (in priority order)
+    if (hasRole('admin')) return 'admin';
+    if (hasRole('comedian_lite')) return 'comedian_lite';
+    if (hasRole('comedian')) return 'comedian';
+    if (hasRole('photographer')) return 'photographer';
+    if (hasRole('videographer')) return 'videographer';
+    if (hasRole('co_promoter')) return 'co_promoter';
+    if (hasRole('member')) return 'member';
+
+    // Fallback
+    return 'member';
+  }, [hasRole]);
 
   // Check permissions
   const hasAdminAccess = hasRole('admin');
-  const hasCRMAccess = hasRole('admin') || hasRole('agency_manager') || hasRole('promoter') || hasRole('venue_manager');
-  const hasManagerAccess = hasRole('agency_manager') || hasRole('manager');
-  const hasAgencyAccess = hasRole('admin') || hasRole('agency_manager') || hasRole('promoter');
+  const hasCRMAccess = hasRole('admin');
+  const hasManagerAccess = hasRole('admin');
+  const hasAgencyAccess = hasRole('admin');
 
   const permissions = {
     hasAdminAccess,
     hasCRMAccess,
     hasManagerAccess,
     hasAgencyAccess,
+  };
+
+  // Helper function to transform profile paths to use active profile type and slug
+  const getItemPath = (path: string): string => {
+    // If viewing an organization, transform /dashboard to org-specific dashboard
+    if (path === '/dashboard' && activeProfileData?.type === 'organization' && activeProfileData?.slug) {
+      return `/org/${activeProfileData.slug}/dashboard`;
+    }
+
+    // If viewing an organization, transform /my-events to org-specific events
+    if (path === '/my-events' && activeProfileData?.type === 'organization' && activeProfileData?.slug) {
+      return `/org/${activeProfileData.slug}/events`;
+    }
+
+    // If path starts with /profile, replace with /:type/:slug/edit
+    if (path.startsWith('/profile')) {
+      // Special case: EPK goes to public profile view, not profile editing page
+      const isEPK = path.includes('tab=EPK');
+
+      // Try to use active profile data first
+      if (activeProfileData?.type && activeProfileData?.slug) {
+        // Map 'organization' to 'org' for shorter URLs
+        const urlType = activeProfileData.type === 'organization' ? 'org' : activeProfileData.type;
+
+        if (isEPK) {
+          // EPK: /profile?tab=EPK → /:type/:slug?tab=epk (public profile view, index route)
+          return path.replace('/profile', `/${urlType}/${activeProfileData.slug}`).replace('tab=EPK', 'tab=epk');
+        } else {
+          // Other tabs: /profile?tab=X → /:type/:slug/edit?tab=X (profile editing page, nested route)
+          return path.replace('/profile', `/${urlType}/${activeProfileData.slug}/edit`);
+        }
+      }
+
+      // Fallback to auth profile if active profile not set
+      const slug = profile?.profile_slug || profile?.id;
+      if (slug) {
+        if (isEPK) {
+          return path.replace('/profile', `/comedian/${slug}`).replace('tab=EPK', 'tab=epk');
+        } else {
+          return path.replace('/profile', `/comedian/${slug}/edit`);
+        }
+      }
+    }
+    return path;
   };
 
   // Badge data
@@ -85,6 +144,13 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   // Filter menu items based on role and permissions
   const availableItems = useMemo(() => {
     return MENU_ITEMS.filter((item) => {
+      // "My Events" only shows when an organization profile is active
+      if (item.id === 'my-events') {
+        if (activeProfileData?.type !== 'organization') {
+          return false;
+        }
+      }
+
       // Check if user's role is in the allowed roles
       if (!item.roles.includes(primaryRole)) {
         // Special case: if user has admin role, they can see everything
@@ -103,7 +169,7 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
 
       return true;
     });
-  }, [primaryRole, hasAdminAccess, permissions, isItemHidden]);
+  }, [primaryRole, hasAdminAccess, permissions, isItemHidden, activeProfileData?.type]);
 
   // Apply custom order from user preferences
   const orderedItems = useMemo(() => {
@@ -155,11 +221,12 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
 
   // Check if a path is active
   const isActive = (path: string) => {
+    const transformedPath = getItemPath(path);
     // Handle query params for profile tabs
-    if (path.includes('?tab=')) {
-      return location.pathname + location.search === path;
+    if (transformedPath.includes('?tab=')) {
+      return location.pathname + location.search === transformedPath;
     }
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+    return location.pathname === transformedPath || location.pathname.startsWith(transformedPath + '/');
   };
 
   // Track expanded state for nested items
@@ -312,7 +379,10 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
               : 'text-gray-100 hover:bg-gray-800'
           }
         >
-          <Link to={item.path} className="flex items-center justify-between w-full">
+          <Link
+            to={getItemPath(item.path)}
+            className="flex items-center justify-between w-full"
+          >
             <div className="flex items-center gap-2">
               <item.icon className="h-4 w-4" />
               <span>{item.label}</span>
@@ -412,7 +482,7 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
               : 'text-gray-100 hover:bg-gray-800'
           }
         >
-          <Link to={item.path} className="flex items-center justify-between w-full">
+          <Link to={getItemPath(item.path)} className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <item.icon className="h-4 w-4" />
               <span>{item.label}</span>
@@ -492,6 +562,16 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
           );
         })}
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-gray-800 p-4">
+        <Button
+          className="professional-button w-full justify-start"
+          onClick={signOut}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>

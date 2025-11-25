@@ -28,7 +28,7 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
   };
 
   const socialMedia = comedian.social_media || mockSocialMedia;
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'));
 
   return (
     <Card 

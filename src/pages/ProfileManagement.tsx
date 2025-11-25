@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Check, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Helper hook to fetch profile-specific data for all profile types
@@ -200,7 +200,7 @@ function ProfileCard({
           <div className="flex gap-2">
             {!isActive && (
               <Button
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 className="flex-1"
                 onClick={onSwitch}
@@ -209,7 +209,7 @@ function ProfileCard({
               </Button>
             )}
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               className={isActive ? "flex-1" : ""}
               onClick={onEdit}
@@ -218,7 +218,7 @@ function ProfileCard({
               Edit
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
               onClick={onDelete}
@@ -248,14 +248,26 @@ function ProfileCard({
  * Located at: /settings/profiles
  */
 export function ProfileManagement() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { activeProfile, availableProfiles, switchProfile } = useProfile();
-  const { data: organizations } = useOrganizationProfiles();
+  const { data: organizations, refetch: refetchOrganizations, isRefetching } = useOrganizationProfiles();
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<ProfileTypeValue | null>(null);
   const [profileToEdit, setProfileToEdit] = useState<ProfileTypeValue | null>(null);
+
+  // Check if user is comedian_lite (restricted from creating new profiles)
+  const isComedianLite = hasRole('comedian_lite');
+
+  // Manual refresh handler
+  const handleRefresh = async () => {
+    await refetchOrganizations();
+    toast({
+      title: 'Refreshed',
+      description: 'Organization profiles have been updated.',
+    });
+  };
 
   const handleEditProfile = (profileType: ProfileTypeValue) => {
     setProfileToEdit(profileType);
@@ -386,10 +398,23 @@ export function ProfileManagement() {
             Manage your profiles and switch between different roles on the platform
           </p>
         </div>
-        <Button onClick={() => setIsWizardOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create New Profile
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleRefresh}
+            variant="secondary"
+            className="gap-2"
+            disabled={isRefetching}
+          >
+            <RefreshCw className={cn("h-4 w-4", isRefetching && "animate-spin")} />
+            {isRefetching ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          {!isComedianLite && (
+            <Button onClick={() => setIsWizardOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create New Profile
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -209,8 +209,7 @@ export const InvoiceDetails: React.FC<InvoiceDetailsProps> = ({
           <div className="flex justify-between">
             <div className="space-x-2">
               <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
+                className="professional-button flex items-center gap-2"
                 onClick={handleDownloadPDF}
                 disabled={isGenerating}
               >
@@ -221,7 +220,7 @@ export const InvoiceDetails: React.FC<InvoiceDetailsProps> = ({
                 )}
                 {isGenerating ? 'Generating...' : 'Download PDF'}
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="professional-button flex items-center gap-2">
                 <Send className="w-4 h-4" />
                 Send Reminder
               </Button>

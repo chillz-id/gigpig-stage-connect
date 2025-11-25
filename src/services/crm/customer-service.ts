@@ -125,6 +125,17 @@ export const customerService = {
     return data as Customer;
   },
 
+  async getCustomerByEmail(email: string): Promise<Customer | null> {
+    const { data, error } = await supabaseClient
+      .from('customers_crm_v')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (error) throw error;
+    return data as Customer | null;
+  },
+
   async listSegmentCounts(): Promise<SegmentCount[]> {
     const { data, error } = await supabaseClient
       .from('customer_segment_counts_v')

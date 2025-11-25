@@ -69,7 +69,7 @@ export const TaskViewSwitcher = ({
           </SelectContent>
         </Select>
         <Button
-          variant="outline"
+          className="professional-button"
           onClick={onOpenTemplateDialog}
           disabled={!selectedTemplateId}
           className="gap-2"

@@ -50,7 +50,7 @@ export function TourStopDetailsModal({
 
           <div className="flex gap-3 pt-6">
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={onClose}
               className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
             >

@@ -141,10 +141,10 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge className="professional-button text-xs">
               {template.category}
             </Badge>
-            <Badge variant="outline" className="text-xs">
+            <Badge className="professional-button text-xs">
               {template.layout}
             </Badge>
           </div>
@@ -248,7 +248,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
 
         <div className="flex items-center gap-2">
           {onImportTemplate && (
-            <Button variant="outline" onClick={handleImportClick}>
+            <Button className="professional-button" onClick={handleImportClick}>
               <Upload className="h-4 w-4 mr-2" />
               Import
             </Button>

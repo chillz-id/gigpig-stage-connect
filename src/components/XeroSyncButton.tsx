@@ -130,7 +130,7 @@ export const XeroSyncButton: React.FC = () => {
               <Button
                 onClick={handleSync}
                 disabled={isSyncing}
-                variant="outline"
+                className="professional-button"
                 size="sm"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -139,7 +139,7 @@ export const XeroSyncButton: React.FC = () => {
               <Button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                variant="outline"
+                className="professional-button"
                 size="sm"
               >
                 <Unlink className="w-4 h-4 mr-2" />

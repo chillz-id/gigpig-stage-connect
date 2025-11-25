@@ -235,7 +235,7 @@ export default function DealDetailPage() {
                           {message.message_type.replace("_", " ")}
                         </Badge>
                         {message.is_automated && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge className="professional-button text-xs">
                             Automated
                           </Badge>
                         )}

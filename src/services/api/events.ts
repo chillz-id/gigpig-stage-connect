@@ -39,7 +39,7 @@ export class EventsApi extends BaseApi<Event> {
         .select(`
           *,
           venue:venues(*),
-          promoter:profiles!events_promoter_id_fkey(*)
+          organization:organization_profiles!events_organization_id_fkey(*)
         `)
         .single();
       
@@ -254,7 +254,7 @@ export class EventsApi extends BaseApi<Event> {
         .select(`
           *,
           venue:venues(*),
-          promoter:profiles!events_promoter_id_fkey(*),
+          organization:organization_profiles!events_organization_id_fkey(*),
           event_spots(
             *,
             performer:profiles(*)

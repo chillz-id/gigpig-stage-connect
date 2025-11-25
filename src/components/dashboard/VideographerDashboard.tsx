@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { Video, CalendarDays, FileText, DollarSign, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 
 /**
  * VideographerDashboard Component
@@ -21,6 +22,7 @@ export function VideographerDashboard() {
   const { user, profile } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { isMobile } = useMobileLayout();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -56,19 +58,22 @@ export function VideographerDashboard() {
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              <h1 className={cn(
+                "font-bold text-white mb-1 md:mb-2",
+                isMobile ? "text-xl" : "text-2xl md:text-3xl"
+              )}>
                 {getGreeting()}, {profile?.name || user?.email?.split('@')[0]}!
               </h1>
               <p className={cn(
                 "text-sm md:text-base",
                 theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
               )}>
-                Your videographer dashboard - manage shoots and video reel
+                {isMobile ? 'Manage shoots & video reel' : 'Your videographer dashboard - manage shoots and video reel'}
               </p>
             </div>
             <Badge className="bg-teal-500 hover:bg-teal-600 text-white w-fit">
@@ -77,18 +82,21 @@ export function VideographerDashboard() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+        )}>
           <Card className={cn(getStatCardStyles(true))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Upcoming Shoots
               </CardTitle>
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <CalendarDays className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>5</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Next: Feb 12, 2025
               </p>
             </CardContent>
@@ -96,14 +104,14 @@ export function VideographerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Events Filmed
               </CardTitle>
-              <Video className="h-4 w-4 text-muted-foreground" />
+              <Video className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">28</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>28</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 +6 this month
               </p>
             </CardContent>
@@ -111,14 +119,14 @@ export function VideographerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Revenue (MTD)
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$3,200</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>$3,200</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 +22% from last month
               </p>
             </CardContent>
@@ -126,66 +134,76 @@ export function VideographerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Reel Videos
               </CardTitle>
-              <Film className="h-4 w-4 text-muted-foreground" />
+              <Film className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">32</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>32</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Across 28 events
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Actions - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}>
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Video className={cn(isMobile ? "w-5 h-5" : "w-5 h-5")} />
                 Quick Actions
               </CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Manage your videography business
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CardContent className={cn(isMobile ? "space-y-2" : "space-y-4")}>
+              <div className={cn(
+                "grid gap-3",
+                isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+              )}>
                 <Button
                   onClick={() => navigate('/shows')}
-                  className="w-full justify-start bg-teal-600 hover:bg-teal-700 text-white border-0"
+                  className="w-full justify-start bg-teal-600 hover:bg-teal-700 text-white border-0 touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <CalendarDays className="w-4 h-4 mr-2" />
+                  <CalendarDays className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Browse Events
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <Film className="w-4 h-4 mr-2" />
+                  <Film className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Video Reel
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=calendar')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <CalendarDays className="w-4 h-4 mr-2" />
+                  <CalendarDays className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   My Bookings
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=invoices')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Invoices
                 </Button>
               </div>
@@ -194,32 +212,38 @@ export function VideographerDashboard() {
 
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle>Videography Metrics</CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardTitle className="text-base md:text-lg">Videography Metrics</CardTitle>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Your production performance
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className={cn(isMobile ? "space-y-3" : "space-y-4")}>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Avg Rate/Event</span>
-                  <span className="text-lg font-bold">$550</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>$550</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Client Satisfaction</span>
-                  <span className="text-lg font-bold">4.8/5.0</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>4.8/5.0</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Avg Turnaround</span>
-                  <span className="text-lg font-bold">5 days</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>5 days</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Upcoming Projects */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Upcoming Projects - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}>
           <Card className={cn(getCardStyles())}>
             <CardHeader>
               <CardTitle>Upcoming Productions</CardTitle>
@@ -278,7 +302,7 @@ export function VideographerDashboard() {
                     <p className="text-sm text-muted-foreground">8 min video delivered</p>
                     <p className="text-xs text-muted-foreground">Feb 5, 2025</p>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" className="professional-button">
                     View
                   </Button>
                 </div>
@@ -288,7 +312,7 @@ export function VideographerDashboard() {
                     <p className="text-sm text-muted-foreground">42 min video delivered</p>
                     <p className="text-xs text-muted-foreground">Jan 30, 2025</p>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" className="professional-button">
                     View
                   </Button>
                 </div>
@@ -298,7 +322,7 @@ export function VideographerDashboard() {
                     <p className="text-sm text-muted-foreground">3 min reel delivered</p>
                     <p className="text-xs text-muted-foreground">Jan 26, 2025</p>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" className="professional-button">
                     View
                   </Button>
                 </div>
@@ -310,15 +334,21 @@ export function VideographerDashboard() {
         {/* Equipment & Reel */}
         <Card className={cn(getCardStyles())}>
           <CardHeader>
-            <CardTitle>Equipment & Specialties</CardTitle>
-            <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+            <CardTitle className="text-base md:text-lg">Equipment & Specialties</CardTitle>
+            <CardDescription className={cn(
+              theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+              "text-sm"
+            )}>
               Your production gear and expertise
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={cn(
+              "grid gap-4",
+              isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+            )}>
               <div>
-                <h4 className="font-medium mb-2">Primary Equipment</h4>
+                <h4 className="font-medium mb-2 text-sm md:text-base">Primary Equipment</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   <li>• Sony FX6 (2 cameras)</li>
                   <li>• DJI RS 3 Pro Gimbal</li>
@@ -327,12 +357,12 @@ export function VideographerDashboard() {
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium mb-2">Specialties</h4>
+                <h4 className="font-medium mb-2 text-sm md:text-base">Specialties</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Live Performance</Badge>
-                  <Badge variant="outline">Event Coverage</Badge>
-                  <Badge variant="outline">Promo Videos</Badge>
-                  <Badge variant="outline">Showreels</Badge>
+                  <Badge className="professional-button text-xs">Live Performance</Badge>
+                  <Badge className="professional-button text-xs">Event Coverage</Badge>
+                  <Badge className="professional-button text-xs">Promo Videos</Badge>
+                  <Badge className="professional-button text-xs">Showreels</Badge>
                 </div>
               </div>
             </div>

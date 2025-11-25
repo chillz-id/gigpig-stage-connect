@@ -10,6 +10,7 @@ interface SegmentFilterProps {
   onClearSegments: () => void;
   onCreateSegment: () => void;
   isCreatingSegment: boolean;
+  totalCustomerCount?: number;
 }
 
 export const SegmentFilter = ({
@@ -19,20 +20,23 @@ export const SegmentFilter = ({
   onClearSegments,
   onCreateSegment,
   isCreatingSegment,
+  totalCustomerCount,
 }: SegmentFilterProps) => {
-  const totalCount = segmentCounts?.reduce((sum, item) => sum + item.count, 0) ?? 0;
+  // Use the actual total customer count (all customers) instead of sum of segments
+  // This ensures ALL shows all customers (15,549) not just those with segments (9,369)
+  const displayCount = totalCustomerCount ?? segmentCounts?.reduce((sum, item) => sum + item.count, 0) ?? 0;
 
   return (
     <div className="flex flex-wrap gap-2">
       <Button
-        variant={selectedSegments.length === 0 ? 'default' : 'outline'}
+        variant={selectedSegments.length === 0 ? 'default' : 'secondary'}
         size="sm"
         onClick={onClearSegments}
       >
         All
-        {segmentCounts && (
+        {displayCount > 0 && (
           <Badge variant="secondary" className="ml-2">
-            {totalCount}
+            {displayCount.toLocaleString('en-AU')}
           </Badge>
         )}
       </Button>
@@ -40,7 +44,7 @@ export const SegmentFilter = ({
       {segmentCounts?.map((segment) => (
         <Button
           key={segment.slug}
-          variant={selectedSegments.includes(segment.slug) ? 'default' : 'outline'}
+          variant={selectedSegments.includes(segment.slug) ? 'default' : 'secondary'}
           size="sm"
           onClick={() => onToggleSegment(segment.slug)}
         >

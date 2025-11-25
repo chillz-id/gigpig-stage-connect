@@ -44,7 +44,7 @@ const Organizer = () => {
   const organizationEvents = events.filter(event => event.promoter_id === organization?.promoter_id);
 
   // Check if user is comedian, promoter, or admin
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'));
   const isConsumerUser = !isIndustryUser;
 
   // Filter events based on search and time filter
@@ -180,7 +180,7 @@ const Organizer = () => {
                 <span>{event.start_time || 'TBA'}</span>
               </div>
             </div>
-            <Badge variant={event.is_paid ? "default" : "outline"}>
+            <Badge variant={event.is_paid ? "default" : "secondary"}>
               {event.is_paid ? 'Paid' : 'Free'}
             </Badge>
           </div>
@@ -193,7 +193,7 @@ const Organizer = () => {
           
           <div className="flex gap-2 pt-2">
             <Button 
-              variant="outline" 
+              className="professional-button" 
               size="sm"
               onClick={() => handleShowDetails(event)}
               className="flex-1"

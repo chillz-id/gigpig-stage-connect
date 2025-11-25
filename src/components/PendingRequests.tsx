@@ -56,7 +56,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                   <div className="flex items-center space-x-2 mb-2">
                     <h4 className="font-medium">{request.senderName}</h4>
                     <Badge 
-                      variant="outline" 
+                      className="professional-button" 
                       className={request.senderRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}
                     >
                       {request.senderRole}
@@ -75,7 +75,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                     </Button>
                     <Button 
                       size="sm"
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => onDeclineRequest(request.id)}
                       className="text-white border-white/30 hover:bg-white/10"
                     >
@@ -84,7 +84,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                     </Button>
                     <Button 
                       size="sm"
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => onBlockUser(request.senderId)}
                       className="text-red-300 border-red-300 hover:bg-red-500/20"
                     >

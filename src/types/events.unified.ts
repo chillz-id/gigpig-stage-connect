@@ -320,6 +320,7 @@ export interface EventFormData {
   ageRestriction: string;
   dresscode: string;
   imageUrl: string;
+  bannerPosition?: { x: number; y: number; scale: number };
   showLevel: string;
   showType: string;
   customShowType: string;

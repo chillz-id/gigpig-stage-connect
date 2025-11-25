@@ -21,7 +21,7 @@ All profile URLs follow this consistent pattern:
 
 ### Components
 
-- **profileType**: One of `comedian`, `manager`, `organization`, or `venue`
+- **profileType**: One of `comedian`, `manager`, `photographer`, `videographer`, `organization`, or `venue`
 - **slug**: URL-safe identifier (lowercase letters, numbers, hyphens only)
 - **page**: Section of the profile (dashboard, settings, gigs, etc.)
 
@@ -30,6 +30,8 @@ All profile URLs follow this consistent pattern:
 ```
 /comedian/chillz-skinner/dashboard
 /manager/social-guru/settings
+/photographer/jane-photos/portfolio
+/videographer/video-pro/showcase
 /organization/sydney-comedy/gigs
 /venue/comedy-store/events
 ```
@@ -153,10 +155,12 @@ record_profile_request(
 
 ### Modified Tables
 
-**`comedians`, `organizations`, `venues`** - Added `url_slug` column
+**`comedians`, `photographers`, `videographers`, `organizations`, `venues`** - Added `url_slug` column
 - Unique partial index: `WHERE url_slug IS NOT NULL`
 - NOT NULL constraint after backfill
 - Auto-generated from name via `slugify()` function
+
+**Note:** Photographer and videographer tables added 2025-01-21 with full profile URL support. Previous promoter functionality migrated to organization-based access.
 
 ## React Components
 
@@ -170,7 +174,7 @@ record_profile_request(
 ```typescript
 interface ActiveProfile {
   id: string;
-  type: 'comedian' | 'manager' | 'organization' | 'venue';
+  type: 'comedian' | 'manager' | 'photographer' | 'videographer' | 'organization' | 'venue';
   slug: string;
   name: string;
   avatarUrl?: string;
@@ -208,6 +212,8 @@ navigate(getProfileUrl('settings')); // -> /comedian/chillz-skinner/settings
 **Route patterns:**
 - `/comedian/:slug/*`
 - `/manager/:slug/*`
+- `/photographer/:slug/*`
+- `/videographer/:slug/*`
 - `/organization/:slug/*`
 - `/venue/:slug/*`
 
@@ -226,7 +232,7 @@ navigate(getProfileUrl('settings')); // -> /comedian/chillz-skinner/settings
 **Props:**
 ```typescript
 interface NotFoundHandlerProps {
-  profileType: 'comedian' | 'manager' | 'organization' | 'venue';
+  profileType: 'comedian' | 'manager' | 'photographer' | 'videographer' | 'organization' | 'venue';
   attemptedSlug: string;
 }
 ```
@@ -554,6 +560,6 @@ For questions or issues:
 
 ---
 
-**Last Updated**: 2025-10-27
-**Version**: 1.0.0
-**Status**: ✅ Phase 8 Complete (Documentation)
+**Last Updated**: 2025-01-21
+**Version**: 1.1.0
+**Status**: ✅ Updated - Photographer & Videographer Support Added

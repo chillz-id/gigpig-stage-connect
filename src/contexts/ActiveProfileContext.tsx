@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 export interface ActiveProfile {
   id: string;
-  type: 'comedian' | 'manager' | 'organization' | 'venue';
+  type: 'comedian' | 'manager' | 'organization' | 'venue' | 'photographer';
   slug: string;
   name: string;
   avatarUrl?: string;
@@ -24,7 +24,7 @@ const STORAGE_KEY = 'activeProfile';
 const isValidProfileType = (
   type: string
 ): type is ActiveProfile['type'] => {
-  return ['comedian', 'manager', 'organization', 'venue'].includes(type);
+  return ['comedian', 'manager', 'organization', 'venue', 'photographer'].includes(type);
 };
 
 const isValidActiveProfile = (data: unknown): data is ActiveProfile => {
@@ -65,41 +65,43 @@ export function ActiveProfileProvider({
     }
   );
 
-  const setActiveProfile = (profile: ActiveProfile) => {
+  const setActiveProfile = useCallback((profile: ActiveProfile) => {
     setActiveProfileState(profile);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     } catch (error) {
       console.error('Failed to save active profile to localStorage:', error);
     }
-  };
+  }, []);
 
-  const clearActiveProfile = () => {
+  const clearActiveProfile = useCallback(() => {
     setActiveProfileState(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error('Failed to remove active profile from localStorage:', error);
     }
-  };
+  }, []);
 
-  const getProfileUrl = (page?: string): string => {
+  const getProfileUrl = useCallback((page?: string): string => {
     if (!activeProfile) {
       return '/';
     }
 
-    const basePath = `/${activeProfile.type}/${activeProfile.slug}`;
+    // Map 'organization' to 'org' for shorter URLs
+    const urlType = activeProfile.type === 'organization' ? 'org' : activeProfile.type;
+    const basePath = `/${urlType}/${activeProfile.slug}`;
     const pagePath = page || 'dashboard';
 
     return `${basePath}/${pagePath}`;
-  };
+  }, [activeProfile]);
 
-  const value: ActiveProfileContextType = {
+  const value: ActiveProfileContextType = useMemo(() => ({
     activeProfile,
     setActiveProfile,
     clearActiveProfile,
     getProfileUrl,
-  };
+  }), [activeProfile, setActiveProfile, clearActiveProfile, getProfileUrl]);
 
   return (
     <ActiveProfileContext.Provider value={value}>

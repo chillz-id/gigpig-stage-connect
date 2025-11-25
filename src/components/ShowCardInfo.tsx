@@ -41,11 +41,11 @@ export const ShowCardInfo: React.FC<ShowCardInfoProps> = ({
 
       <div className="flex flex-wrap gap-2">
         {show.type && (
-          <Badge variant="outline" className="text-foreground border-border">
+          <Badge className="professional-button text-foreground border-border">
             {show.type}
           </Badge>
         )}
-        <Badge variant="outline" className="text-foreground border-border">
+        <Badge className="professional-button text-foreground border-border">
           {show.age_restriction || '18+'}
         </Badge>
       </div>

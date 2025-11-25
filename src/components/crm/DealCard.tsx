@@ -151,7 +151,7 @@ export const DealCard = ({ deal, onClick, isDragging }: DealCardProps) => {
           </div>
 
           {deal.negotiation_stage && (
-            <Badge variant="outline" className="text-xs capitalize">
+            <Badge className="professional-button text-xs capitalize">
               {deal.negotiation_stage.replace('_', ' ')}
             </Badge>
           )}
@@ -159,7 +159,7 @@ export const DealCard = ({ deal, onClick, isDragging }: DealCardProps) => {
 
         {/* Quick Action */}
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           className="w-full"
           onClick={(e) => {

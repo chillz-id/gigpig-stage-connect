@@ -174,7 +174,7 @@ const SpotConfirmationStatus: React.FC<SpotConfirmationStatusProps> = ({
           </CardTitle>
           <Button
             size="sm"
-            variant="outline"
+            className="professional-button"
             onClick={handleRefresh}
           >
             Refresh

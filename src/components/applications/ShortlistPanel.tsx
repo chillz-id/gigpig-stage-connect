@@ -83,7 +83,7 @@ export function ShortlistPanel({
                 onClick={onRemoveAll}
                 disabled={isLoading}
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 className="flex-1 gap-1"
                 aria-label="Clear shortlist"
               >
@@ -145,7 +145,7 @@ export function ShortlistPanel({
                     </p>
                   )}
                   {application.spot_type && (
-                    <Badge variant="outline" className="mt-1 text-xs">
+                    <Badge className="professional-button mt-1 text-xs">
                       {application.spot_type}
                     </Badge>
                   )}
@@ -182,7 +182,7 @@ export function ShortlistPanel({
     <Sheet>
       <SheetTrigger asChild>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           className="fixed bottom-20 right-4 z-40 gap-2 shadow-lg lg:hidden"
           aria-label="Open shortlist"

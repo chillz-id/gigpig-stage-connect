@@ -62,7 +62,9 @@ export function ComedianEventAvailabilityForm() {
     if (!events) return;
     const filtered = events.filter(event => {
       if (!event.session_start) return false;
-      return getDay(new Date(event.session_start)) === dayOfWeek;
+      // Extract date portion to avoid timezone parsing issues
+      const datePart = event.session_start.split('T')[0];
+      return getDay(new Date(`${datePart}T12:00:00`)) === dayOfWeek;
     });
     setSelectedEvents(new Set(filtered.map(getEventKey)));
   };
@@ -171,7 +173,7 @@ export function ComedianEventAvailabilityForm() {
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={selectAll}
                 disabled={eventsLoading || isSubmitting}
@@ -180,7 +182,7 @@ export function ComedianEventAvailabilityForm() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={() => selectByDay(1)}
                 disabled={eventsLoading || isSubmitting}
@@ -189,7 +191,7 @@ export function ComedianEventAvailabilityForm() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={() => selectByDay(3)}
                 disabled={eventsLoading || isSubmitting}
@@ -198,7 +200,7 @@ export function ComedianEventAvailabilityForm() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={() => selectByDay(5)}
                 disabled={eventsLoading || isSubmitting}
@@ -207,7 +209,7 @@ export function ComedianEventAvailabilityForm() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={() => selectByDay(6)}
                 disabled={eventsLoading || isSubmitting}

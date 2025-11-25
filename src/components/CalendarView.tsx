@@ -15,7 +15,7 @@ export const CalendarView: React.FC = () => {
   const [appliedEvents, setAppliedEvents] = useState<Set<string>>(new Set());
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
-  const isComedian = user && hasRole('comedian');
+  const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
   
   // Get events from the hook
   const today = new Date();
@@ -29,7 +29,7 @@ export const CalendarView: React.FC = () => {
   const eventsToShow = events || [];
 
   // Determine if user is a consumer (not an industry user)
-  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'));
 
   const handleToggleInterested = (event: any) => {
     if (!user) {
@@ -149,10 +149,10 @@ export const CalendarView: React.FC = () => {
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
+                <Button className="professional-button" size="sm" onClick={goToPreviousMonth}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={goToNextMonth}>
+                <Button className="professional-button" size="sm" onClick={goToNextMonth}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>

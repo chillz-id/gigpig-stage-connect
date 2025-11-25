@@ -60,7 +60,7 @@ export function ApplicationFilters({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-950 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-background p-4 shadow-sm md:flex-row md:items-center md:justify-between">
       {/* Left side: Filters */}
       <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:gap-4">
         <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">

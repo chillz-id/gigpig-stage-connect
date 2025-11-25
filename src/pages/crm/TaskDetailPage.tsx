@@ -258,7 +258,7 @@ export const TaskDetailPage = () => {
               <h3 className="text-sm font-semibold text-muted-foreground">Tags</h3>
               <div className="flex flex-wrap items-center gap-2">
                 {task.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="gap-1 text-xs">
+                  <Badge key={tag} className="professional-button gap-1 text-xs">
                     <Tag className="h-3 w-3 text-muted-foreground" />
                     {tag}
                   </Badge>

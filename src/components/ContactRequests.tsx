@@ -191,9 +191,9 @@ export const ContactRequests: React.FC = () => {
                           {request.requester?.name || 'Unknown User'}
                         </span>
                         {request.requester?.is_verified && (
-                          <Badge variant="outline">Verified</Badge>
+                          <Badge className="professional-button">Verified</Badge>
                         )}
-                        <Badge variant="outline">Promoter</Badge>
+                        <Badge className="professional-button">Promoter</Badge>
                         <span className="text-sm text-muted-foreground">•</span>
                         <span className="text-sm text-muted-foreground">
                           {new Date(request.created_at).toLocaleDateString()}
@@ -223,7 +223,7 @@ export const ContactRequests: React.FC = () => {
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              className="professional-button"
                               onClick={() => handleDeny(request.id)}
                               disabled={updateRequestMutation.isPending}
                             >
@@ -245,7 +245,7 @@ export const ContactRequests: React.FC = () => {
                           </Badge>
                         )}
                         {request.status === 'pending' && (
-                          <Badge variant="outline">
+                          <Badge className="professional-button">
                             <Clock className="w-3 h-3 mr-1" />
                             Pending
                           </Badge>
@@ -289,7 +289,7 @@ export const ContactRequests: React.FC = () => {
                 {updateRequestMutation.isPending ? 'Approving...' : 'Approve & Share Contact'}
               </Button>
               <Button
-                variant="outline"
+                className="professional-button"
                 onClick={() => setIsResponseDialogOpen(false)}
                 disabled={updateRequestMutation.isPending}
               >

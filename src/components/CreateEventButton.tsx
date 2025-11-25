@@ -123,7 +123,7 @@ export const CreateEventButton: React.FC = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant={"outline"}
+                  variant={"secondary"}
                   className={cn(
                     "w-full justify-start text-left font-normal",
                     !eventDate && "text-muted-foreground"
@@ -214,7 +214,7 @@ export const CreateEventButton: React.FC = () => {
             <Button type="submit" className="flex-1">
               Create Event
             </Button>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" className="professional-button" onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>

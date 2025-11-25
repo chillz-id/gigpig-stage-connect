@@ -1,0 +1,31 @@
+# Filestash Reverse Proxy Configuration
+#
+# Routes:
+#   /*    -> Filestash file manager (default)
+#   /s3/* -> S3 auth proxy (validates tokens, forwards to Supabase Storage)
+#
+# This enables same-origin embedding in iframes (CSP compliance)
+
+:80 {
+    # S3 auth proxy for Supabase Storage (must be before catch-all)
+    handle /s3/* {
+        uri strip_prefix /s3
+        reverse_proxy s3-proxy:9000
+    }
+
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Filestash file manager (catch-all)
+    handle {
+        reverse_proxy filestash:8334
+    }
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

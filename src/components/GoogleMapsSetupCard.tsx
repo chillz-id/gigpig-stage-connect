@@ -34,8 +34,7 @@ export const GoogleMapsSetupCard: React.FC<GoogleMapsSetupCardProps> = ({ onDism
         <div className="flex gap-2">
           <Button
             size="sm"
-            variant="outline"
-            className="text-yellow-800 border-yellow-300 hover:bg-yellow-100 dark:text-yellow-200 dark:border-yellow-700 dark:hover:bg-yellow-800/30"
+            className="professional-button text-yellow-800 border-yellow-300 hover:bg-yellow-100 dark:text-yellow-200 dark:border-yellow-700 dark:hover:bg-yellow-800/30"
             onClick={() => window.open('https://console.cloud.google.com/apis/credentials', '_blank')}
           >
             <ExternalLink className="w-4 h-4 mr-1" />

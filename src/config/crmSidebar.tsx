@@ -45,7 +45,8 @@ export type CRMRouteComponentKey =
   | 'task-manager'
   | 'task-detail'
   | 'relationships'
-  | 'analytics';
+  | 'analytics'
+  | 'import-export';
 
 export interface CRMRouteConfig {
   path: string;
@@ -230,9 +231,8 @@ export const CRM_ROUTE_CONFIG: CRMRouteConfig[] = [
   },
   {
     path: 'import-export',
-    component: 'customer-list',
+    component: 'import-export',
     navItemId: 'crm.customers.import',
-    note: 'Placeholder: import/export routes pending dedicated UI.',
   },
   {
     path: 'deals',

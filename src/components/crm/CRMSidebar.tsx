@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -10,8 +10,12 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   SidebarHeader,
+  SidebarFooter,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserBranding } from '@/hooks/useUserBranding';
 import { CRM_BASE_PATH, CRM_NAV_SECTIONS, type CRMNavItem } from '@/config/crmSidebar';
 import { ProfileSwitcher } from '@/components/layout/ProfileSwitcher';
@@ -31,6 +35,8 @@ const isItemActive = (pathname: string, item: CRMNavItem) => {
 
 export const CRMSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const { logoUrl, brandName, isLoading } = useUserBranding();
 
   return (
@@ -93,6 +99,25 @@ export const CRMSidebar = () => {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-gray-800 p-4 space-y-2">
+        <Button
+          className="professional-button w-full justify-start"
+          onClick={() => navigate('/dashboard')}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Exit CRM
+        </Button>
+
+        <Button
+          className="professional-button w-full justify-start"
+          onClick={signOut}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

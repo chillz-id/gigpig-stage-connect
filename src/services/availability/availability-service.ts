@@ -10,71 +10,127 @@ export interface AvailabilityRecord {
 
 class AvailabilityService {
   /**
-   * Fetch user's current availability as Set of event IDs
+   * Fetch user's current availability as Set of session source IDs
+   * Now queries the unified applications table instead of comedian_event_availability
    */
   async getUserAvailability(userId: string): Promise<Set<string>> {
+    console.log('[availability-service] getUserAvailability called for userId:', userId);
+    const startTime = performance.now();
+
     const { data, error } = await supabase
-      .from('comedian_availability')
-      .select('event_id')
-      .eq('user_id', userId);
+      .from('applications')
+      .select('session_source_id')
+      .eq('comedian_id', userId)
+      .not('session_source_id', 'is', null);
 
-    if (error) throw error;
+    const duration = performance.now() - startTime;
 
-    return new Set((data || []).map(record => record.event_id));
+    if (error) {
+      console.error('[availability-service] getUserAvailability FAILED:', {
+        userId,
+        error,
+        duration: `${duration.toFixed(0)}ms`
+      });
+      throw error;
+    }
+
+    console.log('[availability-service] getUserAvailability SUCCESS:', {
+      userId,
+      count: data?.length || 0,
+      duration: `${duration.toFixed(0)}ms`
+    });
+
+    return new Set((data || []).map(record => record.session_source_id).filter((id): id is string => id !== null));
   }
 
   /**
    * Batch update availability (delete removed, insert added)
+   * Uses direct fetch to RPC endpoint to bypass Supabase client overhead
    */
   async batchUpdateAvailability(
     userId: string,
     toRemove: Set<string>,
     toAdd: Set<string>
   ): Promise<void> {
-    // Delete removed events
-    if (toRemove.size > 0) {
-      const { error: deleteError } = await supabase
-        .from('comedian_availability')
-        .delete()
-        .eq('user_id', userId)
-        .in('event_id', Array.from(toRemove));
+    console.log('[availability-service] batchUpdateAvailability called:', {
+      userId,
+      toRemoveCount: toRemove.size,
+      toAddCount: toAdd.size
+    });
+    const startTime = performance.now();
 
-      if (deleteError) throw deleteError;
+    // Use direct fetch to bypass supabase.rpc() performance issues
+    // See: https://github.com/orgs/supabase/discussions/8733
+    const { data: { session } } = await supabase.auth.getSession();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/batch_update_availability`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${session?.access_token || supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        p_user_id: userId,
+        p_to_remove: Array.from(toRemove),
+        p_to_add: Array.from(toAdd)
+      })
+    });
+
+    const totalDuration = performance.now() - startTime;
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      console.error('[availability-service] BATCH UPDATE FAILED:', {
+        userId,
+        toRemoveCount: toRemove.size,
+        toAddCount: toAdd.size,
+        error,
+        status: response.status,
+        duration: `${totalDuration.toFixed(0)}ms`
+      });
+      throw new Error(error.message || 'Failed to update availability');
     }
 
-    // Insert added events
-    if (toAdd.size > 0) {
-      const records = Array.from(toAdd).map(eventId => ({
-        user_id: userId,
-        event_id: eventId
-      }));
+    const data = await response.json();
 
-      const { error: insertError } = await supabase
-        .from('comedian_availability')
-        .insert(records);
-
-      if (insertError) throw insertError;
-    }
+    console.log('[availability-service] BATCH UPDATE SUCCESS:', {
+      deleted: data?.deleted,
+      inserted: data?.inserted,
+      databaseDuration: `${data?.duration_ms?.toFixed(0) || 'N/A'}ms`,
+      clientDuration: `${totalDuration.toFixed(0)}ms`,
+      networkOverhead: `${(totalDuration - (data?.duration_ms || 0)).toFixed(0)}ms`
+    });
   }
 
   /**
    * Toggle single event availability
+   * Now uses the unified applications table with session_source_id
    */
-  async toggleEvent(userId: string, eventId: string, isSelected: boolean): Promise<void> {
+  async toggleEvent(userId: string, sessionSourceId: string, isSelected: boolean): Promise<void> {
     if (isSelected) {
-      // Add
+      // Add as pending application
       const { error } = await supabase
-        .from('comedian_availability')
-        .insert({ user_id: userId, event_id: eventId });
+        .from('applications')
+        .insert({
+          comedian_id: userId,
+          session_source_id: sessionSourceId,
+          status: 'pending',
+          applied_at: new Date().toISOString(),
+          is_shortlisted: false
+        });
 
       if (error && error.code !== '23505') throw error; // Ignore duplicate errors
     } else {
-      // Remove
+      // Remove application
       const { error } = await supabase
-        .from('comedian_availability')
+        .from('applications')
         .delete()
-        .eq('user_id', userId)
-        .eq('event_id', eventId);
+        .eq('comedian_id', userId)
+        .eq('session_source_id', sessionSourceId);
 
       if (error) throw error;
     }

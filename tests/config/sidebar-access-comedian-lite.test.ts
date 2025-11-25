@@ -2,14 +2,17 @@ import { describe, it, expect } from '@jest/globals';
 import { MENU_ITEMS } from '@/config/sidebarMenuItems';
 
 describe('comedian_lite sidebar access', () => {
+  // comedian_lite has access to these items only
   const allowedItemIds = [
-    'dashboard', 'shows', 'gigs', 'profile', 'messages', 'vouches', 'notifications',
-    'settings', 'social-media-manager', 'browse-comedians', 'browse-photographers',
-    'applications', 'add-gig', 'tasks', 'invoices', 'earnings', 'media-library'
+    'dashboard', 'gigs', 'profile', 'vouches', 'notifications',
+    'settings', 'my-gigs', 'media-library', 'roadmap'
   ];
 
+  // comedian_lite should NOT have access to these items
   const restrictedItemIds = [
-    'analytics', 'crm', 'users', 'web-app-settings'
+    'shows', 'messages', 'social-media-manager', 'browse-comedians',
+    'browse-photographers', 'applications', 'add-gig', 'tasks',
+    'invoices', 'earnings', 'analytics', 'crm', 'users', 'web-app-settings'
   ];
 
   it('should include comedian_lite in all allowed items', () => {
@@ -76,7 +79,8 @@ describe('comedian_lite sidebar access', () => {
       item.roles?.includes('comedian_lite')
     );
 
-    // Updated to 17 items after adding Shows, notifications, and other features
-    expect(accessibleItems.length).toBe(17);
+    // comedian_lite has access to exactly 9 sidebar menu items
+    // (dashboard, gigs, profile, vouches, notifications, settings, my-gigs, media-library, roadmap)
+    expect(accessibleItems.length).toBe(9);
   });
 });

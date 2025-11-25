@@ -72,7 +72,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
   const availableSpots = spots?.filter(spot => !spot.is_filled) || [];
 
   // Determine if user is a consumer (not an industry user)
-  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -150,20 +150,20 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {/* For consumers, only show age restriction */}
                   {isConsumer ? (
-                    <Badge variant="outline">
+                    <Badge className="professional-button">
                       {event.age_restriction}
                     </Badge>
                   ) : (
                     <>
                       {event.type && (
-                        <Badge variant="outline">
+                        <Badge className="professional-button">
                           {event.type}
                         </Badge>
                       )}
-                      <Badge variant="outline">
+                      <Badge className="professional-button">
                         {event.age_restriction}
                       </Badge>
-                      <Badge variant="outline">
+                      <Badge className="professional-button">
                         {event.dress_code}
                       </Badge>
                       {event.is_verified_only && (
@@ -173,7 +173,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                         </Badge>
                       )}
                       {event.allow_recording && (
-                        <Badge variant="outline" className="text-green-600 border-green-600">
+                        <Badge className="professional-button text-green-600 border-green-600">
                           Recording Allowed
                         </Badge>
                       )}
@@ -353,7 +353,7 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 
                 {event.address && (
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => onGetDirections(event)}
                     className="w-full flex items-center gap-2"
                   >

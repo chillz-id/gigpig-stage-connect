@@ -36,7 +36,8 @@ export class ComediansApi extends BaseApi<Comedian> {
             )
           )
         `)
-        .eq('role', 'comedian');
+        .eq('role', 'comedian')
+        .eq('profile_visible', true); // Only show visible profiles in browse/search
       
       // Apply search filter
       if (filters?.search) {
@@ -147,7 +148,7 @@ export class ComediansApi extends BaseApi<Comedian> {
           event:events(
             *,
             venue:venues(*),
-            promoter:profiles!events_promoter_id_fkey(*)
+            organization:organization_profiles!events_organization_id_fkey(*)
           )
         `)
         .eq('performer_id', comedianId)

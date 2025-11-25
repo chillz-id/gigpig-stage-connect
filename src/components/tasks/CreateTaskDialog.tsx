@@ -141,7 +141,7 @@ export default function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: 
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >

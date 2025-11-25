@@ -164,7 +164,7 @@ export const EventTemplateManager: React.FC<EventTemplateManagerProps> = ({
       
       <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="text-white border-white/30 hover:bg-white/10">
+          <Button className="professional-button text-white border-white/30 hover:bg-white/10">
             <Save className="w-4 h-4 mr-2" />
             Save Template
           </Button>
@@ -192,7 +192,7 @@ export const EventTemplateManager: React.FC<EventTemplateManagerProps> = ({
                 {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isCreating ? 'Saving...' : 'Save Template'}
               </Button>
-              <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
+              <Button className="professional-button" onClick={() => setShowSaveTemplate(false)}>
                 Cancel
               </Button>
             </div>

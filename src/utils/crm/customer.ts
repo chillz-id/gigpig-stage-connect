@@ -68,6 +68,8 @@ export const getSegmentBadgeClass = (segment: string): string => {
       return 'bg-blue-600 text-white hover:bg-blue-700';
     case 'new':
       return 'bg-green-600 text-white hover:bg-green-700';
+    case 'prospect':
+      return 'bg-amber-500 text-white hover:bg-amber-600';
     case 'inactive':
       return 'bg-gray-600 text-white hover:bg-gray-700';
     default:

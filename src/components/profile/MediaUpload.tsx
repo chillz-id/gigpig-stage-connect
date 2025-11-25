@@ -1,72 +1,36 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Link, Youtube, HardDrive, X, Plus } from 'lucide-react';
+import { Upload, Youtube, X } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { YouTubeUploadGuide } from './YouTubeUploadGuide';
-import { cn } from '@/lib/utils';
 
 interface MediaUploadProps {
   mediaType: 'photo' | 'video';
   onMediaAdded: () => void;
 }
 
-interface MediaData {
-  title: string;
-  description: string;
-  tags: string[];
-  isFeatured: boolean;
-}
-
 export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdded }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadMethod, setUploadMethod] = useState<'file' | 'youtube' | 'google_drive'>('file');
-  const [mediaData, setMediaData] = useState<MediaData>({
-    title: '',
-    description: '',
-    tags: [],
-    isFeatured: false
-  });
-  const [externalUrl, setExternalUrl] = useState('');
-  const [newTag, setNewTag] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [externalUrl, setExternalUrl] = useState('');
 
   const { uploadFile, isUploading: fileUploading } = useFileUpload({
     bucket: 'comedian-media',
-    maxSize: mediaType === 'photo' ? 5 * 1024 * 1024 : 100 * 1024 * 1024, // 5MB for photos, 100MB for videos
-    allowedTypes: mediaType === 'photo' 
+    folder: `${user?.id}/Headshots`,
+    maxSize: mediaType === 'photo' ? 10 * 1024 * 1024 : 100 * 1024 * 1024,
+    allowedTypes: mediaType === 'photo'
       ? ['image/jpeg', 'image/png', 'image/webp']
       : ['video/mp4', 'video/webm', 'video/quicktime', 'video/avi'],
     onProgress: setUploadProgress
   });
-
-  const addTag = () => {
-    if (newTag.trim() && !mediaData.tags.includes(newTag.trim())) {
-      setMediaData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setMediaData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
 
   const extractYouTubeId = (url: string): string | null => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -74,51 +38,86 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const extractGoogleDriveId = (url: string): string | null => {
-    const regExp = /\/file\/d\/([a-zA-Z0-9-_]+)/;
-    const match = url.match(regExp);
-    return match ? match[1] : null;
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!user) return;
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMultipleFileUpload = async () => {
+    if (!user || selectedFiles.length === 0) return;
 
     try {
       setIsUploading(true);
-      
-      // Upload file to storage
-      const fileName = `${user.id}/${Date.now()}-${file.name}`;
-      const fileUrl = await uploadFile(file, fileName);
-      
-      // Save media record to database
-      const { error } = await supabase
-        .from('comedian_media')
-        .insert({
-          user_id: user.id,
-          media_type: mediaType,
-          title: mediaData.title || file.name,
-          description: mediaData.description,
-          file_url: fileUrl,
-          file_size: file.size,
-          file_type: file.type,
-          tags: mediaData.tags,
-          is_featured: mediaData.isFeatured
+
+      let successCount = 0;
+      const failedFiles: string[] = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        console.log(`Uploading file ${i + 1}/${selectedFiles.length}: ${file.name}, size: ${file.size}, type: ${file.type}`);
+
+        // Upload file to Headshots folder (folder is set in useFileUpload config)
+        const fileUrl = await uploadFile(file);
+
+        if (!fileUrl) {
+          console.error(`Failed to upload: ${file.name}`);
+          failedFiles.push(file.name);
+          continue; // Skip to next file, useFileUpload already showed error toast
+        }
+
+        console.log(`Successfully uploaded: ${file.name} -> ${fileUrl}`);
+
+        // Save media record to database
+        const { error } = await supabase
+          .from('comedian_media')
+          .insert({
+            user_id: user.id,
+            media_type: mediaType,
+            title: file.name,
+            file_url: fileUrl,
+            url: fileUrl,
+            file_size: file.size,
+            file_type: file.type,
+            is_headshot: true  // Auto-mark as headshot since this component uploads to Headshots folder
+          });
+
+        if (error) {
+          console.error('Database insert error:', error);
+          failedFiles.push(file.name);
+          continue;
+        }
+
+        successCount++;
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: `${successCount} headshot${successCount > 1 ? 's' : ''} uploaded successfully`,
+          description: failedFiles.length > 0
+            ? `Failed: ${failedFiles.join(', ')}. Check file size (max 10MB) and format.`
+            : "Your headshots have been added to your portfolio."
         });
+      } else if (failedFiles.length > 0) {
+        toast({
+          title: "Upload failed",
+          description: `Failed files: ${failedFiles.join(', ')}. Check file size (max 10MB) and format.`,
+          variant: "destructive"
+        });
+      }
 
-      if (error) throw error;
-
-      toast({
-        title: "Media uploaded successfully",
-        description: `Your ${mediaType} has been added to your portfolio.`
-      });
-
-      resetForm();
-      onMediaAdded();
+      if (successCount > 0) {
+        setSelectedFiles([]);
+        onMediaAdded();
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your media. Please try again.",
+        description: "There was an error uploading your headshots. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -126,47 +125,40 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
     }
   };
 
-  const handleExternalLink = async () => {
+  const fetchYouTubeTitle = async (videoUrl: string): Promise<string> => {
+    try {
+      const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch video metadata');
+      }
+      const data = await response.json();
+      return data.title || 'YouTube Video';
+    } catch (error) {
+      console.error('Error fetching YouTube title:', error);
+      return 'YouTube Video';
+    }
+  };
+
+  const handleYouTubeSubmit = async () => {
     if (!user || !externalUrl.trim()) return;
 
     try {
       setIsUploading(true);
-      
-      let externalType: string;
-      let externalId: string | null;
-      let thumbnailUrl: string | undefined;
 
-      if (uploadMethod === 'youtube') {
-        externalType = 'youtube';
-        externalId = extractYouTubeId(externalUrl);
-        if (!externalId) {
-          toast({
-            title: "Invalid YouTube URL",
-            description: "Please enter a valid YouTube video URL.",
-            variant: "destructive"
-          });
-          return;
-        }
-        thumbnailUrl = `https://img.youtube.com/vi/${externalId}/maxresdefault.jpg`;
-      } else if (uploadMethod === 'google_drive') {
-        externalType = 'google_drive';
-        externalId = extractGoogleDriveId(externalUrl);
-        if (!externalId) {
-          toast({
-            title: "Invalid Google Drive URL",
-            description: "Please enter a valid Google Drive share URL.",
-            variant: "destructive"
-          });
-          return;
-        }
-      } else {
+      const externalId = extractYouTubeId(externalUrl);
+      if (!externalId) {
         toast({
-          title: "Invalid upload method",
-          description: "Please select a valid upload method.",
+          title: "Invalid YouTube URL",
+          description: "Please enter a valid YouTube video URL.",
           variant: "destructive"
         });
+        setIsUploading(false);
         return;
       }
+
+      // Fetch the actual video title from YouTube
+      const videoTitle = await fetchYouTubeTitle(externalUrl);
+      const thumbnailUrl = `https://img.youtube.com/vi/${externalId}/maxresdefault.jpg`;
 
       // Save media record to database
       const { error } = await supabase
@@ -174,30 +166,28 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
         .insert({
           user_id: user.id,
           media_type: mediaType,
-          title: mediaData.title || `${uploadMethod} ${mediaType}`,
-          description: mediaData.description,
+          title: videoTitle,
           external_url: externalUrl,
-          external_type: externalType,
+          external_type: 'youtube',
           external_id: externalId,
           thumbnail_url: thumbnailUrl,
-          tags: mediaData.tags,
-          is_featured: mediaData.isFeatured
+          url: externalUrl
         });
 
       if (error) throw error;
 
       toast({
-        title: "Media added successfully",
-        description: `Your ${uploadMethod} ${mediaType} has been added to your portfolio.`
+        title: "YouTube video added successfully",
+        description: "Your YouTube video has been added to your portfolio."
       });
 
-      resetForm();
+      setExternalUrl('');
       onMediaAdded();
     } catch (error) {
-      console.error('External link error:', error);
+      console.error('YouTube link error:', error);
       toast({
-        title: "Failed to add media",
-        description: "There was an error adding your media. Please try again.",
+        title: "Failed to add video",
+        description: "There was an error adding your YouTube video. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -205,191 +195,101 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
     }
   };
 
-  const resetForm = () => {
-    setMediaData({
-      title: '',
-      description: '',
-      tags: [],
-      isFeatured: false
-    });
-    setExternalUrl('');
-    setNewTag('');
-  };
+  if (mediaType === 'video') {
+    return (
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label htmlFor="youtube-url">YouTube URL</Label>
+            <YouTubeUploadGuide variant="icon" />
+          </div>
+          <Input
+            id="youtube-url"
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+          <p className="text-sm text-muted-foreground mt-1">
+            Paste your unlisted YouTube video URL. Click the info icon above for step-by-step instructions.
+          </p>
+        </div>
+        <Button
+          onClick={handleYouTubeSubmit}
+          disabled={isUploading || !externalUrl.trim()}
+          className="w-full professional-button"
+        >
+          <Youtube className="w-4 h-4 mr-2" />
+          Add YouTube Video
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Add {mediaType === 'photo' ? 'Photo' : 'Video'}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={uploadMethod} onValueChange={(value) => setUploadMethod(value as any)}>
-          <TabsList className={cn("grid w-full", mediaType === 'video' ? "grid-cols-3" : "grid-cols-2")}>
-            <TabsTrigger value="file" className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Upload File
-            </TabsTrigger>
-            {mediaType === 'video' && (
-              <TabsTrigger value="youtube" className="flex items-center gap-2">
-                <Youtube className="w-4 h-4" />
-                YouTube
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="google_drive" className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4" />
-              Google Drive
-            </TabsTrigger>
-          </TabsList>
+    <div className="space-y-4">
+      <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center">
+        <input
+          type="file"
+          id="headshot-upload-input"
+          accept="image/*"
+          multiple
+          onChange={handleFileSelection}
+          className="hidden"
+          disabled={isUploading}
+        />
+        <label htmlFor="headshot-upload-input">
+          <Button
+            type="button"
+            onClick={() => document.getElementById('headshot-upload-input')?.click()}
+            disabled={isUploading}
+            className="professional-button"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Choose Headshots
+          </Button>
+        </label>
+        <p className="text-sm text-gray-500 mt-2">
+          Supported: JPG, PNG, WebP (max 10MB each)
+        </p>
+      </div>
 
-          <div className="mt-6 space-y-4">
-            {/* Common fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={mediaData.title}
-                  onChange={(e) => setMediaData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder={`${mediaType} title`}
-                />
-              </div>
-              <div className="flex items-end">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={mediaData.isFeatured}
-                    onChange={(e) => setMediaData(prev => ({ ...prev, isFeatured: e.target.checked }))}
-                  />
-                  <span className="text-sm">Featured</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={mediaData.description}
-                onChange={(e) => setMediaData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder={`Describe your ${mediaType}...`}
-              />
-            </div>
-
-            {/* Tags */}
-            <div>
-              <Label>Tags</Label>
-              <div className="flex items-center gap-2 mt-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Add a tag..."
-                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                />
-                <Button type="button" onClick={addTag} size="sm">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {mediaData.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                    {tag}
-                    <X 
-                      className="w-3 h-3 cursor-pointer" 
-                      onClick={() => removeTag(tag)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Upload method specific content */}
-            <TabsContent value="file" className="mt-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                <input
-                  type="file"
-                  accept={mediaType === 'photo' ? 'image/*' : 'video/*'}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileUpload(file);
-                  }}
-                  className="w-full"
-                  disabled={isUploading || fileUploading}
-                />
-                {(isUploading || fileUploading) && (
-                  <div className="mt-3">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Uploading...</span>
-                      <span>{Math.round(uploadProgress)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-                <p className="text-sm text-gray-500 mt-2">
-                  {mediaType === 'photo' 
-                    ? 'Supported: JPG, PNG, WebP (max 5MB)'
-                    : 'Supported: MP4, WebM, MOV, AVI (max 100MB)'
-                  }
-                </p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="youtube" className="mt-4">
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="youtube-url">YouTube URL</Label>
-                    <YouTubeUploadGuide variant="icon" />
-                  </div>
-                  <Input
-                    id="youtube-url"
-                    value={externalUrl}
-                    onChange={(e) => setExternalUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Paste your unlisted YouTube video URL. Click the info icon above for step-by-step instructions.
-                  </p>
-                </div>
+      {selectedFiles.length > 0 && (
+        <div className="space-y-2">
+          <Label>Selected Files ({selectedFiles.length})</Label>
+          <div className="space-y-2">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
+                <span className="text-sm truncate flex-1">{file.name}</span>
                 <Button
-                  onClick={handleExternalLink}
-                  disabled={isUploading || !externalUrl.trim()}
-                  className="w-full"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(index)}
+                  disabled={isUploading}
                 >
-                  Add YouTube Video
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
-            </TabsContent>
-
-            <TabsContent value="google_drive" className="mt-4">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="gdrive-url">Google Drive Share URL</Label>
-                  <Input
-                    id="gdrive-url"
-                    value={externalUrl}
-                    onChange={(e) => setExternalUrl(e.target.value)}
-                    placeholder="https://drive.google.com/file/d/..."
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Make sure the file is set to "Anyone with the link can view"
-                  </p>
-                </div>
-                <Button 
-                  onClick={handleExternalLink} 
-                  disabled={isUploading || !externalUrl.trim()}
-                  className="w-full"
-                >
-                  Add Google Drive File
-                </Button>
-              </div>
-            </TabsContent>
+            ))}
           </div>
-        </Tabs>
-      </CardContent>
-    </Card>
+          <Button
+            onClick={handleMultipleFileUpload}
+            disabled={isUploading || selectedFiles.length === 0}
+            className="w-full professional-button"
+          >
+            {isUploading ? (
+              <>
+                <span>Uploading... {Math.round(uploadProgress)}%</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload {selectedFiles.length} Headshot{selectedFiles.length > 1 ? 's' : ''}
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };

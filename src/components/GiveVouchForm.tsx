@@ -5,10 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Crown, Search } from 'lucide-react';
+import { Crown, Search, Building2, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useVouches } from '@/hooks/useVouches';
 import { VouchFormData, UserSearchResult, Vouch } from '@/types/vouch';
+import { useOrganizationProfiles } from '@/hooks/useOrganizationProfiles';
 import {
   Command,
   CommandEmpty,
@@ -22,6 +23,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface GiveVouchFormProps {
   userId: string;
@@ -35,7 +43,11 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
     checkExistingVouch,
     createVouch,
     updateVouch,
-  } = useVouches();
+  } = useVouches(userId); // Pass userId to hook for profile-scoped vouching
+
+  // Get user's organizations for "vouch as" selector
+  const { data: organizations } = useOrganizationProfiles();
+  const orgList = organizations ? Object.values(organizations) : [];
 
   // Form state
   const [hasVouch, setHasVouch] = useState(false);
@@ -48,12 +60,16 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
   const [existingVouch, setExistingVouch] = useState<Vouch | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Organization selection - 'personal' or org UUID
+  const [vouchAs, setVouchAs] = useState<string>('personal');
 
   // Handle user search
   useEffect(() => {
     const handleSearch = async () => {
       if (searchQuery.trim().length > 0) {
+        console.log('[GiveVouchForm] Searching for:', searchQuery);
         const results = await searchUsers(searchQuery);
+        console.log('[GiveVouchForm] Search results:', results);
         setSearchResults(results);
       } else {
         setSearchResults([]);
@@ -121,7 +137,9 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
       const formData: VouchFormData = {
         vouchee_id: selectedUser.id,
         message: message.trim(),
-        rating: 5 // Always give 5 stars since we're using crown system
+        rating: 5, // Always give 5 stars since we're using crown system
+        // Include organization_id if vouching on behalf of an org
+        organization_id: vouchAs !== 'personal' ? vouchAs : null
       };
 
       if (isEditing && existingVouch) {
@@ -145,6 +163,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
       setSearchQuery('');
       setExistingVouch(null);
       setIsEditing(false);
+      setVouchAs('personal');
 
       onSuccess?.();
     } catch (error: any) {
@@ -211,7 +230,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
-            <Command>
+            <Command shouldFilter={false}>
               <CommandInput placeholder="Search users..." value={searchQuery} onValueChange={setSearchQuery} />
               <CommandList>
                 <CommandEmpty>No users found.</CommandEmpty>
@@ -230,7 +249,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
                         <p className="font-medium">{user.stage_name || user.name}</p>
                         <div className="flex gap-1 mt-1">
                           {user.roles.map(role => (
-                            <Badge key={role} variant="outline" className="text-xs">
+                            <Badge key={role} variant="secondary" className="text-xs">
                               {role}
                             </Badge>
                           ))}
@@ -255,7 +274,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
                 <p className="font-medium">{selectedUser.stage_name || selectedUser.name}</p>
                 <div className="flex gap-1">
                   {selectedUser.roles.map(role => (
-                    <Badge key={role} variant="outline" className="text-xs">
+                    <Badge key={role} variant="secondary" className="text-xs">
                       {role}
                     </Badge>
                   ))}
@@ -276,6 +295,39 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
           </div>
         )}
       </div>
+
+      {/* Organization selector - only show if user has organizations */}
+      {orgList.length > 0 && (
+        <div>
+          <Label htmlFor="vouchAs">Vouch as</Label>
+          <Select value={vouchAs} onValueChange={setVouchAs}>
+            <SelectTrigger id="vouchAs" className="mt-1">
+              <SelectValue placeholder="Select who is vouching" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="personal">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>Personal (as yourself)</span>
+                </div>
+              </SelectItem>
+              {orgList.map((org) => (
+                <SelectItem key={org.id} value={org.id}>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    <span>{org.display_name || org.organization_name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {vouchAs === 'personal'
+              ? 'This vouch will appear as coming from you personally.'
+              : 'This vouch will display your organization\'s logo and name, with your name shown underneath.'}
+          </p>
+        </div>
+      )}
 
       <div>
         <Label htmlFor="vouchMessage">Message</Label>
@@ -299,7 +351,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
         {renderCrown()}
         <Button
           onClick={handleSubmitVouch}
-          variant="default"
+          className="professional-button"
           disabled={submitting || !selectedUser}
         >
           {submitting ? 'Submitting...' : (isEditing ? 'Update Vouch' : 'Submit Vouch')}

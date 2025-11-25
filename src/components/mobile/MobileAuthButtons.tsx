@@ -12,8 +12,7 @@ const MobileAuthButtons: React.FC<MobileAuthButtonsProps> = ({ setIsMobileMenuOp
     <div className="space-y-3 pt-4 border-t border-border">
       <Link to="/auth" className="block">
         <Button
-          variant="outline"
-          className="w-full text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg h-12 text-base"
+          className="professional-button w-full text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg h-12 text-base"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           Sign In

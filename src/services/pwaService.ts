@@ -15,6 +15,15 @@ export interface OfflineAction {
   maxRetries: number;
 }
 
+export interface FormDraft {
+  id: string;
+  formType: string;
+  data: Record<string, any>;
+  step?: number;
+  timestamp: string;
+  expiresAt: string;
+}
+
 export interface PWAInstallPrompt {
   show(): Promise<void>;
   outcome: 'accepted' | 'dismissed';
@@ -31,15 +40,61 @@ export interface PWACapabilities {
   supportsFileHandling: boolean;
 }
 
+// IndexedDB database name and version
+const DB_NAME = 'standup-sydney-pwa';
+const DB_VERSION = 1;
+const FORM_DRAFTS_STORE = 'form-drafts';
+
 class PWAService {
   private deferredPrompt: any = null;
   private offlineActions: OfflineAction[] = [];
   private isOnline = navigator.onLine;
   private swRegistration: ServiceWorkerRegistration | null = null;
+  private db: IDBDatabase | null = null;
 
   constructor() {
     this.initializePWA();
     this.setupEventListeners();
+    this.initIndexedDB();
+  }
+
+  // =====================================
+  // INDEXEDDB INITIALIZATION
+  // =====================================
+
+  private async initIndexedDB(): Promise<void> {
+    if (!('indexedDB' in window)) {
+      console.warn('IndexedDB not supported');
+      return;
+    }
+
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onerror = () => {
+        console.error('Failed to open IndexedDB:', request.error);
+      };
+
+      request.onsuccess = () => {
+        this.db = request.result;
+        console.log('IndexedDB initialized');
+        // Clean up expired drafts on startup
+        this.cleanupExpiredDrafts();
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+
+        // Create form drafts store
+        if (!db.objectStoreNames.contains(FORM_DRAFTS_STORE)) {
+          const store = db.createObjectStore(FORM_DRAFTS_STORE, { keyPath: 'id' });
+          store.createIndex('formType', 'formType', { unique: false });
+          store.createIndex('expiresAt', 'expiresAt', { unique: false });
+        }
+      };
+    } catch (error) {
+      console.error('IndexedDB initialization failed:', error);
+    }
   }
 
   // =====================================
@@ -498,6 +553,303 @@ class PWAService {
       }
     }
     return { usage: 0, quota: 0 };
+  }
+
+  // =====================================
+  // FORM DRAFT CACHING
+  // =====================================
+
+  /**
+   * Save a form draft to IndexedDB
+   * @param formType - Unique identifier for the form type (e.g., 'create-event', 'application')
+   * @param data - Form data to save
+   * @param step - Optional current step for multi-step forms
+   * @param expiresInDays - How long to keep the draft (default: 7 days)
+   */
+  async saveFormDraft(
+    formType: string,
+    data: Record<string, any>,
+    step?: number,
+    expiresInDays: number = 7
+  ): Promise<boolean> {
+    // Try IndexedDB first
+    if (this.db) {
+      try {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+        const draft: FormDraft = {
+          id: formType, // Use formType as ID for simple key-value storage
+          formType,
+          data,
+          step,
+          timestamp: new Date().toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        };
+
+        return new Promise((resolve) => {
+          const transaction = this.db!.transaction([FORM_DRAFTS_STORE], 'readwrite');
+          const store = transaction.objectStore(FORM_DRAFTS_STORE);
+          const request = store.put(draft);
+
+          request.onsuccess = () => resolve(true);
+          request.onerror = () => {
+            console.error('Failed to save form draft to IndexedDB:', request.error);
+            // Fall back to localStorage
+            this.saveFormDraftToLocalStorage(formType, data, step, expiresInDays);
+            resolve(true);
+          };
+        });
+      } catch (error) {
+        console.error('IndexedDB save error:', error);
+      }
+    }
+
+    // Fall back to localStorage
+    return this.saveFormDraftToLocalStorage(formType, data, step, expiresInDays);
+  }
+
+  private saveFormDraftToLocalStorage(
+    formType: string,
+    data: Record<string, any>,
+    step?: number,
+    expiresInDays: number = 7
+  ): boolean {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+      const draft: FormDraft = {
+        id: formType,
+        formType,
+        data,
+        step,
+        timestamp: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+      };
+
+      localStorage.setItem(`form_draft_${formType}`, JSON.stringify(draft));
+      return true;
+    } catch (error) {
+      console.error('Failed to save form draft to localStorage:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load a form draft from IndexedDB or localStorage
+   * @param formType - Unique identifier for the form type
+   * @returns The saved draft or null if not found/expired
+   */
+  async loadFormDraft(formType: string): Promise<FormDraft | null> {
+    // Try IndexedDB first
+    if (this.db) {
+      try {
+        const draft = await new Promise<FormDraft | null>((resolve) => {
+          const transaction = this.db!.transaction([FORM_DRAFTS_STORE], 'readonly');
+          const store = transaction.objectStore(FORM_DRAFTS_STORE);
+          const request = store.get(formType);
+
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => {
+            console.error('Failed to load form draft from IndexedDB:', request.error);
+            resolve(null);
+          };
+        });
+
+        if (draft) {
+          // Check if expired
+          if (new Date(draft.expiresAt) < new Date()) {
+            await this.deleteFormDraft(formType);
+            return null;
+          }
+          return draft;
+        }
+      } catch (error) {
+        console.error('IndexedDB load error:', error);
+      }
+    }
+
+    // Fall back to localStorage
+    return this.loadFormDraftFromLocalStorage(formType);
+  }
+
+  private loadFormDraftFromLocalStorage(formType: string): FormDraft | null {
+    try {
+      const stored = localStorage.getItem(`form_draft_${formType}`);
+      if (!stored) return null;
+
+      const draft: FormDraft = JSON.parse(stored);
+
+      // Check if expired
+      if (new Date(draft.expiresAt) < new Date()) {
+        localStorage.removeItem(`form_draft_${formType}`);
+        return null;
+      }
+
+      return draft;
+    } catch (error) {
+      console.error('Failed to load form draft from localStorage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a form draft
+   * @param formType - Unique identifier for the form type
+   */
+  async deleteFormDraft(formType: string): Promise<boolean> {
+    // Delete from IndexedDB
+    if (this.db) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const transaction = this.db!.transaction([FORM_DRAFTS_STORE], 'readwrite');
+          const store = transaction.objectStore(FORM_DRAFTS_STORE);
+          const request = store.delete(formType);
+
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.error('Failed to delete from IndexedDB:', error);
+      }
+    }
+
+    // Also delete from localStorage (in case it was saved there as fallback)
+    try {
+      localStorage.removeItem(`form_draft_${formType}`);
+    } catch (error) {
+      console.error('Failed to delete from localStorage:', error);
+    }
+
+    return true;
+  }
+
+  /**
+   * List all saved form drafts
+   */
+  async listFormDrafts(): Promise<FormDraft[]> {
+    const drafts: FormDraft[] = [];
+
+    // Get from IndexedDB
+    if (this.db) {
+      try {
+        const indexedDBDrafts = await new Promise<FormDraft[]>((resolve) => {
+          const transaction = this.db!.transaction([FORM_DRAFTS_STORE], 'readonly');
+          const store = transaction.objectStore(FORM_DRAFTS_STORE);
+          const request = store.getAll();
+
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => {
+            console.error('Failed to list form drafts from IndexedDB:', request.error);
+            resolve([]);
+          };
+        });
+
+        drafts.push(...indexedDBDrafts);
+      } catch (error) {
+        console.error('IndexedDB list error:', error);
+      }
+    }
+
+    // Also check localStorage for any fallback drafts
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('form_draft_')) {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const draft: FormDraft = JSON.parse(stored);
+            // Only add if not already in list (from IndexedDB)
+            if (!drafts.find(d => d.id === draft.id)) {
+              drafts.push(draft);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to list form drafts from localStorage:', error);
+    }
+
+    // Filter out expired drafts
+    const now = new Date();
+    return drafts.filter(draft => new Date(draft.expiresAt) > now);
+  }
+
+  /**
+   * Check if a form has a saved draft
+   */
+  async hasFormDraft(formType: string): Promise<boolean> {
+    const draft = await this.loadFormDraft(formType);
+    return draft !== null;
+  }
+
+  /**
+   * Clean up expired drafts
+   */
+  private async cleanupExpiredDrafts(): Promise<void> {
+    if (!this.db) return;
+
+    try {
+      const now = new Date().toISOString();
+
+      const transaction = this.db.transaction([FORM_DRAFTS_STORE], 'readwrite');
+      const store = transaction.objectStore(FORM_DRAFTS_STORE);
+      const index = store.index('expiresAt');
+
+      // Get all drafts that have expired
+      const range = IDBKeyRange.upperBound(now);
+      const request = index.openCursor(range);
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          cursor.delete();
+          cursor.continue();
+        }
+      };
+    } catch (error) {
+      console.error('Failed to cleanup expired drafts:', error);
+    }
+
+    // Also cleanup localStorage
+    try {
+      const now = new Date();
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('form_draft_')) {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const draft: FormDraft = JSON.parse(stored);
+            if (new Date(draft.expiresAt) < now) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cleanup localStorage drafts:', error);
+    }
+  }
+
+  /**
+   * Get draft statistics
+   */
+  async getFormDraftStats(): Promise<{ count: number; oldestTimestamp: string | null }> {
+    const drafts = await this.listFormDrafts();
+
+    if (drafts.length === 0) {
+      return { count: 0, oldestTimestamp: null };
+    }
+
+    const oldestDraft = drafts.reduce((oldest, current) =>
+      new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest
+    );
+
+    return {
+      count: drafts.length,
+      oldestTimestamp: oldestDraft.timestamp,
+    };
   }
 }
 

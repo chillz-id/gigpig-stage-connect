@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useMyGigs } from '@/hooks/useMyGigs';
 import { useAuth } from '@/contexts/AuthContext';
+import { EventBannerUpload } from '@/components/gigs/EventBannerUpload';
 import { Loader2 } from 'lucide-react';
 
 interface AddGigDialogProps {
@@ -23,7 +24,9 @@ export function AddGigDialog({ open, onOpenChange }: AddGigDialogProps) {
     venue_address: '',
     start_datetime: '',
     end_datetime: '',
-    notes: ''
+    description: '',
+    ticket_link: '',
+    banner_url: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,18 +48,32 @@ export function AddGigDialog({ open, onOpenChange }: AddGigDialogProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🎭 [AddGigDialog] Form submitted with data:', formData);
 
-    if (!validateForm() || !user?.id) return;
+    if (!validateForm()) {
+      console.log('❌ [AddGigDialog] Validation failed');
+      return;
+    }
 
-    createGig({
+    if (!user?.id) {
+      console.log('❌ [AddGigDialog] No user ID');
+      return;
+    }
+
+    const gigData = {
       user_id: user.id,
       title: formData.title.trim(),
       venue_name: formData.venue_name.trim() || null,
       venue_address: formData.venue_address.trim() || null,
       start_datetime: formData.start_datetime,
       end_datetime: formData.end_datetime || null,
-      notes: formData.notes.trim() || null
-    });
+      description: formData.description.trim() || null,
+      ticket_link: formData.ticket_link.trim() || null,
+      banner_url: formData.banner_url || null
+    };
+
+    console.log('🎭 [AddGigDialog] Calling createGig with:', gigData);
+    createGig(gigData);
 
     // Reset form and close dialog
     setFormData({
@@ -65,7 +82,9 @@ export function AddGigDialog({ open, onOpenChange }: AddGigDialogProps) {
       venue_address: '',
       start_datetime: '',
       end_datetime: '',
-      notes: ''
+      description: '',
+      ticket_link: '',
+      banner_url: ''
     });
     setErrors({});
     onOpenChange(false);
@@ -79,6 +98,14 @@ export function AddGigDialog({ open, onOpenChange }: AddGigDialogProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Event Banner (Optional)</Label>
+            <EventBannerUpload
+              onBannerSelected={(url) => setFormData({ ...formData, banner_url: url })}
+              currentBannerUrl={formData.banner_url}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -143,21 +170,36 @@ export function AddGigDialog({ open, onOpenChange }: AddGigDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="description">Show Description</Label>
             <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional information..."
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe your show, what makes it special, what the audience can expect..."
               rows={3}
               disabled={isCreating}
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="ticket_link">Ticket Link (Optional)</Label>
+            <Input
+              id="ticket_link"
+              type="url"
+              value={formData.ticket_link}
+              onChange={(e) => setFormData({ ...formData, ticket_link: e.target.value })}
+              placeholder="https://humanitix.com/... or https://eventbrite.com/..."
+              disabled={isCreating}
+            />
+            <p className="text-xs text-muted-foreground">
+              Where customers can buy tickets. This will appear on your public EPK.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => onOpenChange(false)}
               disabled={isCreating}
             >

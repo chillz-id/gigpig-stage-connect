@@ -32,6 +32,8 @@ interface ApplicationsTabProps {
   totalSpots?: number;
   hiddenComedianIds?: string[];
   onHideComedians?: (comedianIds: string[], scope: 'event' | 'global') => void;
+  /** When true, hides header and adjusts styling for modal context */
+  inModal?: boolean;
 }
 
 export default function ApplicationsTab({
@@ -39,7 +41,8 @@ export default function ApplicationsTab({
   userId,
   totalSpots,
   hiddenComedianIds = [],
-  onHideComedians
+  onHideComedians,
+  inModal = false
 }: ApplicationsTabProps) {
   const { toast } = useToast();
 
@@ -168,18 +171,20 @@ export default function ApplicationsTab({
   const statusFilter = filters.status === 'all' ? undefined : filters.status;
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <EventManagementHeaderContainer
-        eventId={eventId}
-        userId={userId}
-        currentTab="applications"
-      />
+    <div className={inModal ? "flex flex-col" : "flex h-full flex-col"}>
+      {/* Header - hidden in modal context */}
+      {!inModal && (
+        <EventManagementHeaderContainer
+          eventId={eventId}
+          userId={userId}
+          currentTab="applications"
+        />
+      )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={inModal ? "flex flex-col gap-4" : "flex flex-1 overflow-hidden"}>
         {/* Left: Applications List */}
-        <div className="flex flex-1 flex-col gap-4 overflow-auto p-6">
+        <div className={`flex flex-1 flex-col gap-4 overflow-auto ${inModal ? 'p-0' : 'p-6'}`}>
           {/* Filters and Export */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
@@ -301,12 +306,14 @@ export default function ApplicationsTab({
           />
         </div>
 
-        {/* Right: Shortlist Panel (sidebar on desktop, sheet on mobile) */}
-        <ShortlistPanelContainer
-          eventId={eventId}
-          userId={userId}
-          totalSpots={totalSpots}
-        />
+        {/* Right: Shortlist Panel (sidebar on desktop, sheet on mobile) - hidden in modal */}
+        {!inModal && (
+          <ShortlistPanelContainer
+            eventId={eventId}
+            userId={userId}
+            totalSpots={totalSpots}
+          />
+        )}
       </div>
 
       {/* Bulk Actions Bar (sticky bottom, only visible when items selected) */}

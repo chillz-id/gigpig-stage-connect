@@ -119,7 +119,7 @@ export const EventFilters: React.FC<EventFiltersProps> = ({
         <Button
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
           className={cn("gap-2", getButtonStyles())}
-          variant="outline"
+          className="professional-button"
         >
           <Filter className="w-4 h-4" />
           Filters

@@ -45,7 +45,7 @@ const TypographyControls: React.FC<TypographyControlsProps> = ({ settings, updat
               <Type className="w-5 h-5" />
               Font Families
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={resetTypography}>
+            <Button className="professional-button" size="sm" onClick={resetTypography}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>

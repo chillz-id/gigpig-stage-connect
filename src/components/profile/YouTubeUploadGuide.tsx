@@ -25,7 +25,7 @@ export const YouTubeUploadGuide: React.FC<YouTubeUploadGuideProps> = ({
     <Dialog>
       <DialogTrigger asChild>
         {variant === 'button' ? (
-          <Button variant="outline" size="sm">
+          <Button className="professional-button" size="sm">
             <InfoIcon className="w-4 h-4 mr-2" />
             How to Upload
           </Button>

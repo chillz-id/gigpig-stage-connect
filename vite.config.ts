@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: parseInt(process.env.PORT || "8080"), // Use Railway's dynamic port
+    hmr: {
+      // Fix WebSocket connection for HMR
+      clientPort: parseInt(process.env.PORT || "8080"),
+      host: 'localhost',
+    },
     headers: {
       // Security headers for development
       'X-Content-Type-Options': 'nosniff',
@@ -45,24 +50,97 @@ export default defineConfig(({ mode }) => ({
     // Optimize chunk splitting
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-core': ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
-          'ui-core': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          'ui-forms': ['@radix-ui/react-select', '@radix-ui/react-checkbox'],
-          'data-fetching': ['@tanstack/react-query', '@supabase/supabase-js'],
-          'form-validation': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'date-utils': ['date-fns'],
-          'editor': ['@tiptap/react', '@tiptap/starter-kit'],
-          'utils': ['clsx', 'tailwind-merge', 'lucide-react'],
-          'charts': ['recharts'],
-          'pdf': ['jspdf', 'jspdf-autotable', 'html2canvas'],
+        manualChunks: (id) => {
+          // React core libraries
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-core';
+          }
+          // React Router
+          if (id.includes('node_modules/react-router')) {
+            return 'react-router';
+          }
+          // Radix UI - Core (dialogs, dropdowns)
+          if (id.includes('@radix-ui/react-dialog') || id.includes('@radix-ui/react-dropdown-menu')) {
+            return 'ui-core';
+          }
+          // Radix UI - Forms (select, checkbox, etc.)
+          if (id.includes('@radix-ui/react-select') || id.includes('@radix-ui/react-checkbox') ||
+              id.includes('@radix-ui/react-radio') || id.includes('@radix-ui/react-switch')) {
+            return 'ui-forms';
+          }
+          // Data fetching
+          if (id.includes('@tanstack/react-query') || id.includes('@supabase/supabase-js')) {
+            return 'data-fetching';
+          }
+          // Form validation
+          if (id.includes('react-hook-form') || id.includes('@hookform/resolvers') || id.includes('node_modules/zod')) {
+            return 'form-validation';
+          }
+          // Date utilities
+          if (id.includes('node_modules/date-fns')) {
+            return 'date-utils';
+          }
+          // Rich text editor
+          if (id.includes('@tiptap/')) {
+            return 'editor';
+          }
+          // Common utilities
+          if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge') ||
+              id.includes('node_modules/lucide-react')) {
+            return 'utils';
+          }
+          // Charts
+          if (id.includes('node_modules/recharts')) {
+            return 'charts';
+          }
+          // PDF generation
+          if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
+            return 'pdf';
+          }
+          // Mobile-specific components (separate chunk for lazy loading on mobile)
+          if (id.includes('/mobile/') || id.includes('MobileFormWizard') ||
+              id.includes('MobileFormSection') || id.includes('MobileDatePicker') ||
+              id.includes('MobileSelect') || id.includes('useMobileLayout') ||
+              id.includes('useSwipeGesture') || id.includes('usePullToRefresh') ||
+              id.includes('AddToHomeScreen') || id.includes('CreateEventFormMobile')) {
+            return 'mobile';
+          }
+          // PWA-specific components
+          if (id.includes('/pwa/') || id.includes('pwaService')) {
+            return 'pwa';
+          }
+          // Media/file handling
+          if (id.includes('MediaLibraryManager') || id.includes('node_modules/browser-image-compression')) {
+            return 'media';
+          }
+          // Keep other vendor chunks together
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
           // Sanitize filename to remove invalid characters (colon, quotes, <, >, |, *, ?, \r, \n)
           const sanitized = facadeModuleId.replace(/[:"<>|*?\r\n]/g, '-');
           return `assets/js/${sanitized}-[hash].js`;
+        },
+        // Optimize asset file names for caching
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split('.') ?? ['asset'];
+          const ext = info[info.length - 1];
+          // Images get their own directory
+          if (/\.(png|jpe?g|svg|gif|webp|avif|ico)$/i.test(assetInfo.name ?? '')) {
+            return `assets/images/[name]-[hash].${ext}`;
+          }
+          // Fonts
+          if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name ?? '')) {
+            return `assets/fonts/[name]-[hash].${ext}`;
+          }
+          // CSS
+          if (ext === 'css') {
+            return `assets/css/[name]-[hash].${ext}`;
+          }
+          return `assets/[name]-[hash].${ext}`;
         },
       },
     },

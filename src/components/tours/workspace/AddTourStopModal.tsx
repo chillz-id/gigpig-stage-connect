@@ -127,7 +127,7 @@ export function AddTourStopModal({
           <div className="flex gap-3 pt-6">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => { onClose(); resetForm(); }}
               className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
             >

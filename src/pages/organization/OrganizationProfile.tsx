@@ -354,7 +354,7 @@ export default function OrganizationProfile() {
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" disabled={isPending}>
+          <Button type="button" className="professional-button" disabled={isPending}>
             Cancel
           </Button>
           <Button type="submit" disabled={isPending}>

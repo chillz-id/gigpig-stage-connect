@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, Image as ImageIcon, Play, Download, Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Video, Image as ImageIcon, Play, Download, Plus, Edit, Trash2, ExternalLink, Grid3x3, LayoutGrid, List } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,14 +10,24 @@ import { MediaUpload } from '@/components/profile/MediaUpload';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { MediaGridLayout } from './media-layouts/MediaGridLayout';
+import { MediaMasonicLayout } from './media-layouts/MediaMasonicLayout';
+import { MediaListLayout } from './media-layouts/MediaListLayout';
 
 interface ComedianMediaProps {
   comedianId: string;
   isOwnProfile?: boolean;
   trackInteraction?: (action: string, details?: any) => void;
+  mediaLayout?: 'grid' | 'masonic' | 'list';
 }
 
-const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile = false, trackInteraction }) => {
+const ComedianMedia: React.FC<ComedianMediaProps> = ({
+  comedianId,
+  isOwnProfile = false,
+  trackInteraction,
+  mediaLayout: initialMediaLayout = 'masonic'
+}) => {
+  const [currentLayout, setCurrentLayout] = useState<'grid' | 'masonic' | 'list'>(initialMediaLayout);
   const { user } = useAuth();
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
   const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
@@ -25,21 +35,24 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
   const [uploadingType, setUploadingType] = useState<'photo' | 'video'>('photo');
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'videos' | 'photos'>('videos');
 
-  const { 
-    photos, 
-    videos, 
-    loading, 
-    error, 
-    deleteMedia, 
-    fetchMedia, 
-    getThumbnailUrl, 
-    getEmbedUrl, 
-    getMediaUrl 
+  const {
+    photos,
+    videos,
+    loading,
+    error,
+    deleteMedia,
+    updateMedia,
+    fetchMedia,
+    getThumbnailUrl,
+    getEmbedUrl,
+    getMediaUrl
   } = useComedianMedia({ userId: comedianId });
 
   const handleUploadClick = (type: 'photo' | 'video') => {
     setUploadingType(type);
+    setActiveTab(type === 'photo' ? 'photos' : 'videos');
     setShowUploadDialog(true);
   };
 
@@ -56,6 +69,59 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
 
   const openExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'headshot.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+
+  const handleVideoClick = (video: any) => {
+    if (trackInteraction) {
+      trackInteraction('video_play', { videoId: video.id, videoTitle: video.title });
+    }
+  };
+
+  const handleUpdateTitle = async (mediaId: string, newTitle: string) => {
+    await updateMedia(mediaId, { title: newTitle });
+  };
+
+  // Render the appropriate layout component
+  const renderLayout = () => {
+    const layoutProps = {
+      photos,
+      videos,
+      isOwnProfile,
+      onDelete: handleDelete,
+      onDownload: downloadImage,
+      onVideoClick: handleVideoClick,
+      onUpdateTitle: handleUpdateTitle,
+      getMediaUrl,
+      getThumbnailUrl,
+      getEmbedUrl,
+    };
+
+    switch (currentLayout) {
+      case 'masonic':
+        return <MediaMasonicLayout {...layoutProps} />;
+      case 'list':
+        return <MediaListLayout {...layoutProps} />;
+      case 'grid':
+      default:
+        return <MediaGridLayout {...layoutProps} />;
+    }
   };
 
   if (loading) {
@@ -80,286 +146,139 @@ const ComedianMedia: React.FC<ComedianMediaProps> = ({ comedianId, isOwnProfile 
     );
   }
 
+  // For public view, render layout directly without card wrapper
+  if (!isOwnProfile) {
+    return (
+      <div className="space-y-6">
+        {/* Layout Switcher */}
+        {(photos.length > 0 || videos.length > 0) && (
+          <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <Button
+                size="sm"
+                variant={currentLayout === 'grid' ? 'default' : 'ghost'}
+                onClick={() => setCurrentLayout('grid')}
+                className="px-3"
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={currentLayout === 'masonic' ? 'default' : 'ghost'}
+                onClick={() => setCurrentLayout('masonic')}
+                className="px-3"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={currentLayout === 'list' ? 'default' : 'ghost'}
+                onClick={() => setCurrentLayout('list')}
+                className="px-3"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {(photos.length > 0 || videos.length > 0) ? (
+          renderLayout()
+        ) : (
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">No media available yet</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // For own profile, show upload buttons at top and use same layout as public view
   return (
     <div className="space-y-6">
-      <Card className="professional-card">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Video className="w-5 h-5" />
-              Media Portfolio
-            </CardTitle>
-            {isOwnProfile && (
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => handleUploadClick('photo')} 
-                  size="sm" 
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Photo
-                </Button>
-                <Button 
-                  onClick={() => handleUploadClick('video')} 
-                  size="sm" 
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Video
-                </Button>
-              </div>
-            )}
+      {/* Upload buttons and Layout Switcher for own profile */}
+      <div className="flex items-center justify-between gap-2">
+        {/* Layout Switcher */}
+        {(photos.length > 0 || videos.length > 0) && (
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <Button
+              size="sm"
+              variant={currentLayout === 'grid' ? 'default' : 'ghost'}
+              onClick={() => setCurrentLayout('grid')}
+              className="px-3"
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={currentLayout === 'masonic' ? 'default' : 'ghost'}
+              onClick={() => setCurrentLayout('masonic')}
+              className="px-3"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={currentLayout === 'list' ? 'default' : 'ghost'}
+              onClick={() => setCurrentLayout('list')}
+              className="px-3"
+            >
+              <List className="w-4 h-4" />
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="videos" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="videos" className="flex items-center gap-2">
-                <Video className="w-4 h-4" />
-                Videos ({videos.length})
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" />
-                Photos ({photos.length})
-              </TabsTrigger>
-            </TabsList>
+        )}
 
-            <TabsContent value="videos" className="mt-6">
-              {videos.length === 0 ? (
-                <div className="text-center py-12">
-                  <Video className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500 mb-4">No videos uploaded yet</p>
-                  {isOwnProfile && (
-                    <Button onClick={() => handleUploadClick('video')} variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Upload Your First Video
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {videos.map((video) => {
-                    const embedUrl = getEmbedUrl(video);
-                    const thumbnailUrl = getThumbnailUrl(video);
-                    const mediaUrl = getMediaUrl(video);
-                    
-                    return (
-                      <div
-                        key={video.id}
-                        className={cn(
-                          "relative bg-gray-900 rounded-lg overflow-hidden transition-all duration-300",
-                          "hover:scale-[1.02] hover:shadow-xl"
-                        )}
-                        onMouseEnter={() => setHoveredVideo(video.id)}
-                        onMouseLeave={() => setHoveredVideo(null)}
-                      >
-                        <div className="relative aspect-video">
-                          <OptimizedImage
-                            src={thumbnailUrl}
-                            alt={video.title || 'Video thumbnail'}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          
-                          {/* Overlay */}
-                          <div className={cn(
-                            "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
-                            hoveredVideo === video.id ? "opacity-100" : "opacity-0"
-                          )}>
-                            <div className="flex gap-2">
-                              {embedUrl ? (
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button size="sm" className="bg-white/20 backdrop-blur-sm">
-                                      <Play className="w-4 h-4 mr-2" />
-                                      Play
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-4xl">
-                                    <DialogHeader>
-                                      <DialogTitle>{video.title}</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="aspect-video">
-                                      <iframe
-                                        src={embedUrl}
-                                        className="w-full h-full rounded-lg"
-                                        allowFullScreen
-                                        title={video.title || 'Video'}
-                                      />
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              ) : (
-                                <Button 
-                                  size="sm" 
-                                  className="bg-white/20 backdrop-blur-sm"
-                                  onClick={() => openExternalLink(mediaUrl)}
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  View
-                                </Button>
-                              )}
-                              
-                              {isOwnProfile && (
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  onClick={() => handleDelete(video.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
+        {/* Upload buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => handleUploadClick('photo')}
+            size="sm"
+            className="professional-button"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Photo
+          </Button>
+          <Button
+            onClick={() => handleUploadClick('video')}
+            size="sm"
+            className="professional-button"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Video
+          </Button>
+        </div>
+      </div>
 
-                          {/* Featured badge */}
-                          {video.is_featured && (
-                            <Badge className="absolute top-2 left-2 bg-yellow-500">
-                              Featured
-                            </Badge>
-                          )}
-
-                          {/* Video type indicator */}
-                          {video.external_type && (
-                            <Badge className="absolute top-2 right-2" variant="secondary">
-                              {video.external_type === 'youtube' ? 'YouTube' : 
-                               video.external_type === 'google_drive' ? 'Google Drive' : 
-                               video.external_type}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="p-4">
-                          <h3 className="font-semibold text-white mb-1">
-                            {video.title || 'Untitled Video'}
-                          </h3>
-                          {video.description && (
-                            <p className="text-gray-300 text-sm mb-2 line-clamp-2">
-                              {video.description}
-                            </p>
-                          )}
-                          {video.tags && video.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {video.tags.map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="photos" className="mt-6">
-              {photos.length === 0 ? (
-                <div className="text-center py-12">
-                  <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500 mb-4">No photos uploaded yet</p>
-                  {isOwnProfile && (
-                    <Button onClick={() => handleUploadClick('photo')} variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Upload Your First Photo
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {photos.map((photo) => {
-                    const photoUrl = getMediaUrl(photo);
-                    
-                    return (
-                      <Dialog key={photo.id}>
-                        <DialogTrigger asChild>
-                          <div
-                            className={cn(
-                              "relative cursor-pointer rounded-lg overflow-hidden transition-all duration-300",
-                              "hover:scale-[1.02] hover:shadow-lg"
-                            )}
-                            onMouseEnter={() => setHoveredPhoto(photo.id)}
-                            onMouseLeave={() => setHoveredPhoto(null)}
-                          >
-                            <div className="aspect-square">
-                              <OptimizedImage
-                                src={photoUrl}
-                                alt={photo.title || 'Photo'}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                              
-                              {/* Overlay */}
-                              <div className={cn(
-                                "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
-                                hoveredPhoto === photo.id ? "opacity-100" : "opacity-0"
-                              )}>
-                                <div className="flex gap-2">
-                                  {isOwnProfile && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="destructive"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete(photo.id);
-                                      }}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Featured badge */}
-                              {photo.is_featured && (
-                                <Badge className="absolute top-2 left-2 bg-yellow-500">
-                                  Featured
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>{photo.title}</DialogTitle>
-                          </DialogHeader>
-                          <div className="max-h-[80vh] overflow-auto">
-                            <OptimizedImage
-                              src={photoUrl}
-                              alt={photo.title || 'Photo'}
-                              className="w-full h-auto rounded-lg"
-                            />
-                            {photo.description && (
-                              <p className="mt-4 text-gray-600">{photo.description}</p>
-                            )}
-                            {photo.tags && photo.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mt-4">
-                                {photo.tags.map((tag) => (
-                                  <Badge key={tag} variant="outline">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+      {/* Render media using same layout as public view */}
+      {(photos.length > 0 || videos.length > 0) ? (
+        renderLayout()
+      ) : (
+        <div className="text-center py-12 bg-muted/20 rounded-lg">
+          <Video className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground mb-4">No media uploaded yet</p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => handleUploadClick('photo')} className="professional-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Upload Photos
+            </Button>
+            <Button onClick={() => handleUploadClick('video')} className="professional-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Upload Videos
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl">
-          <MediaUpload 
-            mediaType={uploadingType} 
+        <DialogContent className={uploadingType === 'video' ? 'sm:max-w-lg' : 'max-w-2xl'}>
+          <DialogHeader>
+            <DialogTitle>{uploadingType === 'video' ? 'Add Video' : 'Add Headshots'}</DialogTitle>
+          </DialogHeader>
+          <MediaUpload
+            mediaType={uploadingType}
             onMediaAdded={handleMediaAdded}
           />
         </DialogContent>

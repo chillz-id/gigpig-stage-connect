@@ -265,7 +265,7 @@ const TourCollaborationManager: React.FC<TourCollaborationManagerProps> = ({
                       accept: false 
                     })}
                     disabled={respondToCollaborationMutation.isPending}
-                    variant="outline"
+                    className="professional-button"
                     className="border-red-400/30 text-red-300 hover:bg-red-500/20"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
@@ -608,7 +608,7 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
           <div className="flex gap-3 pt-6">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={onClose}
               className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
             >
@@ -751,7 +751,7 @@ const CollaborationDetailsModal: React.FC<CollaborationDetailsModalProps> = ({
 
           <div className="flex gap-3 pt-6">
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={onClose}
               className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
             >

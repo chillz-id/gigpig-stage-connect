@@ -129,7 +129,7 @@ export const InvoiceManagement: React.FC = () => {
   };
 
   // Show authentication error if user doesn't have the right role
-  if (!user || (!hasRole('promoter') && !hasRole('comedian') && !hasRole('admin'))) {
+  if (!user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'))) {
     return (
       <Card className="border-amber-200 bg-amber-50">
         <CardContent className="p-6 text-center">
@@ -197,7 +197,7 @@ export const InvoiceManagement: React.FC = () => {
         <h2 className="text-2xl font-bold">Invoice Management</h2>
         <div className="flex gap-2">
           <Button
-            variant={isSelectionMode ? "default" : "outline"}
+            variant={isSelectionMode ? "default" : "secondary"}
             onClick={toggleSelectionMode}
             className="h-12"
           >

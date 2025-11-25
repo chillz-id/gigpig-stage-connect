@@ -41,7 +41,7 @@ const ThemeControls: React.FC = () => {
           {getThemeIcon()}
           {getThemeText()}
           {schedule?.enabled && (
-            <Badge variant="outline" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs border-white/50 text-white">
+            <Badge className="professional-button absolute -top-1 -right-1 h-4 w-4 p-0 text-xs border-white/50 text-white">
               <Clock className="w-2 h-2" />
             </Badge>
           )}
@@ -55,7 +55,7 @@ const ThemeControls: React.FC = () => {
           <User className="w-4 h-4 mr-2 text-red-400" />
           Business Mode
           {theme === 'business' && !autoTheme && (
-            <Badge variant="outline" className="ml-auto text-xs">Active</Badge>
+            <Badge className="professional-button ml-auto text-xs">Active</Badge>
           )}
         </DropdownMenuItem>
         

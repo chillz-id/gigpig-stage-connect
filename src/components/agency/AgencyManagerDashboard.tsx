@@ -267,11 +267,11 @@ const AgencyManagerDashboard: React.FC<AgencyManagerDashboardProps> = ({ agencyI
               <div className="flex items-center justify-between">
                 <CardTitle>All Recent Deals</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     <Search className="h-4 w-4 mr-2" />
                     Search
                   </Button>

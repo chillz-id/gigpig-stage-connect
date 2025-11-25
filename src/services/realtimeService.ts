@@ -56,7 +56,7 @@ export function subscribeToApplications(
       {
         event: '*',
         schema: 'public',
-        table: 'event_applications',
+        table: 'applications',
         filter: `event_id=eq.${eventId}`,
       },
       (payload) => {

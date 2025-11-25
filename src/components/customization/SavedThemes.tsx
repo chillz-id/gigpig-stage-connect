@@ -42,7 +42,7 @@ const SavedThemes: React.FC<SavedThemesProps> = ({ savedThemes, loadTheme, apply
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => loadTheme(theme.id)}
                 >
                   <Eye className="w-3 h-3 mr-1" />

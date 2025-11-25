@@ -1,0 +1,21 @@
+id,first_name,last_name,email,email_source,lifetime_orders,lifetime_gross_cents,last_order_at,created_at
+176341cd-8725-4b7b-a66e-37650c3cd57a,Tiffany,Gyft,tgyfton@gmail.com,import_csv,0,0.00,2025-04-16 22:41:00+00,2025-10-24 09:45:43.539499+00
+838e82e0-8637-4eba-a67d-f14098936f95,Teagan,Bell,teaganbell142@icloud.com,import_csv,0,0.00,2024-12-10 18:11:00+00,2025-10-24 09:45:32.15578+00
+c2fde5a0-6a02-4d29-8eb0-d08ffb0b1922,Tarra,Broderick,tarrabroderick@gmail.com,import_csv,0,0.00,2025-01-10 10:09:00+00,2025-10-24 09:44:57.94814+00
+282711cf-e1a2-48cc-8e21-087e0cd81958,Tara,Land,taraland_@hotmail.com,import_csv,0,0.00,2025-03-27 21:37:00+00,2025-10-24 09:44:56.427714+00
+a62b6d78-ee38-4c92-8459-91088a4b16e7,Tamson,Pietsch,tamson.pietsch@gmail.com,import_csv,0,0.00,2024-12-05 10:22:00+00,2025-10-24 09:44:49.089277+00
+01c89277-a690-4b9b-ac34-447d24b64906,Timothy,Quabba,t.quabba@gmail.com,import_csv,0,0.00,2025-04-02 21:46:00+00,2025-10-24 09:44:40.028817+00
+335f8444-6147-4154-83be-268671e80dd2,Suzanne,Finemore,suzfinemore@gmail.com,import_csv,0,0.00,2025-02-11 23:51:00+00,2025-10-24 09:44:34.347982+00
+3f03de15-1e6a-4ef1-9207-a37fc5612a77,Stewart,Haebich,stewie_oz@hotmail.com,import_csv,0,0.00,2025-03-25 18:54:00+00,2025-10-24 09:44:20.65509+00
+0db611f6-b308-4c3a-b7f8-ee47a428e0da,Steve,Benoit,stevebenoit@codeitc.com,import_csv,0,0.00,2024-12-23 14:27:00+00,2025-10-24 09:44:15.499514+00
+a9effee4-ade2-485b-9f84-6a9f3bb8ca4d,Santiago,G,standupsydney.com@wedermark.com,import_csv,0,0.00,2025-01-17 16:59:00+00,2025-10-24 09:44:01.445655+00
+97678307-a3e5-4b14-b746-186af3b63730,Aidan,Mclean,standupsydney.01@nulladdress.com,import_csv,0,0.00,2025-04-16 01:37:00+00,2025-10-24 09:44:01.083604+00
+2f536630-f14e-4d02-b78f-6be566855480,Storm,Phillips,sphillips1218@hotmail.com,import_csv,0,0.00,2025-03-26 22:30:00+00,2025-10-24 09:43:53.585996+00
+7fd4b7a8-f1d5-49d3-9754-c83c354e10cc,Sasha,Small,smallsasha2006@gmail.com,import_csv,0,0.00,2024-11-29 11:00:00+00,2025-10-24 09:43:07.484805+00
+2e287184-a664-4729-8c39-cbe664610718,Skyla,Steele,skyla.steele1995@gmail.com,import_csv,0,0.00,2025-02-26 14:54:00+00,2025-10-24 09:43:04.19922+00
+d8f7e97f-2e2b-4017-864c-0b24f054ea16,Simone,Reilly,simone.reilly1@gmail.com,import_csv,0,0.00,2024-12-27 15:43:00+00,2025-10-24 09:42:57.185798+00
+f9539db4-f5ff-4e6f-931d-cd5ecfe06176,Siavash,Abbasalipour,siavash@gmimarketing.com.au,import_csv,0,0.00,2025-02-12 14:35:00+00,2025-10-24 09:42:51.078813+00
+1f923aec-f40e-45db-99ef-ac9de5b72adb,Shannon,Connor,shannon.connor@me.com,import_csv,0,0.00,2025-04-05 19:37:00+00,2025-10-24 09:42:30.209964+00
+a949e820-a11a-4576-b5f4-ca0cc21a8388,Yalda,Setoodeh,shahrzad.set@gmail.com,import_csv,0,0.00,2025-01-26 12:34:00+00,2025-10-24 09:42:24.023+00
+527cf614-bdd0-4dfb-83c0-d10bfa4bcccc,Sereena,Toteja,sereenat@gmail.com,import_csv,0,0.00,2024-12-08 21:37:00+00,2025-10-24 09:42:17.61463+00
+1973db8e-9d68-43b8-8e1f-9599ed78232d,SARAH,POWELL,sarqasarah@gmail.com,import_csv,0,0.00,2024-11-04 13:55:00+00,2025-10-24 09:41:57.922288+00

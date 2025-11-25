@@ -132,7 +132,7 @@ const ComedianContact: React.FC<ComedianContactProps> = ({ comedian, trackIntera
                   return (
                     <Button
                       key={index}
-                      variant="outline"
+                      className="professional-button"
                       size="sm"
                       asChild
                       className="flex items-center gap-2"

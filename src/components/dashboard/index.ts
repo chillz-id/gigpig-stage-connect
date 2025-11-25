@@ -6,7 +6,6 @@
  */
 
 export { ComedianDashboard } from './ComedianDashboard';
-export { PromoterDashboard } from './PromoterDashboard';
 export { ManagerDashboard } from './ManagerDashboard';
 export { PhotographerDashboard } from './PhotographerDashboard';
 export { VideographerDashboard } from './VideographerDashboard';

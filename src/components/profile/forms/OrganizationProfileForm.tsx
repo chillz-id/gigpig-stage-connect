@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,23 @@ export function OrganizationProfileForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [countryCode, setCountryCode] = useState('+61'); // Default to Australia
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Parse existing phone number to extract country code
+  useEffect(() => {
+    if (initialData?.contact_phone) {
+      const phone = initialData.contact_phone;
+      // Try to extract country code (format: +XX or +XXX)
+      const match = phone.match(/^(\+\d{1,3})(.*)$/);
+      if (match) {
+        setCountryCode(match[1]);
+        setPhoneNumber(match[2].trim());
+      } else {
+        setPhoneNumber(phone);
+      }
+    }
+  }, [initialData?.contact_phone]);
 
   const handleInputChange = (field: keyof OrganizationProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -105,10 +122,14 @@ export function OrganizationProfileForm({
 
     try {
       setIsLoading(true);
-      // Remove spaces from ABN
+      // Remove spaces from ABN and combine country code with phone
+      const combinedPhone = phoneNumber.trim()
+        ? `${countryCode}${phoneNumber.trim().replace(/^0+/, '')}`
+        : '';
       const cleanedData = {
         ...formData,
-        abn: formData.abn?.replace(/\s/g, '') || undefined
+        abn: formData.abn?.replace(/\s/g, '') || undefined,
+        contact_phone: combinedPhone || undefined
       };
       await onSubmit(cleanedData);
     } finally {
@@ -287,13 +308,33 @@ export function OrganizationProfileForm({
 
             <div>
               <Label htmlFor="contact_phone">Contact Phone</Label>
-              <Input
-                id="contact_phone"
-                type="tel"
-                value={formData.contact_phone}
-                onChange={(e) => handleInputChange('contact_phone', e.target.value)}
-                placeholder="+61 2 1234 5678"
-              />
+              <div className="flex gap-2">
+                <Select value={countryCode} onValueChange={setCountryCode}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                    <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                    <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                    <SelectItem value="+64">🇳🇿 +64</SelectItem>
+                    <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                    <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                    <SelectItem value="+81">🇯🇵 +81</SelectItem>
+                    <SelectItem value="+86">🇨🇳 +86</SelectItem>
+                    <SelectItem value="+91">🇮🇳 +91</SelectItem>
+                    <SelectItem value="+65">🇸🇬 +65</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="contact_phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="2 1234 5678"
+                  className="flex-1"
+                />
+              </div>
             </div>
 
             <div>
@@ -357,7 +398,7 @@ export function OrganizationProfileForm({
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" className="professional-button" onClick={onCancel}>
                 Cancel
               </Button>
             )}

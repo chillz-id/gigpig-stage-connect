@@ -111,12 +111,12 @@ const ComedianMarketplace = () => {
   };
 
   useEffect(() => {
-    if (hasRole('promoter') || hasRole('admin')) {
+    if (hasRole('admin')) {
       fetchComedians();
     }
   }, [fetchComedians, hasRole]);
 
-  if (!hasRole('promoter') && !hasRole('admin')) {
+  if (!hasRole('admin')) {
     return (
       <Card>
         <CardHeader>

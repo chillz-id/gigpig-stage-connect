@@ -23,7 +23,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       <div>
         <Button
           type="button"
-          variant="outline"
+          className="professional-button"
           onClick={onToggleCalendar}
           className="bg-white/10 border-white/20 text-white hover:bg-white/20"
         >

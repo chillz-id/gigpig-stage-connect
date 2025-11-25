@@ -239,7 +239,7 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
                       <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-white border-white/30">
+                            <Badge className="professional-button text-white border-white/30">
                               {ticket.ticket_name}
                             </Badge>
                             <span className="text-sm text-gray-300">

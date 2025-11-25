@@ -17,8 +17,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  hasRole: (role: 'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => boolean;
-  hasAnyRole: (roles: Array<'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => boolean;
+  hasRole: (role: 'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => boolean;
+  hasAnyRole: (roles: Array<'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => boolean;
   isCoPromoterForEvent: (eventId: string) => Promise<boolean>;
   markFirstLoginComplete: () => void;
 }
@@ -248,13 +248,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const hasRole = useCallback((role: 'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
+  const hasRole = useCallback((role: 'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);
     // Checking user role
     return hasTheRole;
   }, [roles]);
 
-  const hasAnyRole = useCallback((checkRoles: Array<'member' | 'comedian' | 'comedian_lite' | 'promoter' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => {
+  const hasAnyRole = useCallback((checkRoles: Array<'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer'>) => {
     return roles.some(userRole => checkRoles.includes(userRole.role));
   }, [roles]);
 

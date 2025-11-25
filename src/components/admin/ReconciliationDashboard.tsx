@@ -232,7 +232,7 @@ export function ReconciliationDashboard({ eventId }: ReconciliationDashboardProp
                     <div key={platform} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium capitalize">{platform}</span>
-                        <Badge variant="outline">{stats.reports} reports</Badge>
+                        <Badge className="professional-button">{stats.reports} reports</Badge>
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-sm">
@@ -335,7 +335,7 @@ export function ReconciliationDashboard({ eventId }: ReconciliationDashboardProp
                           <div className="flex gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
+                              className="professional-button"
                               onClick={() => handleResolveDiscrepancy(discrepancy.id, 'ignored', 'Reviewed and ignored')}
                             >
                               Ignore

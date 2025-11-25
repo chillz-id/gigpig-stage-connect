@@ -28,7 +28,7 @@ const ComedianAvatar: React.FC<ComedianAvatarProps> = ({
   const displayName = stage_name || name || 'Comedian';
 
   return (
-    <div className="w-full h-full rounded-lg overflow-hidden bg-muted transition-all duration-300 hover:scale-105 hover:shadow-lg">
+    <div className="w-full h-full rounded-full overflow-hidden bg-muted transition-all duration-300 hover:scale-105 hover:shadow-lg">
       <OptimizedImage
         src={optimizedSrc}
         alt={displayName}

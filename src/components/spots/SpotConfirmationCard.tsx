@@ -161,7 +161,7 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
             </p>
           </div>
           <Badge 
-            variant="outline" 
+            className="professional-button" 
             className={`${getStatusColor(confirmation.status)} flex items-center gap-1`}
           >
             {getStatusIcon(confirmation.status)}
@@ -344,7 +344,7 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
             </h3>
             <Button 
               onClick={handleCalendarSync}
-              variant="outline"
+              className="professional-button"
               className="w-full"
             >
               {isGoogleConnected ? 'Sync to Google Calendar' : 'Download Calendar File'}
@@ -368,7 +368,7 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
             <Button
               onClick={() => handleConfirmation('declined')}
               disabled={isLoading}
-              variant="outline"
+              className="professional-button"
               className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
             >
               <XCircle className="w-4 h-4 mr-2" />

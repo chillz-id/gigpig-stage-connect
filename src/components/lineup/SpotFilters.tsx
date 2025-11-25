@@ -75,7 +75,7 @@ export function SpotFilters({ onFilterChange }: SpotFiltersProps) {
       {/* Toggle Button for Mobile */}
       <div className="flex items-center justify-between gap-2">
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
           className="gap-2 lg:hidden"

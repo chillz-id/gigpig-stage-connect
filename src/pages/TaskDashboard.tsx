@@ -149,7 +149,7 @@ export default function TaskDashboard() {
         <div className="flex items-center gap-2">
           <Dialog open={templateLibraryOpen} onOpenChange={setTemplateLibraryOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="professional-button flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Templates
               </Button>
@@ -204,23 +204,27 @@ export default function TaskDashboard() {
       {/* Quick Filters */}
       <div className="flex flex-wrap gap-2">
         <Button
-          variant="outline"
+          className={cn(
+            "professional-button",
+            !Object.keys(filters).length && 'bg-primary text-primary-foreground'
+          )}
           size="sm"
           onClick={() => handleQuickFilter('all')}
-          className={!Object.keys(filters).length ? 'bg-primary text-primary-foreground' : ''}
         >
           All Tasks
         </Button>
         <Button
-          variant="outline"
+          className={cn(
+            "professional-button",
+            filters.assignee_id?.includes(user?.id || '') && 'bg-primary text-primary-foreground'
+          )}
           size="sm"
           onClick={() => handleQuickFilter('my-tasks')}
-          className={filters.assignee_id?.includes(user?.id || '') ? 'bg-primary text-primary-foreground' : ''}
         >
           My Tasks
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('due-today')}
           className={filters.due_date_range?.start === new Date().toISOString().split('T')[0] ? 'bg-primary text-primary-foreground' : ''}
@@ -233,7 +237,7 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('due-this-week')}
         >
@@ -245,7 +249,7 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('overdue')}
           className={filters.is_overdue ? 'bg-destructive text-destructive-foreground' : ''}
@@ -258,7 +262,7 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('high-priority')}
           className={filters.priority?.includes('urgent') || filters.priority?.includes('high') ? 'bg-primary text-primary-foreground' : ''}
@@ -266,7 +270,7 @@ export default function TaskDashboard() {
           High Priority
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('in-progress')}
           className={filters.status?.includes('in_progress') ? 'bg-primary text-primary-foreground' : ''}
@@ -304,7 +308,7 @@ export default function TaskDashboard() {
         </Select>
 
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => setSort(prev => ({ 
             ...prev, 
@@ -318,7 +322,7 @@ export default function TaskDashboard() {
 
         <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button className="professional-button flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filters
               {Object.keys(filters).length > 0 && (

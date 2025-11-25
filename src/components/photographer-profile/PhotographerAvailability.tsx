@@ -69,7 +69,7 @@ const PhotographerAvailability: React.FC<PhotographerAvailabilityProps> = ({
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-4">
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => handleMonthChange(-1)}
             >
@@ -79,7 +79,7 @@ const PhotographerAvailability: React.FC<PhotographerAvailabilityProps> = ({
               {format(selectedMonth, 'MMMM yyyy')}
             </h3>
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => handleMonthChange(1)}
             >

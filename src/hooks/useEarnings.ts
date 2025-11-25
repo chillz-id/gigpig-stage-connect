@@ -85,7 +85,7 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
     .from('comedian_bookings')
     .select(`
       fee,
-      events!inner(title, event_date)
+      events!comedian_bookings_event_id_fkey!inner(title, event_date)
     `)
     .eq('comedian_id', userId)
     .gte('events.event_date', startDate.toISOString())
@@ -99,8 +99,8 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
   // Query invoices for additional earnings
   const { data: invoices, error: invoicesError } = await supabase
     .from('invoices')
-    .select('total_amount, issue_date, description')
-    .eq('user_id', userId)
+    .select('total_amount, issue_date, invoice_number')
+    .eq('comedian_id', userId)
     .eq('status', 'paid')
     .gte('issue_date', startDate.toISOString())
     .lte('issue_date', endDate.toISOString());
@@ -124,7 +124,7 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
       type: 'performance' as const
     })),
     ...(invoices || []).map(invoice => ({
-      eventTitle: invoice.description || 'Invoice Payment',
+      eventTitle: invoice.invoice_number || 'Invoice Payment',
       amount: invoice.total_amount || 0,
       date: invoice.issue_date || '',
       type: 'other' as const

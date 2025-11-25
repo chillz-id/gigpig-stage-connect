@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSessionCalendar } from '@/hooks/useSessionCalendar';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
-import { FeaturedEventsCarousel } from '@/components/FeaturedEventsCarousel';
 import { EventFilters } from '@/components/events/EventFilters';
 import { ShowCard } from '@/components/ShowCard';
 import { MonthFilter } from '@/components/MonthFilter';
@@ -16,29 +15,44 @@ import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Calendar, MapPin, Users, AlertCircle, Clock } from 'lucide-react';
 import { formatEventTime } from '@/utils/formatEventTime';
-import { QuickSignUpCard } from '@/components/auth/QuickSignUpCard';
+import { HorizontalAuthBanner } from '@/components/auth/HorizontalAuthBanner';
 import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
 import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 import { Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { ProfileHeader } from '@/components/ProfileHeader';
+import { ImageCrop } from '@/components/ImageCrop';
+import { CalendarGridView } from '@/components/gigs/CalendarGridView';
+import { DayOfWeekSelector } from '@/components/gigs/DayOfWeekSelector';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Gigs page - Browse and discover comedy gigs
 // Previously called "Shows" - renamed to "Gigs" for clarity
 // The /shows route will be used for a new feature showing comedian shows + organization shows
 const Gigs = () => {
   const { theme } = useTheme();
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, signOut, profile } = useAuth();
   const { activeProfile } = useProfile();
   const location = useLocation();
-  
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   // Get month from URL params
   const searchParams = new URLSearchParams(location.search);
   const monthParam = searchParams.get('month');
   const initialDate = monthParam ? new Date(monthParam) : new Date();
-  
+
   const [selectedMonth, setSelectedMonth] = useState<number>(initialDate.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(initialDate.getFullYear());
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -47,6 +61,11 @@ const Gigs = () => {
   const [showDateRange, setShowDateRange] = useState(false);
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<string>('sydney'); // 'sydney' or 'melbourne'
+
+  // Image upload states for ProfileHeader
+  const [selectedImage, setSelectedImage] = useState('');
+  const [showImageCrop, setShowImageCrop] = useState(false);
 
   // Calculate date range for session calendar based on month/year or custom range
   const getDateRange = () => {
@@ -71,11 +90,25 @@ const Gigs = () => {
 
   const { startDate, endDate } = getDateRange();
 
+  // Map selected city to timezone for API query
+  const getTimezoneFromCity = (city: string): string => {
+    switch (city) {
+      case 'sydney':
+        return 'Australia/Sydney';
+      case 'melbourne':
+        return 'Australia/Melbourne';
+      default:
+        return 'Australia/Sydney'; // Default to Sydney
+    }
+  };
+
+  const selectedTimezone = getTimezoneFromCity(selectedCity);
+
   const { events, isLoading, error } = useSessionCalendar({
     startDate,
     endDate,
     includePast: showPastEvents,
-    timezone: 'Australia/Sydney'
+    timezone: selectedTimezone
   });
   
   // Get browse logic handlers
@@ -97,7 +130,7 @@ const Gigs = () => {
 
   // Availability selection hook (only for authenticated comedians)
   const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
-  const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved } = useAvailabilitySelection(
+  const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved, hasPendingChanges } = useAvailabilitySelection(
     isComedian && user ? user.id : null
   );
 
@@ -193,13 +226,114 @@ const Gigs = () => {
   const handleMonthChange = (month: number, year: number) => {
     setSelectedMonth(month);
     setSelectedYear(year);
-    
+
     // Update URL
     const url = new URL(window.location.href);
     const dateStr = new Date(year, month).toISOString().slice(0, 7);
     url.searchParams.set('month', dateStr);
     window.history.replaceState({}, '', url.toString());
   };
+
+  // ProfileHeader handlers
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+        setShowImageCrop(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCroppedImage = async (croppedImage: string) => {
+    try {
+      // Convert base64 to blob
+      const base64Response = await fetch(croppedImage);
+      const blob = await base64Response.blob();
+
+      // Create unique filename
+      const fileExt = 'png';
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, blob, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile picture has been updated successfully."
+      });
+
+      setShowImageCrop(false);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    toast({
+      title: "Signed Out",
+      description: "You have been successfully signed out."
+    });
+    await signOut();
+    navigate('/');
+  };
+
+  // Transform user data for ProfileHeader
+  const userDataForProfile = user ? {
+    id: user.id,
+    email: user.email || '',
+    name: profile?.name || '',
+    first_name: profile?.first_name || '',
+    last_name: profile?.last_name || '',
+    stage_name: profile?.stage_name || '',
+    name_display_preference: profile?.name_display_preference || 'real',
+    bio: profile?.bio || '',
+    location: profile?.location || '',
+    phone: profile?.phone || '',
+    instagram_url: profile?.instagram_url || '',
+    twitter_url: profile?.twitter_url || '',
+    website_url: profile?.website_url || '',
+    youtube_url: profile?.youtube_url || '',
+    facebook_url: profile?.facebook_url || '',
+    tiktok_url: profile?.tiktok_url || '',
+    custom_show_types: profile?.custom_show_types || [],
+    avatar: profile?.avatar_url || '',
+    role: hasRole('admin') ? 'admin' : 'comedian',
+    isVerified: profile?.is_verified || false,
+    membership: profile?.membership_tier || 'basic',
+    joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }) : 'Recently',
+    stats: {
+      showsPerformed: profile?.shows_performed || 0
+    }
+  } : null;
 
   if (isLoading) {
     return (
@@ -239,15 +373,29 @@ const Gigs = () => {
     <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-6 sm:py-8">
 
-        {/* Featured Events Carousel */}
-        <div className="mb-6 sm:mb-8">
-          <FeaturedEventsCarousel />
-        </div>
-
-        {/* Quick Sign Up Card (for anonymous users) */}
-        {!user && (
+        {/* Auth/Profile Section */}
+        {!user ? (
           <div className="mb-6">
-            <QuickSignUpCard />
+            <HorizontalAuthBanner />
+          </div>
+        ) : userDataForProfile ? (
+          <div className="mb-6">
+            <ProfileHeader
+              user={userDataForProfile}
+              onImageSelect={handleImageSelect}
+              onLogout={handleLogout}
+            />
+          </div>
+        ) : null}
+
+        {/* Day of Week Selector (comedians only) */}
+        {isComedian && events && (
+          <div className="mb-6">
+            <DayOfWeekSelector
+              events={events}
+              selectedEventIds={selectedEvents}
+              onSelectWeekday={selectWeekday}
+            />
           </div>
         )}
 
@@ -285,6 +433,29 @@ const Gigs = () => {
                 {showPastEvents ? 'Hide Past' : 'Show Past'}
               </button>
 
+              {/* City filter dropdown */}
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger
+                  className={cn(
+                    "w-[140px] h-10 rounded-lg text-sm font-medium",
+                    theme === 'pleasure'
+                      ? 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                      : 'bg-gray-700 hover:bg-gray-600 text-white border-gray-600'
+                  )}
+                >
+                  <MapPin size={14} className="mr-1.5" />
+                  <SelectValue placeholder="Select City" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="sydney" className="text-white hover:bg-gray-700">
+                    Sydney
+                  </SelectItem>
+                  <SelectItem value="melbourne" className="text-white hover:bg-gray-700">
+                    Melbourne
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
               <button
                 onClick={() => {
                   setUseAdvancedFilters(!useAdvancedFilters);
@@ -295,7 +466,7 @@ const Gigs = () => {
                 }}
                 className={cn(
                   "px-4 py-2 rounded-lg transition-colors text-sm font-medium",
-                  theme === 'pleasure' 
+                  theme === 'pleasure'
                     ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                     : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
                 )}
@@ -345,70 +516,37 @@ const Gigs = () => {
           </div>
         )}
 
-        {/* Events Grid */}
+        {/* Save Status Indicator (for comedians only) */}
+        {isComedian && (
+          <div className="mb-4">
+            {hasPendingChanges && !isSaving && (
+              <div className="flex items-center gap-2 text-sm text-yellow-400">
+                <span>Pending changes...</span>
+              </div>
+            )}
+            {isSaving && (
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Autosaving...</span>
+              </div>
+            )}
+            {!isSaving && !hasPendingChanges && lastSaved && (
+              <div className="text-sm text-green-400">
+                Saved at {format(lastSaved, 'h:mma')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Calendar Grid View */}
         {filteredEvents.length > 0 ? (
-          <>
-            {/* Save Status Indicator (for comedians only) */}
-            {isComedian && (
-              <div className="mb-4">
-                {isSaving && (
-                  <div className="flex items-center gap-2 text-sm text-white/70">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Autosaving...</span>
-                  </div>
-                )}
-                {!isSaving && lastSaved && (
-                  <div className="text-sm text-white/70">
-                    Saved at {format(lastSaved, 'h:mma')}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Event Cards - use availability cards for comedians, regular cards for others */}
-            {isComedian && user ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {filteredEvents.map((event) => (
-                  <EventAvailabilityCard
-                    key={event.id}
-                    event={event}
-                    userId={user.id}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {filteredEvents.map((event) => {
-                  const isPast = event.is_past;
-
-                  return (
-                    <div key={event.id} className="relative">
-                      {/* Status badge for past events */}
-                      {isPast && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <span className="px-2 py-1 text-xs font-medium bg-gray-800/80 text-gray-300 rounded-full backdrop-blur-sm">
-                            Past Event
-                          </span>
-                        </div>
-                      )}
-                      <ShowCard
-                        show={event}
-                        interestedEvents={interestedEvents}
-                        onToggleInterested={handleToggleInterested}
-                        onApply={handleApply}
-                        onBuyTickets={handleBuyTickets}
-                        onShowDetails={handleShowDetails}
-                        onGetDirections={handleGetDirections}
-                        hasAppliedToEvent={hasAppliedToEvent}
-                        getApplicationStatus={getApplicationStatus}
-                        isApplying={isApplying}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
+          <CalendarGridView
+            events={filteredEvents}
+            selectedMonth={new Date(selectedYear, selectedMonth)}
+            isComedian={isComedian}
+            selectedEventIds={selectedEvents}
+            onToggleAvailability={toggleEvent}
+          />
         ) : (
           <div className="text-center py-16">
             <div className={cn(
@@ -493,6 +631,14 @@ const Gigs = () => {
           isSubmitting={isApplying}
         />
       )}
+
+      {/* Image Crop Modal */}
+      <ImageCrop
+        isOpen={showImageCrop}
+        onClose={() => setShowImageCrop(false)}
+        onCrop={handleCroppedImage}
+        imageUrl={selectedImage}
+      />
     </div>
   );
 };

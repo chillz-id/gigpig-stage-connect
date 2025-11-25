@@ -34,7 +34,7 @@ export const ApplicationsListSection = () => {
       case 'withdrawn':
         return <Badge variant="secondary">Withdrawn</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge className="professional-button">{status}</Badge>;
     }
   };
 

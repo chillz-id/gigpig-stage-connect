@@ -96,8 +96,7 @@ const XeroCallback: React.FC = () => {
               <div className="space-y-2">
                 <Button
                   onClick={() => navigate('/profile?tab=invoices')}
-                  variant="outline"
-                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="professional-button w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
                   Return to Invoices
                 </Button>

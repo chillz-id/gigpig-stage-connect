@@ -75,9 +75,8 @@ export const InvoicePaymentSuccess: React.FC = () => {
               <FileText className="w-4 h-4 mr-2" />
               View Invoice
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full"
+            <Button
+              className="professional-button w-full"
               onClick={() => navigate('/invoices')}
             >
               <Home className="w-4 h-4 mr-2" />

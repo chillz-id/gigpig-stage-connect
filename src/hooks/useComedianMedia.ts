@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,9 +42,9 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
       setError(null);
 
       let query = supabase
-        .from('comedian_media')
+        .from('media_files')
         .select('*')
-        .order('display_order', { ascending: true })
+        .eq('is_featured_in_epk', true) // Only fetch EPK-featured media
         .order('created_at', { ascending: false });
 
       if (userId) {
@@ -52,7 +52,8 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
       }
 
       if (mediaType) {
-        query = query.eq('media_type', mediaType);
+        // Map media_type to file_type
+        query = query.eq('file_type', mediaType === 'photo' ? 'image' : 'video');
       }
 
       const { data, error: fetchError } = await query;
@@ -61,7 +62,31 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
         throw fetchError;
       }
 
-      setMedia(data || []);
+      // Map media_files records to ComedianMediaItem interface for backward compatibility
+      const mappedData = (data || []).map((file: any) => ({
+        id: file.id,
+        user_id: file.user_id,
+        media_type: file.file_type === 'image' ? 'photo' : 'video',
+        title: file.file_name,
+        description: null, // media_files doesn't have description
+        file_url: file.public_url,
+        file_size: file.file_size,
+        file_type: file.file_type,
+        external_url: file.external_url,
+        external_type: file.external_type,
+        external_id: file.external_id,
+        thumbnail_url: null, // media_files doesn't have separate thumbnail_url
+        duration: null, // media_files doesn't have duration
+        width: null, // media_files doesn't have width
+        height: null, // media_files doesn't have height
+        is_featured: file.is_featured_in_epk || false,
+        display_order: 0, // media_files doesn't have display_order
+        tags: file.tags || [],
+        created_at: file.created_at,
+        updated_at: file.updated_at
+      }));
+
+      setMedia(mappedData);
     } catch (err) {
       console.error('Error fetching comedian media:', err);
       setError(err instanceof Error ? err.message : 'Failed to load media');
@@ -82,11 +107,11 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
         const fileName = pathParts[pathParts.length - 1];
         const filePath = `${mediaItem.user_id}/${fileName}`;
         
-        // Delete from storage
+        // Delete from storage (check media-library bucket)
         const { error: storageError } = await supabase.storage
-          .from('comedian-media')
+          .from('media-library')
           .remove([filePath]);
-        
+
         if (storageError) {
           console.warn('Storage deletion error:', storageError);
           // Continue with database deletion even if storage fails
@@ -95,7 +120,7 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
 
       // Delete from database
       const { error } = await supabase
-        .from('comedian_media')
+        .from('media_files')
         .delete()
         .eq('id', mediaId);
 
@@ -121,7 +146,7 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
   const updateMedia = async (mediaId: string, updates: Partial<ComedianMediaItem>) => {
     try {
       const { error } = await supabase
-        .from('comedian_media')
+        .from('media_files')
         .update({
           ...updates,
           updated_at: new Date().toISOString()
@@ -151,30 +176,15 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
     }
   };
 
+  // Note: media_files table doesn't have display_order column
+  // Ordering is done by created_at instead
   const reorderMedia = async (mediaId: string, newOrder: number) => {
-    try {
-      const { error } = await supabase
-        .from('comedian_media')
-        .update({ display_order: newOrder })
-        .eq('id', mediaId);
-
-      if (error) throw error;
-
-      // Update local state and re-sort
-      setMedia(prev => {
-        const updated = prev.map(item => 
-          item.id === mediaId ? { ...item, display_order: newOrder } : item
-        );
-        return updated.sort((a, b) => a.display_order - b.display_order);
-      });
-    } catch (err) {
-      console.error('Error reordering media:', err);
-      toast({
-        title: "Reorder failed",
-        description: "There was an error reordering the media.",
-        variant: "destructive"
-      });
-    }
+    console.warn('Reordering not supported in media_files table - items are ordered by created_at');
+    toast({
+      title: "Reordering not available",
+      description: "Media items are automatically ordered by upload date.",
+      variant: "default"
+    });
   };
 
   const getMediaUrl = (item: ComedianMediaItem): string => {
@@ -214,6 +224,22 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
     fetchMedia();
   }, [fetchMedia]);
 
+  // Memoize filtered arrays to prevent infinite re-renders
+  const photos = useMemo(() =>
+    media.filter(item => item.media_type === 'photo'),
+    [media]
+  );
+
+  const videos = useMemo(() =>
+    media.filter(item => item.media_type === 'video'),
+    [media]
+  );
+
+  const featuredMedia = useMemo(() =>
+    media.filter(item => item.is_featured),
+    [media]
+  );
+
   return {
     media,
     loading,
@@ -225,8 +251,8 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
     getMediaUrl,
     getThumbnailUrl,
     getEmbedUrl,
-    photos: media.filter(item => item.media_type === 'photo'),
-    videos: media.filter(item => item.media_type === 'video'),
-    featuredMedia: media.filter(item => item.is_featured)
+    photos,
+    videos,
+    featuredMedia
   };
 };

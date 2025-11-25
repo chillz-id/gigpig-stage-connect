@@ -269,17 +269,17 @@ const EventSeries = () => {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="text-white border-white/30">
+                        <Badge className="professional-button text-white border-white/30">
                           {series.type}
                         </Badge>
-                        <Badge variant="outline" className="text-white border-white/30">
+                        <Badge className="professional-button text-white border-white/30">
                           {event.age_restriction}
                         </Badge>
-                        <Badge variant="outline" className="text-white border-white/30">
+                        <Badge className="professional-button text-white border-white/30">
                           {event.dress_code}
                         </Badge>
                         {event.allow_recording && (
-                          <Badge variant="outline" className="text-green-400 border-green-400">
+                          <Badge className="professional-button text-green-400 border-green-400">
                             Recording OK
                           </Badge>
                         )}
@@ -294,8 +294,7 @@ const EventSeries = () => {
                           {availableSpots <= 0 ? 'Show Full' : isPastEvent ? 'Past Event' : 'Apply Now'}
                         </Button>
                         <Button 
-                          variant="outline" 
-                          className="text-white border-white/30 hover:bg-white/10"
+                          className="professional-button text-white border-white/30 hover:bg-white/10"
                           onClick={() => navigate(`/event/${event.id}`)}
                         >
                           Details

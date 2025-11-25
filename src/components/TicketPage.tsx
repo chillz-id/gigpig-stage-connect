@@ -165,7 +165,7 @@ export const TicketPage: React.FC<TicketPageProps> = ({
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">${ticket.price.toFixed(2)}</p>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge className="professional-button text-xs">
                         {ticket.available} left
                       </Badge>
                     </div>
@@ -174,7 +174,7 @@ export const TicketPage: React.FC<TicketPageProps> = ({
                     <Label htmlFor={`ticket-${ticket.id}`}>Quantity:</Label>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
+                        className="professional-button"
                         size="sm"
                         onClick={() => handleTicketChange(ticket.id, (selectedTickets[ticket.id] || 0) - 1)}
                         disabled={(selectedTickets[ticket.id] || 0) <= 0}
@@ -191,7 +191,7 @@ export const TicketPage: React.FC<TicketPageProps> = ({
                         className="w-16 text-center"
                       />
                       <Button
-                        variant="outline"
+                        className="professional-button"
                         size="sm"
                         onClick={() => handleTicketChange(ticket.id, (selectedTickets[ticket.id] || 0) + 1)}
                         disabled={(selectedTickets[ticket.id] || 0) >= ticket.available}
@@ -292,7 +292,7 @@ export const TicketPage: React.FC<TicketPageProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <Button variant="outline" onClick={onClose}>
+            <Button className="professional-button" onClick={onClose}>
               Cancel
             </Button>
             <Button 

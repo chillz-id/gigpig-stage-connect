@@ -20,7 +20,7 @@ export const TaskActivity = ({ metadata }: TaskActivityProps) => (
       {metadata.status && (
         <div className="flex items-center gap-2">
           <span className="font-medium">Status:</span>
-          <Badge variant="outline">{metadata.status}</Badge>
+          <Badge className="professional-button">{metadata.status}</Badge>
         </div>
       )}
       {metadata.priority && (

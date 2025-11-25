@@ -23,10 +23,11 @@ export const useUpcomingGigs = () => {
         return [];
       }
 
-      // Get confirmed applications for upcoming events
+      // Get confirmed applications for upcoming events (applications is the source of truth)
       const { data, error } = await supabase
         .from('applications')
-        .select(`
+        .select(
+          `
           id,
           event_id,
           status,
@@ -39,7 +40,8 @@ export const useUpcomingGigs = () => {
             pay_per_comedian,
             currency
           )
-        `)
+        `
+        )
         .eq('comedian_id', user.id)
         .eq('status', 'accepted')
         .gte('events.event_date', new Date().toISOString());

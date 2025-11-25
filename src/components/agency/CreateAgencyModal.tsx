@@ -307,7 +307,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({ open, onClose, on
 
           {/* Form Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" className="professional-button" onClick={onClose}>
               Cancel
             </Button>
             <Button 

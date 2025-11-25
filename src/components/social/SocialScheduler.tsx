@@ -123,7 +123,7 @@ export function SocialScheduler() {
                       {channels.map(channel => (
                         <SelectItem key={channel.id} value={channel.id}>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="capitalize">
+                            <Badge className="professional-button capitalize">
                               {channel.platform}
                             </Badge>
                             <span>{channel.name}</span>
@@ -218,7 +218,7 @@ export function SocialScheduler() {
                     <Image className="inline h-4 w-4 mr-1" />
                     Media
                   </Label>
-                  <Button variant="outline" className="w-full" disabled>
+                  <Button className="professional-button w-full" disabled>
                     Add Images/Videos (Coming Soon)
                   </Button>
                 </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Smartphone, Download, Link, Unlink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Link, Unlink, CheckCircle, AlertCircle } from 'lucide-react';
 import { useCalendarIntegration } from '@/hooks/useCalendarIntegration';
 import { useComedianGigs } from '@/hooks/useComedianGigs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +20,6 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
     isGoogleConnected,
     initiateGoogleCalendarAuth,
     disconnectCalendar,
-    downloadICSFile,
     isConnecting,
     isDisconnecting
   } = useCalendarIntegration();
@@ -29,19 +28,6 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
 
   // Don't show to other users
   if (!isOwnProfile) return null;
-
-  // Convert gigs to calendar events format
-  const convertGigsToCalendarEvents = () => {
-    return gigs.map(gig => ({
-      id: gig.id,
-      title: gig.title,
-      description: `Comedy performance at ${gig.venue}${gig.event_spot?.duration_minutes ? ` (${gig.event_spot.duration_minutes} minutes)` : ''}`,
-      start_time: gig.event_date,
-      end_time: new Date(new Date(gig.event_date).getTime() + (gig.event_spot?.duration_minutes || 60) * 60000).toISOString(),
-      location: gig.venue,
-      attendees: []
-    }));
-  };
 
   const handleGoogleConnect = () => {
     if (isGoogleConnected) {
@@ -52,16 +38,6 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
     } else {
       initiateGoogleCalendarAuth();
     }
-  };
-
-  const handleDownloadICS = () => {
-    const calendarEvents = convertGigsToCalendarEvents();
-    if (calendarEvents.length === 0) {
-      return;
-    }
-    
-    const filename = `${user?.name?.toLowerCase().replace(/\s+/g, '-') || 'comedian'}-gigs.ics`;
-    downloadICSFile(calendarEvents, filename);
   };
 
   const confirmedGigs = gigs.filter(gig => gig.status === 'confirmed');
@@ -92,86 +68,55 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
       
       <CardContent className="space-y-6">
         {/* Sync Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Google Calendar */}
-          <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-400" />
-                <span className="font-medium text-white">Google Calendar</span>
-              </div>
-              {isGoogleConnected ? (
-                <Badge className="bg-green-600 text-white">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Connected
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-gray-300">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Not Connected
-                </Badge>
-              )}
+        <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-400" />
+              <span className="font-medium text-white">Google Calendar</span>
             </div>
-            
-            <p className="text-sm text-gray-300 mb-3">
-              {isGoogleConnected 
-                ? 'Your gigs will automatically sync to Google Calendar'
-                : 'Connect to automatically add gigs to your Google Calendar'
-              }
-            </p>
-            
-            <Button
-              onClick={handleGoogleConnect}
-              disabled={isConnecting || isDisconnecting}
-              variant={isGoogleConnected ? "outline" : "default"}
-              size="sm"
-              className="w-full"
-            >
-              {isConnecting ? (
-                'Connecting...'
-              ) : isDisconnecting ? (
-                'Disconnecting...'
-              ) : isGoogleConnected ? (
-                <>
-                  <Unlink className="w-4 h-4 mr-2" />
-                  Disconnect
-                </>
-              ) : (
-                <>
-                  <Link className="w-4 h-4 mr-2" />
-                  Connect Google
-                </>
-              )}
-            </Button>
+            {isGoogleConnected ? (
+              <Badge className="bg-green-600 text-white">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Connected
+              </Badge>
+            ) : (
+              <Badge className="professional-button text-gray-300">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                Not Connected
+              </Badge>
+            )}
           </div>
 
-          {/* Apple Calendar / Outlook */}
-          <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-gray-400" />
-                <span className="font-medium text-white">Apple Calendar / Outlook</span>
-              </div>
-              <Badge variant="outline" className="text-gray-300">
-                Manual Export
-              </Badge>
-            </div>
-            
-            <p className="text-sm text-gray-300 mb-3">
-              Download a calendar file (.ics) to import into Apple Calendar or Outlook
-            </p>
-            
-            <Button
-              onClick={handleDownloadICS}
-              variant="outline"
-              size="sm"
-              className="w-full"
-              disabled={confirmedGigs.length === 0}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download Calendar File
-            </Button>
-          </div>
+          <p className="text-sm text-gray-300 mb-3">
+            {isGoogleConnected
+              ? 'Your gigs will automatically sync to Google Calendar'
+              : 'Connect to automatically add gigs to your Google Calendar'
+            }
+          </p>
+
+          <Button
+            onClick={handleGoogleConnect}
+            disabled={isConnecting || isDisconnecting}
+            variant={isGoogleConnected ? "secondary" : "default"}
+            size="sm"
+            className="w-full"
+          >
+            {isConnecting ? (
+              'Connecting...'
+            ) : isDisconnecting ? (
+              'Disconnecting...'
+            ) : isGoogleConnected ? (
+              <>
+                <Unlink className="w-4 h-4 mr-2" />
+                Disconnect
+              </>
+            ) : (
+              <>
+                <Link className="w-4 h-4 mr-2" />
+                Connect Google
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Statistics */}
@@ -228,10 +173,8 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
           <p className="font-medium mb-2">How Calendar Sync Works:</p>
           <ul className="space-y-1 text-xs">
             <li>• <strong>Google Calendar:</strong> Automatic two-way sync when connected</li>
-            <li>• <strong>Apple Calendar:</strong> Download .ics file and import manually</li>
-            <li>• <strong>Outlook:</strong> Download .ics file and import manually</li>
             <li>• Only confirmed gigs are synced to avoid calendar clutter</li>
-            <li>• Updates to gig details will sync automatically (Google only)</li>
+            <li>• Updates to gig details will sync automatically</li>
           </ul>
         </div>
       </CardContent>

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ComedianProfileLoader from '@/components/comedian-profile/ComedianProfileLoader';
 import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
-import ComedianProfileLayout from '@/components/comedian-profile/ComedianProfileLayout';
+import { ComedianProfileLayout } from '@/components/comedian-profile/ComedianProfileLayout';
 import { SEOHead, generateComedianMetaTags, generatePersonSchema, generateBreadcrumbSchema } from '@/utils/seo';
 
 const ComedianProfile = () => {

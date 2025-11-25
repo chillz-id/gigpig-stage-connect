@@ -63,7 +63,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="w-4 h-4" />
                     <Label htmlFor="email">Email Address</Label>
-                    {contactSettings.email.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.email.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="email"
@@ -83,7 +83,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="w-4 h-4" />
                     <Label htmlFor="phone">Phone Number</Label>
-                    {contactSettings.phone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.phone.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="phone"
@@ -114,7 +114,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="w-4 h-4" />
                     <Label htmlFor="managerEmail">Manager Email</Label>
-                    {contactSettings.managerEmail.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.managerEmail.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="managerEmail"
@@ -134,7 +134,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="w-4 h-4" />
                     <Label htmlFor="managerPhone">Manager Phone</Label>
-                    {contactSettings.managerPhone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.managerPhone.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="managerPhone"
@@ -165,7 +165,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="w-4 h-4" />
                     <Label htmlFor="agentEmail">Agent Email</Label>
-                    {contactSettings.agentEmail.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.agentEmail.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="agentEmail"
@@ -185,7 +185,7 @@ export const ContactSettings: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="w-4 h-4" />
                     <Label htmlFor="agentPhone">Agent Phone</Label>
-                    {contactSettings.agentPhone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
+                    {contactSettings.agentPhone.show && <Badge className="professional-button text-xs">Visible</Badge>}
                   </div>
                   <Input
                     id="agentPhone"

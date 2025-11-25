@@ -328,7 +328,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       {categoryOptions.map((option) => (
                         <Button
                           key={option.value}
-                          variant={selectedCategory === option.value ? "default" : "outline"}
+                          variant={selectedCategory === option.value ? "default" : "secondary"}
                           size="sm"
                           className="whitespace-nowrap"
                           onClick={() => setSelectedCategory(option.value)}
@@ -372,7 +372,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={markAllAsRead}
               >
@@ -416,7 +416,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 {categoryOptions.map((option) => (
                   <Button
                     key={option.value}
-                    variant={selectedCategory === option.value ? "default" : "outline"}
+                    variant={selectedCategory === option.value ? "default" : "secondary"}
                     size="sm"
                     className="whitespace-nowrap"
                     onClick={() => setSelectedCategory(option.value)}

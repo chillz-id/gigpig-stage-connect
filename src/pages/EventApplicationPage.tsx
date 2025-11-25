@@ -209,7 +209,7 @@ const EventApplicationPage = () => {
                   </Badge>
                 )}
                 {event.type && (
-                  <Badge variant="outline" className="text-white border-white/30">
+                  <Badge className="professional-button text-white border-white/30">
                     {event.type}
                   </Badge>
                 )}
@@ -242,9 +242,8 @@ const EventApplicationPage = () => {
                 <div className="flex gap-4">
                   <Button
                     type="button"
-                    variant="outline"
+                    className="professional-button flex-1 text-white border-white/30 hover:bg-white/10"
                     onClick={() => navigate(`/events/${eventId}`)}
-                    className="flex-1 text-white border-white/30 hover:bg-white/10"
                   >
                     Back to Event
                   </Button>

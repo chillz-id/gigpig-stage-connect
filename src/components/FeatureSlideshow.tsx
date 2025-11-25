@@ -217,7 +217,7 @@ const FeatureSlideshow: React.FC = () => {
         {/* Previous/Next buttons */}
         <div className="flex space-x-2">
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={prevSlide}
             className="border-white/20 text-white hover:bg-white/10"
@@ -225,7 +225,7 @@ const FeatureSlideshow: React.FC = () => {
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={nextSlide}
             className="border-white/20 text-white hover:bg-white/10"

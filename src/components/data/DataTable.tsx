@@ -10,6 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { MobileCardList, type MobileCardField } from '@/components/mobile';
 
 export interface Column<T> {
   key: keyof T | string;
@@ -40,6 +42,14 @@ export interface DataTableProps<T> {
     orderDirection: 'asc' | 'desc';
     onSort: (column: string) => void;
   };
+  // Mobile card view configuration
+  mobileCard?: {
+    title: (item: T) => React.ReactNode;
+    subtitle?: (item: T) => React.ReactNode;
+    badges?: (item: T) => React.ReactNode;
+    fields?: MobileCardField<T>[];
+    actions?: (item: T) => React.ReactNode;
+  };
 }
 
 export function DataTable<T extends { id: string }>({
@@ -51,23 +61,46 @@ export function DataTable<T extends { id: string }>({
   className = '',
   pagination,
   sorting,
+  mobileCard,
 }: DataTableProps<T>) {
+  const { isMobile } = useMobileLayout();
+
   const getCellValue = (item: T, column: Column<T>) => {
     if (column.cell) {
       return column.cell(item);
     }
-    
+
     // Handle nested keys like 'user.name'
     const keys = column.key.toString().split('.');
     let value: any = item;
-    
+
     for (const key of keys) {
       value = value?.[key];
     }
-    
+
     return value?.toString() || '-';
   };
-  
+
+  // Mobile card view
+  if (isMobile && mobileCard) {
+    return (
+      <div className={`space-y-4 ${className}`}>
+        <MobileCardList
+          data={data}
+          title={mobileCard.title}
+          subtitle={mobileCard.subtitle}
+          badges={mobileCard.badges}
+          fields={mobileCard.fields}
+          actions={mobileCard.actions}
+          onClick={onRowClick}
+          isLoading={isLoading}
+          emptyMessage={emptyMessage}
+        />
+        {pagination && renderPagination()}
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className={`space-y-4 ${className}`}>
@@ -78,7 +111,7 @@ export function DataTable<T extends { id: string }>({
       </div>
     );
   }
-  
+
   if (!data.length) {
     return (
       <div className={`text-center py-12 text-muted-foreground ${className}`}>
@@ -86,9 +119,67 @@ export function DataTable<T extends { id: string }>({
       </div>
     );
   }
-  
+
   const totalPages = pagination ? Math.ceil(pagination.total / pagination.pageSize) : 1;
-  
+
+  function renderPagination() {
+    if (!pagination || totalPages <= 1) return null;
+
+    return (
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {((pagination.page - 1) * pagination.pageSize) + 1} to{' '}
+          {Math.min(pagination.page * pagination.pageSize, pagination.total)} of{' '}
+          {pagination.total} results
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            className="professional-button"
+            size="icon"
+            onClick={() => pagination.onPageChange(1)}
+            disabled={pagination.page === 1}
+            aria-label="First page"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            className="professional-button"
+            size="icon"
+            onClick={() => pagination.onPageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <span className="text-sm">
+            Page {pagination.page} of {totalPages}
+          </span>
+
+          <Button
+            className="professional-button"
+            size="icon"
+            onClick={() => pagination.onPageChange(pagination.page + 1)}
+            disabled={pagination.page === totalPages}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            className="professional-button"
+            size="icon"
+            onClick={() => pagination.onPageChange(totalPages)}
+            disabled={pagination.page === totalPages}
+            aria-label="Last page"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="rounded-md border">
@@ -131,56 +222,8 @@ export function DataTable<T extends { id: string }>({
           </TableBody>
         </Table>
       </div>
-      
-      {pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing {((pagination.page - 1) * pagination.pageSize) + 1} to{' '}
-            {Math.min(pagination.page * pagination.pageSize, pagination.total)} of{' '}
-            {pagination.total} results
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => pagination.onPageChange(1)}
-              disabled={pagination.page === 1}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => pagination.onPageChange(pagination.page - 1)}
-              disabled={pagination.page === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <span className="text-sm">
-              Page {pagination.page} of {totalPages}
-            </span>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
-              disabled={pagination.page === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => pagination.onPageChange(totalPages)}
-              disabled={pagination.page === totalPages}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+
+      {renderPagination()}
     </div>
   );
 }

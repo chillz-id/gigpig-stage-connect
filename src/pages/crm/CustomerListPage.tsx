@@ -155,7 +155,7 @@ export const CustomerListPage = () => {
             onTemplateDelete={onTemplateDelete}
           />
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
@@ -180,6 +180,7 @@ export const CustomerListPage = () => {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onReset={handleFiltersReset}
+        totalCustomerCount={stats?.total_count}
       />
 
       {/* Table */}
@@ -200,7 +201,7 @@ export const CustomerListPage = () => {
           </p>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => setPage(page - 1)}
               disabled={page === 0 || isLoading}
@@ -208,7 +209,7 @@ export const CustomerListPage = () => {
               Previous
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages - 1 || isLoading}

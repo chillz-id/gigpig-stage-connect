@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
 
 export default function CreateOrganizationEvent() {
-  const { organization, orgId } = useOrganization();
+  const { organization } = useOrganization();
   const navigate = useNavigate();
+
+  // Use slug-based URLs for navigation
+  const orgSlug = organization?.url_slug;
 
   if (!organization) {
     return (
@@ -31,7 +34,7 @@ export default function CreateOrganizationEvent() {
             Organization event creation form will be available here
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate(`/org/${orgId}/events`)}>
+            <Button className="professional-button" onClick={() => navigate(`/org/${orgSlug}/events`)}>
               Cancel
             </Button>
             <Button>Create Event</Button>

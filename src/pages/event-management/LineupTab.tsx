@@ -79,7 +79,7 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
             exportType="lineup"
           />
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => setViewMode(viewMode === 'list' ? 'timeline' : 'list')}
           >

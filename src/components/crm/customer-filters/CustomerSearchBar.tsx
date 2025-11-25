@@ -35,7 +35,7 @@ export const CustomerSearchBar = ({
     <Button type="submit" variant="default">
       Search
     </Button>
-    <Button type="button" variant={isAdvancedOpen ? 'default' : 'outline'} onClick={onToggleAdvanced}>
+    <Button type="button" variant={isAdvancedOpen ? 'default' : 'secondary'} onClick={onToggleAdvanced}>
       <Filter className="mr-2 h-4 w-4" />
       Filters
       {activeFilterCount > 0 && (

@@ -194,7 +194,7 @@ export function VideographerProfileForm({
                     .map((specialty) => (
                       <Badge
                         key={specialty}
-                        variant="outline"
+                        className="professional-button"
                         className="cursor-pointer hover:bg-muted"
                         onClick={() => {
                           setFormData(prev => ({
@@ -277,7 +277,7 @@ export function VideographerProfileForm({
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" className="professional-button" onClick={onCancel}>
                 Cancel
               </Button>
             )}

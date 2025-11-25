@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { generateCDNUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
+import { generateSignedCDNUrl } from '@/utils/imageOptimization';
 import { cn } from '@/lib/utils';
 
 export interface OptimizedAvatarProps {
@@ -38,10 +38,9 @@ export const OptimizedAvatar: React.FC<OptimizedAvatarProps> = ({
   fallbackClassName,
   priority = false
 }) => {
-  // Generate optimized URL based on size
-  const imageSize = size === 'xl' ? 'avatarLarge' : 'avatar';
-  const optimizedSrc = src ? generateCDNUrl(src, IMAGE_SIZES[imageSize]) : null;
-  
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   // Generate fallback initials
   const initials = name
     .split(' ')
@@ -50,16 +49,44 @@ export const OptimizedAvatar: React.FC<OptimizedAvatarProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
+  // Resolve signed URL for Supabase storage images
+  useEffect(() => {
+    if (!src) {
+      setResolvedSrc(null);
+      return;
+    }
+
+    // Check if it's a Supabase URL that needs signing
+    if (src.includes('supabase')) {
+      setIsLoading(true);
+      generateSignedCDNUrl(src)
+        .then((signedUrl) => {
+          setResolvedSrc(signedUrl);
+        })
+        .catch((err) => {
+          console.warn('[OptimizedAvatar] Failed to get signed URL:', err);
+          // Fallback to original URL (might fail but worth trying)
+          setResolvedSrc(src);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // Non-Supabase URLs can be used directly
+      setResolvedSrc(src);
+    }
+  }, [src]);
+
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
-      {optimizedSrc && (
+      {resolvedSrc && !isLoading && (
         <AvatarImage
-          src={optimizedSrc}
+          src={resolvedSrc}
           alt={alt || name}
           loading={priority ? 'eager' : 'lazy'}
         />
       )}
-      <AvatarFallback 
+      <AvatarFallback
         className={cn(
           textSizeClasses[size],
           'bg-primary text-primary-foreground font-medium',

@@ -139,7 +139,7 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
               </div>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge className="professional-button text-xs">
             Updated {contact.updatedAt ? new Date(contact.updatedAt).toLocaleDateString() : '—'}
           </Badge>
         </CardHeader>
@@ -200,7 +200,7 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {contact.serviceAreas.slice(0, 4).map((area) => (
-                      <Badge key={area} variant="outline" className="text-xs capitalize">
+                      <Badge key={area} className="professional-button text-xs capitalize">
                         {area.replace(/_/g, ' ')}
                       </Badge>
                     ))}
@@ -214,7 +214,7 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {contact.specialties.slice(0, 4).map((specialty) => (
-                      <Badge key={specialty} variant="outline" className="text-xs capitalize">
+                      <Badge key={specialty} className="professional-button text-xs capitalize">
                         {specialty.replace(/_/g, ' ')}
                       </Badge>
                     ))}
@@ -255,7 +255,7 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
 
         {!isMobile && (
           <CardFooter className="flex flex-wrap gap-2 border-t bg-muted/30 p-4">
-            <Button variant="outline" size="sm" asChild>
+            <Button className="professional-button" size="sm" asChild>
               <a
                 href={contact.email ? `mailto:${contact.email}` : '#'}
                 onClick={(event) => {
@@ -269,7 +269,7 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
               </a>
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               disabled={!onCreateTask}
               onClick={(event) => {

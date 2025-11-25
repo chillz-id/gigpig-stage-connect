@@ -99,7 +99,7 @@ export function SpotCard({
               {spot.status}
             </Badge>
             {spot.duration_minutes && (
-              <Badge variant="outline">{spot.duration_minutes} min</Badge>
+              <Badge className="professional-button">{spot.duration_minutes} min</Badge>
             )}
           </div>
         </div>
@@ -160,7 +160,7 @@ export function SpotCard({
           onClick={onEdit}
           disabled={isLoading}
           size="sm"
-          variant="outline"
+          className="professional-button"
           className="gap-1"
           aria-label="Edit spot"
         >
@@ -173,7 +173,7 @@ export function SpotCard({
           onClick={onDelete}
           disabled={isLoading}
           size="sm"
-          variant="outline"
+          className="professional-button"
           className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
           aria-label="Delete spot"
         >

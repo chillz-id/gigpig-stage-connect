@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { CheckCircle, Star, Heart, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 import type { ApplicationData } from '@/types/application';
 
 interface ApplicationCardProps {
@@ -43,6 +45,8 @@ export function ApplicationCard({
   onHide,
   isLoading = false
 }: ApplicationCardProps) {
+  const { isMobile } = useMobileLayout();
+
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     accepted: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -61,9 +65,9 @@ export function ApplicationCard({
 
   return (
     <Card className={`transition-all duration-200 ${isHidden ? 'opacity-60' : ''}`}>
-      <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-4">
+      <CardHeader className={cn("flex flex-row items-start gap-4 space-y-0", isMobile ? "pb-3" : "pb-4")}>
         {/* Avatar */}
-        <Avatar className="h-12 w-12">
+        <Avatar className={cn(isMobile ? "h-14 w-14" : "h-12 w-12")}>
           <AvatarImage src={application.comedian_avatar} alt={application.comedian_name} />
           <AvatarFallback>{getInitials(application.comedian_name)}</AvatarFallback>
         </Avatar>
@@ -71,11 +75,11 @@ export function ApplicationCard({
         {/* Info */}
         <div className="flex flex-1 flex-col space-y-1">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className={cn("font-semibold text-gray-900 dark:text-gray-100", isMobile && "text-base")}>
               {application.comedian_name}
             </h3>
             {isFavourited && (
-              <Heart className="h-4 w-4 fill-red-500 text-red-500" aria-label="Favourited" />
+              <Heart className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "fill-red-500 text-red-500")} aria-label="Favourited" />
             )}
           </div>
 
@@ -86,7 +90,7 @@ export function ApplicationCard({
               <>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <Star className={cn(isMobile ? "h-4 w-4" : "h-3 w-3", "fill-yellow-400 text-yellow-400")} />
                   {application.comedian_rating.toFixed(1)}
                 </span>
               </>
@@ -99,11 +103,11 @@ export function ApplicationCard({
               {application.status}
             </Badge>
             {application.spot_type && (
-              <Badge variant="outline">{application.spot_type}</Badge>
+              <Badge className="professional-button">{application.spot_type}</Badge>
             )}
             {isHidden && (
               <Badge variant="secondary" className="gap-1">
-                <EyeOff className="h-3 w-3" />
+                <EyeOff className={cn(isMobile ? "h-4 w-4" : "h-3 w-3")} />
                 Hidden
               </Badge>
             )}
@@ -125,73 +129,87 @@ export function ApplicationCard({
         </p>
       </CardContent>
 
-      <CardFooter className="flex flex-wrap gap-2 pt-4 border-t">
+      <CardFooter className={cn(
+        "flex border-t",
+        isMobile ? "flex-col gap-2 pt-3" : "flex-wrap gap-2 pt-4"
+      )}>
         {/* Confirm Button */}
         <Button
           onClick={onApprove}
           disabled={isLoading || application.status === 'accepted'}
-          size="sm"
+          size={isMobile ? "default" : "sm"}
           variant="default"
-          className="gap-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+          className={cn(
+            "gap-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800",
+            isMobile && "w-full touch-target-44"
+          )}
           aria-label="Confirm application"
         >
-          <CheckCircle className="h-4 w-4" />
+          <CheckCircle className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
           Confirm
         </Button>
 
-        {/* Add to Shortlist Button */}
-        <Button
-          onClick={onAddToShortlist}
-          disabled={isLoading}
-          size="sm"
-          variant="outline"
-          className="gap-1"
-          aria-label="Add to shortlist"
-        >
-          <Star className="h-4 w-4" />
-          Shortlist
-        </Button>
+        {/* Mobile: Secondary Actions Grid */}
+        <div className={cn(
+          isMobile ? "grid grid-cols-3 gap-2 w-full" : "contents"
+        )}>
+          {/* Add to Shortlist Button */}
+          <Button
+            onClick={onAddToShortlist}
+            disabled={isLoading}
+            size={isMobile ? "default" : "sm"}
+            className={cn(
+              "professional-button gap-1",
+              isMobile && "touch-target-44"
+            )}
+            aria-label="Add to shortlist"
+          >
+            <Star className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+            {!isMobile && "Shortlist"}
+          </Button>
 
-        {/* Favourite Button (Toggle) */}
-        <Button
-          onClick={isFavourited ? onUnfavourite : onFavourite}
-          disabled={isLoading}
-          size="sm"
-          variant="outline"
-          className={`gap-1 ${
-            isFavourited
-              ? 'border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
-              : ''
-          }`}
-          aria-label={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
-        >
-          <Heart className={`h-4 w-4 ${isFavourited ? 'fill-red-500' : ''}`} />
-          {isFavourited ? 'Unfavourite' : 'Favourite'}
-        </Button>
+          {/* Favourite Button (Toggle) */}
+          <Button
+            onClick={isFavourited ? onUnfavourite : onFavourite}
+            disabled={isLoading}
+            size={isMobile ? "default" : "sm"}
+            className={cn(
+              "professional-button gap-1",
+              isMobile && "touch-target-44",
+              isFavourited && 'border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
+            )}
+            aria-label={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+          >
+            <Heart className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", isFavourited && 'fill-red-500')} />
+            {!isMobile && (isFavourited ? 'Unfavourite' : 'Favourite')}
+          </Button>
 
-        {/* Hide Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              disabled={isLoading}
-              size="sm"
-              variant="outline"
-              className="gap-1"
-              aria-label="Hide comedian"
-            >
-              <EyeOff className="h-4 w-4" />
-              Hide
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onHide('event')}>
-              Hide from this show
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onHide('global')}>
-              Hide from all shows
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Hide Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={isLoading}
+                size={isMobile ? "default" : "sm"}
+                className={cn(
+                  "professional-button gap-1",
+                  isMobile && "touch-target-44"
+                )}
+                aria-label="Hide comedian"
+              >
+                <EyeOff className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+                {!isMobile && "Hide"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onHide('event')}>
+                Hide from this show
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onHide('global')}>
+                Hide from all shows
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardFooter>
     </Card>
   );

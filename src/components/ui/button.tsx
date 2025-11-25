@@ -18,10 +18,12 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-lg px-3 text-xs",
-        lg: "h-12 rounded-2xl px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-10 px-4 py-2 md:h-10 md:px-4",
+        sm: "h-8 rounded-lg px-3 text-xs md:h-8",
+        lg: "h-12 rounded-2xl px-8 text-base md:h-12",
+        icon: "h-10 w-10 md:h-10 md:w-10",
+        mobile: "h-11 px-4 py-2 md:h-10", // 44px minimum for touch targets
+        mobileIcon: "h-12 w-12 md:h-10 md:w-10", // 48px icon buttons on mobile
       },
     },
     defaultVariants: {
@@ -39,6 +41,19 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // DESIGN SYSTEM ENFORCEMENT: Map 'outline' to 'secondary'
+    // Per platform design guidelines: No white button outlines anywhere
+    // See: /docs/Platform Performance & UI Consistency.md
+    let enforcedVariant = variant;
+    if (variant === 'outline') {
+      console.warn(
+        '[Button] variant="outline" is deprecated and has been automatically converted to variant="secondary". ' +
+        'Please update your code to use variant="secondary" or variant="ghost" instead. ' +
+        'See /docs/Platform Performance & UI Consistency.md for details.'
+      );
+      enforcedVariant = 'secondary';
+    }
+
     // Provide fallback theme when context is not available
     let theme = 'business';
     try {
@@ -48,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       // useTheme throws error when not within ThemeProvider
       console.warn('Button component used outside ThemeProvider, using default theme');
     }
-    
+
     const Comp = asChild ? Slot : "button"
     
     const getThemeStyles = (currentVariant: string | null | undefined) => {
@@ -88,8 +103,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         className={cn(
-          buttonVariants({ variant, size }),
-          getThemeStyles(variant),
+          buttonVariants({ variant: enforcedVariant, size }),
+          getThemeStyles(enforcedVariant),
           className
         )}
         ref={ref}

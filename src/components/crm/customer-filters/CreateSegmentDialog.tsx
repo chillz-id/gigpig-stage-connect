@@ -100,7 +100,7 @@ export const CreateSegmentDialog = ({
         </div>
 
         <DialogFooter className="gap-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button type="button" className="professional-button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

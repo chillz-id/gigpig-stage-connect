@@ -400,7 +400,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
             <div className="flex flex-wrap gap-2 justify-between w-full">
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  className="professional-button"
                   onClick={handlePrint}
                   className="flex items-center gap-2"
                 >
@@ -409,7 +409,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 </Button>
                 {onDownload && (
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     onClick={onDownload}
                     className="flex items-center gap-2"
                   >
@@ -422,7 +422,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
               <div className="flex gap-2">
                 {onEdit && (
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     onClick={onEdit}
                     className="flex items-center gap-2"
                   >
@@ -433,7 +433,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 {onSave && (
                   <>
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => onSave('draft')}
                       className="flex items-center gap-2"
                     >
@@ -449,7 +449,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     </Button>
                   </>
                 )}
-                <Button variant="outline" onClick={onClose}>
+                <Button className="professional-button" onClick={onClose}>
                   Close
                 </Button>
               </div>

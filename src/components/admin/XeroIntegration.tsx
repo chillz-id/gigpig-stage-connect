@@ -338,7 +338,7 @@ const XeroIntegration = () => {
                 {syncInProgress ? 'Syncing...' : 'Sync Now'}
               </Button>
               <Button 
-                variant="outline"
+                className="professional-button"
                 onClick={disconnectFromXero}
                 className="text-red-400 border-red-400/50 hover:bg-red-400/10"
               >
@@ -395,7 +395,7 @@ const XeroIntegration = () => {
       <div className="flex justify-between items-center">
         <h3 className="text-white text-lg font-semibold">Xero Invoices</h3>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="text-white border-white/20">
+          <Button className="professional-button text-white border-white/20">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -430,10 +430,10 @@ const XeroIntegration = () => {
                     {formatCurrency(invoice.amount)}
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <Button size="sm" variant="outline" className="text-white border-white/20">
+                    <Button size="sm" className="professional-button text-white border-white/20">
                       <Eye className="w-3 h-3" />
                     </Button>
-                    <Button size="sm" variant="outline" className="text-white border-white/20">
+                    <Button size="sm" className="professional-button text-white border-white/20">
                       <ExternalLink className="w-3 h-3" />
                     </Button>
                   </div>
@@ -464,20 +464,20 @@ const XeroIntegration = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">{contact.name}</span>
-                    <Badge variant="outline" className={
+                    <Badge className="professional-button" className={
                       contact.contactType === 'Customer' ? 'border-green-500/50 text-green-400' : 'border-blue-500/50 text-blue-400'
                     }>
                       {contact.contactType}
                     </Badge>
                     {contact.syncedFromPlatform && (
-                      <Badge variant="outline" className="border-purple-500/50 text-purple-400">
+                      <Badge className="professional-button border-purple-500/50 text-purple-400">
                         Synced
                       </Badge>
                     )}
                   </div>
                   <p className="text-gray-300 text-sm">{contact.email}</p>
                 </div>
-                <Button size="sm" variant="outline" className="text-white border-white/20">
+                <Button size="sm" className="professional-button text-white border-white/20">
                   <ExternalLink className="w-3 h-3" />
                 </Button>
               </div>

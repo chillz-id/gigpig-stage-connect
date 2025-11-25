@@ -108,7 +108,7 @@ export const XeroIntegrationEnhanced: React.FC = () => {
                   <Button 
                     onClick={handleSync} 
                     disabled={isSyncing}
-                    variant="outline"
+                    className="professional-button"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                     {isSyncing ? 'Syncing...' : 'Sync Now'}

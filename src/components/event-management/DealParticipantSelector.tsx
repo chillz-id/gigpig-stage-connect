@@ -183,7 +183,7 @@ export function DealParticipantSelector({
               </div>
               <Button
                 onClick={handleInvitePartner}
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 className="ml-4"
               >

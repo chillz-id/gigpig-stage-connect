@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useMemo, useState, useRef, type CSSProperties } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Customer, CustomerSortOptions } from '@/hooks/useCustomers';
 import {
@@ -61,6 +61,21 @@ export const CustomerTable = ({
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
   const scrollParentRef = useRef<HTMLDivElement | null>(null);
+
+  // Apply resize cursor to body during drag for smooth experience
+  useEffect(() => {
+    if (resizing) {
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [resizing]);
 
   const columns = useMemo<CustomerTableColumn[]>(() => buildCustomerColumns(DEFAULT_CUSTOMER_COLUMNS, columnConfigs), [columnConfigs]);
 
@@ -141,12 +156,14 @@ export const CustomerTable = ({
   };
 
   // Column resizing handlers
-  const handleResizeStart = (
+  const handleResizeStart = useCallback((
     e: React.MouseEvent,
     columnId: string,
-    currentWidth: number
+    currentWidth: number,
+    minWidth: number
   ) => {
     e.preventDefault();
+    e.stopPropagation();
     setResizing(columnId);
     startXRef.current = e.clientX;
     startWidthRef.current = currentWidth;
@@ -154,7 +171,7 @@ export const CustomerTable = ({
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!onColumnResize) return;
       const delta = moveEvent.clientX - startXRef.current;
-      const newWidth = Math.max(80, startWidthRef.current + delta);
+      const newWidth = Math.max(minWidth, startWidthRef.current + delta);
       onColumnResize(columnId, newWidth);
     };
 
@@ -166,7 +183,35 @@ export const CustomerTable = ({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };
+  }, [onColumnResize]);
+
+  // Auto-fit column to content width on double-click
+  const handleAutoFit = useCallback((columnId: string, minWidth: number) => {
+    if (!onColumnResize) return;
+
+    // Measure the max content width for this column
+    const cells = document.querySelectorAll(`[data-column-id="${columnId}"]`);
+    let maxWidth = minWidth;
+
+    cells.forEach((cell) => {
+      // Create a temporary span to measure text width
+      const content = cell.textContent || '';
+      const span = document.createElement('span');
+      span.style.visibility = 'hidden';
+      span.style.position = 'absolute';
+      span.style.whiteSpace = 'nowrap';
+      span.style.font = window.getComputedStyle(cell).font;
+      span.textContent = content;
+      document.body.appendChild(span);
+      const width = span.offsetWidth + 32; // Add padding
+      document.body.removeChild(span);
+      maxWidth = Math.max(maxWidth, width);
+    });
+
+    // Cap at reasonable max width
+    const finalWidth = Math.min(maxWidth, 400);
+    onColumnResize(columnId, finalWidth);
+  }, [onColumnResize]);
 
   // Render cell content based on column type
   const renderCellContent = (column: CustomerTableColumn, customer: Customer) => {
@@ -333,6 +378,7 @@ export const CustomerTable = ({
             key={column.id}
             className={alignmentClass}
             style={{ width: `${column.width}px` }}
+            data-column-id={column.id}
           >
             {renderCellContent(column, customer)}
           </TableCell>
@@ -378,9 +424,14 @@ export const CustomerTable = ({
               )}
               {onColumnResize && (
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-purple-500 group-hover:bg-purple-300"
-                  onMouseDown={(e) => handleResizeStart(e, column.id, column.width)}
-                  style={{ backgroundColor: resizing === column.id ? '#a855f7' : undefined }}
+                  className={`absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize transition-all duration-150 ${
+                    resizing === column.id
+                      ? 'bg-purple-500 w-1'
+                      : 'bg-transparent hover:bg-purple-400 group-hover:bg-purple-300/50'
+                  }`}
+                  onMouseDown={(e) => handleResizeStart(e, column.id, column.width, column.minWidth)}
+                  onDoubleClick={() => handleAutoFit(column.id, column.minWidth)}
+                  title="Drag to resize, double-click to auto-fit"
                 />
               )}
             </TableHead>
@@ -398,8 +449,8 @@ export const CustomerTable = ({
             height: rowVirtualizer.getTotalSize(),
           }}
         >
-          {virtualItems.map((virtualRow) => (
-            renderRow(customers[virtualRow.index], virtualRow.key, {
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+            renderRow(customers[virtualRow.index]!, virtualRow.key, {
               position: 'absolute',
               top: 0,
               left: 0,

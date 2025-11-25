@@ -34,7 +34,7 @@ const Pricing = () => {
                 'Basic search functionality'
               ],
               buttonText: 'Default Access',
-              isCurrentPlan: !hasRole('member') && !hasRole('comedian') && !hasRole('promoter'),
+              isCurrentPlan: !hasRole('member') && !hasRole('comedian') && !hasRole('comedian_lite'),
               popular: false,
             },
             {
@@ -66,8 +66,8 @@ const Pricing = () => {
                 'Receive booking requests',
                 'Track performance metrics'
               ],
-              buttonText: hasRole('comedian') ? 'Current Role' : 'Contact Admin',
-              isCurrentPlan: hasRole('comedian'),
+              buttonText: (hasRole('comedian') || hasRole('comedian_lite')) ? 'Current Role' : 'Contact Admin',
+              isCurrentPlan: hasRole('comedian') || hasRole('comedian_lite'),
               popular: false,
             },
             {
@@ -84,8 +84,8 @@ const Pricing = () => {
                 'Advanced analytics',
                 'Revenue management'
               ],
-              buttonText: hasRole('promoter') ? 'Current Role' : 'Contact Admin',
-              isCurrentPlan: hasRole('promoter'),
+              buttonText: 'Contact Admin',
+              isCurrentPlan: false,
               popular: false,
             }
           ].map((role) => {

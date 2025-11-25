@@ -22,15 +22,15 @@ import {
   Bell,
   Eye,
   Shield,
+  Lightbulb,
+  AlertTriangle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-export type UserRole = 'comedian' | 'comedian_lite' | 'promoter' | 'photographer' | 'videographer' | 'manager' | 'admin' | 'agency_manager' | 'venue_manager';
+// User roles from auth system (src/types/auth.ts)
+export type UserRole = 'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer';
 
 export const getRoleDisplayName = (role: string): string => {
-  if (role === 'comedian_lite') return 'Comedian';
-  if (role === 'agency_manager') return 'Agency Manager';
-  if (role === 'venue_manager') return 'Venue Manager';
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
@@ -67,7 +67,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
     section: undefined, // Standalone, no section
   },
 
@@ -77,7 +77,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Shows',
     path: '/shows',
     icon: Drama,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'],
     section: undefined, // Standalone, after Dashboard
   },
 
@@ -87,7 +87,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Gigs',
     path: '/gigs',
     icon: Search,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],
     section: undefined, // Standalone, after Shows
   },
 
@@ -97,17 +97,17 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Profile',
     path: '/profile',
     icon: User,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
     section: undefined,
   },
 
-  // Messages - standalone
+  // Messages - standalone (comedian_lite removed - not accessible)
   {
     id: 'messages',
     label: 'Messages',
     path: '/messages',
     icon: MessageCircle,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'],
     section: undefined,
     getBadge: (data) => {
       if (data.unreadCount && data.unreadCount > 0) {
@@ -117,13 +117,13 @@ export const MENU_ITEMS: MenuItem[] = [
     },
   },
 
-  // Vouches - standalone
+  // Vouches - profile tab
   {
     id: 'vouches',
     label: 'Vouches',
-    path: '/vouches',
+    path: '/profile?tab=vouches',
     icon: Crown,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],
     section: undefined,
   },
 
@@ -133,17 +133,17 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Notifications',
     path: '/notifications',
     icon: Bell,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
     section: undefined,
   },
 
-  // Settings - standalone (all settings are tabs within this page)
+  // Settings - profile tab
   {
     id: 'settings',
     label: 'Settings',
-    path: '/settings',
+    path: '/profile?tab=settings',
     icon: Settings,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
     section: undefined,
   },
 
@@ -153,7 +153,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Social Media Manager',
     path: '/social-media',
     icon: ExternalLink,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager', 'venue_manager'],
+    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'],
     section: undefined, // Standalone
   },
 
@@ -163,7 +163,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Browse Comedians',
     path: '/comedians',
     icon: Drama,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin', 'agency_manager'],
+    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'],
     section: 'opportunities',
   },
   {
@@ -171,17 +171,40 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Browse Photographers',
     path: '/photographers',
     icon: Camera,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'photographer', 'videographer', 'admin'],
     section: 'opportunities',
   },
 
   // My Work Section
+  // Note: "My Events" for organizations - path transformed by UnifiedSidebar based on active org
+  {
+    id: 'my-events',
+    label: 'My Events',
+    path: '/my-events', // Transformed to /org/{slug}/events when org is active
+    icon: Calendar,
+    roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'], // Shown when org context is active
+    section: 'work',
+  },
+  {
+    id: 'my-gigs-lite',
+    label: 'My Gigs',
+    path: '/profile?tab=calendar',
+    icon: Calendar,
+    roles: ['comedian_lite'], // Comedian Lite sees calendar tab
+    section: 'work',
+    getBadge: (data) => {
+      if (data.confirmedGigCount && data.confirmedGigCount > 0) {
+        return { count: data.confirmedGigCount, variant: 'default' };
+      }
+      return null;
+    },
+  },
   {
     id: 'applications',
     label: 'Applications',
     path: '/applications',
     icon: FileUser,
-    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer'],
+    roles: ['comedian', 'photographer', 'videographer'],
     section: 'work',
     getBadge: (data) => {
       if (data.pendingConfirmations && data.pendingConfirmations > 0) {
@@ -195,7 +218,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Add Gig',
     path: '/dashboard/gigs/add',
     icon: Plus,
-    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer'],
+    roles: ['comedian', 'photographer', 'videographer'],
     section: 'work',
   },
   {
@@ -203,17 +226,25 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Tasks',
     path: '/tasks',
     icon: CheckSquare,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'photographer', 'videographer', 'admin'],
     section: 'work',
   },
 
   // Business Section
   {
+    id: 'calendar',
+    label: 'Calendar',
+    path: '/profile?tab=calendar',
+    icon: Calendar,
+    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'], // comedian_lite uses My Gigs instead
+    section: 'business',
+  },
+  {
     id: 'invoices',
     label: 'Invoices',
     path: '/profile?tab=invoices',
     icon: FileText,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'photographer', 'videographer', 'admin'],
     section: 'business',
   },
   {
@@ -221,7 +252,15 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Earnings',
     path: '/profile?tab=earnings',
     icon: DollarSign,
-    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer'],
+    roles: ['comedian', 'photographer', 'videographer'],
+    section: 'business',
+  },
+  {
+    id: 'epk',
+    label: 'EPK',
+    path: '/profile?tab=EPK',
+    icon: ExternalLink,
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],
     section: 'business',
   },
   {
@@ -229,8 +268,24 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Media Library',
     path: '/media-library',
     icon: Image,
-    roles: ['comedian', 'comedian_lite', 'promoter', 'photographer', 'videographer', 'manager', 'admin'],
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],
     section: 'business',
+  },
+  {
+    id: 'roadmap',
+    label: 'Feature Roadmap',
+    path: '/roadmap',
+    icon: Lightbulb,
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'co_promoter', 'admin'],
+    section: 'account',
+  },
+  {
+    id: 'bugs',
+    label: 'Bug Tracker',
+    path: '/bugs',
+    icon: AlertTriangle,
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'co_promoter', 'admin'],
+    section: 'account',
   },
 
   // Manager Features Section
@@ -248,7 +303,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'CRM',
     path: '/crm',
     icon: Users,
-    roles: ['admin', 'agency_manager', 'promoter', 'venue_manager'],
+    roles: ['admin', 'agency_manager', 'venue_manager'],
     section: 'manager',
     requiresPermission: (permissions) => permissions.hasCRMAccess,
   },
@@ -279,20 +334,32 @@ export const MENU_ITEMS: MenuItem[] = [
 export const getDefaultHiddenItemsForRole = (role: UserRole): string[] => {
   switch (role) {
     case 'comedian':
-    case 'comedian_lite':
-      // Comedians don't need promoter-specific features by default
+      // Comedians see most features
       return [];
-    case 'promoter':
-      // Promoters don't need comedian-specific features by default
-      return ['applications', 'my-gigs', 'add-gig', 'earnings'];
+    case 'comedian_lite':
+      return [
+        'shows',
+        'messages',           // comedian_lite has no access to Messages
+        'applications',       // comedian_lite has no access to Applications
+        'browse-comedians',
+        'browse-photographers',
+        'add-gig',
+        'tasks',
+        'invoices',
+        'earnings',
+        'social-media-manager',
+        'calendar'            // comedian_lite uses My Gigs which points to calendar
+      ];
     case 'photographer':
     case 'videographer':
       // Similar to comedians
       return [];
-    case 'manager':
-    case 'agency_manager':
-      // Managers might want a cleaner view
-      return ['applications', 'add-gig', 'earnings'];
+    case 'co_promoter':
+      // Co-promoters manage events, hide performer-specific items
+      return ['applications', 'add-gig', 'my-gigs-lite', 'earnings', 'vouches'];
+    case 'member':
+      // Members have limited access
+      return ['applications', 'add-gig', 'my-gigs-lite', 'earnings', 'invoices', 'vouches', 'social-media-manager', 'calendar'];
     case 'admin':
       // Admins see everything by default
       return [];

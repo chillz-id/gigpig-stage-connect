@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencySelector } from '@/components/ui/currency-selector';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Users, Clock, GripVertical } from 'lucide-react';
+import { Plus, X, Users, Clock, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { EventSpot } from '@/types/eventTypes';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { cn } from '@/lib/utils';
 
 interface EventSpotManagerDraggableProps {
   spots: EventSpot[];
@@ -19,6 +21,7 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
   spots,
   onSpotsChange
 }) => {
+  const { isMobile } = useMobileLayout();
   const [newSpot, setNewSpot] = useState<EventSpot>({
     spot_name: '',
     is_paid: false,
@@ -45,6 +48,21 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
 
   const removeSpot = (index: number) => {
     onSpotsChange(spots.filter((_, i) => i !== index));
+  };
+
+  // Mobile: Move up/down functions (alternative to drag-and-drop)
+  const moveSpotUp = (index: number) => {
+    if (index === 0) return;
+    const newSpots = [...spots];
+    [newSpots[index - 1], newSpots[index]] = [newSpots[index], newSpots[index - 1]];
+    onSpotsChange(newSpots);
+  };
+
+  const moveSpotDown = (index: number) => {
+    if (index === spots.length - 1) return;
+    const newSpots = [...spots];
+    [newSpots[index], newSpots[index + 1]] = [newSpots[index + 1], newSpots[index]];
+    onSpotsChange(newSpots);
   };
 
   const handlePaymentAmountChange = (value: string) => {
@@ -110,8 +128,11 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
           Performance Spots
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <CardContent className={cn(isMobile ? "space-y-3 p-4" : "space-y-4")}>
+        <div className={cn(
+          "grid gap-4",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
+        )}>
           <div>
             <Label htmlFor="spotName">Spot Name *</Label>
             <Input
@@ -119,10 +140,13 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
               value={newSpot.spot_name}
               onChange={(e) => setNewSpot(prev => ({ ...prev, spot_name: e.target.value }))}
               placeholder="Opening Act, Feature, etc."
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+              className={cn(
+                "bg-white/10 border-white/20 text-white placeholder:text-gray-300",
+                isMobile && "h-11 touch-target-44"
+              )}
             />
           </div>
-          
+
           <div>
             <Label htmlFor="duration">Duration (min)</Label>
             <Input
@@ -132,14 +156,17 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
               max="60"
               value={newSpot.duration_minutes}
               onChange={(e) => setNewSpot(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 10 }))}
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+              className={cn(
+                "bg-white/10 border-white/20 text-white placeholder:text-gray-300",
+                isMobile && "h-11 touch-target-44"
+              )}
             />
           </div>
 
           <div>
             <Label htmlFor="paymentType">Payment Type</Label>
-            <Select 
-              value={newSpot.is_paid ? newSpot.payment_type : 'unpaid'} 
+            <Select
+              value={newSpot.is_paid ? newSpot.payment_type : 'unpaid'}
               onValueChange={(value) => {
                 if (value === 'unpaid') {
                   setNewSpot(prev => ({ ...prev, is_paid: false, payment_type: 'flat_fee', payment_amount: 0 }));
@@ -148,7 +175,10 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
                 }
               }}
             >
-              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+              <SelectTrigger className={cn(
+                "bg-white/10 border-white/20 text-white",
+                isMobile && "h-11 touch-target-44"
+              )}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +192,10 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
         </div>
 
         {newSpot.is_paid && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className={cn(
+            "grid gap-4",
+            isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
+          )}>
             <div>
               <Label htmlFor="paymentAmount">
                 Amount {isPercentagePayment ? '(%)' : `(${newSpot.currency})`}
@@ -176,7 +209,10 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
                 value={newSpot.payment_amount === 0 ? '' : newSpot.payment_amount}
                 onChange={(e) => handlePaymentAmountChange(e.target.value)}
                 placeholder={isPercentagePayment ? "10.0" : "0.00"}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+                className={cn(
+                  "bg-white/10 border-white/20 text-white placeholder:text-gray-300",
+                  isMobile && "h-11 touch-target-44"
+                )}
               />
             </div>
 
@@ -186,7 +222,10 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
                 <CurrencySelector
                   value={newSpot.currency}
                   onChange={(currency) => setNewSpot(prev => ({ ...prev, currency }))}
-                  className="bg-white/10 border-white/20 text-white"
+                  className={cn(
+                    "bg-white/10 border-white/20 text-white",
+                    isMobile && "h-11 touch-target-44"
+                  )}
                 />
               </div>
             )}
@@ -204,13 +243,16 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
           </div>
         )}
 
-        <Button 
-          type="button" 
-          onClick={addSpot} 
+        <Button
+          type="button"
+          onClick={addSpot}
           disabled={!newSpot.spot_name.trim()}
-          className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={cn(
+            "bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed",
+            isMobile && "w-full touch-target-44"
+          )}
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className={cn(isMobile ? "w-5 h-5 mr-2" : "w-4 h-4 mr-2")} />
           Add Spot
         </Button>
 
@@ -219,32 +261,80 @@ export const EventSpotManagerDraggable: React.FC<EventSpotManagerDraggableProps>
             <Label className="text-sm font-medium">Performance Lineup</Label>
             <div className="space-y-2">
               {spots.map((spot, index) => (
-                <div 
-                  key={index} 
-                  className="p-3 bg-white/5 rounded-lg border border-white/10 cursor-move hover:bg-white/10 transition-colors"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, index)}
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 bg-white/5 rounded-lg border border-white/10 transition-colors",
+                    !isMobile && "cursor-move hover:bg-white/10"
+                  )}
+                  {...(!isMobile && {
+                    draggable: true,
+                    onDragStart: (e: React.DragEvent) => handleDragStart(e, index),
+                    onDragOver: handleDragOver,
+                    onDrop: (e: React.DragEvent) => handleDrop(e, index)
+                  })}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <GripVertical className="w-4 h-4 text-gray-400" />
-                      <Badge variant="outline" className="text-white border-white/30">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {/* Desktop: Drag handle, Mobile: Reorder buttons */}
+                      {isMobile ? (
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => moveSpotUp(index)}
+                            disabled={index === 0}
+                            className={cn(
+                              "p-1 rounded disabled:opacity-30",
+                              index !== 0 && "hover:bg-white/10 active:bg-white/20"
+                            )}
+                            aria-label="Move up"
+                          >
+                            <ChevronUp className="w-4 h-4 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => moveSpotDown(index)}
+                            disabled={index === spots.length - 1}
+                            className={cn(
+                              "p-1 rounded disabled:opacity-30",
+                              index !== spots.length - 1 && "hover:bg-white/10 active:bg-white/20"
+                            )}
+                            aria-label="Move down"
+                          >
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          </button>
+                        </div>
+                      ) : (
+                        <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      )}
+
+                      <Badge className="professional-button text-white border-white/30">
                         {spot.spot_name}
                       </Badge>
-                      <span className="text-sm text-gray-300 flex items-center gap-1">
+                      <span className={cn(
+                        "text-gray-300 flex items-center gap-1",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
                         <Clock className="w-3 h-3" />
                         {spot.duration_minutes}min
                       </span>
                     </div>
-                    <X 
-                      className="w-4 h-4 cursor-pointer hover:text-red-300" 
+
+                    <button
                       onClick={() => removeSpot(index)}
-                    />
+                      className={cn(
+                        "flex-shrink-0 hover:text-red-300 active:text-red-400",
+                        isMobile && "p-2 -m-2 touch-target-44"
+                      )}
+                      aria-label="Remove spot"
+                    >
+                      <X className={cn(isMobile ? "w-5 h-5" : "w-4 h-4")} />
+                    </button>
                   </div>
+
                   {spot.is_paid && (
-                    <div className="flex justify-between text-xs ml-7">
+                    <div className={cn(
+                      "flex justify-between text-xs",
+                      isMobile ? "ml-12 flex-col gap-1" : "ml-7"
+                    )}>
                       <span className="text-gray-400">
                         {spot.payment_type === 'flat_fee' && `Flat Fee: ${spot.currency} ${spot.payment_amount?.toFixed(2)}`}
                         {spot.payment_type === 'percentage_ticket_sales' && `${spot.payment_amount}% of ticket sales`}

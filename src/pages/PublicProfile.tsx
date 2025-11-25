@@ -1,9 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveProfile } from '@/contexts/ActiveProfileContext';
+import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { NotFoundHandler } from '@/components/profile/NotFoundHandler';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GiveVouchForm } from '@/components/GiveVouchForm';
+import { VouchHistory } from '@/components/VouchHistory';
+import { Crown } from 'lucide-react';
+import { OrganizationProfileWrapper } from '@/components/organization/OrganizationProfileWrapper';
+
+// Lazy load organization pages
+const UniversalProfileEditor = lazy(() => import('@/pages/UniversalProfileEditor').then(m => ({ default: m.UniversalProfileEditor })));
+const OrganizationDashboard = lazy(() => import('@/pages/organization/OrganizationDashboard'));
+const OrganizationEvents = lazy(() => import('@/pages/organization/OrganizationEvents'));
+const OrganizationTeam = lazy(() => import('@/pages/organization/OrganizationTeam'));
+const OrganizationTasks = lazy(() => import('@/pages/organization/OrganizationTasks'));
+const OrganizationAnalytics = lazy(() => import('@/pages/organization/OrganizationAnalytics'));
+const OrganizationMediaLibrary = lazy(() => import('@/pages/organization/OrganizationMediaLibrary'));
+const OrganizationInvoices = lazy(() => import('@/pages/organization/OrganizationInvoices'));
+const OrganizationBookComedian = lazy(() => import('@/pages/organization/OrganizationBookComedian'));
+const CreateOrganizationEvent = lazy(() => import('@/pages/organization/CreateOrganizationEvent'));
 
 interface PublicProfileProps {
   type: 'comedian' | 'manager' | 'organization' | 'venue';
@@ -20,7 +39,7 @@ interface ProfileData {
 const TABLE_MAP = {
   comedian: 'comedians',
   manager: 'manager_profiles',
-  organization: 'organizations',
+  organization: 'organization_profiles',
   venue: 'venues',
 } as const;
 
@@ -44,24 +63,39 @@ export default function PublicProfile({ type }: PublicProfileProps) {
         setLoading(true);
         const tableName = TABLE_MAP[type];
 
+        // Build select query based on profile type (organizations use different column names)
+        const selectFields = type === 'organization'
+          ? 'id, organization_name, url_slug, logo_url'
+          : 'id, name, url_slug, avatar_url';
+
         // First, try to fetch profile directly by slug
         const { data, error } = await supabase
           .from(tableName)
-          .select('id, name, url_slug, avatar_url')
+          .select(selectFields)
           .eq('url_slug', slug)
           .maybeSingle();
 
         if (error) throw error;
 
         if (data) {
+          // Map organization columns to ProfileData interface
+          const profileData: ProfileData = type === 'organization'
+            ? {
+                id: data.id,
+                name: (data as any).organization_name,
+                url_slug: data.url_slug,
+                avatar_url: (data as any).logo_url,
+              }
+            : data as ProfileData;
+
           // Profile found - set as active profile
-          setProfile(data as ProfileData);
+          setProfile(profileData);
           setActiveProfile({
-            id: data.id,
+            id: profileData.id,
             type,
-            slug: data.url_slug,
-            name: data.name,
-            avatarUrl: data.avatar_url || undefined,
+            slug: profileData.url_slug,
+            name: profileData.name,
+            avatarUrl: profileData.avatar_url || undefined,
           });
           setNotFound(false);
         } else {
@@ -121,6 +155,37 @@ export default function PublicProfile({ type }: PublicProfileProps) {
     return <NotFoundHandler profileType={type} attemptedSlug={slug || ''} />;
   }
 
+  // For organization profiles, use the full organization pages with OrganizationProvider
+  if (type === 'organization') {
+    return (
+      <OrganizationProvider>
+        <Suspense
+          fallback={
+            <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          }
+        >
+          <Routes>
+            <Route index element={<OrganizationProfileWrapper />} />
+            <Route path="edit" element={<UniversalProfileEditor profileType="organization" organizationId={profile.id} />} />
+            <Route path="dashboard" element={<OrganizationDashboard />} />
+            <Route path="events" element={<OrganizationEvents />} />
+            <Route path="events/create" element={<CreateOrganizationEvent />} />
+            <Route path="team" element={<OrganizationTeam />} />
+            <Route path="tasks" element={<OrganizationTasks />} />
+            <Route path="analytics" element={<OrganizationAnalytics />} />
+            <Route path="media" element={<OrganizationMediaLibrary />} />
+            <Route path="invoices" element={<OrganizationInvoices />} />
+            <Route path="book-comedian" element={<OrganizationBookComedian />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </OrganizationProvider>
+    );
+  }
+
+  // For other profile types (comedian, manager, venue), use generic profile pages
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -139,6 +204,53 @@ export default function PublicProfile({ type }: PublicProfileProps) {
               <div>
                 <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
                 <p>Dashboard content for {profile.name}</p>
+              </div>
+            }
+          />
+          <Route
+            path="vouches"
+            element={
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-yellow-500" />
+                      Give a Vouch
+                    </CardTitle>
+                    <CardDescription>
+                      Endorse someone in your network by giving them a vouch
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <GiveVouchForm userId={profile.id} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-yellow-500" />
+                      Vouch History
+                    </CardTitle>
+                    <CardDescription>
+                      View vouches you've received and given
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="received" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="received">Received</TabsTrigger>
+                        <TabsTrigger value="given">Given</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="received" className="space-y-4 mt-4">
+                        <VouchHistory userId={profile.id} mode="received" />
+                      </TabsContent>
+                      <TabsContent value="given" className="space-y-4 mt-4">
+                        <VouchHistory userId={profile.id} mode="given" />
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
               </div>
             }
           />

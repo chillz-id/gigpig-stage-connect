@@ -32,8 +32,8 @@ const EventDetailPublic = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
   // Determine user type
-  const isComedian = user && hasRole('comedian');
-  const isPromoter = user && hasRole('promoter');
+  const isComedian = user && (hasRole('comedian') || hasRole('comedian_lite'));
+  const isPromoter = false;
   const isIndustryUser = isComedian || isPromoter || (user && hasRole('admin'));
   const isCustomer = !isIndustryUser;
 
@@ -231,7 +231,7 @@ const EventDetailPublic = () => {
                         {isPastEvent ? "Past Event" : "Upcoming"}
                       </Badge>
                       {event.show_type && (
-                        <Badge variant="outline">{event.show_type}</Badge>
+                        <Badge className="professional-button">{event.show_type}</Badge>
                       )}
                     </div>
                   </div>
@@ -247,10 +247,9 @@ const EventDetailPublic = () => {
                         Manage Event
                       </Button>
                       <Button
-                        variant="outline"
+                        className="professional-button flex items-center gap-2"
                         size="sm"
                         onClick={() => navigate(`/events/${eventId}/edit`)}
-                        className="flex items-center gap-2"
                       >
                         <Edit className="w-4 h-4" />
                         Edit Event
@@ -418,7 +417,7 @@ const EventDetailPublic = () => {
                           </div>
                           {/* Show payment info only to comedians */}
                           {isComedian && spot.is_paid && (
-                            <Badge variant="outline" className="flex items-center gap-1 ml-3">
+                            <Badge className="professional-button flex items-center gap-1 ml-3">
                               <DollarSign className="w-3 h-3" />
                               ${spot.payment_amount}
                             </Badge>
@@ -509,10 +508,9 @@ const EventDetailPublic = () => {
                 {isIndustryUser && !isComedian && (
                   <>
                     {!isPastEvent && (
-                      <Button 
+                      <Button
                         onClick={handleApply}
-                        variant="outline"
-                        className="w-full"
+                        className="professional-button w-full"
                         size="lg"
                       >
                         View as Comedian
@@ -521,20 +519,18 @@ const EventDetailPublic = () => {
                     {event.ticketing_type !== 'none' && !isPastEvent && (
                       <>
                         {event.status === 'open' ? (
-                          <Button 
+                          <Button
                             onClick={handleBuyTickets}
-                            variant="outline"
-                            className="w-full"
+                            className="professional-button w-full"
                             size="lg"
                             disabled={isPurchasing}
                           >
                             {isPurchasing ? 'Processing...' : event.ticketing_type === 'external' ? 'Get Tickets' : 'Buy Tickets'}
                           </Button>
                         ) : event.status === 'closed' ? (
-                          <Button 
+                          <Button
                             onClick={() => setShowWaitlistDialog(true)}
-                            variant="outline"
-                            className="w-full"
+                            className="professional-button w-full"
                             size="lg"
                           >
                             Join Waitlist

@@ -124,7 +124,7 @@ export const CreateEventForm: React.FC = () => {
             />
             <Button 
               type="button"
-              variant="outline"
+              className="professional-button"
               disabled={isCreating}
               onClick={handleSubmit(onSaveDraft)}
               className="border-gray-300 hover:bg-gray-100"

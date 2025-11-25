@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { ChevronUp, ChevronDown, Eye, EyeOff, GripVertical } from 'lucide-react';
 import { useSidebarPreferences } from '@/hooks/useSidebarPreferences';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { MENU_ITEMS, type UserRole } from '@/config/sidebarMenuItems';
 
 interface SidebarItem {
   id: string;
@@ -14,52 +16,63 @@ interface SidebarItem {
   required?: boolean; // Items that cannot be hidden
 }
 
-// Complete list of all sidebar items
-const DEFAULT_SIDEBAR_ITEMS: SidebarItem[] = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'browse-shows', label: 'Browse Shows' },
-  { id: 'browse-comedians', label: 'Browse Comedians' },
-  { id: 'browse-photographers', label: 'Browse Photographers' },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'applications', label: 'Applications' },
-  { id: 'gigs', label: 'My Gigs' },
-  { id: 'add-gig', label: 'Add Gig' },
-  { id: 'invoices', label: 'Invoices' },
-  { id: 'earnings', label: 'Earnings' },
-  { id: 'tasks', label: 'Tasks' },
-  { id: 'analytics', label: 'Analytics' },
-  { id: 'crm', label: 'CRM' },
-  { id: 'users', label: 'Users' },
-  { id: 'web-app-settings', label: 'Web App Settings' },
-  { id: 'messages', label: 'Messages' },
-  { id: 'profile', label: 'Profile', required: true },
-  { id: 'settings', label: 'Settings', required: true },
-];
+/**
+ * Get sidebar items available to the current user's role
+ */
+function getSidebarItemsForRole(role: UserRole | undefined): SidebarItem[] {
+  if (!role) return [];
+
+  return MENU_ITEMS
+    .filter((item) => item.roles.includes(role))
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      // Profile and Settings are required and cannot be hidden
+      required: item.id === 'profile' || item.id === 'settings',
+    }));
+}
 
 export function SidebarCustomization() {
+  const { profile, roles } = useAuth();
   const { preferences, isItemHidden, getItemOrder, hideItem, showItem, setItemOrder } =
     useSidebarPreferences();
   const { toast } = useToast();
 
-  const [items, setItems] = useState<SidebarItem[]>(DEFAULT_SIDEBAR_ITEMS);
+  // Get items available to the user's role(s)
+  // Use the first role as the primary role for sidebar customization
+  const userRole = roles[0]?.role as UserRole | undefined;
+
+  // Memoize available items to prevent infinite loops
+  const availableItems = useMemo(() => {
+    return getSidebarItemsForRole(userRole);
+  }, [userRole]);
+
+  const [items, setItems] = useState<SidebarItem[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Initialize items order from preferences
   useEffect(() => {
+    if (availableItems.length === 0) {
+      setItems([]);
+      return;
+    }
+
     const savedOrder = getItemOrder();
     if (savedOrder.length > 0) {
       const orderedItems = savedOrder
-        .map((id) => DEFAULT_SIDEBAR_ITEMS.find((item) => item.id === id))
+        .map((id) => availableItems.find((item) => item.id === id))
         .filter((item): item is SidebarItem => item !== undefined);
 
       // Add any new items not in saved order
-      const remainingItems = DEFAULT_SIDEBAR_ITEMS.filter(
+      const remainingItems = availableItems.filter(
         (item) => !savedOrder.includes(item.id)
       );
 
       setItems([...orderedItems, ...remainingItems]);
+    } else {
+      setItems(availableItems);
     }
-  }, [getItemOrder]);
+  }, [availableItems]); // Only depend on memoized availableItems
 
   const handleToggleVisibility = async (itemId: string, isRequired: boolean) => {
     if (isRequired) {
@@ -184,8 +197,16 @@ export function SidebarCustomization() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {items.map((item, index) => {
+        {items.length === 0 ? (
+          <div className="p-4 rounded-md bg-muted text-center">
+            <p className="text-sm text-muted-foreground">
+              {userRole ? 'No sidebar items available for your role.' : 'Loading sidebar items...'}
+            </p>
+          </div>
+        ) : (
+          <>
+          <div className="space-y-2">
+            {items.map((item, index) => {
             const hidden = isItemHidden(item.id);
             return (
               <div
@@ -254,6 +275,8 @@ export function SidebarCustomization() {
             Use the toggle to hide/show items in your sidebar navigation. Settings and Profile cannot be hidden.
           </p>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

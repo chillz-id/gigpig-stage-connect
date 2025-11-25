@@ -239,7 +239,7 @@ export default function FlightDashboard() {
 
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            className="professional-button"
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`flex items-center gap-2 ${autoRefresh ? 'bg-green-50 border-green-200' : ''}`}
           >
@@ -249,7 +249,7 @@ export default function FlightDashboard() {
 
           <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="relative flex items-center gap-2">
+              <Button className="professional-button relative flex items-center gap-2">
                 <Bell className="w-4 h-4" />
                 Notifications
                 {urgentFlights > 0 && (
@@ -269,7 +269,7 @@ export default function FlightDashboard() {
 
           <Dialog open={flightSearchOpen} onOpenChange={setFlightSearchOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="professional-button flex items-center gap-2">
                 <Search className="w-4 h-4" />
                 Search Flights
               </Button>
@@ -331,7 +331,7 @@ export default function FlightDashboard() {
       {/* Quick Filters */}
       <div className="flex flex-wrap gap-2">
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('all')}
           className={!Object.keys(filters).length ? 'bg-primary text-primary-foreground' : ''}
@@ -339,7 +339,7 @@ export default function FlightDashboard() {
           All Flights
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('upcoming')}
         >
@@ -351,7 +351,7 @@ export default function FlightDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('today')}
         >
@@ -363,7 +363,7 @@ export default function FlightDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('delayed')}
           className={filters.status?.includes('delayed') ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''}
@@ -376,7 +376,7 @@ export default function FlightDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('cancelled')}
           className={filters.status?.includes('cancelled') ? 'bg-red-100 text-red-800 border-red-200' : ''}
@@ -384,14 +384,14 @@ export default function FlightDashboard() {
           Cancelled
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('in-progress')}
         >
           In Progress
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('completed')}
         >
@@ -427,7 +427,7 @@ export default function FlightDashboard() {
         </Select>
 
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => setSort(prev => ({ 
             ...prev, 

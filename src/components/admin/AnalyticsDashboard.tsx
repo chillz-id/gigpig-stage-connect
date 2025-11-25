@@ -129,7 +129,7 @@ const AnalyticsDashboard = () => {
               Revenue Growth
             </CardTitle>
             <Button 
-              variant="outline" 
+              className="professional-button" 
               size="sm" 
               onClick={exportRevenueData}
               className="text-white border-white/20 hover:bg-white/10"

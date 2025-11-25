@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ComedianProfileLoader from '@/components/comedian-profile/ComedianProfileLoader';
 import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
-import ComedianProfileLayout from '@/components/comedian-profile/ComedianProfileLayout';
+import ComedianEPKLayout from '@/components/comedian-profile/ComedianEPKLayout';
 import { SEOHead, generateComedianMetaTags, generatePersonSchema, generateBreadcrumbSchema } from '@/utils/seo';
 
 const ComedianProfileBySlug = () => {
@@ -15,7 +15,49 @@ const ComedianProfileBySlug = () => {
     queryKey: ['comedian-profile-by-slug', slug],
     queryFn: async () => {
       if (!slug) throw new Error('No comedian slug provided');
-      
+
+      // Check if slug is a UUID (fallback when profile_slug is not set)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+      if (isUUID) {
+        // Query directly by ID
+        const { data: uuidData, error: uuidError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            name,
+            stage_name,
+            bio,
+            location,
+            avatar_url,
+            banner_url,
+            banner_position,
+            is_verified,
+            email,
+            created_at,
+            phone,
+            website_url,
+            instagram_url,
+            twitter_url,
+            youtube_url,
+            facebook_url,
+            tiktok_url,
+            show_contact_in_epk,
+            custom_show_types,
+            profile_slug
+          `)
+          .eq('id', slug)
+          .single();
+
+        if (uuidData) {
+          return uuidData;
+        }
+
+        if (uuidError && uuidError.code !== 'PGRST116') {
+          throw uuidError;
+        }
+      }
+
       // Query by profile_slug first
       const { data: dbData, error: dbError } = await supabase
         .from('profiles')
@@ -26,6 +68,8 @@ const ComedianProfileBySlug = () => {
           bio,
           location,
           avatar_url,
+          banner_url,
+          banner_position,
           is_verified,
           email,
           created_at,
@@ -42,20 +86,20 @@ const ComedianProfileBySlug = () => {
         `)
         .eq('profile_slug', slug)
         .single();
-      
+
       if (dbData) {
         return dbData;
       }
-      
+
       if (dbError && dbError.code !== 'PGRST116') {
         throw dbError;
       }
-      
+
       // Fallback: try to find by name-based slug for backward compatibility
-      const name = slug.split('-').map(word => 
+      const name = slug.split('-').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ');
-      
+
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('profiles')
         .select(`
@@ -65,6 +109,8 @@ const ComedianProfileBySlug = () => {
           bio,
           location,
           avatar_url,
+          banner_url,
+          banner_position,
           is_verified,
           email,
           created_at,
@@ -81,13 +127,13 @@ const ComedianProfileBySlug = () => {
         `)
         .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
         .single();
-      
+
       if (fallbackData) {
         return fallbackData;
       }
-      
+
       // If no match found in database, return null to show error
-      
+
       throw new Error(`Comedian not found: ${slug}`);
     },
     enabled: !!slug,
@@ -174,7 +220,7 @@ const ComedianProfileBySlug = () => {
         {...metaTags}
         structuredData={[personSchema, breadcrumbSchema]}
       />
-      <ComedianProfileLayout comedian={comedian} />
+      <ComedianEPKLayout comedian={comedian} />
     </>
   );
 };

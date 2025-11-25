@@ -85,7 +85,7 @@ export const BulkOperationErrorsDialog: React.FC<BulkOperationErrorsDialogProps>
 
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button
-            variant="outline"
+            className="professional-button"
             onClick={downloadErrorReport}
           >
             <Download className="w-4 h-4 mr-2" />

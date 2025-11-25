@@ -218,7 +218,7 @@ const SystemSettings = () => {
             
             {facebookAdsStatus.connected && (
               <Button 
-                variant="outline"
+                className="professional-button"
                 className="border-white/30 text-white hover:bg-white/10"
                 onClick={() => {
                   setFacebookAdsStatus({
@@ -391,7 +391,7 @@ const SystemSettings = () => {
             </Button>
 
             <Button 
-              variant="outline"
+              className="professional-button"
               className="border-white/30 text-white hover:bg-white/10"
             >
               <Globe className="w-4 h-4 mr-2" />
@@ -399,7 +399,7 @@ const SystemSettings = () => {
             </Button>
 
             <Button 
-              variant="outline"
+              className="professional-button"
               className="border-white/30 text-white hover:bg-white/10"
             >
               <Mail className="w-4 h-4 mr-2" />
@@ -407,7 +407,7 @@ const SystemSettings = () => {
             </Button>
 
             <Button 
-              variant="outline"
+              className="professional-button"
               className="border-white/30 text-white hover:bg-white/10"
             >
               <Shield className="w-4 h-4 mr-2" />

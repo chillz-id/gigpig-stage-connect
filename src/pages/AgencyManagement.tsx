@@ -75,7 +75,7 @@ const AgencyManagement: React.FC = () => {
                   console.log('Test button clicked, current testState:', testState);
                   setTestState(!testState);
                 }}
-                variant="outline"
+                className="professional-button"
                 size="sm"
               >
                 Test State: {testState ? 'TRUE' : 'FALSE'}
@@ -211,10 +211,9 @@ const AgencyManagement: React.FC = () => {
           <TabsContent value="deals" className="space-y-6">
             {selectedDeal ? (
               <div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  className="professional-button mb-4"
                   onClick={() => setSelectedDeal(null)}
-                  className="mb-4"
                 >
                   ← Back to Deals
                 </Button>

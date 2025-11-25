@@ -157,7 +157,7 @@ export function DealCard({
               onClick={onReject}
               disabled={isLoading}
               size="sm"
-              variant="outline"
+              className="professional-button"
               className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
               aria-label="Reject deal"
             >
@@ -181,7 +181,7 @@ export function DealCard({
             onClick={onEdit}
             disabled={isLoading}
             size="sm"
-            variant="outline"
+            className="professional-button"
             className="gap-1 ml-auto"
             aria-label="Edit deal"
           >

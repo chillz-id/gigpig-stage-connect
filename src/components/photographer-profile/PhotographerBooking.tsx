@@ -108,7 +108,7 @@ const PhotographerBooking: React.FC<PhotographerBookingProps> = ({ photographer 
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  className="professional-button"
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />

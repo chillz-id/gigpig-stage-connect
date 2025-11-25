@@ -192,7 +192,7 @@ export function ApplicationDialog({ event, isOpen, onOpenChange }: ApplicationDi
           <DialogFooter className="mt-6">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >

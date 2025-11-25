@@ -57,7 +57,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
     queryFn: async () => {
       const [applications, spots, deals] = await Promise.all([
         supabase
-          .from('event_applications')
+          .from('applications')
           .select('status')
           .eq('event_id', eventId),
         supabase
@@ -76,7 +76,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
 
       const totalApplications = applications.data?.length || 0;
       const confirmedApplications = applications.data?.filter(
-        (a) => a.status === 'approved'
+        (a) => a.status === 'accepted'
       ).length || 0;
       const pendingApplications = applications.data?.filter(
         (a) => a.status === 'pending'
@@ -119,15 +119,15 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
     queryFn: async () => {
       // Fetch recent applications
       const { data: recentApplications, error: appsError } = await supabase
-        .from('event_applications')
+        .from('applications')
         .select(`
           id,
           status,
-          created_at,
-          comedian:profiles!event_applications_comedian_id_fkey(stage_name)
+          applied_at,
+          comedian:profiles!applications_comedian_id_fkey(stage_name)
         `)
         .eq('event_id', eventId)
-        .order('created_at', { ascending: false })
+        .order('applied_at', { ascending: false })
         .limit(10);
 
       if (appsError) throw appsError;
@@ -137,7 +137,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
         type: 'application' as const,
         title: 'New Application',
         description: `${app.comedian?.stage_name || 'Comedian'} applied for this event`,
-        timestamp: app.created_at,
+        timestamp: app.applied_at,
         user_name: app.comedian?.stage_name,
       }));
 
@@ -278,16 +278,16 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
+            <Button className="professional-button" size="sm">
               View Applications
             </Button>
-            <Button variant="outline" size="sm">
+            <Button className="professional-button" size="sm">
               Manage Lineup
             </Button>
-            <Button variant="outline" size="sm">
+            <Button className="professional-button" size="sm">
               Create Deal
             </Button>
-            <Button variant="outline" size="sm">
+            <Button className="professional-button" size="sm">
               Export Data
             </Button>
           </div>

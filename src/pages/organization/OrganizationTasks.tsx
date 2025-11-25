@@ -363,7 +363,7 @@ export default function OrganizationTasks() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button type="button" className="professional-button" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit">Create Task</Button>

@@ -95,7 +95,7 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
             {/* Clear Filters Button */}
             <Button 
-              variant="outline" 
+              className="professional-button" 
               onClick={onClearFilters}
               className="flex items-center justify-center gap-2 h-12 text-base"
             >

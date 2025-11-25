@@ -1,0 +1,50 @@
+version: "3.9"
+
+# Filestash + S3 Auth Proxy + Caddy Reverse Proxy
+#
+# Architecture:
+#   Browser -> Caddy (/filestash/* -> filestash:8334)
+#                    (/s3/* -> s3-proxy:9000)
+#   Filestash -> S3 Proxy -> Supabase Storage S3
+#
+# Usage:
+#   1. Ensure .env has SUPABASE_S3_* and FILESTASH_SESSION_SECRET vars
+#   2. docker compose -f docker-compose.filestash.yml up -d
+#   3. Access Filestash at http://localhost:8080/filestash/
+
+services:
+  # Caddy reverse proxy - provides same-origin access for embedding
+  caddy:
+    image: caddy:2-alpine
+    container_name: filestash-caddy
+    ports:
+      - "8090:80"
+    volumes:
+      - ./filestash/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - filestash
+      - s3-proxy
+    restart: unless-stopped
+
+  # Filestash file manager
+  filestash:
+    image: machines/filestash:latest
+    container_name: filestash
+    environment:
+      - APPLICATION_URL=/filestash
+    volumes:
+      - filestash-data:/app/data/state
+    restart: unless-stopped
+
+  # S3 auth proxy - validates tokens and forwards to Supabase Storage
+  s3-proxy:
+    build:
+      context: ./filestash/s3-proxy
+      dockerfile: Dockerfile
+    container_name: filestash-s3-proxy
+    env_file:
+      - ./.env
+    restart: unless-stopped
+
+volumes:
+  filestash-data:

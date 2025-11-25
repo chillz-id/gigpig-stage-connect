@@ -9,11 +9,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
-interface TicketsSectionProps {
-  isMemberView: boolean;
-}
-
-export const TicketsSection: React.FC<TicketsSectionProps> = ({ isMemberView }) => {
+export const TicketsSection: React.FC = () => {
   const { tickets, isLoading, cancelTicket, isCancelling } = useTickets();
   const navigate = useNavigate();
   return (
@@ -36,8 +32,7 @@ export const TicketsSection: React.FC<TicketsSectionProps> = ({ isMemberView }) 
           <div className="text-center py-8">
             <p className="text-muted-foreground">No tickets purchased yet</p>
             <Button 
-              variant="outline" 
-              className="mt-4"
+              className="professional-button mt-4"
               onClick={() => navigate('/shows')}
             >
               Browse Events
@@ -75,7 +70,7 @@ export const TicketsSection: React.FC<TicketsSectionProps> = ({ isMemberView }) 
                             {ticket.status}
                           </Badge>
                           {isPastEvent && (
-                            <Badge variant="outline">Past</Badge>
+                            <Badge className="professional-button">Past</Badge>
                           )}
                         </div>
                       </div>
@@ -115,7 +110,7 @@ export const TicketsSection: React.FC<TicketsSectionProps> = ({ isMemberView }) 
                         </span>
                         <div className="flex gap-2">
                           <Button 
-                            variant="outline" 
+                            className="professional-button" 
                             size="sm"
                             onClick={() => navigate(`/events/${ticket.event_id}`)}
                           >
@@ -140,24 +135,6 @@ export const TicketsSection: React.FC<TicketsSectionProps> = ({ isMemberView }) 
               );
             })}
           </div>
-        )}
-        
-        {/* Shows Attended Counter for Members */}
-        {isMemberView && (
-          <Card className="bg-primary/5 border-primary/20 mt-6">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-lg font-semibold mb-1">Shows Attended</h4>
-                  <p className="text-muted-foreground">Your comedy show attendance history</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">{tickets.length}</div>
-                  <p className="text-sm text-muted-foreground">Events</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </CardContent>
     </Card>

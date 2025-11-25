@@ -79,7 +79,7 @@ export default function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarVie
                         {task.priority}
                       </Badge>
                     )}
-                    <Badge variant="outline">{task.status}</Badge>
+                    <Badge className="professional-button">{task.status}</Badge>
                   </div>
                 </div>
               </Card>

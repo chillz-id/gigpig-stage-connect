@@ -109,11 +109,11 @@ const mapComedianApplication = (row: any): ComedianApplicationRecord => {
       state: row.events.state ?? '',
       status: row.events.status ?? null,
       banner_url: row.events.banner_url ?? null,
-      promoter: row.events.promoter
+      promoter: row.events.organization
         ? {
-            id: row.events.promoter.id,
-            name: row.events.promoter.name ?? null,
-            avatar_url: row.events.promoter.avatar_url ?? null,
+            id: row.events.organization.id,
+            name: row.events.organization.organization_name ?? null,
+            avatar_url: row.events.organization.logo_url ?? null,
           }
         : null,
     },
@@ -121,11 +121,38 @@ const mapComedianApplication = (row: any): ComedianApplicationRecord => {
 };
 
 export const eventApplicationService = {
+  /**
+   * List applications by internal event UUID
+   */
   async listByEvent(eventId: string): Promise<EventApplication[]> {
     const { data, error } = await supabaseClient
       .from('applications')
       .select('*')
       .eq('event_id', eventId)
+      .order('applied_at', { ascending: false });
+
+    if (error) throw error;
+    return (data as EventApplication[] | null) ?? [];
+  },
+
+  /**
+   * List applications by session source ID (Humanitix session ID)
+   * Used for calendar-based applications from the Find Gigs page
+   */
+  async listBySessionSourceId(sessionSourceId: string): Promise<EventApplication[]> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .select(`
+        *,
+        comedian:profiles!applications_comedian_id_fkey (
+          id,
+          name,
+          avatar_url,
+          bio,
+          years_experience
+        )
+      `)
+      .eq('session_source_id', sessionSourceId)
       .order('applied_at', { ascending: false });
 
     if (error) throw error;
@@ -150,11 +177,11 @@ export const eventApplicationService = {
           state,
           status,
           banner_url,
-          promoter_id,
-          promoter:profiles!events_promoter_id_fkey (
+          organization_id,
+          organization:organization_profiles!events_organization_id_fkey (
             id,
-            name,
-            avatar_url
+            organization_name,
+            logo_url
           )
         )
       `

@@ -113,7 +113,7 @@ export const PendingConfirmationsSection = () => {
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-blue-500" />
               Pending Confirmations
-              <Badge variant="outline" className="ml-2">
+              <Badge className="professional-button ml-2">
                 {pendingConfirmations.length}
               </Badge>
             </CardTitle>
@@ -200,7 +200,7 @@ export const PendingConfirmationsSection = () => {
 
                 <div className="mt-4 flex items-center justify-between">
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={() => navigate(`/events/${application.event_id}`)}
                   >
@@ -209,7 +209,7 @@ export const PendingConfirmationsSection = () => {
                   
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       size="sm"
                       onClick={() => handleConfirmation(application.id, false)}
                       disabled={isUpdating}

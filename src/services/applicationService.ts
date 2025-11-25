@@ -22,7 +22,7 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
       requirements_acknowledged,
       applied_at,
       responded_at,
-      events!inner (
+      events!applications_event_id_fkey (
         id,
         title,
         venue,
@@ -376,7 +376,7 @@ export async function getShortlistedApplications(eventId: string): Promise<Appli
       responded_at,
       is_shortlisted,
       shortlisted_at,
-      events!inner (
+      events!applications_event_id_fkey (
         id,
         title,
         venue,
@@ -441,7 +441,7 @@ export async function getApplicationsByEvent(
       responded_at,
       is_shortlisted,
       shortlisted_at,
-      events!inner (
+      events!applications_event_id_fkey (
         id,
         title,
         venue,

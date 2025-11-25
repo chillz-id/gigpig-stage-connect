@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/toaster';
@@ -29,6 +29,7 @@ const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Gigs = lazy(() => import('@/pages/Gigs'));
 const Shows = lazy(() => import('@/pages/Shows'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const EPK = lazy(() => import('@/pages/EPK'));
 const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const Applications = lazy(() => import('@/pages/Applications'));
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
@@ -39,6 +40,8 @@ const EditEvent = lazy(() => import('@/pages/EditEvent'));
 const EventManagement = lazy(() => import('@/pages/EventManagement'));
 const ComedianProfile = lazy(() => import('@/pages/ComedianProfile'));
 const ComedianProfileBySlug = lazy(() => import('@/pages/ComedianProfileBySlug'));
+const ComedianProfileLayout = lazy(() => import('@/components/comedian-profile/ComedianProfileLayout').then(m => ({ default: m.ComedianProfileLayout })));
+const ComedianEPKLayout = lazy(() => import('@/components/comedian-profile/ComedianEPKLayout'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
 const Comedians = lazy(() => import('@/pages/Comedians'));
 const Messages = lazy(() => import('@/pages/Messages'));
@@ -63,10 +66,24 @@ const PostSignupSetup = lazy(() => import('@/pages/PostSignupSetup'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const MediaLibrary = lazy(() => import('@/pages/MediaLibrary'));
 const TaskDashboard = lazy(() => import('@/pages/TaskDashboard'));
-const Vouches = lazy(() => import('@/pages/Vouches'));
 const SocialMedia = lazy(() => import('@/pages/SocialMedia'));
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
+const Roadmap = lazy(() => import('@/pages/Roadmap'));
+const BugTracker = lazy(() => import('@/pages/BugTracker'));
+const ABNChecker = lazy(() => import('@/pages/ABNChecker'));
+const ComedianLinksPage = lazy(() => import('@/pages/ComedianLinksPage'));
 const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
+
+// CRM Pages
+const CRMLayout = lazy(() => import('@/components/crm/CRMLayout').then(module => ({ default: module.CRMLayout })));
+const CustomerListPage = lazy(() => import('@/pages/crm/CustomerListPage').then(module => ({ default: module.CustomerListPage })));
+const CustomerDetailPage = lazy(() => import('@/pages/crm/CustomerDetailPage').then(module => ({ default: module.CustomerDetailPage })));
+const DealPipelinePage = lazy(() => import('@/pages/crm/DealPipelinePage').then(module => ({ default: module.DealPipelinePage })));
+const TaskManagerPage = lazy(() => import('@/pages/crm/TaskManagerPage').then(module => ({ default: module.TaskManagerPage })));
+const TaskDetailPage = lazy(() => import('@/pages/crm/TaskDetailPage').then(module => ({ default: module.TaskDetailPage })));
+const RelationshipsPage = lazy(() => import('@/pages/crm/RelationshipsPage').then(module => ({ default: module.RelationshipsPage })));
+const AnalyticsDashboardPage = lazy(() => import('@/pages/crm/AnalyticsDashboardPage').then(module => ({ default: module.AnalyticsDashboardPage })));
+const ImportExportPage = lazy(() => import('@/pages/crm/ImportExportPage').then(module => ({ default: module.ImportExportPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,7 +107,7 @@ const queryClient = new QueryClient({
 });
 
 const LoadingFallback = () => (
-  <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 flex items-center justify-center">
     <LoadingSpinner size="lg" />
   </div>
 );
@@ -99,6 +116,18 @@ const LoadingFallback = () => (
 const DesignSystemInitializer = ({ children }: { children: React.ReactNode }) => {
   useGlobalDesignSystem();
   return <>{children}</>;
+};
+
+// Wrapper to force re-render when location changes
+const LocationWrapper = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  return <div key={location.pathname + location.search}>{children}</div>;
+};
+
+// Routes wrapper to ensure proper re-rendering on location changes
+const RoutesWrapper = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  return <Routes key={location.pathname + location.search}>{children}</Routes>;
 };
 
 // PWA Integration Component
@@ -177,14 +206,8 @@ function App() {
                         <PWAIntegration />
                         <PlatformLayout>
                           <Suspense fallback={<LoadingFallback />}>
-                            <Routes>
-                              {/* Profile URL Routes - MUST be first (highest priority) */}
-                              <Route path="/comedian/:slug/*" element={<PublicProfile type="comedian" />} />
-                              <Route path="/manager/:slug/*" element={<PublicProfile type="manager" />} />
-                              <Route path="/organization/:slug/*" element={<PublicProfile type="organization" />} />
-                              <Route path="/venue/:slug/*" element={<PublicProfile type="venue" />} />
-
-                              {/* Static routes */}
+                            <RoutesWrapper>
+                              {/* Static routes - MUST be first to prevent wildcard route matching */}
                               <Route path="/" element={<Index />} />
                               <Route path="/auth" element={<Auth />} />
                               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -192,6 +215,7 @@ function App() {
                               <Route path="/auth/xero-callback" element={<XeroCallback />} />
                               <Route path="/post-signup-setup" element={<PostSignupSetup />} />
                               <Route path="/dashboard" element={<Dashboard />} />
+                              <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
                               <Route path="/gigs" element={<Gigs />} />
                               <Route path="/shows" element={<Shows />} />
                               <Route path="/browse" element={<Navigate to="/gigs" replace />} />
@@ -201,18 +225,21 @@ function App() {
                               <Route path="/photographers/:id" element={<PhotographerProfile />} />
                               <Route path="/messages" element={<Messages />} />
                               <Route path="/notifications" element={<Notifications />} />
-                              <Route path="/profile" element={<Profile />} />
+                              {/* REMOVED: Profile editing now at /:profileType/:slug?tab=profile */}
+                              {/* <Route path="/profile" element={<Profile />} /> */}
+                              <Route path="/epk" element={<ProtectedRoute><EPK /></ProtectedRoute>} />
                               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                               <Route path="/media-library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
                               <Route path="/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
                               <Route path="/tasks" element={<ProtectedRoute><TaskDashboard /></ProtectedRoute>} />
-                              <Route path="/vouches" element={<ProtectedRoute><Vouches /></ProtectedRoute>} />
+                              <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
+                              <Route path="/bugs" element={<ProtectedRoute><BugTracker /></ProtectedRoute>} />
+                              <Route path="/abn-checker" element={<ProtectedRoute><ABNChecker /></ProtectedRoute>} />
+                              <Route path="/calendar" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Calendar /></ProtectedRoute>} />
                               <Route path="/create-event" element={<CreateEvent />} />
-                              <Route path="/applications" element={<ProtectedRoute roles={['promoter', 'admin']}><Applications /></ProtectedRoute>} />
+                              <Route path="/applications" element={<ProtectedRoute roles={['admin']}><Applications /></ProtectedRoute>} />
                               <Route path="/agency" element={<AgencyManagement />} />
                               <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><AddGig /></ProtectedRoute>} />
-                              <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
-                              <Route path="/calendar" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Calendar /></ProtectedRoute>} />
                               {/* Invoice routes */}
                               <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                               <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
@@ -226,15 +253,55 @@ function App() {
                               <Route path="/settings/pwa" element={<PWASettings />} />
                               <Route path="/admin/events/:eventId" element={<EventDetail />} />
                               <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
-                              <Route path="/events/:eventId/manage" element={<ProtectedRoute roles={['promoter', 'admin']}><EventManagement /></ProtectedRoute>} />
+                              <Route path="/events/:eventId/manage" element={<ProtectedRoute><EventManagement /></ProtectedRoute>} />
                               <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><EventApplicationPage /></ProtectedRoute>} />
                               <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
                               <Route path="/events/:eventId" element={<EventDetailPublic />} />
                               <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
-                              <Route path="/comedian/:slug" element={<ComedianProfileBySlug />} />
+
+                              {/* Comedian Profile Routes - Nested Structure */}
+                              <Route path="/comedian/:slug" element={<ComedianProfileLayout key="comedian-layout" />}>
+                                {/* Default: Public EPK view */}
+                                <Route index element={<ComedianEPKLayout />} />
+
+                                {/* Profile editing - protected */}
+                                <Route path="edit" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Profile /></ProtectedRoute>} />
+
+                                {/* Links page */}
+                                <Route path="links" element={<ComedianLinksPage />} />
+                              </Route>
+
+                              {/* CRM Routes */}
+                              <Route
+                                path="/crm/*"
+                                element={
+                                  <ProtectedRoute roles={['admin', 'agency_manager', 'venue_manager']}>
+                                    <CRMLayout />
+                                  </ProtectedRoute>
+                                }
+                              >
+                                <Route index element={<Navigate to="/crm/customers" replace />} />
+                                <Route path="customers" element={<CustomerListPage />} />
+                                <Route path="customers/:id" element={<CustomerDetailPage />} />
+                                <Route path="deals" element={<DealPipelinePage />} />
+                                <Route path="tasks" element={<TaskManagerPage />} />
+                                <Route path="tasks/:id" element={<TaskDetailPage />} />
+                                <Route path="relationships" element={<RelationshipsPage />} />
+                                <Route path="analytics" element={<AnalyticsDashboardPage />} />
+                                <Route path="import-export" element={<ImportExportPage />} />
+                              </Route>
+
+                              {/* Profile URL Routes with wildcards - AFTER static routes to prevent false matches */}
+                              {/* Comedian routes now use nested routing via ComedianProfileLayout */}
+                              {/* Keys force React to unmount/remount when switching between profile types */}
+                              <Route path="/manager/:slug/*" element={<PublicProfile type="manager" key="manager-profile" />} />
+                              <Route path="/org/:slug/*" element={<PublicProfile type="organization" key="org-profile" />} />
+                              <Route path="/venue/:slug/*" element={<PublicProfile type="venue" key="venue-profile" />} />
+                              <Route path="/photographer/:slug/*" element={<PublicProfile type="photographer" key="photographer-profile" />} />
+
                               {/* 404 handler with profile request tracking */}
                               <Route path="*" element={<NotFoundHandler />} />
-                            </Routes>
+                            </RoutesWrapper>
                           </Suspense>
                         </PlatformLayout>
                         <Toaster />

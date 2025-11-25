@@ -27,15 +27,16 @@ import EventOverviewTab from './event-management/EventOverviewTab';
 import ApplicationsTab from './event-management/ApplicationsTab';
 import LineupTab from './event-management/LineupTab';
 import DealsTab from './event-management/DealsTab';
+import PartnersTab from './event-management/PartnersTab';
 import { formatDate } from '@/lib/utils';
 import type { EventData } from '@/types/event';
 
-type TabValue = 'overview' | 'applications' | 'lineup' | 'deals';
+type TabValue = 'overview' | 'applications' | 'lineup' | 'deals' | 'partners';
 
 export default function EventManagement() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Get tab from URL or default to 'overview'
@@ -43,30 +44,45 @@ export default function EventManagement() {
 
   const [hiddenComedianIds, setHiddenComedianIds] = useState<string[]>([]);
 
-  // Fetch event details
+  // Fetch event details with organization ownership info
   const {
     data: event,
     isLoading: eventLoading,
     error: eventError,
-  } = useQuery<EventData>({
+  } = useQuery<EventData & { organization_owner_id?: string | null }>({
     queryKey: ['event', eventId],
     queryFn: async () => {
       if (!eventId) throw new Error('Event ID is required');
 
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          organization_profiles!events_organization_id_fkey (
+            owner_id
+          )
+        `)
         .eq('id', eventId)
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Flatten organization owner_id into event data
+      const orgOwner = (data as any)?.organization_profiles?.owner_id;
+      return {
+        ...data,
+        organization_owner_id: orgOwner ?? null,
+      };
     },
     enabled: !!eventId,
   });
 
-  // Check if user is event owner
-  const isOwner = event?.organizer_id === user?.id;
+  // Check if user is event owner (direct promoter OR organization owner) or admin
+  const isAdmin = hasRole('admin');
+  const isOwner =
+    isAdmin ||
+    event?.promoter_id === user?.id ||
+    event?.organization_owner_id === user?.id;
 
   // Enable real-time subscriptions
   const { isFullyConnected, connections } = useRealtimeEventManagement(
@@ -77,8 +93,6 @@ export default function EventManagement() {
   // Access control: redirect if not owner/admin
   useEffect(() => {
     if (event && !isOwner) {
-      // TODO: Check if user has admin role
-      // For now, just redirect non-owners
       navigate(`/events/${eventId}`);
     }
   }, [event, isOwner, eventId, navigate]);
@@ -197,7 +211,7 @@ export default function EventManagement() {
                 connections={connections}
               />
               <Button
-                variant="outline"
+                className="professional-button"
                 onClick={() => navigate(`/events/${eventId}`)}
               >
                 View Public Page
@@ -210,11 +224,12 @@ export default function EventManagement() {
       {/* Tabs Navigation */}
       <div className="container mx-auto px-6 py-6">
         <Tabs value={currentTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="lineup">Lineup</TabsTrigger>
             <TabsTrigger value="deals">Deals</TabsTrigger>
+            <TabsTrigger value="partners">Partners</TabsTrigger>
           </TabsList>
 
           {/* Tab Content */}
@@ -238,6 +253,14 @@ export default function EventManagement() {
 
             <TabsContent value="deals" className="space-y-6">
               <DealsTab
+                eventId={eventId}
+                userId={user.id}
+                isOwner={isOwner}
+              />
+            </TabsContent>
+
+            <TabsContent value="partners" className="space-y-6">
+              <PartnersTab
                 eventId={eventId}
                 userId={user.id}
                 isOwner={isOwner}

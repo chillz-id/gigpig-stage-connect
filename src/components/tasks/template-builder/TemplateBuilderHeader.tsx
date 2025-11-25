@@ -26,7 +26,7 @@ export function TemplateBuilderHeader({
 
       <div className="flex items-center gap-2">
         <Button
-          variant="outline"
+          className="professional-button"
           onClick={onTogglePreview}
           className="flex items-center gap-2"
         >
@@ -35,7 +35,7 @@ export function TemplateBuilderHeader({
         </Button>
 
         {onCancel && (
-          <Button variant="outline" onClick={onCancel}>
+          <Button className="professional-button" onClick={onCancel}>
             Cancel
           </Button>
         )}

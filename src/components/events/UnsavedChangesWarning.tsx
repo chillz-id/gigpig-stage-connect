@@ -135,7 +135,7 @@ export const UnsavedChangesWarning: React.FC<UnsavedChangesWarningProps> = ({
             {onSave && (
               <Button
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 onClick={onSave}
                 className="h-7 text-xs"
               >

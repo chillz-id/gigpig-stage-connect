@@ -315,7 +315,7 @@ export const eventBrowseService = {
         canonicalSource: typeof event.canonical_source === 'string' ? event.canonical_source : null,
         title: finalTitle,
         event_date: eventDateString,
-        start_time: startTime,
+        start_time: eventDateString, // Full datetime string for EventPill to parse
         end_time: null, // session_complete doesn't have end time
         venue: event.venue_name ?? null,
         address: event.venue_address ?? null,

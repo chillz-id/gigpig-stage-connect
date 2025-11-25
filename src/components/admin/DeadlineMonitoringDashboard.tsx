@@ -173,9 +173,9 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
       case 'declined':
         return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Declined</Badge>;
       case 'expired':
-        return <Badge variant="outline"><Timer className="h-3 w-3 mr-1" />Expired</Badge>;
+        return <Badge className="professional-button"><Timer className="h-3 w-3 mr-1" />Expired</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge className="professional-button">{status}</Badge>;
     }
   };
 
@@ -327,7 +327,7 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
                             {format(new Date(event.event_date), 'PPP')}
                           </CardDescription>
                         </div>
-                        <Badge variant="outline">{filteredSpots.length} spots</Badge>
+                        <Badge className="professional-button">{filteredSpots.length} spots</Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -363,7 +363,7 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
                               {spot.confirmation_status === 'pending' && spot.confirmation_deadline && !isPast(new Date(spot.confirmation_deadline)) && (
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  className="professional-button"
                                   onClick={() => openExtensionDialog(spot, event.title)}
                                 >
                                   Extend Deadline
@@ -427,7 +427,7 @@ export function DeadlineMonitoringDashboard({ promoterId }: { promoterId: string
           
           <DialogFooter>
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={() => setExtensionDialog({ open: false, spotId: null, spotName: '', eventTitle: '', currentDeadline: null })}
               disabled={extending}
             >

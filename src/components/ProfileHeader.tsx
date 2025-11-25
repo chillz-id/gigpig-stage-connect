@@ -4,12 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
-import { Camera, MapPin, Calendar, Trophy, Shield, MessageSquare, Award, LogOut, Crown } from 'lucide-react';
-import { useFileUpload } from '@/hooks/useFileUpload';
+import { Camera, MapPin, Calendar, Trophy, Shield, ExternalLink, Award, LogOut, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileUrlEditor } from '@/components/profile/ProfileUrlEditor';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { forceNavigate, navigateToProfile } from '@/utils/navigation';
 
 interface ProfileHeaderProps {
   user: any;
@@ -24,38 +23,49 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const { toast } = useToast();
   const { profile } = useAuth();
-  const navigate = useNavigate();
-  const { uploadFile, uploading } = useFileUpload({
-    bucket: 'profile-images',
-    maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['image/jpeg', 'image/png', 'image/webp']
-  });
 
   const getMembershipBadgeColor = (membership: string) => {
     switch (membership) {
       case 'premium':
-        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
+        return 'bg-gradient-to-r from-gray-700 to-gray-900 text-white';
       case 'pro':
-        return 'bg-gradient-to-r from-blue-500 to-purple-500 text-white';
+        return 'bg-gradient-to-r from-blue-600 to-gray-800 text-white';
       default:
-        return 'bg-gradient-to-r from-purple-600 to-pink-500 text-white';
+        return 'bg-gradient-to-r from-gray-600 to-gray-800 text-white';
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const url = await uploadFile(file);
-      if (url) {
-        // Pass the original event to maintain compatibility
-        onImageSelect(event);
-      }
-    }
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Pass the event to parent component to handle crop modal
+    onImageSelect(event);
   };
 
   // Provide default values for potentially undefined properties
   const membership = user.membership || 'basic';
-  const userName = user.name || 'User';
+
+  // Compute display name based on name_display_preference
+  const getDisplayName = () => {
+    const preference = user.name_display_preference || 'real';
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    const stageName = user.stage_name || '';
+    const realName = `${firstName} ${lastName}`.trim();
+
+    switch (preference) {
+      case 'stage':
+        return stageName || realName || 'User';
+      case 'both':
+        if (stageName && realName) {
+          return `${stageName} - ${realName}`;
+        }
+        return stageName || realName || 'User';
+      case 'real':
+      default:
+        return realName || stageName || 'User';
+    }
+  };
+
+  const userName = getDisplayName();
   const userBio = user.bio || 'No bio available';
   const userLocation = user.location || 'Location not set';
   const joinDate = user.joinDate || 'Recently joined';
@@ -85,7 +95,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 className="hidden"
-                disabled={uploading}
               />
             </div>
           </div>
@@ -93,9 +102,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">{userName}</h1>
               {user.isVerified && <Shield className="w-6 h-6 text-blue-500" />}
-              <Badge className={getMembershipBadgeColor(membership)}>
-                {membership.toUpperCase()}
-              </Badge>
+              {membership !== 'basic' && (
+                <Badge className={getMembershipBadgeColor(membership)}>
+                  {membership.toUpperCase()}
+                </Badge>
+              )}
             </div>
             <p className="text-muted-foreground mb-4">{userBio}</p>
             
@@ -125,19 +136,26 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Button variant="outline" size="sm">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Message
+            <Button
+              className="professional-button"
+              size="sm"
+              onClick={() => {
+                const slug = profile?.profile_slug || user.id;
+                // Use forceNavigate for reliable cross-nested-route navigation
+                navigateToProfile('comedian', slug);
+              }}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              EPK
             </Button>
-            <Button variant="outline" size="sm">
-              <Award className="w-4 h-4 mr-2" />
-              Vouch
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/vouches')}>
+            <Button className="professional-button" size="sm" onClick={() => {
+              // Navigate to profile page with vouches tab using forceNavigate for reliability
+              forceNavigate('/profile?tab=vouches');
+            }}>
               <Crown className="w-4 h-4 mr-2 text-yellow-500" />
               Vouches
             </Button>
-            <Button variant="outline" size="sm" onClick={onLogout}>
+            <Button className="professional-button" size="sm" onClick={onLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>

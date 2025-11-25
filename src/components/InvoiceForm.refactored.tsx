@@ -129,7 +129,7 @@ const RefactoredInvoiceForm = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPreview(true)}>
+          <Button className="professional-button" onClick={() => setShowPreview(true)}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
@@ -212,7 +212,7 @@ const RefactoredInvoiceForm = () => {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !invoiceData.issueDate && "text-muted-foreground"
@@ -238,7 +238,7 @@ const RefactoredInvoiceForm = () => {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !invoiceData.dueDate && "text-muted-foreground"
@@ -356,10 +356,10 @@ const RefactoredInvoiceForm = () => {
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={resetForm}>
+          <Button type="button" className="professional-button" onClick={resetForm}>
             Reset Form
           </Button>
-          <Button type="button" variant="outline" onClick={() => handleSubmit('draft')}>
+          <Button type="button" className="professional-button" onClick={() => handleSubmit('draft')}>
             <Save className="h-4 w-4 mr-2" />
             Save as Draft
           </Button>

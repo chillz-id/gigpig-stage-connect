@@ -1,0 +1,13 @@
+{
+  "name": "filestash-s3-proxy",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "S3 auth proxy for Filestash -> Supabase Storage",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

@@ -67,7 +67,7 @@ export function GigCalendar({ gigs, onGigClick, initialMonth }: GigCalendarProps
       {/* Header with month/year and nav buttons */}
       <div className="flex items-center justify-between">
         <Button
-          variant="outline"
+          className="professional-button"
           size="icon"
           onClick={handlePrevMonth}
           aria-label="Previous month"
@@ -80,7 +80,7 @@ export function GigCalendar({ gigs, onGigClick, initialMonth }: GigCalendarProps
         </h2>
 
         <Button
-          variant="outline"
+          className="professional-button"
           size="icon"
           onClick={handleNextMonth}
           aria-label="Next month"

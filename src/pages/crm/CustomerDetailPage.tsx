@@ -120,15 +120,15 @@ export const CustomerDetailPage = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+          <Button className="professional-button" size="sm" onClick={() => setIsEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit Customer
           </Button>
-          <Button variant="outline" size="sm">
+          <Button className="professional-button" size="sm">
             <MessageSquare className="mr-2 h-4 w-4" />
             Send Message
           </Button>
-          <Button variant="outline" size="sm">
+          <Button className="professional-button" size="sm">
             <CheckSquare className="mr-2 h-4 w-4" />
             Create Task
           </Button>
@@ -306,7 +306,7 @@ export const CustomerDetailPage = () => {
               {customer.source && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Source</span>
-                  <Badge variant="outline" className="capitalize">
+                  <Badge className="professional-button capitalize">
                     {customer.source}
                   </Badge>
                 </div>

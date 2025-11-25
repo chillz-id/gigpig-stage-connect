@@ -298,11 +298,11 @@ export const EventImageCrop: React.FC<EventImageCropProps> = ({
           </p>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={resetCrop} className="flex-1">
+            <Button className="professional-button flex-1">
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button className="professional-button flex-1">
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>

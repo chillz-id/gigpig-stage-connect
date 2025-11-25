@@ -45,7 +45,7 @@ export function CalendarSubscriptionDialog({ open, onOpenChange }: CalendarSubsc
             <div className="flex gap-2">
               <Input value={webcalUrl} readOnly />
               <Button
-                variant="outline"
+                className="professional-button"
                 size="icon"
                 onClick={() => handleCopy(webcalUrl)}
               >
@@ -115,7 +115,7 @@ export function CalendarSubscriptionDialog({ open, onOpenChange }: CalendarSubsc
                 </p>
               </div>
               <Button
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={() => regenerateToken()}
                 disabled={isRegenerating}

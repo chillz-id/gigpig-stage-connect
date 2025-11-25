@@ -361,7 +361,7 @@ export default function ApplyTemplateDialog({
                         <Label htmlFor={`var-${key}`} className="flex items-center gap-2">
                           {variable.label}
                           {variable.required && <span className="text-red-500">*</span>}
-                          <Badge variant="outline" className="text-xs">
+                          <Badge className="professional-button text-xs">
                             {variable.type}
                           </Badge>
                         </Label>
@@ -473,12 +473,12 @@ export default function ApplyTemplateDialog({
                                 variant={
                                   task.priority === 'urgent' ? 'destructive' :
                                   task.priority === 'high' ? 'default' :
-                                  task.priority === 'medium' ? 'secondary' : 'outline'
+                                  task.priority === 'medium' ? 'secondary' : 'secondary'
                                 }
                               >
                                 {task.priority}
                               </Badge>
-                              <Badge variant="outline">
+                              <Badge className="professional-button">
                                 {task.category.replace('_', ' ')}
                               </Badge>
                               {task.due_date && (
@@ -515,12 +515,12 @@ export default function ApplyTemplateDialog({
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center gap-2">
             {currentStep === 'variables' && Object.keys(template.variables).length > 0 && (
-              <Badge variant="outline">
+              <Badge className="professional-button">
                 Step 1 of 2: Configure Variables
               </Badge>
             )}
             {currentStep === 'preview' && (
-              <Badge variant="outline">
+              <Badge className="professional-button">
                 Step 2 of 2: Review Tasks
               </Badge>
             )}
@@ -528,12 +528,12 @@ export default function ApplyTemplateDialog({
 
           <div className="flex items-center gap-2">
             {currentStep === 'preview' && (
-              <Button variant="outline" onClick={handleBack}>
+              <Button className="professional-button" onClick={handleBack}>
                 Back
               </Button>
             )}
             
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button className="professional-button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
 

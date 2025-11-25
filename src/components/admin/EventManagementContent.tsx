@@ -134,10 +134,10 @@ const EventManagementContent = () => {
           <CardContent>
             <p className="text-gray-300 text-sm mb-4">Standard comedy show template with 5 comedians</p>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="text-white border-white/20">
+              <Button size="sm" className="professional-button text-white border-white/20">
                 Use Template
               </Button>
-              <Button size="sm" variant="outline" className="text-white border-white/20">
+              <Button size="sm" className="professional-button text-white border-white/20">
                 Edit
               </Button>
             </div>
@@ -150,10 +150,10 @@ const EventManagementContent = () => {
           <CardContent>
             <p className="text-gray-300 text-sm mb-4">Open mic format with signup slots</p>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="text-white border-white/20">
+              <Button size="sm" className="professional-button text-white border-white/20">
                 Use Template
               </Button>
-              <Button size="sm" variant="outline" className="text-white border-white/20">
+              <Button size="sm" className="professional-button text-white border-white/20">
                 Edit
               </Button>
             </div>
@@ -189,7 +189,7 @@ const EventManagementContent = () => {
             <div className="p-3 bg-white/5 rounded border border-blue-500/20">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-white font-medium">Instagram Stories</span>
-                <Badge variant="outline">Scheduled</Badge>
+                <Badge className="professional-button">Scheduled</Badge>
               </div>
               <p className="text-gray-300 text-sm">Weekly comedy night promotion</p>
               <div className="text-xs text-gray-400 mt-2">Scheduled for tomorrow 6PM</div>
@@ -209,7 +209,7 @@ const EventManagementContent = () => {
               <p className="text-gray-300 text-sm">Upcoming shows digest</p>
               <div className="text-xs text-gray-400 mt-2">Open rate: 24.5% | Click rate: 8.2%</div>
             </div>
-            <Button variant="outline" className="w-full text-white border-white/20">
+            <Button className="professional-button w-full text-white border-white/20">
               Create New Campaign
             </Button>
           </CardContent>
@@ -301,13 +301,13 @@ const EventManagementContent = () => {
             <CardTitle className="text-white flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Event Management
-              <Badge variant="outline" className="ml-2">
+              <Badge className="professional-button ml-2">
                 {filteredEvents.length} events
               </Badge>
             </CardTitle>
             <div className="flex gap-2">
               <Button 
-                variant="outline" 
+                className="professional-button" 
                 size="sm" 
                 onClick={exportEvents}
                 className="text-white border-white/20 hover:bg-white/10"
@@ -358,7 +358,7 @@ const EventManagementContent = () => {
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => handleBulkAction('publish')}
                       className="text-green-400 border-green-400/50 hover:bg-green-400/10"
                     >
@@ -366,7 +366,7 @@ const EventManagementContent = () => {
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => handleBulkAction('unpublish')}
                       className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10"
                     >
@@ -374,7 +374,7 @@ const EventManagementContent = () => {
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => handleBulkAction('delete')}
                       className="text-red-400 border-red-400/50 hover:bg-red-400/10"
                     >
@@ -382,7 +382,7 @@ const EventManagementContent = () => {
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => setSelectedEvents([])}
                       className="text-gray-400 border-gray-400/50 hover:bg-gray-400/10"
                     >

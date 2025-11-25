@@ -117,7 +117,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </Select>
 
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => exportAnalytics('csv')}
             disabled={isExporting}

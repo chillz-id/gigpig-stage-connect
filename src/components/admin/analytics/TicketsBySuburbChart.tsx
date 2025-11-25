@@ -76,7 +76,7 @@ export const TicketsBySuburbChart: React.FC<TicketsBySuburbChartProps> = ({
           Tickets by Suburb
         </CardTitle>
         <Button 
-          variant="outline" 
+          className="professional-button" 
           size="sm" 
           onClick={onExport}
           className="text-white border-white/20 hover:bg-white/10"

@@ -22,7 +22,7 @@ export const MediaPortfolio: React.FC = () => {
               <div className="text-muted-foreground">
                 <Youtube className="w-8 h-8 mx-auto mb-2" />
                 <p>Upload your show reel video or add YouTube link</p>
-                <Button variant="outline" className="mt-2">Add Video</Button>
+                <Button className="professional-button mt-2">Add Video</Button>
               </div>
             </div>
           </div>
@@ -32,7 +32,7 @@ export const MediaPortfolio: React.FC = () => {
             <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
               {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="aspect-square border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Button className="professional-button flex items-center gap-2">
                     <Image className="w-4 h-4" />
                     Add Photo
                   </Button>

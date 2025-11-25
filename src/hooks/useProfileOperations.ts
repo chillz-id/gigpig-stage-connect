@@ -1,4 +1,4 @@
-
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/types/auth';
@@ -7,7 +7,7 @@ import { User } from '@supabase/supabase-js';
 export const useProfileOperations = () => {
   const { toast } = useToast();
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       // Fetching user profile
       
@@ -68,9 +68,9 @@ export const useProfileOperations = () => {
       console.error('Profile fetch exception:', error);
       return null;
     }
-  };
+  }, []); // CRITICAL: Empty deps - function never changes
 
-  const fetchRoles = async (userId: string) => {
+  const fetchRoles = useCallback(async (userId: string) => {
     try {
       // Fetching user roles
       
@@ -90,9 +90,9 @@ export const useProfileOperations = () => {
       console.error('Roles fetch exception:', error);
       return [];
     }
-  };
+  }, []); // CRITICAL: Empty deps - function never changes
 
-  const updateProfile = async (user: User, updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (user: User, updates: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
@@ -159,7 +159,7 @@ export const useProfileOperations = () => {
       });
       return { error };
     }
-  };
+  }, [toast]); // CRITICAL: Only depends on toast
 
   return { fetchProfile, fetchRoles, updateProfile };
 };

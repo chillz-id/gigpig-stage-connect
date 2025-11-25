@@ -137,7 +137,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.website_url && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.open(photographer.website_url!, '_blank')}
                   >
                     <Globe className="w-4 h-4 mr-1" />
@@ -147,7 +147,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.instagram_url && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.open(photographer.instagram_url!, '_blank')}
                   >
                     <Instagram className="w-4 h-4 mr-1" />
@@ -157,7 +157,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.email && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.location.href = `mailto:${photographer.email}`}
                   >
                     <Mail className="w-4 h-4 mr-1" />
@@ -167,7 +167,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.phone && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.location.href = `tel:${photographer.phone}`}
                   >
                     <Phone className="w-4 h-4 mr-1" />
@@ -181,7 +181,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />

@@ -181,7 +181,7 @@ const MetaPixelSettings = () => {
                 <Button onClick={handleTestPixel} className="bg-blue-600 hover:bg-blue-700">
                   Send Test Event
                 </Button>
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Button className="professional-button border-white/30 text-white hover:bg-white/10">
                   View Event Manager
                 </Button>
               </div>

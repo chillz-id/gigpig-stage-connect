@@ -27,7 +27,7 @@ export const InvoiceItemsList: React.FC<InvoiceItemsListProps> = ({
         <h3 className="text-lg font-medium">Invoice Items</h3>
         <Button 
           type="button" 
-          variant="outline" 
+          className="professional-button" 
           size="sm" 
           onClick={onAddItem}
           className="flex items-center gap-2"

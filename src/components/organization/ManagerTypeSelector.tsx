@@ -63,7 +63,7 @@ export function ManagerTypeSelector({ value, onChange, disabled }: ManagerTypeSe
       <SelectContent>
         <SelectItem value="none">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge className="professional-button text-xs">
               No Type
             </Badge>
             <span className="text-xs text-gray-500">Use default permissions</span>

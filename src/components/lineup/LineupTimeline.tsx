@@ -119,7 +119,7 @@ export function LineupTimeline({
             {formatTime(eventStartTime)} - {formatTime(eventEndTime)}
           </p>
         </div>
-        <Badge variant="outline">
+        <Badge className="professional-button">
           {spots.length} {spots.length === 1 ? 'spot' : 'spots'}
         </Badge>
       </div>
@@ -166,7 +166,7 @@ export function LineupTimeline({
 
                   {/* Type badge */}
                   <Badge
-                    variant="outline"
+                    className="professional-button"
                     className={`${colors.text} border-current text-xs`}
                   >
                     {spot.type}

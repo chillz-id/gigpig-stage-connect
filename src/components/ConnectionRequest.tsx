@@ -43,7 +43,7 @@ const ConnectionRequest: React.FC<ConnectionRequestProps> = ({
             <CardTitle className="flex items-center space-x-2">
               <span>Connect with {recipientName}</span>
               <Badge 
-                variant="outline" 
+                className="professional-button" 
                 className={recipientRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}
               >
                 {recipientRole}
@@ -77,8 +77,7 @@ const ConnectionRequest: React.FC<ConnectionRequestProps> = ({
           </Button>
           <Button 
             onClick={onCancel}
-            variant="outline" 
-            className="text-white border-white/30 hover:bg-white/10"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
           >
             Cancel
           </Button>

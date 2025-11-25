@@ -252,8 +252,7 @@ const TourDashboard: React.FC = () => {
             
             <div className="flex gap-3">
               <Button 
-                variant="outline" 
-                className="border-blue-400/30 text-blue-200 hover:bg-blue-500/20"
+                className="professional-button border-blue-400/30 text-blue-200 hover:bg-blue-500/20"
                 onClick={() => refetchTours()}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -644,7 +643,7 @@ const CreateTourModal: React.FC<CreateTourModalProps> = ({
           <div className="flex gap-3 pt-6">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={onClose}
               className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
             >

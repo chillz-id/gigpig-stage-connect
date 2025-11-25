@@ -192,13 +192,13 @@ export const CommissionSplitManager: React.FC = () => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       platform: 'default',
       agency: 'secondary',
-      comedian: 'outline',
-      promoter: 'outline',
-      venue: 'outline'
+      comedian: 'secondary',
+      promoter: 'secondary',
+      venue: 'secondary'
     };
 
     return (
-      <Badge variant={variants[type] || 'outline'} className="capitalize">
+      <Badge variant={variants[type] || 'secondary'} className="capitalize">
         {type}
       </Badge>
     );
@@ -207,13 +207,13 @@ export const CommissionSplitManager: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       pending: 'secondary',
-      processing: 'outline',
+      processing: 'secondary',
       completed: 'default',
       failed: 'destructive'
     };
 
     return (
-      <Badge variant={variants[status] || 'outline'} className="capitalize">
+      <Badge variant={variants[status] || 'secondary'} className="capitalize">
         {status}
       </Badge>
     );
@@ -247,11 +247,11 @@ export const CommissionSplitManager: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['commission-splits'] })}>
+          <Button className="professional-button" onClick={() => queryClient.invalidateQueries({ queryKey: ['commission-splits'] })}>
             <TrendingUp className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline">
+          <Button className="professional-button">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
           </Button>
@@ -306,7 +306,7 @@ export const CommissionSplitManager: React.FC = () => {
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-4">
               <p className="font-medium">{selectedSplits.length} splits selected</p>
-              <Badge variant="outline">
+              <Badge className="professional-button">
                 Total: {formatCurrency(
                   commissionSplits
                     ?.filter(split => selectedSplits.includes(split.id))
@@ -354,7 +354,7 @@ export const CommissionSplitManager: React.FC = () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
+                  <Button className="professional-button" onClick={() => setPayoutDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button 
@@ -466,7 +466,7 @@ export const CommissionSplitManager: React.FC = () => {
                     {split.split_status === 'pending' && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        className="professional-button"
                         onClick={() => {
                           setSelectedSplits([split.id]);
                           setPayoutDialogOpen(true);
@@ -535,7 +535,7 @@ export const CommissionSplitManager: React.FC = () => {
             </div>
           </div>
           <div className="flex justify-end mt-4">
-            <Button variant="outline">
+            <Button className="professional-button">
               <Settings className="w-4 h-4 mr-2" />
               Update Commission Rules
             </Button>

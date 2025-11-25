@@ -47,7 +47,7 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
   }, [user, userApplications, show.id]);
 
   const isAdmin = hasRole('admin');
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || isAdmin);
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || isAdmin);
   const isConsumerUser = !isIndustryUser;
   const availableSpots = (show.spots || 5) - (show.applied_spots || 0);
   const isInterested = interestedEvents.has(show.id);

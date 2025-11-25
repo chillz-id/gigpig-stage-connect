@@ -79,7 +79,7 @@ export const EarningsCard: React.FC = () => {
         <div className="flex items-center gap-2">
           <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
           {dateRange.start && dateRange.end && (
-            <Badge variant="outline" className="text-xs">
+            <Badge className="professional-button text-xs">
               Custom Range
             </Badge>
           )}

@@ -22,7 +22,7 @@ export const DeleteTemplateDialog = ({ open, onOpenChange, onConfirm }: DeleteTe
         <DialogDescription>This action cannot be undone.</DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <Button className="professional-button" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
         <Button variant="destructive" onClick={onConfirm}>

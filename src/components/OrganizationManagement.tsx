@@ -245,7 +245,7 @@ const OrganizationManagement = () => {
                 <Button type="submit" disabled={isCreating}>
                   {isCreating ? 'Creating...' : 'Create Organization'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                <Button type="button" className="professional-button" onClick={() => setShowCreateDialog(false)}>
                   Cancel
                 </Button>
               </div>
@@ -293,7 +293,7 @@ const OrganizationManagement = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       size="sm"
                       onClick={() => handleEdit(org)}
                       className="text-white border-white/30 hover:bg-white/10"
@@ -301,7 +301,7 @@ const OrganizationManagement = () => {
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       size="sm"
                       onClick={() => handleDelete(org.id)}
                       className="text-red-400 border-red-400/30 hover:bg-red-400/10"
@@ -480,7 +480,7 @@ const OrganizationManagement = () => {
               <Button type="submit" disabled={isUpdating}>
                 {isUpdating ? 'Updating...' : 'Update Organization'}
               </Button>
-              <Button type="button" variant="outline" onClick={() => setEditingOrganization(null)}>
+              <Button type="button" className="professional-button" onClick={() => setEditingOrganization(null)}>
                 Cancel
               </Button>
             </div>

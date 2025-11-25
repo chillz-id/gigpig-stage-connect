@@ -29,6 +29,8 @@ import { toast } from 'sonner';
  * - Privacy: Data sharing and privacy settings
  * - Sidebar: Customize sidebar menu items
  * - PWA: Progressive Web App settings (link)
+ *
+ * Note: Custom Links and Social Media are managed in the Profile page accordion
  */
 export default function Settings() {
   const { user, profile } = useAuth();
@@ -65,7 +67,7 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <TabsTrigger value="account" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Account</span>
@@ -246,10 +248,10 @@ export default function Settings() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     Download My Data
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     View Privacy Policy
                   </Button>
                 </div>

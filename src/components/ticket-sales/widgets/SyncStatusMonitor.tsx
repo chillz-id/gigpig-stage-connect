@@ -195,7 +195,7 @@ const SyncStatusMonitor: React.FC<SyncStatusMonitorProps> = ({ eventId }) => {
         <div className="flex items-center justify-between">
           <CardTitle>Sync Status</CardTitle>
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={handleManualSync}
             disabled={syncing}

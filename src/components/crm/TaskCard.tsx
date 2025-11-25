@@ -149,7 +149,7 @@ export const TaskCard = ({ task, onClick, onComplete, isDragging }: TaskCardProp
           </div>
 
           {(task.is_recurring || task.recurrence_pattern) && (
-            <Badge variant="outline" className="gap-2 text-xs">
+            <Badge className="professional-button gap-2 text-xs">
               <Repeat className="h-3 w-3" />
               Recurring
             </Badge>
@@ -158,13 +158,13 @@ export const TaskCard = ({ task, onClick, onComplete, isDragging }: TaskCardProp
           {tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="gap-1 text-[11px]">
+                <Badge key={tag} className="professional-button gap-1 text-[11px]">
                   <Tag className="h-3 w-3 text-muted-foreground" />
                   {tag}
                 </Badge>
               ))}
               {hasMoreTags && (
-                <Badge variant="outline" className="text-[11px]">
+                <Badge className="professional-button text-[11px]">
                   +{task.tags.length - tags.length} more
                 </Badge>
               )}

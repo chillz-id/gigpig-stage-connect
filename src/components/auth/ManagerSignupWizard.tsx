@@ -284,7 +284,7 @@ export const ManagerSignupWizard: React.FC<ManagerSignupWizardProps> = ({
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={onSkip} disabled={isSubmitting}>
+            <Button className="professional-button" onClick={onSkip} disabled={isSubmitting}>
               Skip for now
             </Button>
             <Button onClick={handleCreateProfile} disabled={isSubmitting} className="flex-1">
@@ -313,7 +313,7 @@ export const ManagerSignupWizard: React.FC<ManagerSignupWizardProps> = ({
             <Label>Client Type</Label>
             <div className="flex gap-2">
               <Button
-                variant={clientType === 'comedian' ? 'default' : 'outline'}
+                variant={clientType === 'comedian' ? 'default' : 'secondary'}
                 onClick={() => {
                   setClientType('comedian');
                   setSearchResults([]);
@@ -324,7 +324,7 @@ export const ManagerSignupWizard: React.FC<ManagerSignupWizardProps> = ({
                 Comedians
               </Button>
               <Button
-                variant={clientType === 'organization' ? 'default' : 'outline'}
+                variant={clientType === 'organization' ? 'default' : 'secondary'}
                 onClick={() => {
                   setClientType('organization');
                   setSearchResults([]);
@@ -409,7 +409,7 @@ export const ManagerSignupWizard: React.FC<ManagerSignupWizardProps> = ({
           )}
 
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={onComplete} disabled={isSubmitting}>
+            <Button className="professional-button" onClick={onComplete} disabled={isSubmitting}>
               Skip for now
             </Button>
             <Button

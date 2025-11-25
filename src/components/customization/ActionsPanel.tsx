@@ -59,8 +59,7 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
         </Button>
         <Button 
           onClick={resetToDefault} 
-          variant="outline"
-          className="w-full"
+          className="professional-button w-full"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
           Reset to Default

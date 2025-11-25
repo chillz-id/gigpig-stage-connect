@@ -201,7 +201,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                     <>
                       <Button 
                         size="sm" 
-                        variant="outline"
+                        className="professional-button"
                         onClick={handleCopyPaymentLink}
                         title="Copy payment link"
                       >
@@ -209,7 +209,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="outline"
+                        className="professional-button"
                         onClick={handleOpenPaymentLink}
                         title="Open payment link"
                       >
@@ -224,14 +224,14 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
               <div className="flex gap-2">
                 <Button 
                   size="sm" 
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => onView?.(invoice)}
                 >
                   <Eye className="w-4 h-4" />
                 </Button>
                 <Button 
                   size="sm" 
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => onEdit?.(invoice)}
                 >
                   <Edit className="w-4 h-4" />
@@ -250,7 +250,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
             <div className="sm:hidden flex justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>

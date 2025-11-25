@@ -380,11 +380,10 @@ const Messages = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                   <h3 className="font-medium truncate">{conversation.participantName}</h3>
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${
-                                      conversation.participantRole === 'comedian' 
-                                        ? 'text-blue-300 border-blue-300' 
+                                  <Badge
+                                    className={`professional-button text-xs ${
+                                      conversation.participantRole === 'comedian'
+                                        ? 'text-blue-300 border-blue-300'
                                         : 'text-orange-300 border-orange-300'
                                     }`}
                                   >
@@ -428,11 +427,10 @@ const Messages = () => {
                           <div>
                             <h2 className="font-semibold">{selectedConversation.participantName}</h2>
                             <div className="flex items-center space-x-2">
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${
-                                  selectedConversation.participantRole === 'comedian' 
-                                    ? 'text-blue-300 border-blue-300' 
+                              <Badge
+                                className={`professional-button text-xs ${
+                                  selectedConversation.participantRole === 'comedian'
+                                    ? 'text-blue-300 border-blue-300'
                                     : 'text-orange-300 border-orange-300'
                                 }`}
                               >
@@ -445,25 +443,23 @@ const Messages = () => {
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+                          <Button className="professional-button text-white border-white/30 hover:bg-white/10">
                             <Phone className="w-4 h-4" />
                           </Button>
-                          <Button variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+                          <Button className="professional-button text-white border-white/30 hover:bg-white/10">
                             <Video className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            className="professional-button text-red-300 border-red-300 hover:bg-red-500/20"
+                            size="sm"
                             onClick={() => handleBlockUser(selectedConversation.participantId)}
-                            className="text-red-300 border-red-300 hover:bg-red-500/20"
                           >
                             <Shield className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            className="professional-button text-orange-300 border-orange-300 hover:bg-orange-500/20"
                             size="sm"
                             onClick={() => handleReportUser(selectedConversation.participantId)}
-                            className="text-orange-300 border-orange-300 hover:bg-orange-500/20"
                           >
                             <AlertTriangle className="w-4 h-4" />
                           </Button>
@@ -508,7 +504,7 @@ const Messages = () => {
                     {/* Message Input */}
                     <div className="border-t border-white/10 p-4">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+                        <Button className="professional-button text-white border-white/30 hover:bg-white/10">
                           <Paperclip className="w-4 h-4" />
                         </Button>
                         <Input

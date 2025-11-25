@@ -36,7 +36,7 @@ const ButtonDesignControls: React.FC<ButtonDesignControlsProps> = ({ settings, u
               <Square className="w-5 h-5" />
               Button Shape & Size
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={resetButtonStyles}>
+            <Button className="professional-button" size="sm" onClick={resetButtonStyles}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>

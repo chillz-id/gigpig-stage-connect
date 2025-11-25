@@ -11,7 +11,7 @@ import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useProfileData } from '@/hooks/useProfileData';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +22,7 @@ const Profile = () => {
   const { theme } = useTheme();
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Get tab from URL parameter or default to 'profile'
   const urlParams = new URLSearchParams(location.search);
@@ -32,37 +33,41 @@ const Profile = () => {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [avatarKey, setAvatarKey] = useState(Date.now()); // Force avatar refresh
 
+  // Update avatarKey whenever profile.avatar_url changes to bust cache
+  useEffect(() => {
+    if (profile?.avatar_url) {
+      setAvatarKey(Date.now());
+    }
+  }, [profile?.avatar_url]);
+
   // Check if user is industry user (comedian/promoter/admin)
-  const isIndustryUser = hasRole('comedian') || hasRole('promoter') || hasRole('admin');
-  
-  // For now, set isMemberView to false since we're removing the member view concept
-  const isMemberView = false;
+  const isIndustryUser = hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin');
 
   // Get profile data using custom hook
-  const { userInterests, mockTickets } = useProfileData(user?.id, isMemberView);
+  const { userInterests, mockTickets } = useProfileData(user?.id);
 
-  // Tab configuration based on view mode
-  const memberTabs = ['profile', 'tickets', 'notifications', 'book-comedian', 'settings'];
-  const industryTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
-  const availableTabs = isMemberView ? memberTabs : industryTabs;
+  // Tab configuration for industry users (comedians, promoters, etc.)
+  const availableTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
 
-  // Only sync from URL on component mount, not on every URL change
+  // Only sync from URL on initial mount to read the tab parameter
+  // After that, tab changes are managed by handleTabChange which updates both state and URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab') || 'profile';
-    
-    
+
+
     // Set initial tab if it's valid, otherwise use 'profile'
     if (availableTabs.includes(tabParam)) {
       setActiveTab(tabParam);
     } else {
       setActiveTab('profile');
     }
-  }, [availableTabs, location.search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only on mount - read URL once, then handleTabChange manages both state and URL
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
-      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+      return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
     }
     return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
   };
@@ -111,12 +116,13 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out.",
     });
-    signOut();
+    await signOut();
+    navigate('/');
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,19 +180,11 @@ const Profile = () => {
       }
       
       console.log('Profile update successful');
-      
+
       // Close the modal after successful update
       setShowImageCrop(false);
-      
-      // Force avatar refresh by updating the key
-      const newKey = Date.now();
-      setAvatarKey(newKey);
-      console.log('Avatar key updated to:', newKey);
-      
-      // Double-check the profile was updated
-      setTimeout(() => {
-        console.log('Current profile avatar:', profile?.avatar_url);
-      }, 1000);
+
+      // Note: Avatar will automatically update via the useEffect watching profile.avatar_url
       
       // Clean up old profile images in the background
       // We keep 2 images: the new one and the most recent previous one
@@ -199,19 +197,11 @@ const Profile = () => {
         console.error('Failed to cleanup old images:', error);
       });
       
-      // Force a small delay to ensure image loads
-      setTimeout(() => {
-        toast({
-          title: "Profile Picture Updated",
-          description: "Your profile picture has been successfully updated.",
-        });
-        
-        // Force a page refresh to ensure avatar updates everywhere
-        // This is a temporary workaround for cache issues
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      }, 100);
+      // Show success message
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been successfully updated.",
+      });
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       toast({
@@ -224,19 +214,25 @@ const Profile = () => {
 
   // Handle tab changes with validation and URL update
   const handleTabChange = (newTab: string) => {
-    
+
     // Validate the tab is available for current view
     if (availableTabs.includes(newTab)) {
       setActiveTab(newTab);
-      
-      // Update URL without triggering useEffect
-      const newUrl = new URL(window.location.href);
+
+      // Update URL using React Router's navigate
+      const searchParams = new URLSearchParams(location.search);
       if (newTab === 'profile') {
-        newUrl.searchParams.delete('tab');
+        searchParams.delete('tab');
       } else {
-        newUrl.searchParams.set('tab', newTab);
+        searchParams.set('tab', newTab);
       }
-      window.history.replaceState({}, '', newUrl.toString());
+
+      // Use navigate with replace to update URL without adding to history
+      const newSearch = searchParams.toString();
+      navigate({
+        pathname: location.pathname,
+        search: newSearch ? `?${newSearch}` : ''
+      }, { replace: true });
     }
   };
 
@@ -260,8 +256,13 @@ const Profile = () => {
     tiktok_url: profile?.tiktok_url || '',
     custom_show_types: profile?.custom_show_types || [],
     avatar: profile?.avatar_url ? `${profile.avatar_url}?t=${avatarKey}` : '',
-    role: hasRole('admin') ? 'admin' : hasRole('promoter') ? 'promoter' : 'comedian',
-    isVerified: profile?.is_verified || false
+    role: hasRole('admin') ? 'admin' : 'comedian',
+    isVerified: profile?.is_verified || false,
+    joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }) : 'Recently',
+    membership: profile?.membership_tier || 'basic',
+    stats: {
+      showsPerformed: profile?.shows_performed || 0
+    }
   };
 
   return (
@@ -278,8 +279,8 @@ const Profile = () => {
         <ProfileTabs
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          isMemberView={isMemberView}
           isIndustryUser={isIndustryUser}
+          isComedianLite={hasRole('comedian_lite')}
           user={userForComponents}
           userInterests={userInterests}
           mockTickets={mockTickets}

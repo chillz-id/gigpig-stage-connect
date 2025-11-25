@@ -5,11 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { 
-  Calendar, 
-  Search, 
-  User, 
-  LogOut, 
+import {
+  Calendar,
+  Search,
+  User,
+  LogOut,
   Bell,
   Settings,
   Menu,
@@ -19,12 +19,15 @@ import {
   BarChart3,
   Plus,
   Palette,
-  Building2
+  Building2,
+  Lightbulb,
+  Bug
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
 import MobileNavigation from './MobileNavigation';
 import ThemeControls from './ThemeControls';
+import { MobileBottomNav, MobileDrawer } from '@/components/mobile';
 
 const Navigation = () => {
   const { user, signOut, hasRole } = useAuth();
@@ -33,6 +36,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -101,13 +105,13 @@ const Navigation = () => {
                 <BarChart3 className="w-4 h-4" />
               </Link>
 
-              {hasRole('comedian') && (
+              {(hasRole('comedian') || hasRole('comedian_lite')) && (
                 <Link to="/applications" className={getNavLinkClass('/applications')} title="Applications">
                   <Calendar className="w-4 h-4" />
                 </Link>
               )}
 
-              {(hasRole('promoter') || hasRole('admin')) && (
+              {(hasRole('admin')) && (
                 <Link to="/agency" className={getNavLinkClass('/agency')} title="Agency Management">
                   <Building2 className="w-4 h-4" />
                 </Link>
@@ -120,13 +124,21 @@ const Navigation = () => {
               <Link to="/notifications" className={cn(getNavLinkClass('/notifications'), "relative")} title="Notifications">
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center animate-blink animate-pulse-notification"
                   >
                     {unreadCount}
                   </Badge>
                 )}
+              </Link>
+
+              <Link to="/roadmap" className={getNavLinkClass('/roadmap')} title="Feature Roadmap">
+                <Lightbulb className="w-4 h-4" />
+              </Link>
+
+              <Link to="/bugs" className={getNavLinkClass('/bugs')} title="Bug Tracker">
+                <Bug className="w-4 h-4" />
               </Link>
 
               {hasRole('admin') && (
@@ -155,7 +167,7 @@ const Navigation = () => {
 
               <Button
                 onClick={handleSignOut}
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 className={cn("ml-2", getButtonClass())}
               >
@@ -166,7 +178,7 @@ const Navigation = () => {
 
             {/* Mobile Menu Button */}
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               className={cn("md:hidden", getButtonClass())}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -177,14 +189,76 @@ const Navigation = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation */}
-      <MobileNavigation 
-        isMobileMenuOpen={isMobileMenuOpen} 
-        setIsMobileMenuOpen={setIsMobileMenuOpen} 
+      {/* Mobile Navigation (Hamburger Menu) */}
+      <MobileNavigation
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
 
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        onMoreClick={() => setIsMoreDrawerOpen(true)}
+        notificationCounts={{ applications: unreadCount }}
+      />
+
+      {/* Mobile More Drawer */}
+      <MobileDrawer
+        open={isMoreDrawerOpen}
+        onOpenChange={setIsMoreDrawerOpen}
+        title="More Options"
+      >
+        <nav className="space-y-2">
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
+            onClick={() => setIsMoreDrawerOpen(false)}
+          >
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Link>
+          {hasRole(['admin']) && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
+              onClick={() => setIsMoreDrawerOpen(false)}
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span>Admin Dashboard</span>
+            </Link>
+          )}
+          {hasRole(['admin', 'agency_manager']) && (
+            <Link
+              to="/crm"
+              className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
+              onClick={() => setIsMoreDrawerOpen(false)}
+            >
+              <Users className="h-5 w-5" />
+              <span>CRM</span>
+            </Link>
+          )}
+          <Link
+            to="/messages"
+            className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
+            onClick={() => setIsMoreDrawerOpen(false)}
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span>Messages</span>
+          </Link>
+          <button
+            onClick={() => {
+              setIsMoreDrawerOpen(false);
+              handleSignOut();
+            }}
+            className="flex w-full items-center gap-3 rounded-lg p-3 text-destructive hover:bg-destructive/10"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Sign Out</span>
+          </button>
+        </nav>
+      </MobileDrawer>
+
       {/* Spacer for fixed navigation */}
-      <div className="h-20" />
+      <div className="h-20 md:h-20" /> {/* Extra space on mobile for bottom nav */}
     </>
   );
 };

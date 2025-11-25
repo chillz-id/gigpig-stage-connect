@@ -40,7 +40,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button variant="outline" className={className}>
+          <Button className="professional-button" className={className}>
             <Upload className="w-4 h-4 mr-2" />
             Upload Banner
           </Button>
@@ -78,11 +78,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Button variant="outline" className="w-full" disabled>
+            <Button className="professional-button w-full" disabled>
               <Cloud className="w-4 h-4 mr-2" />
               Google Drive (Coming Soon)
             </Button>
-            <Button variant="outline" className="w-full" disabled>
+            <Button className="professional-button w-full" disabled>
               <Cloud className="w-4 h-4 mr-2" />
               Dropbox (Coming Soon)
             </Button>

@@ -95,7 +95,7 @@ export function ApplicationListContainer({
               ? `Failed to load applications: ${error.message}`
               : 'Failed to load applications. Please try again.'}
           </span>
-          <Button onClick={() => refetch()} variant="outline" size="sm">
+          <Button onClick={() => refetch()} className="professional-button" size="sm">
             Retry
           </Button>
         </AlertDescription>
@@ -161,7 +161,7 @@ export function ApplicationListContainer({
           <div className="flex gap-2">
             <Button
               onClick={handleSelectAll}
-              variant="outline"
+              className="professional-button"
               size="sm"
               disabled={selectedIds.length === filteredApplications.length}
             >
@@ -169,7 +169,7 @@ export function ApplicationListContainer({
             </Button>
             <Button
               onClick={handleClearSelection}
-              variant="outline"
+              className="professional-button"
               size="sm"
               disabled={selectedIds.length === 0}
             >

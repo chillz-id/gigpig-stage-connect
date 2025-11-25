@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Calendar, Users, CheckSquare, Image, Award, TrendingUp, Plus } from 'lucide-react';
+import { getOrgTypeLabels, type OrgType } from '@/config/organizationTypes';
 
 export default function OrganizationDashboard() {
   const { organization, orgId, isLoading: orgLoading } = useOrganization();
@@ -38,23 +39,27 @@ export default function OrganizationDashboard() {
   const pendingTasks = tasks?.filter(t => t.status === 'todo' || t.status === 'in_progress') || [];
   const nextUpcomingEvents = upcomingEvents?.slice(0, 3) || [];
 
+  // Use slug-based URLs for navigation
+  const orgSlug = organization.url_slug;
+  const baseUrl = `/org/${orgSlug}`;
+
   return (
     <div className="container mx-auto space-y-8 py-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">{organization.organization_name}</h1>
-          <p className="mt-1 text-gray-600">{organization.organization_type?.replace('_', ' ').toUpperCase()} Dashboard</p>
+          <p className="mt-1 text-gray-600">{getOrgTypeLabels((organization.organization_type || []) as OrgType[])} Dashboard</p>
         </div>
         <div className="flex gap-3">
-          <Link to={`/org/${orgId}/events/create`}>
+          <Link to={`${baseUrl}/events/create`}>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Create Event
             </Button>
           </Link>
-          <Link to={`/org/${orgId}/profile`}>
-            <Button variant="outline">Edit Profile</Button>
+          <Link to={baseUrl}>
+            <Button className="professional-button">Edit Profile</Button>
           </Link>
         </div>
       </div>
@@ -124,7 +129,7 @@ export default function OrganizationDashboard() {
                 <CardTitle>Upcoming Events</CardTitle>
                 <CardDescription>Next events on your calendar</CardDescription>
               </div>
-              <Link to={`/org/${orgId}/events`}>
+              <Link to={`${baseUrl}/events`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </div>
@@ -183,7 +188,7 @@ export default function OrganizationDashboard() {
                 <CardTitle>Pending Tasks</CardTitle>
                 <CardDescription>Tasks requiring attention</CardDescription>
               </div>
-              <Link to={`/org/${orgId}/tasks`}>
+              <Link to={`${baseUrl}/tasks`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </div>
@@ -245,26 +250,26 @@ export default function OrganizationDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Link to={`/org/${orgId}/events/create`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/events/create`}>
+              <Button className="professional-button w-full justify-start">
                 <Calendar className="mr-2 h-4 w-4" />
                 Create Event
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/book-comedian`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/book-comedian`}>
+              <Button className="professional-button w-full justify-start">
                 <Users className="mr-2 h-4 w-4" />
                 Book Comedian
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/team`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/team`}>
+              <Button className="professional-button w-full justify-start">
                 <Users className="mr-2 h-4 w-4" />
                 Manage Team
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/analytics`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/analytics`}>
+              <Button className="professional-button w-full justify-start">
                 <TrendingUp className="mr-2 h-4 w-4" />
                 View Analytics
               </Button>

@@ -83,13 +83,13 @@ export const AutoSaveStatusDemo: React.FC = () => {
         <CardContent>
           <div className="flex gap-2">
             <Button
-              variant={theme === 'business' ? 'default' : 'outline'}
+              variant={theme === 'business' ? 'default' : 'secondary'}
               onClick={() => setTheme('business')}
             >
               Business Theme
             </Button>
             <Button
-              variant={theme === 'pleasure' ? 'default' : 'outline'}
+              variant={theme === 'pleasure' ? 'default' : 'secondary'}
               onClick={() => setTheme('pleasure')}
             >
               Pleasure Theme
@@ -119,7 +119,7 @@ export const AutoSaveStatusDemo: React.FC = () => {
             <Button onClick={simulateSave} variant="secondary">
               Simulate Save (Random)
             </Button>
-            <Button onClick={() => setAutoDemo(true)} variant="outline">
+            <Button onClick={() => setAutoDemo(true)} className="professional-button">
               Run Auto Demo
             </Button>
           </div>

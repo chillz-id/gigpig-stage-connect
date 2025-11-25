@@ -333,7 +333,7 @@ export const BookingRequestsSection: React.FC = () => {
                           <div className="grid grid-cols-2 gap-2 mt-2">
                             <Button
                               type="button"
-                              variant={responseForm.response_type === 'accepted' ? 'default' : 'outline'}
+                              variant={responseForm.response_type === 'accepted' ? 'default' : 'secondary'}
                               size="sm"
                               onClick={() => setResponseForm(prev => ({ ...prev, response_type: 'accepted' }))}
                               className="justify-start"
@@ -343,7 +343,7 @@ export const BookingRequestsSection: React.FC = () => {
                             </Button>
                             <Button
                               type="button"
-                              variant={responseForm.response_type === 'declined' ? 'default' : 'outline'}
+                              variant={responseForm.response_type === 'declined' ? 'default' : 'secondary'}
                               size="sm"
                               onClick={() => setResponseForm(prev => ({ ...prev, response_type: 'declined' }))}
                               className="justify-start"
@@ -353,7 +353,7 @@ export const BookingRequestsSection: React.FC = () => {
                             </Button>
                             <Button
                               type="button"
-                              variant={responseForm.response_type === 'negotiating' ? 'default' : 'outline'}
+                              variant={responseForm.response_type === 'negotiating' ? 'default' : 'secondary'}
                               size="sm"
                               onClick={() => setResponseForm(prev => ({ ...prev, response_type: 'negotiating' }))}
                               className="justify-start"
@@ -363,7 +363,7 @@ export const BookingRequestsSection: React.FC = () => {
                             </Button>
                             <Button
                               type="button"
-                              variant={responseForm.response_type === 'interested' ? 'default' : 'outline'}
+                              variant={responseForm.response_type === 'interested' ? 'default' : 'secondary'}
                               size="sm"
                               onClick={() => setResponseForm(prev => ({ ...prev, response_type: 'interested' }))}
                               className="justify-start"

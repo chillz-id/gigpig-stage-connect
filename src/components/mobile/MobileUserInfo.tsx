@@ -27,14 +27,14 @@ const MobileUserInfo: React.FC = () => {
               Admin
             </Badge>
           )}
-          {hasRole('promoter') && (
+          {false && (
             <Badge key="promoter" variant="secondary" className="text-xs capitalize bg-purple-100 text-purple-800">
               Promoter
             </Badge>
           )}
-          {hasRole('comedian') && (
+          {(hasRole('comedian') || hasRole('comedian_lite')) && (
             <Badge key="comedian" variant="secondary" className="text-xs capitalize bg-blue-100 text-blue-800">
-              Comedian
+              {hasRole('comedian_lite') ? 'Comedian Lite' : 'Comedian'}
             </Badge>
           )}
         </div>

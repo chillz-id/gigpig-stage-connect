@@ -76,7 +76,7 @@ const SalesTable = ({ ticketSales, events, onRefund }: SalesTableProps) => {
                     <TableCell className="text-white">{sale.ticket_quantity}</TableCell>
                     <TableCell className="text-white">${Number(sale.total_amount).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge className="professional-button text-xs">
                         {sale.platform}
                       </Badge>
                     </TableCell>
@@ -98,7 +98,7 @@ const SalesTable = ({ ticketSales, events, onRefund }: SalesTableProps) => {
                         <div className="flex gap-1">
                           <Button
                             size="sm"
-                            variant="outline"
+                            className="professional-button"
                             onClick={() => onRefund(sale.id, 'partial')}
                             className="text-xs"
                           >

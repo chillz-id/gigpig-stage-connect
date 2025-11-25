@@ -13,8 +13,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
   scheduled: 'default',
-  posting: 'outline',
-  posted: 'outline',
+  posting: 'secondary',
+  posted: 'secondary',
   failed: 'destructive',
   cancelled: 'secondary',
 };
@@ -82,11 +82,11 @@ export function ScheduledPosts() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" disabled>
+                          <Button className="professional-button" size="sm" disabled>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="outline"
+                            className="professional-button"
                             size="sm"
                             onClick={() => cancelPost(post.id)}
                             disabled={isCancelling}
@@ -102,7 +102,7 @@ export function ScheduledPosts() {
                       </p>
                       {post.mediaUrls && post.mediaUrls.length > 0 && (
                         <div className="mt-2">
-                          <Badge variant="outline">
+                          <Badge className="professional-button">
                             {post.mediaUrls.length} {post.mediaUrls.length === 1 ? 'attachment' : 'attachments'}
                           </Badge>
                         </div>
@@ -135,7 +135,7 @@ export function ScheduledPosts() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <Badge variant={STATUS_VARIANTS[post.status] || 'outline'}>
+                            <Badge variant={STATUS_VARIANTS[post.status] || 'secondary'}>
                               <StatusIcon className="mr-1 h-3 w-3" />
                               {post.status}
                             </Badge>

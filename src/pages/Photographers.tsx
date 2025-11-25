@@ -148,7 +148,7 @@ const Photographers = () => {
             {/* Filter Sheet */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline">
+                <Button className="professional-button">
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
                   {(selectedSpecialties.length > 0 || selectedServices.length > 0) && (
@@ -241,9 +241,8 @@ const Photographers = () => {
                   </div>
 
                   {/* Clear Filters */}
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
+                  <Button
+                    className="professional-button w-full"
                     onClick={() => {
                       setSelectedSpecialties([]);
                       setSelectedServices([]);
@@ -303,9 +302,8 @@ const Photographers = () => {
           <div className="text-center py-12">
             <Camera className={`w-12 h-12 ${getSubtextStyles()} mx-auto mb-4`} />
             <p className={`${getSubtextStyles()}`}>No photographers found matching your criteria.</p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
+            <Button
+              className="professional-button mt-4"
               onClick={() => {
                 setFilters({ search: '', sortBy: 'name', available_for_events: true });
                 setSelectedSpecialties([]);

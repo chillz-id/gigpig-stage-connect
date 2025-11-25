@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Plus, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SocialMediaInput } from '@/components/SocialMediaInput';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import type { ProfileAwareProps } from '@/types/universalProfile';
+import { getProfileConfig } from '@/utils/profileConfig';
 
 interface ProfileData {
   firstName: string;
@@ -28,20 +30,25 @@ interface ProfileData {
   tiktokUrl: string;
 }
 
-interface ProfileInformationProps {
+interface ProfileInformationProps extends Partial<ProfileAwareProps> {
   user: any;
   onSave: (data: ProfileData) => Promise<void>;
 }
 
 export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   user,
-  onSave
+  onSave,
+  profileType = 'comedian',
+  config: propConfig
 }) => {
   const { toast } = useToast();
+  // Use provided config or derive from profileType (backwards compatibility)
+  const config = propConfig ?? getProfileConfig(profileType);
   const [isLoading, setIsLoading] = useState(false);
-  const [newShowType, setNewShowType] = useState('');
-  
-  const [formData, setFormData] = useState<ProfileData>({
+  const [showMoreSocial, setShowMoreSocial] = useState(false);
+
+  // Initial form data for change detection
+  const initialFormData: ProfileData = {
     firstName: user.first_name || user.name?.split(' ')[0] || '',
     lastName: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
     stageName: user.stage_name || '',
@@ -57,7 +64,12 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
     youtubeUrl: user.youtube_url || '',
     facebookUrl: user.facebook_url || '',
     tiktokUrl: user.tiktok_url || ''
-  });
+  };
+
+  const [formData, setFormData] = useState<ProfileData>(initialFormData);
+
+  // Check if form has unsaved changes
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     setFormData(prev => ({
@@ -66,22 +78,6 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
     }));
   };
 
-  const addShowType = () => {
-    if (newShowType.trim() && !formData.customShowTypes.includes(newShowType.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        customShowTypes: [...prev.customShowTypes, newShowType.trim()]
-      }));
-      setNewShowType('');
-    }
-  };
-
-  const removeShowType = (typeToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      customShowTypes: prev.customShowTypes.filter(type => type !== typeToRemove)
-    }));
-  };
 
   const handleSubmit = async () => {
     // Basic validation
@@ -89,17 +85,6 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields (First Name, Last Name, Email).",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
@@ -125,19 +110,12 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   };
 
   return (
-    <Card className="professional-card">
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>
-          Update your public profile information
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="first-name">First Name *</Label>
-            <Input 
-              id="first-name" 
+            <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
+            <Input
+              id="first-name"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               required
@@ -145,8 +123,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
           <div>
             <Label htmlFor="last-name">Last Name *</Label>
-            <Input 
-              id="last-name" 
+            <Input
+              id="last-name"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               required
@@ -154,53 +132,58 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="stage-name">Stage Name</Label>
-            <Input 
-              id="stage-name" 
-              value={formData.stageName}
-              onChange={(e) => handleInputChange('stageName', e.target.value)}
-              placeholder="Your professional/stage name"
-            />
+        {/* Conditionally show secondary name field (Stage Name for comedians, Legal Name for organizations) */}
+        {config.fields.hasSecondaryName && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="stage-name">{config.labels.secondaryName || 'Stage Name'}</Label>
+              <Input
+                id="stage-name"
+                value={formData.stageName}
+                onChange={(e) => handleInputChange('stageName', e.target.value)}
+                placeholder={`Your ${config.labels.secondaryName?.toLowerCase() || 'stage name'}`}
+              />
+            </div>
+            <div>
+              <Label htmlFor="name-display">Name Display Preference</Label>
+              <Select
+                value={formData.nameDisplayPreference}
+                onValueChange={(value) => handleInputChange('nameDisplayPreference', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select how your name is displayed" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="real">Real name only</SelectItem>
+                  <SelectItem value="stage">{config.labels.secondaryName || 'Stage name'} only</SelectItem>
+                  <SelectItem value="both">Both ({config.labels.secondaryName || 'Stage name'} - Real name)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="name-display">Name Display Preference</Label>
-            <Select 
-              value={formData.nameDisplayPreference} 
-              onValueChange={(value) => handleInputChange('nameDisplayPreference', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select how your name is displayed" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="real">Real name only</SelectItem>
-                <SelectItem value="stage">Stage name only</SelectItem>
-                <SelectItem value="both">Both (Stage name - Real name)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="email">Email *</Label>
-            <Input 
-              id="email" 
+            <Input
+              id="email"
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
+              disabled
+              className="bg-muted cursor-not-allowed"
               required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Contact support to change your email address
+            </p>
           </div>
           <div>
             <Label htmlFor="phone">Phone</Label>
-            <Input 
-              id="phone" 
-              type="tel"
+            <PhoneInput
               value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              placeholder="+61 4XX XXX XXX"
+              onChange={(value) => handleInputChange('phone', value)}
             />
           </div>
         </div>
@@ -216,71 +199,33 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea 
-            id="bio" 
+          <Label htmlFor="bio">{config.labels.bio || 'Bio'}</Label>
+          <Textarea
+            id="bio"
             value={formData.bio}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            placeholder="Tell us about yourself and your comedy style..."
+            placeholder={
+              profileType === 'organization'
+                ? 'Describe your organization, mission, and what you do...'
+                : profileType === 'photographer' || profileType === 'videographer'
+                ? 'Tell us about your work, style, and experience...'
+                : 'Tell us about yourself and your comedy style...'
+            }
             rows={4}
           />
-        </div>
-
-        {/* Custom Show Types */}
-        <div>
-          <Label>Comedy Styles & Show Types</Label>
-          <div className="flex items-center gap-2 mt-2">
-            <Input
-              value={newShowType}
-              onChange={(e) => setNewShowType(e.target.value)}
-              placeholder="Add a comedy style or show type..."
-              onKeyPress={(e) => e.key === 'Enter' && addShowType()}
-            />
-            <Button type="button" onClick={addShowType} size="sm">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.customShowTypes.map((type) => (
-              <Badge key={type} variant="secondary" className="flex items-center gap-1">
-                {type}
-                <X 
-                  className="w-3 h-3 cursor-pointer" 
-                  onClick={() => removeShowType(type)}
-                />
-              </Badge>
-            ))}
-          </div>
         </div>
 
         {/* Social Media Links */}
         <div className="space-y-4">
           <Label className="text-base font-semibold">Social Media & Links</Label>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Just enter @username or username - we'll convert it to the full URL automatically!
-          </p>
-          
+
+          {/* Always visible: Instagram, YouTube, TikTok, Website */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SocialMediaInput
               id="instagram"
               platform="instagram"
               value={formData.instagramUrl}
               onChange={(value) => handleInputChange('instagramUrl', value)}
-            />
-            <SocialMediaInput
-              id="twitter"
-              platform="twitter"
-              value={formData.twitterUrl}
-              onChange={(value) => handleInputChange('twitterUrl', value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SocialMediaInput
-              id="website"
-              platform="website"
-              value={formData.websiteUrl}
-              onChange={(value) => handleInputChange('websiteUrl', value)}
             />
             <SocialMediaInput
               id="youtube"
@@ -292,31 +237,61 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SocialMediaInput
-              id="facebook"
-              platform="facebook"
-              value={formData.facebookUrl}
-              onChange={(value) => handleInputChange('facebookUrl', value)}
-            />
-            <SocialMediaInput
               id="tiktok"
               platform="tiktok"
               value={formData.tiktokUrl}
               onChange={(value) => handleInputChange('tiktokUrl', value)}
             />
+            <SocialMediaInput
+              id="website"
+              platform="website"
+              value={formData.websiteUrl}
+              onChange={(value) => handleInputChange('websiteUrl', value)}
+            />
+          </div>
+
+          {/* Collapsible section for Facebook and Twitter */}
+          <div>
+            <Button
+              type="button"
+              className="professional-button flex items-center gap-2"
+              size="sm"
+              onClick={() => setShowMoreSocial(!showMoreSocial)}
+            >
+              <Plus className="w-4 h-4" />
+              {showMoreSocial ? 'Hide' : 'Add'} More Social Links
+              {showMoreSocial ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+
+            {showMoreSocial && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <SocialMediaInput
+                  id="facebook"
+                  platform="facebook"
+                  value={formData.facebookUrl}
+                  onChange={(value) => handleInputChange('facebookUrl', value)}
+                />
+                <SocialMediaInput
+                  id="twitter"
+                  platform="twitter"
+                  value={formData.twitterUrl}
+                  onChange={(value) => handleInputChange('twitterUrl', value)}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isLoading}
-            className="professional-button"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isLoading ? 'Saving...' : 'Save Profile'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end pt-4">
+        <Button
+          onClick={handleSubmit}
+          disabled={isLoading || !hasUnsavedChanges}
+          className="professional-button"
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {isLoading ? 'Saving...' : 'Save Profile'}
+        </Button>
+      </div>
+    </div>
   );
 };

@@ -47,7 +47,7 @@ export class EventTemplateErrorBoundary extends Component<Props, State> {
             </p>
             <div className="flex gap-2">
               <Button 
-                variant="outline" 
+                className="professional-button" 
                 size="sm" 
                 onClick={this.handleRetry}
                 className="border-red-300 hover:bg-red-100"

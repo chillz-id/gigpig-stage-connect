@@ -186,8 +186,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                     </Button>
                     <Button 
                       onClick={() => setIsCreateDialogOpen(false)}
-                      variant="outline"
-                      className="text-white border-white/30 hover:bg-white/10"
+                      className="professional-button text-white border-white/30 hover:bg-white/10"
                     >
                       Cancel
                     </Button>
@@ -213,7 +212,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                     <CardTitle className="flex items-center space-x-2">
                       <span>{group.name}</span>
                       {group.isDefault && (
-                        <Badge variant="outline" className="text-xs text-blue-300 border-blue-300">
+                        <Badge className="professional-button text-xs text-blue-300 border-blue-300">
                           Default
                         </Badge>
                       )}
@@ -247,8 +246,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                   {group.permissions.map((permission) => (
                     <Badge 
                       key={permission} 
-                      variant="outline" 
-                      className="text-xs text-purple-200 border-purple-300"
+                      className="professional-button text-xs text-purple-200 border-purple-300"
                     >
                       {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </Badge>

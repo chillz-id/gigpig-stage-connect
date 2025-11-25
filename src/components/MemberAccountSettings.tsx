@@ -117,10 +117,10 @@ export const MemberAccountSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" className="w-full justify-start">
+          <Button className="professional-button w-full justify-start">
             Download My Data
           </Button>
-          <Button variant="outline" className="w-full justify-start">
+          <Button className="professional-button w-full justify-start">
             Export Event History
           </Button>
           

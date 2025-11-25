@@ -193,6 +193,50 @@ describe('ActiveProfileContext', () => {
     expect(result.current.activeProfile).toBeNull();
   });
 
+  it('supports photographer profile type', () => {
+    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+
+    const photographerProfile: ActiveProfile = {
+      id: 'photographer-id-123',
+      type: 'photographer',
+      slug: 'jane-photographer',
+      name: 'Jane Photographer',
+      avatarUrl: 'https://example.com/photographer.jpg',
+    };
+
+    act(() => {
+      result.current.setActiveProfile(photographerProfile);
+    });
+
+    expect(result.current.activeProfile).toEqual(photographerProfile);
+    expect(result.current.getProfileUrl()).toBe(
+      '/photographer/jane-photographer/dashboard'
+    );
+    expect(result.current.getProfileUrl('portfolio')).toBe(
+      '/photographer/jane-photographer/portfolio'
+    );
+  });
+
+  it('supports videographer profile type', () => {
+    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+
+    const videographerProfile: ActiveProfile = {
+      id: 'videographer-id-456',
+      type: 'videographer',
+      slug: 'bob-videographer',
+      name: 'Bob Videographer',
+    };
+
+    act(() => {
+      result.current.setActiveProfile(videographerProfile);
+    });
+
+    expect(result.current.activeProfile).toEqual(videographerProfile);
+    expect(result.current.getProfileUrl()).toBe(
+      '/videographer/bob-videographer/dashboard'
+    );
+  });
+
   it('validates profile type on load', () => {
     const invalidProfile = {
       id: 'test-id',

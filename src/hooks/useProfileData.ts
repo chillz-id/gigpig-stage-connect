@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useProfileData = (userId: string | undefined, isMemberView: boolean = false) => {
+export const useProfileData = (userId: string | undefined) => {
   // Fetch user interests from database
   const { data: userInterests = [] } = useQuery({
     queryKey: ['user-interests', userId],

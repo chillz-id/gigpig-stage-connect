@@ -44,7 +44,7 @@ export const MapEventList: React.FC<MapEventListProps> = ({
             </div>
             {show.type && (
               <div className="mt-1">
-                <Badge variant="outline" className="text-xs">{show.type}</Badge>
+                <Badge className="professional-button text-xs">{show.type}</Badge>
               </div>
             )}
           </button>

@@ -68,7 +68,7 @@ const ColorSystemControls: React.FC<ColorSystemControlsProps> = ({ settings, upd
                 {category.title}
               </CardTitle>
               <Button 
-                variant="outline" 
+                className="professional-button" 
                 size="sm"
                 onClick={() => resetCategory(category.title)}
               >

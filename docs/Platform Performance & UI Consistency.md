@@ -92,4 +92,127 @@ Platform Performance & UI Consistency Fixes                                     
 │ │ - All buttons have consistent dark background style                                                                                                                                 │ │
 │ │ - Past Events defaults to "Hidden"                                                                                                                                                  │ │
 │ │ - Calendar View works on Shows page                                                                                                                                                 │ │
-│ │ - No white button outlines anywhere  
+│ │ - No white button outlines anywhere
+
+## 6. Button Variant Enforcement System
+
+**Design System Requirement**: Absolutely no `variant="outline"` buttons anywhere in the platform.
+
+### Why This Matters
+
+White button outlines (variant="outline") violate the platform's dark-themed design system and create visual inconsistency. All outline variants have been removed platform-wide and replaced with:
+- **`variant="secondary"`** - For alternative actions (filters, toggles, secondary CTAs)
+- **`variant="ghost"`** - For cancel/close buttons and subtle interactions
+
+### Multi-Layer Prevention System
+
+To prevent `variant="outline"` from being re-introduced, we've implemented a **four-layer defense**:
+
+#### Layer 1: ESLint Rule (Development Time)
+- **Rule**: `design-system/no-outline-variant`
+- **Location**: `eslint.config.js`
+- **Behavior**: Flags all occurrences of `variant="outline"` as **errors** during development
+- **Coverage**:
+  - Literal JSX attributes: `<Button variant="outline">`
+  - Conditional expressions: `variant={condition ? 'default' : 'outline'}`
+  - Default parameters: `variant = 'outline'`
+  - Object properties: `{variant: 'outline'}`
+- **When it runs**: On save in IDEs with ESLint integration, during `npm run lint`
+
+#### Layer 2: Runtime Component Guard (Production Safety Net)
+- **Location**: `src/components/ui/button.tsx`
+- **Behavior**: Automatically converts `variant="outline"` to `variant="secondary"` at runtime
+- **Console Warning**: Logs detailed deprecation message to console when outline is detected
+- **Why**: Catches any outline variants that slip through linting (dynamic imports, third-party components, etc.)
+
+```typescript
+// Button component now includes:
+if (variant === 'outline') {
+  console.warn(
+    '[Button] variant="outline" is deprecated and has been automatically converted to variant="secondary". ' +
+    'Please update your code to use variant="secondary" or variant="ghost" instead. ' +
+    'See /docs/Platform Performance & UI Consistency.md for details.'
+  );
+  enforcedVariant = 'secondary';
+}
+```
+
+#### Layer 3: Pre-Commit Hook (Git Level)
+- **Location**: `.git/hooks/pre-commit`
+- **Behavior**: Scans all staged files for outline variants and **blocks the commit**
+- **Pattern Detection**: Catches `variant="outline"`, `variant='outline'`, and object property patterns
+- **Error Message**: Shows exact line numbers and suggests replacements
+- **When it runs**: Automatically on every `git commit`
+
+```bash
+# Blocks commits containing:
+variant="outline"
+variant='outline'
+: "outline"
+: 'outline'
+```
+
+#### Layer 4: TypeScript Type Safety
+- **Location**: `src/components/ui/button.tsx`
+- **Behavior**: While 'outline' remains in the TypeScript union type for backward compatibility, it's intercepted at runtime
+- **Why kept in types**: Prevents TypeScript errors in existing code while enforcement happens at runtime
+
+### Migration Completed
+
+**Status**: ✅ All outline variants removed platform-wide (November 20, 2025)
+
+**Scope of cleanup**:
+- 45+ literal `variant="outline"` instances
+- 600+ dynamic/conditional variants
+- Both single-quoted `'outline'` and double-quoted `"outline"` patterns
+- Affected components: CRM filters, segment buttons, export menus, calendar controls, media library, and 30+ other files
+
+**Files modified**: See `/root/agents/Plans/Remove-Outline-Button-Variants-20251120.md` for complete list
+
+### Developer Guidelines
+
+**When adding new buttons:**
+
+❌ **NEVER use**:
+```tsx
+<Button variant="outline">Click Me</Button>
+```
+
+✅ **Instead use**:
+```tsx
+// For alternative actions (filters, toggles, secondary CTAs)
+<Button variant="secondary">Filter</Button>
+
+// For cancel/close buttons
+<Button variant="ghost">Cancel</Button>
+
+// For primary actions
+<Button variant="default">Submit</Button>
+
+// For destructive actions
+<Button variant="destructive">Delete</Button>
+```
+
+### Verification
+
+Run these commands to verify enforcement is working:
+
+```bash
+# ESLint check (should find no violations)
+npm run lint
+
+# Pre-commit hook test (should block if outline found)
+git add .
+git commit -m "test"  # Will block if outline detected
+
+# Runtime check (watch browser console for warnings)
+npm run dev
+```
+
+### Support
+
+If you encounter issues with this enforcement system:
+1. Check the console for the automatic conversion warning
+2. Update your code to use `variant="secondary"` or `variant="ghost"`
+3. Run `npm run lint` to find all instances
+4. See examples in recently updated components (MediaLibraryManager.tsx, DealFilters.tsx, SegmentFilter.tsx)  
