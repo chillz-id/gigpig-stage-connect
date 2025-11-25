@@ -1,0 +1,33 @@
+%%{init: {'theme': 'base'}}%%
+flowchart TB
+    subgraph Create["Event Creation"]
+        CE[CreateEvent.tsx]
+        EF[EventForm]
+    end
+
+    subgraph DB["Database"]
+        Events[(events)]
+        Sessions[(sessions)]
+        Orders[(orders)]
+    end
+
+    subgraph External["External Platforms"]
+        HTX[Humanitix]
+        EB[Eventbrite]
+    end
+
+    subgraph Sync["Webhook Sync"]
+        WH[Edge Functions]
+        Processor[webhookProcessor]
+    end
+
+    CE --> EF
+    EF --> Events
+    Events --> |Optional| HTX
+    Events --> |Optional| EB
+
+    HTX --> |Webhook| WH
+    EB --> |Webhook| WH
+    WH --> Processor
+    Processor --> Sessions
+    Processor --> Orders

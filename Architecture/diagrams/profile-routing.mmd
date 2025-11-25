@@ -1,0 +1,35 @@
+%%{init: {'theme': 'base'}}%%
+flowchart LR
+    subgraph Switcher["ProfileSwitcher"]
+        PS[ProfileSwitcher.tsx]
+        PC[ProfileContext]
+    end
+
+    subgraph State["State Updates"]
+        LS[localStorage]
+        AP[activeProfile]
+    end
+
+    subgraph Routing["URL Routing"]
+        RR[React Router]
+        PP[PublicProfile.tsx]
+    end
+
+    subgraph Display["Profile Display"]
+        CPL[ComedianProfileLayout]
+        MPL[ManagerProfile]
+        OPL[OrgProfile]
+        PPL[PhotographerProfile]
+    end
+
+    PS --> |setActiveProfile| PC
+    PC --> LS
+    PC --> AP
+
+    PS --> |navigate| RR
+    RR --> PP
+
+    PP --> |type=comedian| CPL
+    PP --> |type=manager| MPL
+    PP --> |type=organization| OPL
+    PP --> |type=photographer| PPL

@@ -1,0 +1,19 @@
+%%{init: {'theme': 'base'}}%%
+sequenceDiagram
+    participant U as User
+    participant C as Component
+    participant H as Hook
+    participant RQ as React Query
+    participant S as Supabase
+    participant DB as PostgreSQL
+
+    U->>C: Interaction
+    C->>H: Call hook
+    H->>RQ: useQuery/useMutation
+    RQ->>S: API Request
+    S->>DB: SQL Query
+    DB-->>S: Result
+    S-->>RQ: Response
+    RQ-->>H: Cached Data
+    H-->>C: State Update
+    C-->>U: UI Update

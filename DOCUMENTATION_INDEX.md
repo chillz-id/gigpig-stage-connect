@@ -1,6 +1,6 @@
 # Documentation Index
 
-This guide highlights where to find working reference material. Updated 2025-11-25.
+This guide highlights where to find working reference material. Updated 2025-11-26.
 
 ## Canonical Documentation
 
@@ -11,6 +11,17 @@ This guide highlights where to find working reference material. Updated 2025-11-
 | `CLAUDE.md` | Developer guide for Claude Code sessions |
 | `AGENTS.md` | Git workflow and contributor guidelines |
 | `QUICK_REFERENCE.md` | Development quick reference |
+
+### Architecture Documentation (NEW)
+| File | Purpose |
+|------|---------|
+| `Architecture/00-QUICK-START.md` | **Start here** - Agent onboarding guide |
+| `Architecture/01-SYSTEM-MAP.md` | High-level architecture with diagrams |
+| `Architecture/02-DIRECTORY-GUIDE.md` | Annotated directory tree |
+| `Architecture/03-FEATURE-CONNECTIONS.md` | How features interact |
+| `Architecture/04-DATABASE-OVERVIEW.md` | Schema and relationships |
+| `Architecture/05-COMMON-PATTERNS.md` | Code patterns with examples |
+| `Architecture/diagrams/` | Mermaid diagram source files |
 
 ### Feature Documentation
 | Location | Contents |
