@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
-import { FileUp, Upload, AlertCircle, CheckCircle2, XCircle, Download, Loader2 } from 'lucide-react';
+import { FileUp, Upload, AlertCircle, CheckCircle2, XCircle, Download, Loader2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -32,6 +34,7 @@ import {
   type ValidationResult,
   type ImportResult,
 } from '@/services/crm/import-service';
+import { segmentService } from '@/services/crm/segment-service';
 import { useExportCustomers } from '@/hooks/useCustomers';
 
 type ImportStep = 'upload' | 'mapping' | 'preview' | 'importing' | 'complete';
@@ -55,6 +58,9 @@ const IMPORT_FIELDS: Array<{ key: keyof ImportCustomerRow; label: string; requir
 ];
 
 export const ImportExportPage = () => {
+  const [searchParams] = useSearchParams();
+  const segmentSlug = searchParams.get('segment');
+
   const [step, setStep] = useState<ImportStep>('upload');
   const [parsedCSV, setParsedCSV] = useState<ParsedCSV | null>(null);
   const [columnMappings, setColumnMappings] = useState<Record<string, keyof ImportCustomerRow>>({});
@@ -62,6 +68,13 @@ export const ImportExportPage = () => {
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Fetch target segment details if slug is provided
+  const { data: targetSegment } = useQuery({
+    queryKey: ['segment', segmentSlug],
+    queryFn: () => segmentService.getBySlug(segmentSlug!),
+    enabled: !!segmentSlug,
+  });
 
   const exportMutation = useExportCustomers();
 
@@ -135,14 +148,16 @@ export const ImportExportPage = () => {
         50,
         (processed, total) => {
           setImportProgress(Math.round((processed / total) * 100));
-        }
+        },
+        targetSegment?.id // Pass segment ID if importing to a segment
       );
 
       setImportResult(result);
       setStep('complete');
 
       if (result.failed === 0) {
-        toast.success(`Successfully imported ${result.created + result.updated} customers`);
+        const segmentMsg = targetSegment ? ` and added to "${targetSegment.name}"` : '';
+        toast.success(`Successfully imported ${result.created + result.updated} customers${segmentMsg}`);
       } else {
         toast.warning(`Import completed with ${result.failed} errors`);
       }
@@ -200,6 +215,17 @@ export const ImportExportPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {targetSegment && (
+              <Alert className="mb-4 border-purple-500/50 bg-purple-500/10">
+                <Tag className="h-4 w-4 text-purple-500" />
+                <AlertTitle className="text-purple-700 dark:text-purple-300">
+                  Importing to Segment: {targetSegment.name}
+                </AlertTitle>
+                <AlertDescription>
+                  Imported customers will automatically be added to this segment.
+                </AlertDescription>
+              </Alert>
+            )}
             {step === 'upload' && (
               <div
                 {...getRootProps()}
@@ -226,7 +252,7 @@ export const ImportExportPage = () => {
                   <p className="text-sm text-muted-foreground">
                     {parsedCSV.rows.length} rows found. Map your CSV columns to customer fields.
                   </p>
-                  <Button variant="outline" size="sm" onClick={handleReset}>
+                  <Button variant="secondary" size="sm" onClick={handleReset}>
                     Start Over
                   </Button>
                 </div>
@@ -289,10 +315,10 @@ export const ImportExportPage = () => {
                       <Badge variant="destructive">{validation.errors.length} errors</Badge>
                     )}
                     {validation.warnings.length > 0 && (
-                      <Badge variant="outline">{validation.warnings.length} warnings</Badge>
+                      <Badge variant="secondary">{validation.warnings.length} warnings</Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setStep('mapping')}>
+                  <Button variant="secondary" size="sm" onClick={() => setStep('mapping')}>
                     Back to Mapping
                   </Button>
                 </div>

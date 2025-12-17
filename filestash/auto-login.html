@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Connecting to Media Library...</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    .loader { text-align: center; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #333;
+      border-top-color: #9333ea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error { color: #ef4444; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="loader">
+    <div class="spinner"></div>
+    <div>Connecting to Media Library...</div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <!-- Form for S3 login - auto-submitted with all credentials -->
+  <form id="s3Form" method="POST" action="/api/session" style="display:none;">
+    <input type="hidden" name="type" value="s3">
+    <input type="hidden" name="access_key_id" value="user">
+    <input type="hidden" name="secret_access_key" value="x">
+    <input type="hidden" name="session_token" id="session_token">
+    <input type="hidden" name="endpoint" value="http://s3-proxy:9000">
+    <input type="hidden" name="path" value="/media-library">
+    <input type="hidden" name="region" value="auto">
+  </form>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (!token) {
+        document.getElementById('error').textContent = 'No authentication token';
+        return;
+      }
+
+      // Set session_token to user's JWT
+      document.getElementById('session_token').value = token;
+
+      // Submit S3 login form
+      document.getElementById('s3Form').submit();
+    })();
+  </script>
+</body>
+</html>

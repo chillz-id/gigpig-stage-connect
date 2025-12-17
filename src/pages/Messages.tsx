@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -368,10 +368,11 @@ const Messages = () => {
                         >
                           <div className="flex items-start space-x-3">
                             <div className="relative">
-                              <Avatar className="w-12 h-12">
-                                <AvatarImage src={conversation.participantAvatar} alt={conversation.participantName} />
-                                <AvatarFallback>{conversation.participantName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                              </Avatar>
+                              <OptimizedAvatar
+                                src={conversation.participantAvatar}
+                                name={conversation.participantName}
+                                className="w-12 h-12"
+                              />
                               {conversation.isOnline && (
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                               )}
@@ -416,10 +417,11 @@ const Messages = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="relative">
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={selectedConversation.participantAvatar} alt={selectedConversation.participantName} />
-                              <AvatarFallback>{selectedConversation.participantName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                            </Avatar>
+                            <OptimizedAvatar
+                              src={selectedConversation.participantAvatar}
+                              name={selectedConversation.participantName}
+                              className="w-10 h-10"
+                            />
                             {selectedConversation.isOnline && (
                               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                             )}
@@ -475,15 +477,12 @@ const Messages = () => {
                           className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
                         >
                           <div className={`flex space-x-2 max-w-[80%] ${message.senderId === user.id ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage 
-                                src={message.senderId === user.id ? (profile?.avatar_url || '') : message.senderAvatar} 
-                                alt={message.senderName} 
-                              />
-                              <AvatarFallback className="text-xs">
-                                {message.senderName.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
+                            <OptimizedAvatar
+                              src={message.senderId === user.id ? (profile?.avatar_url || '') : message.senderAvatar}
+                              name={message.senderName}
+                              className="w-8 h-8"
+                              fallbackClassName="text-xs"
+                            />
                             <div className={`rounded-lg p-3 ${
                               message.senderId === user.id 
                                 ? 'bg-gradient-to-r from-primary to-secondary text-white' 

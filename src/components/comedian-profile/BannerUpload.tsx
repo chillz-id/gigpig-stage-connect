@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,14 +20,15 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
-  const [bannerPosition, setBannerPosition] = useState<{ x: number; y: number; scale: number }>({ x: 0, y: 0, scale: 1 });
+  const [originalFileName, setOriginalFileName] = useState<string>('banner.jpg');
 
+  // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
+  // Path: {userId}/my-files/profile/Profile Banners maps to MediaBrowser's my-files/profile/Profile Banners
   const { uploadFile } = useFileUpload({
-    bucket: 'comedian-media',
-    folder: `${user?.id}/Banner`,
+    bucket: 'media-library',
+    folder: `${user?.id}/my-files/profile/Profile Banners`,
     maxSize: 10 * 1024 * 1024, // 10MB max
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     onProgress: setUploadProgress
@@ -57,36 +58,34 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
       return;
     }
 
-    setSelectedFile(file);
+    setOriginalFileName(file.name);
 
-    // Create preview and open editor
+    // Create preview and open editor immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
       setShowEditor(true);
     };
     reader.readAsDataURL(file);
+
+    // Reset file input so same file can be selected again
+    e.target.value = '';
   };
 
-  const handlePositionSave = (position: { x: number; y: number; scale: number }) => {
-    setBannerPosition(position);
+  // Handler for cropped image - auto-uploads after cropping
+  const handleImageSave = useCallback(async (imageDataUrl: string, blob?: Blob) => {
+    if (!blob || !user) {
+      setShowEditor(false);
+      return;
+    }
+
     setShowEditor(false);
-  };
-
-  const removeFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setBannerPosition({ x: 0, y: 0, scale: 1 });
-  };
-
-  const handleUpload = async () => {
-    if (!user || !selectedFile) return;
+    setIsUploading(true);
 
     try {
-      setIsUploading(true);
-
-      // Upload file to Banner folder
-      const fileUrl = await uploadFile(selectedFile);
+      // Create file from blob and upload directly
+      const fileToUpload = new File([blob], originalFileName, { type: blob.type });
+      const fileUrl = await uploadFile(fileToUpload);
 
       if (!fileUrl) {
         toast({
@@ -94,17 +93,13 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
           description: 'Failed to upload banner image. Please try again.',
           variant: 'destructive'
         });
-        setIsUploading(false);
         return;
       }
 
-      // Update profiles table with new banner URL and position
+      // Update profiles table with new banner URL
       const { error } = await supabase
         .from('profiles')
-        .update({
-          banner_url: fileUrl,
-          banner_position: bannerPosition // Save the position from editor
-        })
+        .update({ banner_url: fileUrl })
         .eq('id', user.id);
 
       if (error) {
@@ -114,7 +109,6 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
           description: 'The image was uploaded but failed to save. Please try again.',
           variant: 'destructive'
         });
-        setIsUploading(false);
         return;
       }
 
@@ -124,8 +118,6 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
       });
 
       onBannerUploaded(fileUrl);
-      setSelectedFile(null);
-      setPreviewUrl(null);
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -135,16 +127,17 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
       });
     } finally {
       setIsUploading(false);
+      setPreviewUrl(null);
     }
-  };
+  }, [user, originalFileName, uploadFile, toast, onBannerUploaded]);
 
   return (
     <div className="space-y-4">
       {/* Current Banner Preview */}
-      {currentBannerUrl && !selectedFile && (
+      {currentBannerUrl && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Current Banner</label>
-          <div className="relative aspect-[8/3] rounded-lg overflow-hidden border border-border">
+          <div className="relative aspect-video rounded-lg overflow-hidden border border-border">
             <img
               src={currentBannerUrl}
               alt="Current banner"
@@ -172,76 +165,35 @@ export const BannerUpload: React.FC<BannerUploadProps> = ({
             className="professional-button"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Choose Banner Image
+            {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Choose Banner Image'}
           </Button>
         </label>
         <p className="text-sm text-gray-500 mt-2">
-          Recommended: 1200x450px (8:3 ratio)
+          You'll crop to 16:9 ratio after selecting
         </p>
         <p className="text-xs text-gray-400 mt-1">
           Supported: JPG, PNG, WebP (max 10MB)
         </p>
       </div>
 
-      {/* Selected File Preview */}
-      {selectedFile && previewUrl && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Selected Image</label>
-          <div className="relative">
-            <div className="aspect-[8/3] rounded-lg overflow-hidden border border-border">
-              <img
-                src={previewUrl}
-                alt="Banner preview"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={removeFile}
-              disabled={isUploading}
-              className="absolute top-2 right-2"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm truncate">{selectedFile.name}</span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-            </span>
-          </div>
-
-          <Button
-            onClick={handleUpload}
-            disabled={isUploading}
-            className="w-full professional-button"
-          >
-            {isUploading ? (
-              <span>Uploading... {Math.round(uploadProgress)}%</span>
-            ) : (
-              <>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Banner
-              </>
-            )}
-          </Button>
+      {/* Uploading indicator */}
+      {isUploading && (
+        <div className="flex items-center justify-center p-4 bg-slate-800 rounded-lg">
+          <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-3" />
+          <span className="text-sm text-gray-300">Uploading banner... {Math.round(uploadProgress)}%</span>
         </div>
       )}
 
-      {/* Banner Position Editor */}
+      {/* Banner Image Editor - opens immediately after file selection */}
       {showEditor && previewUrl && (
         <BannerImageEditor
           isOpen={showEditor}
-          onClose={() => setShowEditor(false)}
-          onSave={handlePositionSave}
+          onClose={() => {
+            setShowEditor(false);
+            setPreviewUrl(null);
+          }}
+          onImageSave={handleImageSave}
           imageUrl={previewUrl}
-          initialPosition={bannerPosition}
         />
       )}
     </div>

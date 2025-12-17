@@ -25,7 +25,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useEventApplications } from '@/hooks/useEventApplications';
 import { useUpcomingGigs } from '@/hooks/useUpcomingGigs';
 import { useSidebarPreferences } from '@/hooks/useSidebarPreferences';
-import { useActiveProfile } from '@/contexts/ActiveProfileContext';
+import { useActiveProfile } from '@/contexts/ProfileContext';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { MENU_ITEMS, SECTION_LABELS, type UserRole, type MenuItem } from '@/config/sidebarMenuItems';
 import { useMemo, useState } from 'react';

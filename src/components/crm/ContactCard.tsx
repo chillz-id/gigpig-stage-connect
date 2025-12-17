@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +15,6 @@ const roleLabels: Record<ContactRole, string> = {
   agency_manager: 'Agency',
 };
 
-const getInitials = (name: string) => {
-  const parts = name.trim().split(' ');
-  const first = parts[0]?.[0];
-  const second = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return `${first || ''}${second || ''}`.toUpperCase();
-};
 
 interface ContactCardProps {
   contact: CRMContact;
@@ -29,7 +23,6 @@ interface ContactCardProps {
 }
 
 export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardProps) => {
-  const initials = getInitials(contact.name);
   const isMobile = useIsMobile();
   const [isSwiped, setIsSwiped] = useState(false);
   const touchStart = useRef<number | null>(null);
@@ -123,10 +116,11 @@ export const ContactCard = ({ contact, onCreateTask, onViewDeals }: ContactCardP
       >
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              {contact.avatarUrl && <AvatarImage src={contact.avatarUrl} alt={contact.name} />}
-              <AvatarFallback>{initials || roleLabels[contact.role][0]}</AvatarFallback>
-            </Avatar>
+            <OptimizedAvatar
+              src={contact.avatarUrl}
+              name={contact.name || roleLabels[contact.role]}
+              className="h-12 w-12"
+            />
             <div>
               <CardTitle className="text-base font-semibold leading-tight">
                 {contact.name}

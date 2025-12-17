@@ -87,13 +87,13 @@ const PressReviews: React.FC<PressReviewsProps> = ({
               <div className="flex items-start justify-between mb-2">
                 <StarRating rating={review.rating} readonly />
                 {isOwnProfile && (onEdit || onDelete) && (
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
                     {onEdit && (
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEditClick(review)}
-                        className="h-7 px-2"
+                        className="h-7 w-7 sm:w-auto px-1 sm:px-2"
                       >
                         <Edit2 className="w-3 h-3" />
                       </Button>
@@ -103,7 +103,7 @@ const PressReviews: React.FC<PressReviewsProps> = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(review.id)}
-                        className="h-7 px-2 text-red-400 hover:text-red-300"
+                        className="h-7 w-7 sm:w-auto px-1 sm:px-2 text-red-400 hover:text-red-300"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -116,7 +116,7 @@ const PressReviews: React.FC<PressReviewsProps> = ({
                 "{review.hookLine}"
               </blockquote>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <p className="text-white font-medium">{review.publication}</p>
                   <p className="text-gray-400 text-sm">
@@ -128,7 +128,7 @@ const PressReviews: React.FC<PressReviewsProps> = ({
                     href={review.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                    className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors text-sm sm:text-base"
                   >
                     Read Full Review
                     <ExternalLink className="w-4 h-4" />

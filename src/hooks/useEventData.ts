@@ -19,6 +19,19 @@ interface Event {
   settlement_status: string;
   promoter_id: string;
   capacity: number;
+  // Sync-related fields
+  source: 'humanitix' | 'eventbrite' | 'platform' | string | null;
+  source_id: string | null;
+  canonical_session_source_id: string | null;
+  synced_at: string | null;
+  is_synced: boolean | null;
+  ticket_count: number | null;
+  gross_dollars: number | null;
+  net_dollars: number | null;
+  fees_dollars: number | null;
+  order_count: number | null;
+  last_order_at: string | null;
+  ticket_url: string | null;
 }
 
 export const useEventData = () => {
@@ -47,7 +60,19 @@ export const useEventData = () => {
           profit_margin,
           settlement_status,
           promoter_id,
-          capacity
+          capacity,
+          source,
+          source_id,
+          canonical_session_source_id,
+          synced_at,
+          is_synced,
+          ticket_count,
+          gross_dollars,
+          net_dollars,
+          fees_dollars,
+          order_count,
+          last_order_at,
+          ticket_url
         `)
         .order('event_date', { ascending: false });
       

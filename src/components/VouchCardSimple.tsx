@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Crown, MessageSquare } from 'lucide-react';
 
 interface VouchCardSimpleProps {
@@ -47,12 +47,12 @@ export const VouchCardSimple: React.FC<VouchCardSimpleProps> = ({ vouch }) => {
     <Card className="bg-card/50 backdrop-blur-sm">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={otherUser?.avatar} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {otherUser?.name[0]}
-            </AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={otherUser?.avatar}
+            name={otherUser?.name || '?'}
+            className="h-10 w-10"
+            fallbackClassName="bg-primary text-primary-foreground"
+          />
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">

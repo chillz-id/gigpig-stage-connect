@@ -52,6 +52,14 @@ export const useSegments = () => {
   });
 };
 
+export const useSegmentsWithDetails = () => {
+  return useQuery({
+    queryKey: ['segments-with-details'],
+    queryFn: () => segmentService.listWithDetails(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 export const useCustomerStats = () => {
   return useQuery({
     queryKey: ['customer-stats'],

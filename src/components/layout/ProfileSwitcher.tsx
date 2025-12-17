@@ -11,13 +11,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   useProfile,
+  useActiveProfile,
   PROFILE_TYPES,
   isOrganizationProfile,
   getOrganizationId,
   type ProfileTypeValue,
   type BaseProfileType,
 } from '@/contexts/ProfileContext';
-import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { ProfileCreationWizard } from '@/components/profile/ProfileCreationWizard';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { useAuth } from '@/contexts/AuthContext';

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useOrganizationEvents, useOrganizationUpcomingEvents, useOrganizationPastEvents, type OrganizationEvent } from '@/hooks/organization/useOrganizationEvents';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,8 +9,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { EventDetailsModal } from '@/components/organization/EventDetailsModal';
-import { Calendar, MapPin, Plus, LayoutGrid, List, CalendarDays, X, Clock, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Plus, LayoutGrid, List, CalendarDays, X, Clock, Eye, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -27,20 +26,34 @@ type ViewMode = 'cards' | 'list' | 'calendar';
 
 export default function OrganizationEvents() {
   const { organization } = useOrganization();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<EventFilter>('upcoming');
-  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('org-events-view-mode');
+    return (saved as ViewMode) || 'list';
+  });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedEvent, setSelectedEvent] = useState<OrganizationEvent | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
-  const handleOpenEventDetails = (event: OrganizationEvent) => {
-    setSelectedEvent(event);
-    setModalOpen(true);
-  };
+  // Persist view mode preference
+  useEffect(() => {
+    localStorage.setItem('org-events-view-mode', viewMode);
+  }, [viewMode]);
 
   // Use slug-based URLs for navigation
   const orgSlug = organization?.url_slug;
+  const orgId = organization?.id;
+
+  // Navigate to full-page event management
+  const handleOpenEventDetails = (event: OrganizationEvent) => {
+    // For native events, go directly to manage page
+    if (event.source === 'native') {
+      navigate(`/events/${event.id}/manage`);
+    } else {
+      // For synced events, use navigator to handle linking (pass orgId for creating linked events)
+      navigate(`/events/navigate/${event.source}/${event.canonical_source_id || event.id}?orgId=${orgId}`);
+    }
+  };
 
   const { data: allEvents, isLoading: allLoading } = useOrganizationEvents();
   const { data: upcomingEvents, isLoading: upcomingLoading } = useOrganizationUpcomingEvents();
@@ -317,12 +330,20 @@ export default function OrganizationEvents() {
           <h1 className="text-3xl font-bold">Events</h1>
           <p className="mt-1 text-gray-600">Manage {organization.organization_name}'s events</p>
         </div>
-        <Link to={`/org/${orgSlug}/events/create`}>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Event
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to={`/org/${orgSlug}/events/series`}>
+            <Button variant="secondary">
+              <Layers className="mr-2 h-4 w-4" />
+              Series
+            </Button>
+          </Link>
+          <Link to={`/org/${orgSlug}/events/create`}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Event
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters Row */}
@@ -453,7 +474,7 @@ export default function OrganizationEvents() {
 
             return (
               <div key={monthKey}>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-200 dark:border-gray-800">
+                <h2 className="text-lg font-semibold text-foreground mb-3 pb-2 border-b border-border">
                   {monthName}
                   <span className="ml-2 text-sm font-normal text-gray-500">
                     ({monthEvents.length} {monthEvents.length === 1 ? 'event' : 'events'})
@@ -549,13 +570,6 @@ export default function OrganizationEvents() {
           </CardContent>
         </Card>
       )}
-
-      {/* Event Details Modal */}
-      <EventDetailsModal
-        event={selectedEvent}
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLinks } from '@/components/comedian-profile/CustomLinks';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,28 +47,18 @@ const ComedianLinksPage: React.FC = () => {
     );
   }
 
-  // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-black">
       {/* Header */}
       <div className="pt-12 pb-8 px-4">
         <div className="max-w-md mx-auto text-center">
           {/* Avatar */}
-          <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white/20">
-            <AvatarImage src={comedian.avatar_url || undefined} alt={comedian.stage_name} />
-            <AvatarFallback className="bg-purple-600 text-white text-2xl">
-              {getInitials(comedian.stage_name)}
-            </AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={comedian.avatar_url}
+            name={comedian.stage_name}
+            className="w-24 h-24 mx-auto mb-4 border-4 border-white/20"
+            fallbackClassName="bg-purple-600 text-white text-2xl"
+          />
 
           {/* Name */}
           <h1 className="text-3xl font-bold text-white mb-2">{comedian.stage_name}</h1>

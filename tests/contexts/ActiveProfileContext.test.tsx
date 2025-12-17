@@ -1,10 +1,46 @@
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-  ActiveProfileProvider,
+  ProfileProvider,
   useActiveProfile,
   type ActiveProfile,
-} from '@/contexts/ActiveProfileContext';
+} from '@/contexts/ProfileContext';
+
+// Mock Supabase client
+jest.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      })),
+    })),
+    auth: {
+      getUser: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })),
+    },
+  },
+}));
+
+// Mock useAuth to return no user (prevents user_roles query)
+jest.mock('@/contexts/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: null,
+    session: null,
+    loading: false,
+  })),
+}));
+
+// Mock useOrganizationProfiles
+jest.mock('@/hooks/useOrganizationProfiles', () => ({
+  useOrganizationProfiles: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  })),
+}));
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -28,23 +64,38 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ActiveProfileProvider>{children}</ActiveProfileProvider>
-);
+// Create a fresh QueryClient for each test
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
 
-describe('ActiveProfileContext', () => {
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <ProfileProvider>{children}</ProfileProvider>
+    </QueryClientProvider>
+  );
+};
+
+describe('ActiveProfileContext (via ProfileContext)', () => {
   beforeEach(() => {
     localStorageMock.clear();
+    jest.clearAllMocks();
   });
 
   it('provides default null state', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     expect(result.current.activeProfile).toBeNull();
   });
 
   it('setActiveProfile updates state correctly', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-123',
@@ -62,7 +113,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('persists active profile to localStorage', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-456',
@@ -91,13 +142,13 @@ describe('ActiveProfileContext', () => {
 
     localStorage.setItem('activeProfile', JSON.stringify(testProfile));
 
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     expect(result.current.activeProfile).toEqual(testProfile);
   });
 
   it('clearActiveProfile resets state', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-clear',
@@ -120,7 +171,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('clearActiveProfile removes from localStorage', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-remove',
@@ -143,7 +194,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('getProfileUrl generates correct URL for dashboard', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-url',
@@ -160,7 +211,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('getProfileUrl generates correct URL for specific page', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const testProfile: ActiveProfile = {
       id: 'test-id-settings',
@@ -179,7 +230,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('getProfileUrl returns root when no active profile', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     expect(result.current.getProfileUrl()).toBe('/');
     expect(result.current.getProfileUrl('settings')).toBe('/');
@@ -188,13 +239,13 @@ describe('ActiveProfileContext', () => {
   it('handles invalid localStorage data gracefully', () => {
     localStorage.setItem('activeProfile', 'invalid-json');
 
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     expect(result.current.activeProfile).toBeNull();
   });
 
   it('supports photographer profile type', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const photographerProfile: ActiveProfile = {
       id: 'photographer-id-123',
@@ -218,7 +269,7 @@ describe('ActiveProfileContext', () => {
   });
 
   it('supports videographer profile type', () => {
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     const videographerProfile: ActiveProfile = {
       id: 'videographer-id-456',
@@ -247,7 +298,7 @@ describe('ActiveProfileContext', () => {
 
     localStorage.setItem('activeProfile', JSON.stringify(invalidProfile));
 
-    const { result } = renderHook(() => useActiveProfile(), { wrapper });
+    const { result } = renderHook(() => useActiveProfile(), { wrapper: createWrapper() });
 
     expect(result.current.activeProfile).toBeNull();
   });
@@ -258,7 +309,7 @@ describe('ActiveProfileContext', () => {
 
     expect(() => {
       renderHook(() => useActiveProfile());
-    }).toThrow('useActiveProfile must be used within an ActiveProfileProvider');
+    }).toThrow('useActiveProfile must be used within a ProfileProvider');
 
     consoleSpy.mockRestore();
   });

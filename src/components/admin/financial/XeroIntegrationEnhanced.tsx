@@ -174,7 +174,7 @@ export const XeroIntegrationEnhanced: React.FC = () => {
                         <Badge variant={
                           invoice.invoice_status === 'PAID' ? 'default' :
                           invoice.invoice_status === 'AUTHORISED' ? 'secondary' :
-                          'outline'
+                          'destructive'
                         }>
                           {invoice.invoice_status}
                         </Badge>

@@ -1,6 +1,6 @@
 # ProfileContext + ActiveProfileContext Consolidation Plan
 Created: 2025-11-25
-Status: Pending
+Status: Completed (2025-11-25)
 
 ## Overview
 Two contexts manage profile state with overlapping responsibilities. This plan proposes consolidating them into a single unified context to simplify state management and eliminate synchronization issues.
@@ -161,3 +161,50 @@ Files currently using ProfileContext (minimal changes):
 - Consider whether comedian_lite should be a separate profile type or handled via profile.tier field
 - Organization profiles use `org:{uuid}` format - this pattern should be preserved
 - PROFILE_TYPES constant can remain for UI rendering (icons, labels)
+
+---
+
+## Completion Summary (2025-11-25)
+
+### Implementation Approach
+Used **Option A: Big Bang** - all changes in one PR for consistency.
+
+### Changes Made
+
+**1. ProfileContext.tsx - Merged ActiveProfileContext logic**
+- Added `ActiveProfile` interface and `ActiveProfileType` type
+- Added `activeProfileEntity` state with localStorage persistence
+- Added `setActiveProfile`, `clearActiveProfile`, `getProfileUrl` functions
+- Added `useActiveProfile()` hook for backwards compatibility
+- Updated context value interface to include all entity fields
+- Kept both localStorage keys: `active-profile-type` (type) and `activeProfile` (entity)
+
+**2. Updated Consumers (4 files)**
+- `src/pages/PublicProfile.tsx` - Import from ProfileContext
+- `src/components/layout/UnifiedSidebar.tsx` - Import from ProfileContext
+- `src/components/layout/ProfileSwitcher.tsx` - Single import, both hooks
+- `src/components/comedian-profile/ComedianProfileLayout.tsx` - Import from ProfileContext
+
+**3. App.tsx - Removed ActiveProfileProvider**
+- Removed import and provider wrapper
+- ProfileProvider now provides all profile state
+
+**4. Deleted ActiveProfileContext.tsx**
+- File removed after all consumers updated
+
+**5. Updated Tests**
+- `tests/contexts/ActiveProfileContext.test.tsx` - Updated to test via ProfileContext
+- `tests/components/ProfileSwitcher.test.tsx` - Removed ActiveProfileProvider wrapper
+
+### Verification
+- ✅ TypeScript compiles cleanly
+- ✅ Build successful (1m 3s)
+- ✅ All 14 ActiveProfileContext tests pass
+- ✅ All 8 ProfileSwitcher tests pass
+- ✅ No references to old ActiveProfileContext in source code
+
+### Benefits Achieved
+- Single source of truth for profile state
+- No more manual synchronization in ProfileSwitcher
+- Simpler provider hierarchy (one fewer wrapper)
+- Backwards-compatible API via `useActiveProfile()` hook

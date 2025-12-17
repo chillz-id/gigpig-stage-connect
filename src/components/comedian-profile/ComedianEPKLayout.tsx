@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Eye, EyeOff, GripVertical, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
@@ -10,6 +10,7 @@ import { useProfileAnalytics } from '@/hooks/useProfileAnalytics';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { useComedianProfile } from './ComedianProfileLayout';
 import ComedianHeader from './ComedianHeader';
+import ComedianSocialLinks from './ComedianSocialLinks';
 import ComedianBio from './ComedianBio';
 import ComedianMedia from './ComedianMedia';
 import ComedianUpcomingShows from './ComedianUpcomingShows';
@@ -88,6 +89,22 @@ const ComedianEPKLayout: React.FC = () => {
 
   // Preview mode state - allows profile owner to see public view
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  // Device preview type - desktop/tablet/mobile simulation
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+  // Get device preview container styles
+  const getDevicePreviewStyles = () => {
+    if (!isPreviewMode) return {};
+    switch (previewDevice) {
+      case 'mobile':
+        return { maxWidth: '375px', margin: '0 auto' };
+      case 'tablet':
+        return { maxWidth: '768px', margin: '0 auto' };
+      default:
+        return {};
+    }
+  };
 
   // Section ordering hook - only fetch if this is the user's own profile
   const { sections, isLoading: sectionsLoading, updateAllSections } = useEPKSectionOrder(
@@ -206,7 +223,7 @@ const ComedianEPKLayout: React.FC = () => {
               comedianId={comedian.id}
               isOwnProfile={isDraggable ? isOwnProfile : false}
               trackInteraction={trackInteraction}
-              mediaLayout={comedian.media_layout || 'grid'}
+              mediaLayout={comedian.media_layout || 'slider'}
             />
           </SortableEPKSection>
         );
@@ -244,18 +261,56 @@ const ComedianEPKLayout: React.FC = () => {
     <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8 relative">
-          {/* Action Buttons positioned absolutely */}
-          {hasRole('admin') && (
-            <div className="absolute top-0 left-0 z-10 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-          )}
-
-          {/* Preview Mode Toggle Button - Only visible to profile owner */}
+          {/* Preview Mode Controls - Only visible to profile owner */}
           {isOwnProfile && (
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center justify-end gap-3 mb-4">
+              {/* Device Preview Toggle - Only show when in preview mode */}
+              {isPreviewMode && (
+                <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
+                  <button
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={cn(
+                      "p-2 rounded-md transition-colors",
+                      previewDevice === 'desktop'
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-400 hover:text-white hover:bg-slate-700"
+                    )}
+                    title="Desktop preview"
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setPreviewDevice('tablet')}
+                    className={cn(
+                      "p-2 rounded-md transition-colors",
+                      previewDevice === 'tablet'
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-400 hover:text-white hover:bg-slate-700"
+                    )}
+                    title="Tablet preview (768px)"
+                  >
+                    <Tablet className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={cn(
+                      "p-2 rounded-md transition-colors",
+                      previewDevice === 'mobile'
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-400 hover:text-white hover:bg-slate-700"
+                    )}
+                    title="Mobile preview (375px)"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <Button
-                onClick={() => setIsPreviewMode(!isPreviewMode)}
+                onClick={() => {
+                  setIsPreviewMode(!isPreviewMode);
+                  if (isPreviewMode) setPreviewDevice('desktop'); // Reset on exit
+                }}
                 className="professional-button"
                 size="sm"
               >
@@ -274,17 +329,31 @@ const ComedianEPKLayout: React.FC = () => {
             </div>
           )}
 
-          {/* Header Section */}
-          <ComedianHeader
-            comedian={comedian}
-            isOwnProfile={isOwnProfile && !isPreviewMode}
-            onShare={handleShare}
-            onContact={handleContact}
-          />
-
           {/* Show tabs for own profile to include analytics (unless in preview mode) */}
           {isOwnProfile && !isPreviewMode ? (
-            <Tabs defaultValue={initialTab} onValueChange={handleTabChange} className="space-y-6">
+            <>
+              {/* Header Section */}
+              <ComedianHeader
+                comedian={comedian}
+                isOwnProfile={true}
+                onShare={handleShare}
+                onContact={handleContact}
+              />
+
+              {/* Social Links - Centered Linktree style */}
+              <div className="flex justify-center py-4">
+                <ComedianSocialLinks
+                  instagram_url={comedian.instagram_url}
+                  youtube_url={comedian.youtube_url}
+                  twitter_url={comedian.twitter_url}
+                  facebook_url={comedian.facebook_url}
+                  tiktok_url={comedian.tiktok_url}
+                  website_url={comedian.website_url}
+                  className="flex items-center gap-5"
+                />
+              </div>
+
+            <Tabs value={initialTab} onValueChange={handleTabChange} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="epk">EPK</TabsTrigger>
                 <TabsTrigger value="links">Links</TabsTrigger>
@@ -319,24 +388,55 @@ const ComedianEPKLayout: React.FC = () => {
                 <AnalyticsDashboard profileId={comedian.id} />
               </TabsContent>
             </Tabs>
+            </>
           ) : (
-            <Tabs defaultValue={initialTab} onValueChange={handleTabChange} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="epk">Profile</TabsTrigger>
-                <TabsTrigger value="links">Links</TabsTrigger>
-              </TabsList>
+            /* Public view / Preview mode - may have device simulation */
+            <div
+              style={getDevicePreviewStyles()}
+              className={cn(
+                "transition-all duration-300",
+                isPreviewMode && previewDevice !== 'desktop' && "bg-slate-950 rounded-lg shadow-2xl border border-slate-700 p-2"
+              )}
+            >
+              {/* Header Section - inside device preview container */}
+              <ComedianHeader
+                comedian={comedian}
+                isOwnProfile={false}
+                onShare={handleShare}
+                onContact={handleContact}
+              />
 
-              <TabsContent value="epk" className="space-y-8">
-                {sections.map((section) => renderSection(section.section_id, false))}
-              </TabsContent>
-
-              <TabsContent value="links" className="space-y-8">
-                <CustomLinks
-                  userId={comedian.id}
-                  isOwnProfile={false}
+              {/* Social Links - Centered Linktree style */}
+              <div className="flex justify-center py-4">
+                <ComedianSocialLinks
+                  instagram_url={comedian.instagram_url}
+                  youtube_url={comedian.youtube_url}
+                  twitter_url={comedian.twitter_url}
+                  facebook_url={comedian.facebook_url}
+                  tiktok_url={comedian.tiktok_url}
+                  website_url={comedian.website_url}
+                  className="flex items-center gap-5"
                 />
-              </TabsContent>
-            </Tabs>
+              </div>
+
+              <Tabs value={initialTab} onValueChange={handleTabChange} className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="epk">Profile</TabsTrigger>
+                  <TabsTrigger value="links">Links</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="epk" className="space-y-8">
+                  {sections.map((section) => renderSection(section.section_id, false))}
+                </TabsContent>
+
+                <TabsContent value="links" className="space-y-8">
+                  <CustomLinks
+                    userId={comedian.id}
+                    isOwnProfile={false}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   isSameDay
 } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 
 interface Event {
   id: string;
@@ -47,6 +48,7 @@ function CalendarGridViewComponent({
   selectedEventIds = new Set(),
   onToggleAvailability
 }: CalendarGridViewProps) {
+  const { isMobile } = useMobileLayout();
 
   // Generate calendar grid days
   const calendarDays = useMemo(() => {
@@ -96,14 +98,28 @@ function CalendarGridViewComponent({
     return grouped;
   }, [events]);
 
+  // Day headers - shorter on mobile
+  const dayHeaders = isMobile
+    ? ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4">
+    <div className={cn(
+      "bg-white/5 backdrop-blur-sm rounded-lg",
+      isMobile ? "p-2" : "p-4"
+    )}>
       {/* Day of week headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+      <div className={cn(
+        "grid grid-cols-7 mb-2",
+        isMobile ? "gap-1" : "gap-2"
+      )}>
+        {dayHeaders.map((day, idx) => (
           <div
-            key={day}
-            className="text-center text-sm font-semibold text-white/70 py-2"
+            key={idx}
+            className={cn(
+              "text-center font-semibold text-white/70",
+              isMobile ? "text-xs py-1" : "text-sm py-2"
+            )}
           >
             {day}
           </div>
@@ -111,19 +127,26 @@ function CalendarGridViewComponent({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className={cn(
+        "grid grid-cols-7",
+        isMobile ? "gap-1" : "gap-2"
+      )}>
         {calendarDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayEvents = eventsByDate[dateKey] || [];
-          const visibleEvents = dayEvents.slice(0, 3);
+          // Show fewer events on mobile to save space
+          const maxVisible = isMobile ? 2 : 3;
+          const visibleEvents = dayEvents.slice(0, maxVisible);
           const hiddenCount = dayEvents.length - visibleEvents.length;
 
           const isCurrentMonth = isSameMonth(day, selectedMonth);
           const isCurrentDay = isToday(day);
 
           const cellClasses = cn(
-            "min-h-24 rounded-lg p-2 transition-colors",
+            "rounded-lg transition-colors",
             "border border-white/10",
+            // Smaller cells on mobile
+            isMobile ? "min-h-14 p-1" : "min-h-24 p-2",
             isCurrentMonth ? "bg-white/5" : "bg-white/[0.02]",
             isCurrentDay && "ring-2 ring-purple-400",
             !isCurrentMonth && "opacity-50"
@@ -133,14 +156,15 @@ function CalendarGridViewComponent({
             <div key={index} className={cellClasses}>
               {/* Day number */}
               <div className={cn(
-                "text-sm font-medium mb-1",
+                "font-medium",
+                isMobile ? "text-xs mb-0.5" : "text-sm mb-1",
                 isCurrentDay ? "text-purple-300" : "text-white/60"
               )}>
                 {format(day, 'd')}
               </div>
 
               {/* Event pills */}
-              <div className="space-y-0.5">
+              <div className={isMobile ? "space-y-px" : "space-y-0.5"}>
                 {visibleEvents.map(event => (
                   <EventPill
                     key={event.id}
@@ -148,13 +172,17 @@ function CalendarGridViewComponent({
                     isComedian={isComedian}
                     isSelected={selectedEventIds.has(event.id)}
                     onToggle={onToggleAvailability}
+                    compact={isMobile}
                   />
                 ))}
 
                 {/* More events indicator */}
                 {hiddenCount > 0 && (
-                  <div className="text-[10px] text-white/50 text-center py-0.5">
-                    +{hiddenCount} more
+                  <div className={cn(
+                    "text-white/50 text-center",
+                    isMobile ? "text-[8px] py-px" : "text-[10px] py-0.5"
+                  )}>
+                    +{hiddenCount}
                   </div>
                 )}
               </div>
@@ -165,9 +193,12 @@ function CalendarGridViewComponent({
 
       {/* Empty state */}
       {events.length === 0 && (
-        <div className="text-center py-12 text-white/50">
-          <p className="text-lg">No events found for this month</p>
-          <p className="text-sm mt-2">Try navigating to a different month</p>
+        <div className={cn(
+          "text-center text-white/50",
+          isMobile ? "py-8" : "py-12"
+        )}>
+          <p className={isMobile ? "text-base" : "text-lg"}>No events found for this month</p>
+          <p className={cn("mt-2", isMobile ? "text-xs" : "text-sm")}>Try navigating to a different month</p>
         </div>
       )}
     </div>

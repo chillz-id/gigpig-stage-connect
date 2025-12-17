@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateEvent } from '@/hooks/useCreateEvent';
+import { useDuplicateDetection, DuplicateCandidate } from '@/hooks/useDuplicateDetection';
 import { EventFormData, RecurringSettings, EventSpot, EventCost } from '@/types/eventTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { withNetworkErrorHandling } from '@/utils/eventNetworkErrorHandler';
@@ -92,12 +93,31 @@ export const useCreateEventForm = () => {
   const { createEvent, isCreating } = useCreateEvent();
   const { user, session } = useAuth();
 
+  // Duplicate detection
+  const {
+    checkDuplicates,
+    mergeData,
+    duplicateResult,
+    isChecking: isCheckingDuplicates,
+    isLinking: isMergingData,
+    reset: resetDuplicateDetection,
+    skipDuplicateCheck,
+    wasSkipped: duplicateCheckSkipped,
+  } = useDuplicateDetection();
+
   // Additional state not handled by react-hook-form
   const [eventSpots, setEventSpots] = useState<EventSpot[]>([]);
   const [eventCosts, setEventCosts] = useState<EventCost[]>([]);
   const [recurringSettings, setRecurringSettings] = useState<RecurringSettings>(initialRecurringSettings);
   const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+
+  // Duplicate detection dialog state
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState<{
+    data: EventFormData;
+    status: 'draft' | 'open';
+  } | null>(null);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
@@ -154,15 +174,16 @@ export const useCreateEventForm = () => {
     }
   };
 
-  const validateAndSubmit = async (data: EventFormData, status: 'draft' | 'open' = 'open') => {
+  // Internal submit function that bypasses duplicate check (called after user confirms)
+  const performSubmit = useCallback(async (data: EventFormData, status: 'draft' | 'open' = 'open') => {
     try {
       // Double-check current auth state
       const { data: { user: currentUser, session: currentSession }, error: authError } = await supabase.auth.getUser();
-      
+
       if (authError || !currentUser || !currentSession) {
         // Try to refresh the session
         const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        
+
         if (refreshError || !refreshedSession) {
           toast({
             title: "Authentication required",
@@ -188,17 +209,17 @@ export const useCreateEventForm = () => {
       // Prepare event data
       const eventData = prepareEventData(data, recurringSettings, eventSpots, currentUser!.id);
       eventData.status = status;
-      
+
       // Submit with network error handling
       await withNetworkErrorHandling(
         async () => {
           const result = await createEvent(eventData);
-          
+
           // If creating a draft and it succeeds, enable auto-save
           if (status === 'draft' && result?.id) {
             setCurrentEventId(result.id);
             setAutoSaveEnabled(true);
-            
+
             // Clear localStorage since we now have a saved draft
             if (typeof window !== 'undefined') {
               localStorage.removeItem('event_draft');
@@ -211,7 +232,7 @@ export const useCreateEventForm = () => {
               localStorage.removeItem('event_draft');
             }
           }
-          
+
           return result;
         },
         {
@@ -232,7 +253,100 @@ export const useCreateEventForm = () => {
         variant: "destructive"
       });
     }
+  }, [createEvent, eventSpots, navigate, recurringSettings, toast]);
+
+  const validateAndSubmit = async (data: EventFormData, status: 'draft' | 'open' = 'open') => {
+    // Skip duplicate check for drafts or if already skipped
+    if (status === 'draft' || duplicateCheckSkipped) {
+      await performSubmit(data, status);
+      return;
+    }
+
+    // Skip duplicate check for recurring events (too complex to match)
+    if (recurringSettings.isRecurring) {
+      await performSubmit(data, status);
+      return;
+    }
+
+    // Check for duplicates before creating
+    if (data.date && data.title) {
+      try {
+        const result = await checkDuplicates(data.title, data.date);
+
+        if (result.hasDuplicates && result.candidates.length > 0) {
+          // Store pending submission and show dialog
+          setPendingSubmission({ data, status });
+          setShowDuplicateDialog(true);
+          return;
+        }
+      } catch (error) {
+        // If duplicate check fails, proceed with creation anyway
+        console.warn('Duplicate check failed, proceeding with creation:', error);
+      }
+    }
+
+    // No duplicates found, proceed with creation
+    await performSubmit(data, status);
   };
+
+  // Handler when user selects a synced event from duplicates
+  const handleSelectSyncedEvent = useCallback(async (candidate: DuplicateCandidate) => {
+    if (!pendingSubmission) return;
+
+    // Merge platform data into the synced event
+    const platformData = {
+      description: pendingSubmission.data.description,
+      banner_url: pendingSubmission.data.imageUrl,
+      requirements: pendingSubmission.data.requirements?.join(', '),
+      spots: pendingSubmission.data.spots,
+    };
+
+    const success = await mergeData(candidate.id, platformData);
+
+    if (success) {
+      toast({
+        title: "Event linked",
+        description: `Your event details have been merged with the existing "${candidate.title}" event.`,
+      });
+
+      // Navigate to the synced event
+      navigate(`/admin/events/${candidate.id}`);
+    } else {
+      toast({
+        title: "Merge failed",
+        description: "Failed to merge event data. Please try again.",
+        variant: "destructive",
+      });
+    }
+
+    // Clean up
+    setShowDuplicateDialog(false);
+    setPendingSubmission(null);
+    resetDuplicateDetection();
+  }, [mergeData, navigate, pendingSubmission, resetDuplicateDetection, toast]);
+
+  // Handler when user wants to create new event despite duplicates
+  const handleCreateNewAnyway = useCallback(async () => {
+    if (!pendingSubmission) return;
+
+    // Skip future duplicate checks for this submission
+    skipDuplicateCheck();
+    setShowDuplicateDialog(false);
+
+    // Proceed with creation
+    await performSubmit(pendingSubmission.data, pendingSubmission.status);
+
+    // Clean up
+    setPendingSubmission(null);
+    resetDuplicateDetection();
+  }, [pendingSubmission, performSubmit, resetDuplicateDetection, skipDuplicateCheck]);
+
+  // Handler to dismiss duplicate dialog
+  const handleDismissDuplicateDialog = useCallback(() => {
+    setShowDuplicateDialog(false);
+    setPendingSubmission(null);
+    resetDuplicateDetection();
+  }, [resetDuplicateDetection]);
 
   const onSubmit = (data: EventFormData) => validateAndSubmit(data, 'open');
   const onSaveDraft = (data: EventFormData) => validateAndSubmit(data, 'draft');
@@ -260,5 +374,14 @@ export const useCreateEventForm = () => {
     currentEventId,
     autoSaveEnabled,
     enableAutoSave,
+    // Duplicate detection
+    showDuplicateDialog,
+    duplicateCandidates: duplicateResult?.candidates ?? [],
+    isCheckingDuplicates,
+    isMergingData,
+    pendingEventData: pendingSubmission?.data ?? null,
+    handleSelectSyncedEvent,
+    handleCreateNewAnyway,
+    handleDismissDuplicateDialog,
   };
 };

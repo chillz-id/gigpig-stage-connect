@@ -9,7 +9,7 @@ import {
 } from '@/utils/fileValidation';
 
 interface UseFileUploadOptions {
-  bucket: 'event-media' | 'profile-images' | 'comedian-media';
+  bucket: 'event-media' | 'profile-images' | 'comedian-media' | 'media-library';
   folder?: string;
   maxSize?: number;
   allowedTypes?: string[];

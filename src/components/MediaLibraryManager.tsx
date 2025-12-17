@@ -40,6 +40,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { MediaTagInput, MediaTagDisplay, MediaTagFilter } from '@/components/media-library';
+import { useMediaTags } from '@/hooks/useMediaTags';
 
 type ViewMode = 'grid' | 'list';
 type MediaType = 'images' | 'videos';
@@ -109,6 +111,23 @@ export const MediaLibraryManager: React.FC = () => {
   const [videoTitle, setVideoTitle] = useState('');
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const [previewMedia, setPreviewMedia] = useState<MediaFile | null>(null);
+  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+
+  // Tag management hook
+  const { updateMediaTags, isUpdating: isUpdatingTags } = useMediaTags();
+
+  // Tag filter helpers
+  const toggleFilterTag = useCallback((tag: string) => {
+    setSelectedFilterTags(prev =>
+      prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  }, []);
+
+  const clearFilterTags = useCallback(() => {
+    setSelectedFilterTags([]);
+  }, []);
 
   // Fetch user's folders
   useEffect(() => {
@@ -717,8 +736,24 @@ export const MediaLibraryManager: React.FC = () => {
       file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       file.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesHeadshotFilter = !showHeadshotsOnly || file.is_headshot === true;
-    return matchesType && matchesSearch && matchesHeadshotFilter;
+    const matchesTagFilter = selectedFilterTags.length === 0 ||
+      selectedFilterTags.every(tag => file.tags?.includes(tag));
+    return matchesType && matchesSearch && matchesHeadshotFilter && matchesTagFilter;
   });
+
+  // Helper to update tags for a file
+  const handleTagsChange = async (fileId: string, newTags: string[]) => {
+    try {
+      await updateMediaTags(fileId, newTags);
+      // Update local state after successful save
+      setFiles(prev => prev.map(f =>
+        f.id === fileId ? { ...f, tags: newTags } : f
+      ));
+    } catch (error) {
+      // Toast is shown by the hook
+      console.error('Failed to update tags:', error);
+    }
+  };
 
   return (
     <div className={cn("space-y-6", isMobile && "space-y-4")}>
@@ -822,7 +857,7 @@ export const MediaLibraryManager: React.FC = () => {
             <Button
               onClick={handleGoogleDriveConnect}
               className={cn("flex items-center gap-2", isMobile && "h-11 touch-target-44 w-full")}
-              variant="outline"
+              variant="secondary"
             >
               <Cloud className={cn(isMobile ? "w-5 h-5" : "w-4 h-4")} />
               {isMobile ? "Google Drive" : "Connect Google Drive"}
@@ -830,7 +865,7 @@ export const MediaLibraryManager: React.FC = () => {
             <Button
               onClick={handleDropboxConnect}
               className={cn("flex items-center gap-2", isMobile && "h-11 touch-target-44 w-full")}
-              variant="outline"
+              variant="secondary"
             >
               <Droplet className={cn(isMobile ? "w-5 h-5" : "w-4 h-4")} />
               {isMobile ? "Dropbox" : "Connect Dropbox"}
@@ -858,6 +893,12 @@ export const MediaLibraryManager: React.FC = () => {
 
             {/* View Controls */}
             <div className={cn("flex items-center gap-2", isMobile && "justify-between")}>
+              <MediaTagFilter
+                selectedTags={selectedFilterTags}
+                onTagToggle={toggleFilterTag}
+                onClear={clearFilterTags}
+                className={cn(isMobile && "touch-target-44")}
+              />
               <Button
                 className={cn(
                   showHeadshotsOnly ? '' : 'professional-button',
@@ -1112,7 +1153,12 @@ export const MediaLibraryManager: React.FC = () => {
                       {/* File Info */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
                         <p className="text-xs text-white truncate">{file.name}</p>
-                        <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                          {file.tags && file.tags.length > 0 && (
+                            <MediaTagDisplay tags={file.tags} maxDisplay={2} className="ml-1" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1299,7 +1345,7 @@ export const MediaLibraryManager: React.FC = () => {
                   {isCreatingFolder ? 'Creating...' : 'Create Folder'}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => {
                     setShowCreateFolderDialog(false);
                     setNewFolderName('');
@@ -1388,7 +1434,7 @@ export const MediaLibraryManager: React.FC = () => {
                   {isAddingVideo ? 'Adding...' : 'Add Video'}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => {
                     setShowAddVideoUrl(false);
                     setVideoUrl('');
@@ -1497,6 +1543,22 @@ export const MediaLibraryManager: React.FC = () => {
               <p className="text-center text-muted-foreground">Preview not available</p>
             )}
           </div>
+          {/* Tag Editor in Preview */}
+          {previewMedia && (
+            <div className={cn("border-t pt-4", isMobile ? "mt-2" : "mt-4")}>
+              <Label className="text-sm font-medium mb-2 block">Tags</Label>
+              <MediaTagInput
+                value={previewMedia.tags || []}
+                onChange={(newTags) => {
+                  handleTagsChange(previewMedia.id, newTags);
+                  setPreviewMedia(prev => prev ? { ...prev, tags: newTags } : null);
+                }}
+                placeholder="Add tags..."
+                className="max-w-full"
+              />
+            </div>
+          )}
+
           <DialogFooter className={cn(isMobile ? "mt-2 flex-col gap-2" : "mt-4")}>
             {isMobile ? (
               <>
@@ -1510,7 +1572,7 @@ export const MediaLibraryManager: React.FC = () => {
                   </Button>
                 )}
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => setPreviewMedia(null)}
                   className="w-full touch-target-44"
                 >

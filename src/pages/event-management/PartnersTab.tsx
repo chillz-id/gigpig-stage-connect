@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import {
   Dialog,
   DialogContent,
@@ -111,11 +111,6 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
     await reactivatePartner.mutateAsync({ partnerId, eventId });
   };
 
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -123,7 +118,7 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
       case 'pending_invite':
         return <Badge variant="secondary">Pending Invite</Badge>;
       case 'inactive':
-        return <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>;
+        return <Badge variant="secondary" className="text-muted-foreground">Inactive</Badge>;
       default:
         return null;
     }
@@ -132,9 +127,9 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
   const getPartnerTypeBadge = (type: string) => {
     switch (type) {
       case 'deal_participant':
-        return <Badge variant="outline" className="border-blue-500 text-blue-500">Deal</Badge>;
+        return <Badge variant="secondary" className="border-blue-500 text-blue-500">Deal</Badge>;
       case 'co_promoter':
-        return <Badge variant="outline" className="border-purple-500 text-purple-500">Co-Promoter</Badge>;
+        return <Badge variant="secondary" className="border-purple-500 text-purple-500">Co-Promoter</Badge>;
       default:
         return null;
     }
@@ -258,12 +253,10 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
                 <div key={partner.id} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={partner.partner_profile?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {getInitials(partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={partner.partner_profile?.avatar_url || undefined}
+                        name={partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email || 'Partner'}
+                      />
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium">
@@ -443,12 +436,11 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
                       onClick={() => handleAddPartner(profile.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={profile.avatar_url || undefined} />
-                          <AvatarFallback>
-                            {getInitials(profile.display_name || profile.name)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={profile.avatar_url || undefined}
+                          name={profile.display_name || profile.name || 'User'}
+                          className="h-8 w-8"
+                        />
                         <div>
                           <p className="text-sm font-medium">
                             {profile.display_name || profile.name}
@@ -566,7 +558,7 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddPartner(false)}>
+            <Button variant="secondary" onClick={() => setShowAddPartner(false)}>
               Cancel
             </Button>
           </DialogFooter>

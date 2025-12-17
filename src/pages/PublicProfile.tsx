@@ -1,7 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useActiveProfile } from '@/contexts/ActiveProfileContext';
+import { useActiveProfile } from '@/contexts/ProfileContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { NotFoundHandler } from '@/components/profile/NotFoundHandler';
@@ -23,6 +23,7 @@ const OrganizationMediaLibrary = lazy(() => import('@/pages/organization/Organiz
 const OrganizationInvoices = lazy(() => import('@/pages/organization/OrganizationInvoices'));
 const OrganizationBookComedian = lazy(() => import('@/pages/organization/OrganizationBookComedian'));
 const CreateOrganizationEvent = lazy(() => import('@/pages/organization/CreateOrganizationEvent'));
+const OrganizationEventSeries = lazy(() => import('@/pages/organization/OrganizationEventSeries'));
 
 interface PublicProfileProps {
   type: 'comedian' | 'manager' | 'organization' | 'venue';
@@ -172,6 +173,7 @@ export default function PublicProfile({ type }: PublicProfileProps) {
             <Route path="dashboard" element={<OrganizationDashboard />} />
             <Route path="events" element={<OrganizationEvents />} />
             <Route path="events/create" element={<CreateOrganizationEvent />} />
+            <Route path="events/series" element={<OrganizationEventSeries />} />
             <Route path="team" element={<OrganizationTeam />} />
             <Route path="tasks" element={<OrganizationTasks />} />
             <Route path="analytics" element={<OrganizationAnalytics />} />

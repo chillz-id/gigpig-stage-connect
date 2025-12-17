@@ -1,18 +1,25 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, DoorOpen, Coffee, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ExportMenu } from '@/components/event-management/ExportMenu';
 import SpotListContainer from '@/components/lineup/SpotListContainer';
-import SpotFilters from '@/components/lineup/SpotFilters';
 import LineupTimeline from '@/components/lineup/LineupTimeline';
+import { AddSpotDialog } from '@/components/lineup/AddSpotDialog';
+import { AddBreakDialog } from '@/components/lineup/AddBreakDialog';
 import { useLineupStats, formatDuration } from '@/hooks/useLineupStats';
 import { formatCurrency } from '@/lib/utils';
-import type { SpotType, SpotStatus } from '@/types/spot';
+import type { SpotCategory } from '@/types/spot';
 
 interface LineupTabProps {
   eventId: string;
@@ -21,22 +28,16 @@ interface LineupTabProps {
 
 type ViewMode = 'list' | 'timeline';
 
-interface FilterState {
-  spotType: SpotType | 'all';
-  status: SpotStatus | 'all';
-  assignment: 'filled' | 'open' | 'all';
-  sort: 'position' | 'time' | 'payment';
-}
-
 export default function LineupTab({ eventId, userId }: LineupTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [filters, setFilters] = useState<FilterState>({
-    spotType: 'all',
-    status: 'all',
-    assignment: 'all',
-    sort: 'position',
-  });
   const [showAddSpotDialog, setShowAddSpotDialog] = useState(false);
+  const [showAddBreakDialog, setShowAddBreakDialog] = useState(false);
+  const [breakType, setBreakType] = useState<SpotCategory>('intermission');
+
+  const handleAddBreak = (type: SpotCategory) => {
+    setBreakType(type);
+    setShowAddBreakDialog(true);
+  };
 
   // Fetch event title for export
   const { data: event } = useQuery({
@@ -55,10 +56,6 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   const { data: stats, isLoading: statsLoading } = useLineupStats(eventId);
 
   const isOwner = event?.organizer_id === userId;
-
-  const handleFilterChange = (newFilters: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
 
   return (
     <div className="space-y-6">
@@ -85,6 +82,33 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
           >
             {viewMode === 'list' ? 'Timeline View' : 'List View'}
           </Button>
+
+          {/* Add Break Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Break
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleAddBreak('doors')}>
+                <DoorOpen className="mr-2 h-4 w-4" />
+                Doors Open
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddBreak('intermission')}>
+                <Coffee className="mr-2 h-4 w-4" />
+                Intermission
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddBreak('custom')}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Custom Break...
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Add Spot Button */}
           <Button onClick={() => setShowAddSpotDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Spot
@@ -101,55 +125,17 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
         </AlertDescription>
       </Alert>
 
-      {/* Filters */}
+      {/* Quick Stats - Moved to top */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filters & Display</CardTitle>
-          <CardDescription>
-            Filter and sort the lineup to focus on specific spot types or statuses
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SpotFilters
-            spotType={filters.spotType}
-            status={filters.status}
-            assignment={filters.assignment}
-            sort={filters.sort}
-            onFilterChange={handleFilterChange}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Lineup Display */}
-      {viewMode === 'list' ? (
-        <SpotListContainer
-          eventId={eventId}
-          userId={userId}
-          spotTypeFilter={filters.spotType}
-          statusFilter={filters.status}
-          assignmentFilter={filters.assignment}
-          sortBy={filters.sort}
-        />
-      ) : (
-        <LineupTimeline
-          eventId={eventId}
-          userId={userId}
-          spotTypeFilter={filters.spotType}
-          statusFilter={filters.status}
-        />
-      )}
-
-      {/* Quick Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lineup Statistics</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Lineup Statistics</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Spots</p>
               {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16 bg-muted" />
               ) : (
                 <p className="text-2xl font-bold">{stats?.totalSpots || 0}</p>
               )}
@@ -157,7 +143,7 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Filled Spots</p>
               {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16 bg-muted" />
               ) : (
                 <p className="text-2xl font-bold">{stats?.filledSpots || 0}</p>
               )}
@@ -165,7 +151,7 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Total Duration</p>
               {statsLoading ? (
-                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-24 bg-muted" />
               ) : (
                 <p className="text-2xl font-bold">{formatDuration(stats?.totalDuration || 0)}</p>
               )}
@@ -173,6 +159,13 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Lineup Display */}
+      {viewMode === 'list' ? (
+        <SpotListContainer eventId={eventId} />
+      ) : (
+        <LineupTimeline eventId={eventId} userId={userId} />
+      )}
 
       {/* Payment Summary */}
       <Card>
@@ -247,6 +240,27 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Spot Dialog */}
+      <AddSpotDialog
+        open={showAddSpotDialog}
+        onOpenChange={setShowAddSpotDialog}
+        eventId={eventId}
+        onSpotCreated={() => {
+          setShowAddSpotDialog(false);
+        }}
+      />
+
+      {/* Add Break Dialog */}
+      <AddBreakDialog
+        open={showAddBreakDialog}
+        onOpenChange={setShowAddBreakDialog}
+        eventId={eventId}
+        breakType={breakType}
+        onBreakCreated={() => {
+          setShowAddBreakDialog(false);
+        }}
+      />
     </div>
   );
 }

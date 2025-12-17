@@ -263,7 +263,7 @@ export function AddToHomeScreen({
           </div>
 
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => setState(prev => ({ ...prev, showInstructions: false }))}
             className="w-full touch-target-44"
           >

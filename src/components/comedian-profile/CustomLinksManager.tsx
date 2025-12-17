@@ -314,13 +314,14 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
     url: '',
     description: '',
     section_id: null as string | null,
-    custom_thumbnail_url: null as string | null,
+    thumbnail_url: null as string | null,        // Auto-fetched OG image
+    custom_thumbnail_url: null as string | null, // User-uploaded override
     is_visible: true,
   });
 
   const debouncedUrl = useDebounce(linkForm.url, 500);
 
-  // Auto-fetch OG data
+  // Auto-fetch OG data (title, description, and thumbnail)
   useEffect(() => {
     if (debouncedUrl && !linkForm.title && !editingLink) {
       fetchOGData(debouncedUrl).then((metadata) => {
@@ -329,6 +330,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
             ...prev,
             title: prev.title || metadata.title,
             description: prev.description || metadata.description || '',
+            thumbnail_url: metadata.image || null,
           }));
         }
       });
@@ -438,6 +440,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
       url: linkForm.url,
       description: linkForm.description || null,
       section_id: linkForm.section_id,
+      thumbnail_url: linkForm.thumbnail_url,          // Auto-fetched OG image
       custom_thumbnail_url: linkForm.custom_thumbnail_url,
       is_visible: linkForm.is_visible,
       display_order: linkForm.section_id
@@ -450,6 +453,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
       url: '',
       description: '',
       section_id: null,
+      thumbnail_url: null,
       custom_thumbnail_url: null,
       is_visible: true,
     });
@@ -463,6 +467,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
       url: link.url,
       description: link.description || '',
       section_id: link.section_id,
+      thumbnail_url: link.thumbnail_url,
       custom_thumbnail_url: link.custom_thumbnail_url,
       is_visible: link.is_visible,
     });
@@ -478,6 +483,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
       url: linkForm.url,
       description: linkForm.description || null,
       section_id: linkForm.section_id,
+      thumbnail_url: linkForm.thumbnail_url,          // Auto-fetched OG image
       custom_thumbnail_url: linkForm.custom_thumbnail_url,
       is_visible: linkForm.is_visible,
     });
@@ -488,6 +494,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
       url: '',
       description: '',
       section_id: null,
+      thumbnail_url: null,
       custom_thumbnail_url: null,
       is_visible: true,
     });
@@ -502,6 +509,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
         ...prev,
         title: metadata.title,
         description: metadata.description || '',
+        thumbnail_url: metadata.image || null,
       }));
     }
   };
@@ -540,6 +548,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
                   url: '',
                   description: '',
                   section_id: null,
+                  thumbnail_url: null,
                   custom_thumbnail_url: null,
                   is_visible: true,
                 });
@@ -681,6 +690,26 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
                 rows={3}
               />
             </div>
+
+            {/* Auto-fetched OG thumbnail preview */}
+            {linkForm.thumbnail_url && !linkForm.custom_thumbnail_url && (
+              <div className="space-y-2">
+                <Label className="text-white">Auto-Fetched Thumbnail</Label>
+                <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
+                    <img
+                      src={linkForm.thumbnail_url}
+                      alt="OG thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <p className="text-sm text-white/70">Thumbnail fetched from page metadata</p>
+                    <p className="text-xs text-white/50 truncate">{linkForm.thumbnail_url}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <LinkThumbnailUpload
               onThumbnailSelected={(url) => setLinkForm({ ...linkForm, custom_thumbnail_url: url })}

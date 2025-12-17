@@ -22,9 +22,11 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({ mediaType, onMediaAdde
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [externalUrl, setExternalUrl] = useState('');
 
+  // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
+  // Path: {userId}/my-files/profile/Headshots maps to MediaBrowser's my-files/profile/Headshots
   const { uploadFile, isUploading: fileUploading } = useFileUpload({
-    bucket: 'comedian-media',
-    folder: `${user?.id}/Headshots`,
+    bucket: 'media-library',
+    folder: `${user?.id}/my-files/profile/Headshots`,
     maxSize: mediaType === 'photo' ? 10 * 1024 * 1024 : 100 * 1024 * 1024,
     allowedTypes: mediaType === 'photo'
       ? ['image/jpeg', 'image/png', 'image/webp']

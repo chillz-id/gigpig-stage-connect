@@ -274,8 +274,8 @@ const ComedianAccomplishments: React.FC<ComedianAccomplishmentsProps> = ({
   return (
     <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white text-2xl">
-          <Trophy className="w-6 h-6 text-purple-400" />
+        <CardTitle className="flex items-center gap-2 text-white text-xl sm:text-2xl">
+          <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
           Accomplishments & Reviews
         </CardTitle>
       </CardHeader>

@@ -30,9 +30,11 @@ export const LinkThumbnailUpload: React.FC<LinkThumbnailUploadProps> = ({
     ? { width: 400, height: 400, ratio: '1:1' }
     : { width: 800, height: 400, ratio: '2:1' };
 
+  // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
+  // Path: {userId}/my-files/profile/Link Thumbnails maps to MediaBrowser's my-files/profile/Link Thumbnails
   const { uploadFile } = useFileUpload({
-    bucket: 'comedian-media',
-    folder: `${user?.id}/link-thumbnails${linkId ? `/${linkId}` : ''}`,
+    bucket: 'media-library',
+    folder: `${user?.id}/my-files/profile/Link Thumbnails${linkId ? `/${linkId}` : ''}`,
     maxSize: 5 * 1024 * 1024, // 5MB max
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     onProgress: setUploadProgress

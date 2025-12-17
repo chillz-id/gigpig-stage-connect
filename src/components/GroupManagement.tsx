@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -265,12 +265,12 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                   {group.members.map((member) => (
                     <div key={member.id} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback className="text-xs">
-                            {member.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={member.avatar}
+                          name={member.name}
+                          className="w-6 h-6"
+                          fallbackClassName="text-xs"
+                        />
                         <span className="text-sm">{member.name}</span>
                       </div>
                       {!group.isDefault && (

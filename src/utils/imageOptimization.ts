@@ -110,8 +110,8 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn = 360
  * Generate CDN URL with image transformations
  * Supports Supabase Storage transformations and fallback CDN options
  *
- * NOTE: Due to Supabase Storage public URL issues (400 errors on /object/public/),
- * this function now converts public URLs to signed URL requests.
+ * For public buckets, returns the public URL directly.
+ * For marker URLs (supabase-storage://), converts to public URL.
  */
 export function generateCDNUrl(
   path: string,
@@ -119,34 +119,35 @@ export function generateCDNUrl(
 ): string {
   if (!path) return '';
 
-  // If already a full URL, check if it's a Supabase URL
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    const url = new URL(path);
-
-    // Check if it's a Supabase URL - these need special handling due to Storage issues
-    if (url.hostname.includes('supabase')) {
-      // Parse the storage URL to extract bucket and path
-      const parsed = parseSupabaseStorageUrl(path);
-      if (parsed) {
-        // Return a special marker URL that components can detect and handle
-        // The actual signed URL fetch needs to happen asynchronously
-        return `supabase-storage://${parsed.bucket}/${parsed.path}`;
-      }
-
-      // If we can't parse it, return as-is (might still fail)
-      return path;
+  // Handle marker URLs - convert to public URLs
+  if (path.startsWith('supabase-storage://')) {
+    const parsed = parseStorageMarkerUrl(path);
+    if (parsed) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      return `${supabaseUrl}/storage/v1/object/public/${parsed.bucket}/${parsed.path}`;
     }
+    return '';
+  }
 
+  // If already a full URL, return as-is (public URLs work directly)
+  if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
 
-  // For relative paths, assume profile-images bucket
-  return `supabase-storage://profile-images/${path}`;
+  // For relative paths, construct public URL for profile-images bucket
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  return `${supabaseUrl}/storage/v1/object/public/profile-images/${path}`;
 }
 
 /**
  * Async version of generateCDNUrl that returns actual signed URLs
  * Use this when you need a working URL immediately
+ *
+ * Handles:
+ * - Marker URLs (supabase-storage://bucket/path)
+ * - Full Supabase URLs (https://xxx.supabase.co/storage/...)
+ * - Relative paths (userid/filename.jpg)
+ * - External URLs (returns as-is)
  */
 export async function generateSignedCDNUrl(
   path: string,
@@ -154,26 +155,45 @@ export async function generateSignedCDNUrl(
 ): Promise<string> {
   if (!path) return '';
 
+  // Handle marker URLs (supabase-storage://bucket/path)
+  if (isSupabaseStorageUrl(path)) {
+    const parsed = parseStorageMarkerUrl(path);
+    if (parsed) {
+      const signedUrl = await getSignedUrl(parsed.bucket, parsed.path);
+      if (signedUrl) {
+        return signedUrl;
+      }
+    }
+    // Fallback: marker URL can't be used directly, return empty for fallback
+    console.warn('[imageOptimization] Failed to resolve marker URL:', path);
+    return '';
+  }
+
   // If already a full URL, check if it's a Supabase URL
   if (path.startsWith('http://') || path.startsWith('https://')) {
-    const url = new URL(path);
+    try {
+      const url = new URL(path);
 
-    // Check if it's a Supabase URL
-    if (url.hostname.includes('supabase')) {
-      // Parse the storage URL to extract bucket and path
-      const parsed = parseSupabaseStorageUrl(path);
-      if (parsed) {
-        const signedUrl = await getSignedUrl(parsed.bucket, parsed.path);
-        if (signedUrl) {
-          return signedUrl;
+      // Check if it's a Supabase URL
+      if (url.hostname.includes('supabase')) {
+        // Parse the storage URL to extract bucket and path
+        const parsed = parseSupabaseStorageUrl(path);
+        if (parsed) {
+          const signedUrl = await getSignedUrl(parsed.bucket, parsed.path);
+          if (signedUrl) {
+            return signedUrl;
+          }
         }
+
+        // Fallback to original URL if signing fails
+        return path;
       }
 
-      // Fallback to original URL if signing fails
       return path;
+    } catch {
+      // Invalid URL, try treating as path
+      console.warn('[imageOptimization] Invalid URL, treating as path:', path);
     }
-
-    return path;
   }
 
   // For relative paths, assume profile-images bucket and get signed URL

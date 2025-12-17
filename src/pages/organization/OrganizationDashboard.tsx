@@ -148,30 +148,46 @@ export default function OrganizationDashboard() {
                 {nextUpcomingEvents.map((event) => (
                   <Link
                     key={event.id}
-                    to={`/events/${event.id}`}
-                    className="block rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                    to={event.source === 'native' ? `/events/${event.id}` : event.ticket_link || '#'}
+                    target={event.source !== 'native' ? '_blank' : undefined}
+                    rel={event.source !== 'native' ? 'noopener noreferrer' : undefined}
+                    className="block rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium">{event.title || event.name || 'Untitled Event'}</h4>
-                        <p className="mt-1 text-sm text-gray-600">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium truncate">{event.event_name || 'Untitled Event'}</h4>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                           {new Date(event.event_date).toLocaleDateString('en-AU', {
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
                           })}
                         </p>
+                        {event.venue && (
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+                            {event.venue.name}
+                          </p>
+                        )}
                       </div>
-                      {event.status === 'published' ? (
-                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">
-                          Published
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">
-                          Draft
-                        </span>
-                      )}
+                      <div className="flex flex-col items-end gap-1 ml-2">
+                        {event.is_published ? (
+                          <span className="rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-1 text-xs text-green-800 dark:text-green-300">
+                            Published
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs text-gray-800 dark:text-gray-300">
+                            Draft
+                          </span>
+                        )}
+                        {event.source !== 'native' && (
+                          <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-1 text-xs text-purple-800 dark:text-purple-300 capitalize">
+                            {event.source}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 ))}

@@ -14,7 +14,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProfileSwitcher } from '@/components/layout/ProfileSwitcher';
 import { ProfileProvider } from '@/contexts/ProfileContext';
-import { ActiveProfileProvider } from '@/contexts/ActiveProfileContext';
 
 // Mock Supabase client
 jest.mock('@/integrations/supabase/client', () => ({
@@ -68,7 +67,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
-        <ActiveProfileProvider>{children}</ActiveProfileProvider>
+        {children}
       </ProfileProvider>
     </QueryClientProvider>
   </BrowserRouter>

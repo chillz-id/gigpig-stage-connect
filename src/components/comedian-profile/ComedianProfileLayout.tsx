@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect } from 'react';
 import { Outlet, useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useActiveProfile } from '@/contexts/ActiveProfileContext';
+import { useActiveProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
 
@@ -53,6 +54,7 @@ export const ComedianProfileLayout = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const { setActiveProfile } = useActiveProfile();
+  const { user } = useAuth();
 
   const { data: comedian, isLoading, error } = useQuery({
     queryKey: ['comedian-profile-by-slug', slug],
@@ -138,55 +140,18 @@ export const ComedianProfileLayout = () => {
         throw dbError;
       }
 
-      // Fallback: try to find by name-based slug for backward compatibility
-      const name = slug.split('-').map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ');
-
-      const { data: nameData, error: nameError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          name,
-          stage_name,
-          bio,
-          location,
-          avatar_url,
-          banner_url,
-          banner_position,
-          is_verified,
-          email,
-          created_at,
-          phone,
-          website_url,
-          instagram_url,
-          twitter_url,
-          youtube_url,
-          facebook_url,
-          tiktok_url,
-          show_contact_in_epk,
-          custom_show_types,
-          profile_slug
-        `)
-        .eq('name', name)
-        .maybeSingle();
-
-      if (nameData) {
-        return nameData;
-      }
-
-      if (nameError) {
-        throw nameError;
-      }
-
+      // No fallback - if profile_slug doesn't match, profile doesn't exist
       throw new Error('Comedian not found');
     },
     enabled: !!slug,
   });
 
-  // Set active profile when comedian data loads
+  // Only set active profile when viewing OWN profile (not other comedians' profiles)
+  // The comedian.id matches the user's auth ID when it's their own profile
+  const isOwnProfile = user?.id === comedian?.id;
+
   useEffect(() => {
-    if (comedian) {
+    if (comedian && isOwnProfile) {
       setActiveProfile({
         id: comedian.id,
         type: 'comedian',
@@ -195,7 +160,7 @@ export const ComedianProfileLayout = () => {
         avatarUrl: comedian.avatar_url || undefined,
       });
     }
-  }, [comedian, setActiveProfile]);
+  }, [comedian, isOwnProfile, setActiveProfile]);
 
   if (isLoading) {
     return (

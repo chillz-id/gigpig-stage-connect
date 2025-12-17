@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import {
   Calendar,
   Clock,
@@ -217,12 +217,12 @@ export const BookingManagementDashboard: React.FC = () => {
                               {request.responses.length > 0 && (
                                 <div className="mt-3 flex -space-x-2">
                                   {request.responses.slice(0, 3).map((response) => (
-                                    <Avatar key={response.id} className="w-8 h-8 border-2 border-background">
-                                      <AvatarImage src={response.comedian.profile_image_url} />
-                                      <AvatarFallback>
-                                        {response.comedian.name?.[0]?.toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
+                                    <OptimizedAvatar
+                                      key={response.id}
+                                      src={response.comedian.profile_image_url}
+                                      name={response.comedian.name || 'Comedian'}
+                                      className="w-8 h-8 border-2 border-background"
+                                    />
                                   ))}
                                   {request.responses.length > 3 && (
                                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
@@ -284,12 +284,11 @@ export const BookingManagementDashboard: React.FC = () => {
                                     <Card key={response.id} className="bg-muted/50">
                                       <CardContent className="p-4">
                                         <div className="flex items-start gap-4">
-                                          <Avatar className="w-12 h-12">
-                                            <AvatarImage src={response.comedian.profile_image_url} />
-                                            <AvatarFallback>
-                                              {response.comedian.name?.[0]?.toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
+                                          <OptimizedAvatar
+                                            src={response.comedian.profile_image_url}
+                                            name={response.comedian.name || 'Comedian'}
+                                            className="w-12 h-12"
+                                          />
                                           
                                           <div className="flex-1">
                                             <div className="flex items-start justify-between mb-2">

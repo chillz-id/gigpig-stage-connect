@@ -161,7 +161,7 @@ function useEventOrders(event: OrganizationEvent, limit: number) {
 
         // Get ticket counts per order
         const orderSourceIds = (htxData || []).map(o => o.source_id);
-        let ticketCounts: Record<string, number> = {};
+        const ticketCounts: Record<string, number> = {};
 
         if (orderSourceIds.length > 0) {
           const { data: ticketData, error: ticketError } = await supabase
@@ -228,7 +228,7 @@ function useEventOrders(event: OrganizationEvent, limit: number) {
 
         // Get ticket counts per Eventbrite order
         const ebOrderSourceIds = (ebData || []).map(o => o.source_id);
-        let ebTicketCounts: Record<string, number> = {};
+        const ebTicketCounts: Record<string, number> = {};
 
         if (ebOrderSourceIds.length > 0) {
           const { data: ebTicketData, error: ebTicketError } = await supabase
@@ -389,7 +389,7 @@ export function EventOrdersList({ event, limit = 10 }: EventOrdersListProps) {
                         {order.source === 'humanitix' ? 'HTX' : 'EB'}
                       </Badge>
                       {order.discount_code && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="secondary" className="text-xs">
                           <Tag className="h-2.5 w-2.5 mr-1" />
                           {order.discount_code}
                         </Badge>

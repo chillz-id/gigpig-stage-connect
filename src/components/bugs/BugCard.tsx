@@ -1,7 +1,7 @@
 import { BugReport } from '@/services/bugs/bug-service';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { MessageCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,15 +52,6 @@ export function BugCard({
     return text.slice(0, maxLength) + '...';
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <Card
       className={cn(
@@ -109,28 +100,24 @@ export function BugCard({
 
             {/* Reporter */}
             <div className="flex items-center gap-1">
-              <Avatar className="h-5 w-5">
-                {bug.reporter_avatar && (
-                  <AvatarImage src={bug.reporter_avatar} alt={bug.reporter_name} />
-                )}
-                <AvatarFallback className="text-[8px]">
-                  {getInitials(bug.reporter_name || 'U')}
-                </AvatarFallback>
-              </Avatar>
+              <OptimizedAvatar
+                src={bug.reporter_avatar}
+                name={bug.reporter_name || 'U'}
+                className="h-5 w-5"
+                fallbackClassName="text-[8px]"
+              />
             </div>
           </div>
 
           {/* Assigned to */}
           {bug.assigned_to && (
             <div className="flex items-center gap-1">
-              <Avatar className="h-5 w-5 border-2 border-green-500">
-                {bug.assigned_avatar && (
-                  <AvatarImage src={bug.assigned_avatar} alt={bug.assigned_name} />
-                )}
-                <AvatarFallback className="text-[8px] bg-green-100">
-                  {getInitials(bug.assigned_name || 'A')}
-                </AvatarFallback>
-              </Avatar>
+              <OptimizedAvatar
+                src={bug.assigned_avatar}
+                name={bug.assigned_name || 'A'}
+                className="h-5 w-5 border-2 border-green-500"
+                fallbackClassName="text-[8px] bg-green-100"
+              />
             </div>
           )}
         </div>

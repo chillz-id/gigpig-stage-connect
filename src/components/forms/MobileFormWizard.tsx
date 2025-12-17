@@ -283,7 +283,7 @@ export function MobileFormWizard({
               <div className="grid grid-cols-2 gap-3 w-full">
                 {!isFirstStep && (
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={goPrevious}
                     className="touch-target-44"
                     disabled={isSubmitting || isSaving}
@@ -294,7 +294,7 @@ export function MobileFormWizard({
                 )}
 
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={saveDraft}
                   className={cn(
                     "touch-target-44",
@@ -313,7 +313,7 @@ export function MobileFormWizard({
               <div className="flex gap-3 flex-1">
                 {!isFirstStep && (
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={goPrevious}
                     disabled={isSubmitting || isSaving}
                   >
@@ -323,7 +323,7 @@ export function MobileFormWizard({
                 )}
 
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={saveDraft}
                   disabled={isSaving || isSubmitting}
                 >

@@ -8,7 +8,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Pencil, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 // ============================================================================
@@ -72,15 +72,6 @@ export function ParticipantCard({
 
   const status = statusConfig[participant.approval_status];
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
@@ -132,10 +123,11 @@ export function ParticipantCard({
         <div className="flex items-center justify-between gap-4">
           {/* Left: Avatar and Info */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarImage src={participant.participant_avatar} alt={participant.participant_name} />
-              <AvatarFallback>{getInitials(participant.participant_name)}</AvatarFallback>
-            </Avatar>
+            <OptimizedAvatar
+              src={participant.participant_avatar}
+              name={participant.participant_name}
+              className="h-10 w-10 flex-shrink-0"
+            />
 
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">

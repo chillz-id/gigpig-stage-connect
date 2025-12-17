@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Label } from '@/components/ui/label';
 import {
   useFeature,
@@ -200,15 +200,6 @@ export function FeatureDetailDialog({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const statusBadge = feature ? STATUS_BADGES[feature.status] : null;
   const statusLabel = STATUS_OPTIONS.find((s) => s.value === feature?.status)?.label || feature?.status;
   const categoryLabel = CATEGORY_OPTIONS.find((c) => c.value === feature?.category)?.label || feature?.category;
@@ -251,14 +242,12 @@ export function FeatureDetailDialog({
 
               {/* Created by */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Avatar className="h-6 w-6">
-                  {feature.creator_avatar && (
-                    <AvatarImage src={feature.creator_avatar} alt={feature.creator_name} />
-                  )}
-                  <AvatarFallback className="text-[10px]">
-                    {getInitials(feature.creator_name || 'U')}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={feature.creator_avatar}
+                  name={feature.creator_name || 'U'}
+                  className="h-6 w-6"
+                  fallbackClassName="text-[10px]"
+                />
                 <span>
                   Created by {feature.creator_name} •{' '}
                   {formatDistanceToNow(new Date(feature.created_at), { addSuffix: true })}
@@ -392,17 +381,12 @@ export function FeatureDetailDialog({
                         <div key={comment.id} className="border rounded-lg p-3 space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                {comment.user_avatar && (
-                                  <AvatarImage
-                                    src={comment.user_avatar}
-                                    alt={comment.user_name}
-                                  />
-                                )}
-                                <AvatarFallback className="text-[10px]">
-                                  {getInitials(comment.user_name || 'U')}
-                                </AvatarFallback>
-                              </Avatar>
+                              <OptimizedAvatar
+                                src={comment.user_avatar}
+                                name={comment.user_name || 'U'}
+                                className="h-6 w-6"
+                                fallbackClassName="text-[10px]"
+                              />
                               <div>
                                 <p className="text-sm font-medium">{comment.user_name}</p>
                                 <p className="text-xs text-muted-foreground">

@@ -9,7 +9,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,28 +54,20 @@ export function ApplicationCard({
     withdrawn: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <Card className={`transition-all duration-200 ${isHidden ? 'opacity-60' : ''}`}>
       <CardHeader className={cn("flex flex-row items-start gap-4 space-y-0", isMobile ? "pb-3" : "pb-4")}>
         {/* Avatar */}
-        <Avatar className={cn(isMobile ? "h-14 w-14" : "h-12 w-12")}>
-          <AvatarImage src={application.comedian_avatar} alt={application.comedian_name} />
-          <AvatarFallback>{getInitials(application.comedian_name)}</AvatarFallback>
-        </Avatar>
+        <OptimizedAvatar
+          src={application.comedian_avatar}
+          name={application.comedian_name}
+          className={cn(isMobile ? "h-14 w-14" : "h-12 w-12")}
+        />
 
         {/* Info */}
         <div className="flex flex-1 flex-col space-y-1">
           <div className="flex items-center justify-between">
-            <h3 className={cn("font-semibold text-gray-900 dark:text-gray-100", isMobile && "text-base")}>
+            <h3 className={cn("font-semibold text-foreground", isMobile && "text-base")}>
               {application.comedian_name}
             </h3>
             {isFavourited && (
@@ -84,7 +76,7 @@ export function ApplicationCard({
           </div>
 
           {/* Experience and Rating */}
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {application.comedian_experience && <span>{application.comedian_experience}</span>}
             {application.comedian_rating && (
               <>
@@ -118,13 +110,13 @@ export function ApplicationCard({
       <CardContent className="space-y-2 pb-4">
         {/* Application Message */}
         {application.message && (
-          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+          <p className="text-sm text-muted-foreground line-clamp-3">
             {application.message}
           </p>
         )}
 
         {/* Applied Date */}
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-muted-foreground">
           Applied {new Date(application.applied_at).toLocaleDateString()}
         </p>
       </CardContent>

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Award, Crown, Plus, Search, Edit2, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react';
 import { VouchCard } from './VouchCard';
 import { useToast } from '@/hooks/use-toast';
@@ -362,10 +362,11 @@ export const VouchSystemEnhanced: React.FC = () => {
                           onSelect={() => handleUserSelect(user)}
                           className="flex items-center gap-3 cursor-pointer"
                         >
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
+                          <OptimizedAvatar
+                          src={user.avatar_url}
+                          name={user.name}
+                          className="w-8 h-8"
+                        />
                           <div className="flex-1">
                             <p className="font-medium">{user.stage_name || user.name}</p>
                             <div className="flex gap-1 mt-1">
@@ -387,10 +388,11 @@ export const VouchSystemEnhanced: React.FC = () => {
             {selectedUser && (
               <div className="mt-2 p-3 bg-muted rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={selectedUser.avatar_url} />
-                    <AvatarFallback>{selectedUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <OptimizedAvatar
+                    src={selectedUser.avatar_url}
+                    name={selectedUser.name}
+                    className="w-8 h-8"
+                  />
                   <div>
                     <p className="font-medium">{selectedUser.stage_name || selectedUser.name}</p>
                     <div className="flex gap-1">
@@ -586,12 +588,11 @@ export const VouchSystemEnhanced: React.FC = () => {
           <div className="space-y-4">
             {editingVouch && (
               <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={editingVouch.vouchee_profile?.avatar_url} />
-                  <AvatarFallback>
-                    {(editingVouch.vouchee_profile?.name || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={editingVouch.vouchee_profile?.avatar_url}
+                  name={editingVouch.vouchee_profile?.name || 'Unknown'}
+                  className="w-8 h-8"
+                />
                 <div>
                   <p className="font-medium">
                     {editingVouch.vouchee_profile?.stage_name || editingVouch.vouchee_profile?.name || 'Unknown User'}

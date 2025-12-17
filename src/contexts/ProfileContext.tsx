@@ -19,6 +19,17 @@ export type BaseProfileType = 'comedian' | 'manager' | 'photographer' | 'videogr
 // Profile types include base profiles AND organization profiles (org:{uuid})
 export type ProfileTypeValue = BaseProfileType | `org:${string}`;
 
+// Active profile entity types (merged from ActiveProfileContext)
+export type ActiveProfileType = 'comedian' | 'comedian_lite' | 'manager' | 'organization' | 'venue' | 'photographer' | 'videographer';
+
+export interface ActiveProfile {
+  id: string;
+  type: ActiveProfileType;
+  slug: string;
+  name: string;
+  avatarUrl?: string;
+}
+
 export interface ProfileType {
   type: ProfileTypeValue;
   label: string;
@@ -49,17 +60,45 @@ export const PROFILE_TYPES: Record<ProfileTypeValue, ProfileType> = {
 };
 
 interface ProfileContextValue {
+  // Profile type state (legacy - for backwards compatibility)
   activeProfile: ProfileTypeValue | null;
   availableProfiles: ProfileTypeValue[];
   switchProfile: (type: ProfileTypeValue) => void;
   isLoading: boolean;
   hasProfile: (type: ProfileTypeValue) => boolean;
   error: string | null;
+
+  // Active profile entity state (merged from ActiveProfileContext)
+  activeProfileEntity: ActiveProfile | null;
+  setActiveProfile: (profile: ActiveProfile) => void;
+  clearActiveProfile: () => void;
+  getProfileUrl: (page?: string) => string;
 }
 
 const ProfileContext = createContext<ProfileContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'active-profile-type';
+const ENTITY_STORAGE_KEY = 'activeProfile';
+
+// Validation helpers for localStorage entity
+const isValidProfileType = (type: string): type is ActiveProfileType => {
+  return ['comedian', 'comedian_lite', 'manager', 'organization', 'venue', 'photographer', 'videographer'].includes(type);
+};
+
+const isValidActiveProfile = (data: unknown): data is ActiveProfile => {
+  if (!data || typeof data !== 'object') return false;
+
+  const profile = data as Record<string, unknown>;
+
+  return (
+    typeof profile.id === 'string' &&
+    typeof profile.type === 'string' &&
+    isValidProfileType(profile.type) &&
+    typeof profile.slug === 'string' &&
+    typeof profile.name === 'string' &&
+    (profile.avatarUrl === undefined || typeof profile.avatarUrl === 'string')
+  );
+};
 
 // Map user roles to profile types
 const ROLE_TO_PROFILE_MAP: Record<string, ProfileTypeValue> = {
@@ -79,7 +118,26 @@ interface ProfileProviderProps {
 
 export function ProfileProvider({ children }: ProfileProviderProps) {
   const { user } = useAuth();
-  const [activeProfile, setActiveProfile] = useState<ProfileTypeValue | null>(null);
+  const [activeProfileType, setActiveProfileType] = useState<ProfileTypeValue | null>(null);
+
+  // Active profile entity state (merged from ActiveProfileContext)
+  const [activeProfileEntity, setActiveProfileEntityState] = useState<ActiveProfile | null>(
+    () => {
+      // Load from localStorage on mount
+      try {
+        const stored = localStorage.getItem(ENTITY_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (isValidActiveProfile(parsed)) {
+            return parsed;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load active profile entity from localStorage:', error);
+      }
+      return null;
+    }
+  );
 
   // Fetch user roles
   const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
@@ -139,37 +197,37 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   const isLoading = rolesLoading || orgsLoading;
   const error = rolesError || orgsError;
 
-  // Set active profile when availableProfiles changes
+  // Set active profile type when availableProfiles changes
   useEffect(() => {
     if (isLoading) return;
 
-    // Don't reset if we already have a valid active profile
+    // Don't reset if we already have a valid active profile type
     // This prevents flickering/resetting when availableProfiles array reference changes
-    if (activeProfile && availableProfiles.includes(activeProfile)) {
-      console.log('[ProfileContext] Active profile already valid, skipping reset:', activeProfile);
+    if (activeProfileType && availableProfiles.includes(activeProfileType)) {
+      console.log('[ProfileContext] Active profile type already valid, skipping reset:', activeProfileType);
       return;
     }
 
-    // Set active profile from localStorage or default to first available
+    // Set active profile type from localStorage or default to first available
     const savedProfile = localStorage.getItem(STORAGE_KEY) as ProfileTypeValue | null;
     if (savedProfile && availableProfiles.includes(savedProfile)) {
-      console.log('[ProfileContext] Setting active profile from localStorage:', savedProfile);
-      setActiveProfile(savedProfile);
+      console.log('[ProfileContext] Setting active profile type from localStorage:', savedProfile);
+      setActiveProfileType(savedProfile);
     } else if (availableProfiles.length > 0) {
       // Default to first available profile
       const defaultProfile = availableProfiles[0];
       if (defaultProfile) {
-        console.log('[ProfileContext] Setting default active profile:', defaultProfile);
-        setActiveProfile(defaultProfile);
+        console.log('[ProfileContext] Setting default active profile type:', defaultProfile);
+        setActiveProfileType(defaultProfile);
         localStorage.setItem(STORAGE_KEY, defaultProfile);
       }
     } else {
       // User has no comedy profiles - clear any stale localStorage
-      setActiveProfile(null);
+      setActiveProfileType(null);
       localStorage.removeItem(STORAGE_KEY);
       console.log('[ProfileContext] User has no comedy profiles - profile creation required');
     }
-  }, [availableProfiles, isLoading, activeProfile]);
+  }, [availableProfiles, isLoading, activeProfileType]);
 
   const switchProfile = useCallback((type: ProfileTypeValue) => {
     if (!availableProfiles.includes(type)) {
@@ -177,7 +235,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       return;
     }
 
-    setActiveProfile(type);
+    setActiveProfileType(type);
     localStorage.setItem(STORAGE_KEY, type);
 
     // Announce profile switch for screen readers
@@ -200,14 +258,71 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     return availableProfiles.includes(type);
   }, [availableProfiles]);
 
+  // Entity management functions (merged from ActiveProfileContext)
+  const setActiveProfile = useCallback((profile: ActiveProfile) => {
+    setActiveProfileEntityState(profile);
+    try {
+      localStorage.setItem(ENTITY_STORAGE_KEY, JSON.stringify(profile));
+    } catch (err) {
+      console.error('Failed to save active profile entity to localStorage:', err);
+    }
+
+    // Announce profile switch for screen readers
+    const announcement = document.getElementById('platform-status-announcements');
+    if (announcement) {
+      announcement.textContent = `Profile switched to ${profile.name}`;
+    }
+  }, []);
+
+  const clearActiveProfile = useCallback(() => {
+    setActiveProfileEntityState(null);
+    try {
+      localStorage.removeItem(ENTITY_STORAGE_KEY);
+    } catch (err) {
+      console.error('Failed to remove active profile entity from localStorage:', err);
+    }
+  }, []);
+
+  const getProfileUrl = useCallback((page?: string): string => {
+    if (!activeProfileEntity) {
+      return '/';
+    }
+
+    // Map profile types to URL paths
+    // - 'organization' -> 'org' for shorter URLs
+    // - 'comedian_lite' -> 'comedian' (they share routes)
+    let urlType: string;
+    switch (activeProfileEntity.type) {
+      case 'organization':
+        urlType = 'org';
+        break;
+      case 'comedian_lite':
+        urlType = 'comedian';
+        break;
+      default:
+        urlType = activeProfileEntity.type;
+    }
+
+    const basePath = `/${urlType}/${activeProfileEntity.slug}`;
+    const pagePath = page || 'dashboard';
+
+    return `${basePath}/${pagePath}`;
+  }, [activeProfileEntity]);
+
   const value = useMemo(() => ({
-    activeProfile,
+    // Profile type state (legacy - for backwards compatibility)
+    activeProfile: activeProfileType,
     availableProfiles,
     switchProfile,
     isLoading,
     hasProfile,
     error: error ? (error instanceof Error ? error.message : 'Failed to load profiles') : null,
-  }), [activeProfile, availableProfiles, switchProfile, isLoading, hasProfile, error]);
+    // Active profile entity state (merged from ActiveProfileContext)
+    activeProfileEntity,
+    setActiveProfile,
+    clearActiveProfile,
+    getProfileUrl,
+  }), [activeProfileType, availableProfiles, switchProfile, isLoading, hasProfile, error, activeProfileEntity, setActiveProfile, clearActiveProfile, getProfileUrl]);
 
   return (
     <ProfileContext.Provider value={value}>
@@ -222,6 +337,26 @@ export function useProfile() {
     throw new Error('useProfile must be used within a ProfileProvider');
   }
   return context;
+}
+
+/**
+ * Hook for accessing active profile entity state.
+ * This is the preferred API for components that need full profile entity data.
+ * Provides backwards compatibility with the former ActiveProfileContext.
+ */
+export function useActiveProfile() {
+  const context = useContext(ProfileContext);
+  if (context === undefined) {
+    throw new Error('useActiveProfile must be used within a ProfileProvider');
+  }
+
+  // Return only the entity-related fields (API compatible with former ActiveProfileContext)
+  return {
+    activeProfile: context.activeProfileEntity,
+    setActiveProfile: context.setActiveProfile,
+    clearActiveProfile: context.clearActiveProfile,
+    getProfileUrl: context.getProfileUrl,
+  };
 }
 
 /**

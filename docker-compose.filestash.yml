@@ -21,6 +21,7 @@ services:
       - "8090:80"
     volumes:
       - ./filestash/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./filestash/auto-login.html:/etc/caddy/auto-login.html:ro
     depends_on:
       - filestash
       - s3-proxy
@@ -30,8 +31,7 @@ services:
   filestash:
     image: machines/filestash:latest
     container_name: filestash
-    environment:
-      - APPLICATION_URL=/filestash
+    # No APPLICATION_URL - let config.json control the host setting
     volumes:
       - filestash-data:/app/data/state
     restart: unless-stopped
@@ -44,6 +44,7 @@ services:
     container_name: filestash-s3-proxy
     env_file:
       - ./.env
+    # Auth enabled - JWT token required
     restart: unless-stopped
 
 volumes:

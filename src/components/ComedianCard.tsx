@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, Mail, Instagram, Twitter, Youtube } from 'lucide-react';
@@ -16,8 +17,18 @@ interface ComedianCardProps {
 }
 
 const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onContact }) => {
+  const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Get the profile slug - prefer profile_slug, fallback to generating from name
+  const profileSlug = (comedian as any).profile_slug ||
+    comedian.name?.toLowerCase().replace(/\s+/g, '-') ||
+    comedian.id;
+
+  const handleCardClick = () => {
+    navigate(`/comedian/${profileSlug}`);
+  };
 
   // Mock social media data for demonstration
   const mockSocialMedia = {
@@ -31,8 +42,9 @@ const ComedianCard: React.FC<ComedianCardProps> = ({ comedian, isContacting, onC
   const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'));
 
   return (
-    <Card 
+    <Card
       className="relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { UserCheck, UserX, Shield } from 'lucide-react';
 
 interface ConnectionRequest {
@@ -48,10 +48,11 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
           <CardContent className="p-4">
             <div className="flex items-start justify-between space-x-4">
               <div className="flex items-start space-x-3 flex-1">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={request.senderAvatar} alt={request.senderName} />
-                  <AvatarFallback>{request.senderName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={request.senderAvatar}
+                  name={request.senderName}
+                  className="w-12 h-12"
+                />
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <h4 className="font-medium">{request.senderName}</h4>

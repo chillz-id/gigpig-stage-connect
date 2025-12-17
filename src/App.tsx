@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
-import { ActiveProfileProvider } from '@/contexts/ActiveProfileContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PlatformLayout } from '@/components/layout/PlatformLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -34,10 +33,12 @@ const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const Applications = lazy(() => import('@/pages/Applications'));
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 const TicketSalesTestPage = lazy(() => import('@/pages/admin/TicketSalesTestPage').then(module => ({ default: module.TicketSalesTestPage })));
+const ComedianDirectoryPage = lazy(() => import('@/pages/ComedianDirectoryPage').then(module => ({ default: module.ComedianDirectoryPage })));
 const EventDetail = lazy(() => import('@/pages/EventDetail'));
 const EventDetailPublic = lazy(() => import('@/pages/EventDetailPublic'));
 const EditEvent = lazy(() => import('@/pages/EditEvent'));
 const EventManagement = lazy(() => import('@/pages/EventManagement'));
+const EventNavigator = lazy(() => import('@/pages/EventNavigator'));
 const ComedianProfile = lazy(() => import('@/pages/ComedianProfile'));
 const ComedianProfileBySlug = lazy(() => import('@/pages/ComedianProfileBySlug'));
 const ComedianProfileLayout = lazy(() => import('@/components/comedian-profile/ComedianProfileLayout').then(m => ({ default: m.ComedianProfileLayout })));
@@ -57,6 +58,7 @@ const XeroCallback = lazy(() => import('@/pages/XeroCallback'));
 const Photographers = lazy(() => import('@/pages/Photographers'));
 const PhotographerProfile = lazy(() => import('@/pages/PhotographerProfile'));
 const TestEventValidation = lazy(() => import('@/pages/TestEventValidation'));
+const MediaBrowserTest = lazy(() => import('@/pages/MediaBrowserTest'));
 const BookComedian = lazy(() => import('@/pages/BookComedian'));
 const EventApplicationPage = lazy(() => import('@/pages/EventApplicationPage'));
 const SpotConfirmationPage = lazy(() => import('@/pages/SpotConfirmationPage'));
@@ -84,6 +86,7 @@ const TaskDetailPage = lazy(() => import('@/pages/crm/TaskDetailPage').then(modu
 const RelationshipsPage = lazy(() => import('@/pages/crm/RelationshipsPage').then(module => ({ default: module.RelationshipsPage })));
 const AnalyticsDashboardPage = lazy(() => import('@/pages/crm/AnalyticsDashboardPage').then(module => ({ default: module.AnalyticsDashboardPage })));
 const ImportExportPage = lazy(() => import('@/pages/crm/ImportExportPage').then(module => ({ default: module.ImportExportPage })));
+const SegmentsPage = lazy(() => import('@/pages/crm/SegmentsPage').then(module => ({ default: module.SegmentsPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,16 +121,11 @@ const DesignSystemInitializer = ({ children }: { children: React.ReactNode }) =>
   return <>{children}</>;
 };
 
-// Wrapper to force re-render when location changes
-const LocationWrapper = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  return <div key={location.pathname + location.search}>{children}</div>;
-};
-
-// Routes wrapper to ensure proper re-rendering on location changes
+// Simple Routes wrapper - React Router handles re-rendering automatically
+// NOTE: Previously had a key based on location.pathname which caused navigation issues
+// React Router v6 handles route matching and re-rendering properly without manual keying
 const RoutesWrapper = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  return <Routes key={location.pathname + location.search}>{children}</Routes>;
+  return <Routes>{children}</Routes>;
 };
 
 // PWA Integration Component
@@ -195,7 +193,6 @@ function App() {
             <AuthProvider>
               <UserProvider>
                 <ProfileProvider>
-                  <ActiveProfileProvider>
                     <DesignSystemInitializer>
                       <Router
                         future={{
@@ -248,19 +245,22 @@ function App() {
                               <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                               <Route path="/admin" element={<AdminDashboard />} />
                               <Route path="/admin/ticket-sales" element={<ProtectedRoute roles={['admin']}><TicketSalesTestPage /></ProtectedRoute>} />
+                              <Route path="/admin/directory" element={<ProtectedRoute roles={['admin']}><ComedianDirectoryPage /></ProtectedRoute>} />
                               <Route path="/design-system" element={<DesignSystem />} />
                               <Route path="/test-events" element={<TestEventValidation />} />
+                              <Route path="/test/media-browser" element={<ProtectedRoute><MediaBrowserTest /></ProtectedRoute>} />
                               <Route path="/settings/pwa" element={<PWASettings />} />
                               <Route path="/admin/events/:eventId" element={<EventDetail />} />
                               <Route path="/events/:id/edit" element={<ProtectedRoute><EditEvent /></ProtectedRoute>} />
                               <Route path="/events/:eventId/manage" element={<ProtectedRoute><EventManagement /></ProtectedRoute>} />
+                              <Route path="/events/navigate/:sourceType/:sourceId" element={<ProtectedRoute><EventNavigator /></ProtectedRoute>} />
                               <Route path="/events/:eventId/apply" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><EventApplicationPage /></ProtectedRoute>} />
                               <Route path="/events/:eventId/confirm-spot" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
                               <Route path="/events/:eventId" element={<EventDetailPublic />} />
                               <Route path="/spots/:spotId/confirm" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SpotConfirmationPage /></ProtectedRoute>} />
 
                               {/* Comedian Profile Routes - Nested Structure */}
-                              <Route path="/comedian/:slug" element={<ComedianProfileLayout key="comedian-layout" />}>
+                              <Route path="/comedian/:slug" element={<ComedianProfileLayout />}>
                                 {/* Default: Public EPK view */}
                                 <Route index element={<ComedianEPKLayout />} />
 
@@ -289,6 +289,7 @@ function App() {
                                 <Route path="relationships" element={<RelationshipsPage />} />
                                 <Route path="analytics" element={<AnalyticsDashboardPage />} />
                                 <Route path="import-export" element={<ImportExportPage />} />
+                                <Route path="segments" element={<SegmentsPage />} />
                               </Route>
 
                               {/* Profile URL Routes with wildcards - AFTER static routes to prevent false matches */}
@@ -307,7 +308,6 @@ function App() {
                         <Toaster />
                       </Router>
                     </DesignSystemInitializer>
-                  </ActiveProfileProvider>
                 </ProfileProvider>
               </UserProvider>
             </AuthProvider>

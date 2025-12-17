@@ -49,21 +49,20 @@ const Profile = () => {
   // Tab configuration for industry users (comedians, promoters, etc.)
   const availableTabs = ['profile', 'calendar', isIndustryUser ? 'invoices' : 'tickets', 'vouches', 'settings'];
 
-  // Only sync from URL on initial mount to read the tab parameter
-  // After that, tab changes are managed by handleTabChange which updates both state and URL
+  // Sync tab state from URL when location.search changes
+  // This handles both initial mount and external navigation (e.g., sidebar clicks)
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab') || 'profile';
 
-
-    // Set initial tab if it's valid, otherwise use 'profile'
+    // Set tab if it's valid, otherwise use 'profile'
     if (availableTabs.includes(tabParam)) {
       setActiveTab(tabParam);
     } else {
       setActiveTab('profile');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount - read URL once, then handleTabChange manages both state and URL
+  }, [location.search]); // Re-run when URL search params change
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {

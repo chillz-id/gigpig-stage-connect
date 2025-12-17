@@ -51,7 +51,7 @@ const ComedianApplicationsView = () => {
       case 'pending': return 'secondary';
       case 'accepted': return 'default';
       case 'rejected': return 'destructive';
-      case 'withdrawn': return 'outline';
+      case 'withdrawn': return 'secondary';
       default: return 'secondary';
     }
   };
@@ -197,7 +197,7 @@ const ComedianApplicationsView = () => {
                     <div className="flex sm:flex-col gap-2 sm:items-end">
                       {app.status === 'pending' && (
                         <Button
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
                           onClick={() => withdrawApplication(app.id)}
                           disabled={isWithdrawing}

@@ -102,7 +102,7 @@ const mapComedianApplication = (row: any): ComedianApplicationRecord => {
       id: row.events.id,
       title: row.events.title ?? '',
       venue: row.events.venue ?? '',
-      address: row.events.address ?? row.events.venue_address ?? null,
+      address: row.events.address ?? null,
       event_date: row.events.event_date ?? '',
       start_time: row.events.start_time ?? null,
       city: row.events.city ?? '',
@@ -165,28 +165,23 @@ export const eventApplicationService = {
       .select(
         `
         *,
-        events!inner (
+        events (
           id,
           title,
           venue,
           address,
-          venue_address,
           event_date,
           start_time,
           city,
           state,
           status,
           banner_url,
-          organization_id,
-          organization:organization_profiles!events_organization_id_fkey (
-            id,
-            organization_name,
-            logo_url
-          )
+          organization_id
         )
       `
       )
       .eq('comedian_id', comedianId)
+      .not('event_id', 'is', null)
       .order('applied_at', { ascending: false });
 
     if (error) throw error;
@@ -302,15 +297,13 @@ export const eventApplicationService = {
           id,
           title,
           venue,
-          venue_address,
+          address,
           event_date,
-          event_time,
+          start_time,
           city,
           state,
           description,
-          requirements,
-          total_spots,
-          available_spots
+          requirements
         ),
         profiles!inner (
           id,

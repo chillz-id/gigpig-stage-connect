@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Media visibility levels for EPK
+export type MediaVisibility = 'public' | 'promoters' | 'private';
+
 export interface ComedianMediaItem {
   id: string;
   user_id: string;
@@ -19,6 +22,9 @@ export interface ComedianMediaItem {
   width: number | null;
   height: number | null;
   is_featured: boolean;
+  is_headshot: boolean;
+  show_in_epk: boolean;
+  visibility: MediaVisibility;
   display_order: number;
   tags: string[] | null;
   created_at: string;
@@ -28,9 +34,10 @@ export interface ComedianMediaItem {
 interface UseComedianMediaProps {
   userId?: string;
   mediaType?: 'photo' | 'video';
+  epkOnly?: boolean; // If true, only fetch media tagged for EPK display
 }
 
-export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = {}) => {
+export const useComedianMedia = ({ userId, mediaType, epkOnly = false }: UseComedianMediaProps = {}) => {
   const [media, setMedia] = useState<ComedianMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +49,9 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
       setError(null);
 
       let query = supabase
-        .from('media_files')
+        .from('comedian_media')
         .select('*')
-        .eq('is_featured_in_epk', true) // Only fetch EPK-featured media
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (userId) {
@@ -52,8 +59,12 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
       }
 
       if (mediaType) {
-        // Map media_type to file_type
-        query = query.eq('file_type', mediaType === 'photo' ? 'image' : 'video');
+        query = query.eq('media_type', mediaType);
+      }
+
+      // Filter to only EPK-tagged media when viewing EPK
+      if (epkOnly) {
+        query = query.eq('show_in_epk', true);
       }
 
       const { data, error: fetchError } = await query;
@@ -62,28 +73,31 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
         throw fetchError;
       }
 
-      // Map media_files records to ComedianMediaItem interface for backward compatibility
-      const mappedData = (data || []).map((file: any) => ({
-        id: file.id,
-        user_id: file.user_id,
-        media_type: file.file_type === 'image' ? 'photo' : 'video',
-        title: file.file_name,
-        description: null, // media_files doesn't have description
-        file_url: file.public_url,
-        file_size: file.file_size,
-        file_type: file.file_type,
-        external_url: file.external_url,
-        external_type: file.external_type,
-        external_id: file.external_id,
-        thumbnail_url: null, // media_files doesn't have separate thumbnail_url
-        duration: null, // media_files doesn't have duration
-        width: null, // media_files doesn't have width
-        height: null, // media_files doesn't have height
-        is_featured: file.is_featured_in_epk || false,
-        display_order: 0, // media_files doesn't have display_order
-        tags: file.tags || [],
-        created_at: file.created_at,
-        updated_at: file.updated_at
+      // Map comedian_media records to ComedianMediaItem interface
+      const mappedData = (data || []).map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        media_type: item.media_type as 'photo' | 'video',
+        title: item.title,
+        description: item.description,
+        file_url: item.file_url || item.url,
+        file_size: item.file_size,
+        file_type: item.file_type,
+        external_url: item.external_url,
+        external_type: item.external_type,
+        external_id: item.external_id,
+        thumbnail_url: item.thumbnail_url,
+        duration: null,
+        width: null,
+        height: null,
+        is_featured: item.is_headshot || false,
+        is_headshot: item.is_headshot || false,
+        show_in_epk: item.show_in_epk || false,
+        visibility: (item.visibility as MediaVisibility) || 'public',
+        display_order: item.display_order || 0,
+        tags: item.tags || [],
+        created_at: item.created_at,
+        updated_at: item.created_at // comedian_media doesn't have updated_at
       }));
 
       setMedia(mappedData);
@@ -93,34 +107,40 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
     } finally {
       setLoading(false);
     }
-  }, [mediaType, userId]);
+  }, [mediaType, userId, epkOnly]);
 
   const deleteMedia = async (mediaId: string) => {
     try {
       // First get the media item to check if it has a file to delete
       const mediaItem = media.find(item => item.id === mediaId);
-      
+
       if (mediaItem?.file_url) {
-        // Extract file path from URL for storage deletion
+        // Detect bucket from URL - supports both legacy comedian-media and unified media-library
         const url = new URL(mediaItem.file_url);
         const pathParts = url.pathname.split('/');
-        const fileName = pathParts[pathParts.length - 1];
-        const filePath = `${mediaItem.user_id}/${fileName}`;
-        
-        // Delete from storage (check media-library bucket)
-        const { error: storageError } = await supabase.storage
-          .from('media-library')
-          .remove([filePath]);
 
-        if (storageError) {
-          console.warn('Storage deletion error:', storageError);
-          // Continue with database deletion even if storage fails
+        // URL format: /storage/v1/object/public/{bucket}/{path}
+        // Find the bucket name by looking for 'public' and taking the next segment
+        const publicIndex = pathParts.indexOf('public');
+        if (publicIndex !== -1 && publicIndex + 1 < pathParts.length) {
+          const bucket = pathParts[publicIndex + 1];
+          const filePath = pathParts.slice(publicIndex + 2).join('/');
+
+          // Delete from the detected bucket
+          const { error: storageError } = await supabase.storage
+            .from(bucket)
+            .remove([decodeURIComponent(filePath)]);
+
+          if (storageError) {
+            console.warn('Storage deletion error:', storageError);
+            // Continue with database deletion even if storage fails
+          }
         }
       }
 
       // Delete from database
       const { error } = await supabase
-        .from('media_files')
+        .from('comedian_media')
         .delete()
         .eq('id', mediaId);
 
@@ -145,20 +165,28 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
 
   const updateMedia = async (mediaId: string, updates: Partial<ComedianMediaItem>) => {
     try {
+      // Map ComedianMediaItem fields to comedian_media table columns
+      const dbUpdates: Record<string, any> = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.display_order !== undefined) dbUpdates.display_order = updates.display_order;
+      if (updates.is_featured !== undefined) dbUpdates.is_headshot = updates.is_featured;
+      if (updates.is_headshot !== undefined) dbUpdates.is_headshot = updates.is_headshot;
+      if (updates.show_in_epk !== undefined) dbUpdates.show_in_epk = updates.show_in_epk;
+      if (updates.visibility !== undefined) dbUpdates.visibility = updates.visibility;
+      if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+
       const { error } = await supabase
-        .from('media_files')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .from('comedian_media')
+        .update(dbUpdates)
         .eq('id', mediaId);
 
       if (error) throw error;
 
       // Update local state
-      setMedia(prev => prev.map(item => 
-        item.id === mediaId 
-          ? { ...item, ...updates, updated_at: new Date().toISOString() }
+      setMedia(prev => prev.map(item =>
+        item.id === mediaId
+          ? { ...item, ...updates }
           : item
       ));
 
@@ -166,6 +194,8 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
         title: "Media updated",
         description: "Your changes have been saved."
       });
+
+      return true;
     } catch (err) {
       console.error('Error updating media:', err);
       toast({
@@ -173,18 +203,38 @@ export const useComedianMedia = ({ userId, mediaType }: UseComedianMediaProps = 
         description: "There was an error updating the media item.",
         variant: "destructive"
       });
+      return false;
     }
   };
 
-  // Note: media_files table doesn't have display_order column
-  // Ordering is done by created_at instead
   const reorderMedia = async (mediaId: string, newOrder: number) => {
-    console.warn('Reordering not supported in media_files table - items are ordered by created_at');
-    toast({
-      title: "Reordering not available",
-      description: "Media items are automatically ordered by upload date.",
-      variant: "default"
-    });
+    try {
+      const { error } = await supabase
+        .from('comedian_media')
+        .update({ display_order: newOrder })
+        .eq('id', mediaId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMedia(prev => prev.map(item =>
+        item.id === mediaId
+          ? { ...item, display_order: newOrder }
+          : item
+      ).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+
+      toast({
+        title: "Order updated",
+        description: "Media order has been saved."
+      });
+    } catch (err) {
+      console.error('Error reordering media:', err);
+      toast({
+        title: "Reorder failed",
+        description: "There was an error reordering the media.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getMediaUrl = (item: ComedianMediaItem): string => {

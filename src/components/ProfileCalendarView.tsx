@@ -54,7 +54,7 @@ type ViewMode = 'monthly' | 'weekly' | 'list';
  * - List: Chronological event list
  *
  * Features:
- * - Shows confirmed bookings from comedian_bookings
+ * - Shows confirmed/pending gigs from applications table
  * - Shows personal gigs from personal_gigs table
  * - Shows blocked dates/times
  * - Add personal gigs (manual or Google import)
@@ -85,24 +85,26 @@ export const ProfileCalendarView: React.FC = () => {
     disconnect
   } = useGoogleCalendarSync();
 
-  // Fetch confirmed bookings
+  // Fetch applications (accepted = confirmed gigs, pending = awaiting response)
   const { data: confirmedBookings = [] } = useQuery({
-    queryKey: ['confirmed-bookings', user?.id],
+    queryKey: ['comedian-applications', user?.id],
     queryFn: async () => {
       if (!user?.id || !isComedian) return [];
 
-      // First, fetch bookings (both confirmed and pending)
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('comedian_bookings')
+      // Fetch applications (accepted and pending)
+      const { data: applications, error: applicationsError } = await supabase
+        .from('applications')
         .select('id, status, event_id')
         .eq('comedian_id', user.id)
-        .in('status', ['confirmed', 'pending']);
+        .in('status', ['accepted', 'pending']);
 
-      if (bookingsError) throw bookingsError;
-      if (!bookings || bookings.length === 0) return [];
+      if (applicationsError) throw applicationsError;
+      if (!applications || applications.length === 0) return [];
 
       // Then batch-fetch related events
-      const eventIds = [...new Set(bookings.map(b => b.event_id))];
+      const eventIds = [...new Set(applications.map(a => a.event_id).filter(Boolean))];
+      if (eventIds.length === 0) return [];
+
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('id, title, venue, event_date, start_time')
@@ -110,13 +112,13 @@ export const ProfileCalendarView: React.FC = () => {
 
       if (eventsError) throw eventsError;
 
-      // Map events to bookings
+      // Map events to applications
       const eventMap = new Map(events?.map(e => [e.id, e]) || []);
-      return bookings.map(booking => ({
-        id: booking.id,
-        status: booking.status,
-        events: eventMap.get(booking.event_id)
-      })).filter(b => b.events); // Only include bookings with valid events
+      return applications.map(application => ({
+        id: application.id,
+        status: application.status === 'accepted' ? 'confirmed' : application.status,
+        events: eventMap.get(application.event_id!)
+      })).filter(b => b.events); // Only include applications with valid events
     },
     enabled: !!user?.id && isComedian
   });

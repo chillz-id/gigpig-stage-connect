@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Check, EyeOff, Eye, Calendar, MapPin, Star, Clock, CheckCircle2, XCircle, User, Mic } from 'lucide-react';
 import { ApplicationData } from '@/services/applicationService';
@@ -143,12 +143,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               </div>
             )}
             
-            <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-white/20">
-              <AvatarImage src={application.comedian_avatar} alt={application.comedian_name} />
-              <AvatarFallback className="bg-purple-500 text-white text-sm sm:text-lg font-semibold">
-                {application.comedian_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
+            <OptimizedAvatar
+              src={application.comedian_avatar}
+              name={application.comedian_name}
+              className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-white/20"
+              fallbackClassName="bg-purple-500 text-white text-sm sm:text-lg font-semibold"
+            />
             
             {/* Mobile comedian info */}
             <div className="flex-1 sm:hidden">

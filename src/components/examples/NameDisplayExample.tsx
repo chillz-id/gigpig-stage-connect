@@ -4,7 +4,7 @@
 import React from 'react';
 import { getDisplayName, getShortDisplayName, getInitials } from '@/utils/nameDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 
 interface UserProfile {
   firstName: string;
@@ -44,10 +44,11 @@ export const NameDisplayExample: React.FC<{ user: UserProfile }> = ({ user }) =>
       <CardContent className="space-y-4">
         {/* Full display with avatar */}
         <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={user.avatarUrl} alt={displayName} />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={user.avatarUrl}
+            name={displayName}
+            className="h-12 w-12"
+          />
           <div>
             <h3 className="font-semibold">{displayName}</h3>
             <p className="text-sm text-gray-500">Full display name</p>
@@ -56,9 +57,11 @@ export const NameDisplayExample: React.FC<{ user: UserProfile }> = ({ user }) =>
 
         {/* Compact display */}
         <div className="flex items-center gap-4">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            name={shortName}
+            className="h-8 w-8"
+            fallbackClassName="text-xs"
+          />
           <div>
             <p className="text-sm font-medium">{shortName}</p>
             <p className="text-xs text-gray-500">Compact display</p>

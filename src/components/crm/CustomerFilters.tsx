@@ -14,10 +14,12 @@ interface CustomerFiltersProps {
   filters: CustomerFiltersType;
   onFiltersChange: (filters: CustomerFiltersType) => void;
   onReset: () => void;
+  onExportSegment?: (segmentSlug: string) => void;
+  isExporting?: boolean;
   totalCustomerCount?: number;
 }
 
-export const CustomerFilters = ({ filters, onFiltersChange, onReset, totalCustomerCount }: CustomerFiltersProps) => {
+export const CustomerFilters = ({ filters, onFiltersChange, onReset, onExportSegment, isExporting, totalCustomerCount }: CustomerFiltersProps) => {
   const { data: segmentCounts } = useCustomerSegmentCounts();
   const { data: sources } = useCustomerSources();
 
@@ -156,7 +158,9 @@ export const CustomerFilters = ({ filters, onFiltersChange, onReset, totalCustom
         onClearSegments={clearSegments}
         onToggleSegment={toggleSegment}
         onCreateSegment={segmentManager.openDialog}
+        onExportSegment={onExportSegment}
         isCreatingSegment={segmentManager.isSubmitting}
+        isExporting={isExporting}
         totalCustomerCount={totalCustomerCount}
       />
 

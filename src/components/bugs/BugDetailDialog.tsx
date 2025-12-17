@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Label } from '@/components/ui/label';
 import {
   useBug,
@@ -208,15 +208,6 @@ export function BugDetailDialog({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const severityStyle = bug ? SEVERITY_STYLES[bug.severity] : null;
   const statusBadge = bug ? STATUS_BADGES[bug.status] : null;
   const statusLabel = STATUS_OPTIONS.find((s) => s.value === bug?.status)?.label || bug?.status;
@@ -297,14 +288,12 @@ export function BugDetailDialog({
               {/* Reporter and Assignment */}
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Avatar className="h-6 w-6">
-                    {bug.reporter_avatar && (
-                      <AvatarImage src={bug.reporter_avatar} alt={bug.reporter_name} />
-                    )}
-                    <AvatarFallback className="text-[10px]">
-                      {getInitials(bug.reporter_name || 'U')}
-                    </AvatarFallback>
-                  </Avatar>
+                  <OptimizedAvatar
+                    src={bug.reporter_avatar}
+                    name={bug.reporter_name || 'U'}
+                    className="h-6 w-6"
+                    fallbackClassName="text-[10px]"
+                  />
                   <span>
                     Reported by {bug.reporter_name} •{' '}
                     {formatDistanceToNow(new Date(bug.created_at), { addSuffix: true })}
@@ -314,14 +303,12 @@ export function BugDetailDialog({
                 {bug.assigned_to && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Assigned to:</span>
-                    <Avatar className="h-6 w-6 border-2 border-green-500">
-                      {bug.assigned_avatar && (
-                        <AvatarImage src={bug.assigned_avatar} alt={bug.assigned_name} />
-                      )}
-                      <AvatarFallback className="text-[10px] bg-green-100">
-                        {getInitials(bug.assigned_name || 'A')}
-                      </AvatarFallback>
-                    </Avatar>
+                    <OptimizedAvatar
+                      src={bug.assigned_avatar}
+                      name={bug.assigned_name || 'A'}
+                      className="h-6 w-6 border-2 border-green-500"
+                      fallbackClassName="text-[10px] bg-green-100"
+                    />
                     <span className="text-sm font-medium">{bug.assigned_name}</span>
                   </div>
                 )}
@@ -453,17 +440,12 @@ export function BugDetailDialog({
                         <div key={comment.id} className="border rounded-lg p-3 space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                {comment.user_avatar && (
-                                  <AvatarImage
-                                    src={comment.user_avatar}
-                                    alt={comment.user_name}
-                                  />
-                                )}
-                                <AvatarFallback className="text-[10px]">
-                                  {getInitials(comment.user_name || 'U')}
-                                </AvatarFallback>
-                              </Avatar>
+                              <OptimizedAvatar
+                                src={comment.user_avatar}
+                                name={comment.user_name || 'U'}
+                                className="h-6 w-6"
+                                fallbackClassName="text-[10px]"
+                              />
                               <div>
                                 <p className="text-sm font-medium">{comment.user_name}</p>
                                 <p className="text-xs text-muted-foreground">

@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import type { SpotData } from '@/types/spot';
 
 interface LineupTimelineProps {
@@ -41,15 +41,6 @@ export function LineupTimeline({
       border: 'border-green-500',
       text: 'text-green-800 dark:text-green-200'
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   const formatTime = (time: string) => {
@@ -166,7 +157,7 @@ export function LineupTimeline({
 
                   {/* Type badge */}
                   <Badge
-                    className="professional-button"
+                    variant="secondary"
                     className={`${colors.text} border-current text-xs`}
                   >
                     {spot.type}
@@ -175,12 +166,12 @@ export function LineupTimeline({
                   {/* Comedian */}
                   {spot.comedian_id && spot.comedian_name ? (
                     <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={spot.comedian_avatar} alt={spot.comedian_name} />
-                        <AvatarFallback className="text-xs">
-                          {getInitials(spot.comedian_name)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={spot.comedian_avatar}
+                        name={spot.comedian_name}
+                        className="h-6 w-6"
+                        fallbackClassName="text-xs"
+                      />
                       <span className={`text-xs font-medium ${colors.text}`}>
                         {spot.comedian_name}
                       </span>

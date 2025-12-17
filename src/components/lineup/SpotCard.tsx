@@ -8,8 +8,8 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Pencil, Trash2, UserPlus, Clock } from 'lucide-react';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
+import { Pencil, Trash2, UserPlus, GripVertical, Clock, Coffee, DoorOpen } from 'lucide-react';
 import type { SpotData } from '@/types/spot';
 
 interface SpotCardProps {
@@ -41,26 +41,10 @@ export function SpotCard({
     cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const formatTime = (time: string) => {
-    try {
-      const date = new Date(time);
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-    } catch {
-      return time;
-    }
+  const categoryColors: Record<string, string> = {
+    doors: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    intermission: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+    custom: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'
   };
 
   const formatCurrency = (amount?: number) => {
@@ -71,63 +55,94 @@ export function SpotCard({
     }).format(amount);
   };
 
+  const formatTime = (time?: string) => {
+    if (!time) return null;
+    try {
+      const date = new Date(time);
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const isBreak = spot.category !== 'act';
+  const formattedTime = formatTime(spot.start_time);
+
+  // Get icon for break types
+  const BreakIcon = spot.category === 'doors' ? DoorOpen : Coffee;
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-4">
-        {/* Position Badge */}
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-lg font-bold text-white">
+    <Card className={isBreak ? 'border-dashed bg-muted/30' : undefined}>
+      <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-3">
+        {/* Drag Handle */}
+        <div className="cursor-grab text-muted-foreground hover:text-foreground">
+          <GripVertical className="h-5 w-5" />
+        </div>
+
+        {/* Position Number */}
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-sm font-semibold text-foreground">
           {spot.position}
         </div>
 
-        {/* Info */}
-        <div className="flex flex-1 flex-col space-y-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {formatTime(spot.time)}
-              </span>
-            </div>
+        {/* Start Time */}
+        {formattedTime && (
+          <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            {formattedTime}
           </div>
+        )}
 
-          {/* Type and Status Badges */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={typeColors[spot.type] || typeColors.Guest}>
-              {spot.type}
+        {/* Type/Category, Status, Duration Badges */}
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {isBreak ? (
+            <Badge className={categoryColors[spot.category] || categoryColors.custom}>
+              <BreakIcon className="mr-1 h-3 w-3" />
+              {spot.label || spot.category}
             </Badge>
-            <Badge className={statusColors[spot.status] || statusColors.available}>
-              {spot.status}
-            </Badge>
-            {spot.duration_minutes && (
-              <Badge className="professional-button">{spot.duration_minutes} min</Badge>
-            )}
-          </div>
+          ) : (
+            <>
+              <Badge className={typeColors[spot.type] || typeColors.Guest}>
+                {spot.type}
+              </Badge>
+              <Badge className={statusColors[spot.status] || statusColors.available}>
+                {spot.status}
+              </Badge>
+            </>
+          )}
+          {spot.duration_minutes && (
+            <Badge variant="secondary">{spot.duration_minutes} min</Badge>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3 pb-4">
         {/* Assigned Comedian */}
         {spot.comedian_id && spot.comedian_name ? (
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={spot.comedian_avatar} alt={spot.comedian_name} />
-              <AvatarFallback>{getInitials(spot.comedian_name)}</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-3">
+            <OptimizedAvatar
+              src={spot.comedian_avatar}
+              name={spot.comedian_name}
+              className="h-10 w-10"
+            />
             <div className="flex-1">
-              <p className="font-medium text-gray-900 dark:text-gray-100">
+              <p className="font-medium text-foreground">
                 {spot.comedian_name}
               </p>
               {spot.payment_amount && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {formatCurrency(spot.payment_amount)}
                 </p>
               )}
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-            <UserPlus className="h-5 w-5 text-gray-400" />
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
+            <UserPlus className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
               Not assigned
             </span>
           </div>
@@ -135,32 +150,34 @@ export function SpotCard({
 
         {/* Notes */}
         {spot.notes && (
-          <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+          <p className="text-sm text-muted-foreground italic">
             {spot.notes}
           </p>
         )}
       </CardContent>
 
-      <CardFooter className="flex flex-wrap gap-2 pt-4 border-t">
-        {/* Assign Comedian Button */}
-        <Button
-          onClick={onAssign}
-          disabled={isLoading}
-          size="sm"
-          variant="default"
-          className="gap-1"
-          aria-label="Assign comedian to spot"
-        >
-          <UserPlus className="h-4 w-4" />
-          {spot.comedian_id ? 'Reassign' : 'Assign'}
-        </Button>
+      <CardFooter className="flex flex-wrap gap-2 pt-4 border-t border-border">
+        {/* Assign Comedian Button - Only show for act spots, not breaks */}
+        {!isBreak && (
+          <Button
+            onClick={onAssign}
+            disabled={isLoading}
+            size="sm"
+            variant="default"
+            className="gap-1"
+            aria-label="Assign comedian to spot"
+          >
+            <UserPlus className="h-4 w-4" />
+            {spot.comedian_id ? 'Reassign' : 'Assign'}
+          </Button>
+        )}
 
         {/* Edit Button */}
         <Button
           onClick={onEdit}
           disabled={isLoading}
           size="sm"
-          className="professional-button"
+          variant="secondary"
           className="gap-1"
           aria-label="Edit spot"
         >
@@ -173,7 +190,7 @@ export function SpotCard({
           onClick={onDelete}
           disabled={isLoading}
           size="sm"
-          className="professional-button"
+          variant="ghost"
           className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
           aria-label="Delete spot"
         >

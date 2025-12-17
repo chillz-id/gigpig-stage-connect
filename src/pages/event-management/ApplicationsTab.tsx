@@ -10,7 +10,6 @@ import React, { useState } from 'react';
 import { Users, CheckCircle, XCircle, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { EventManagementHeaderContainer } from '@/components/event-management/EventManagementHeaderContainer';
 import { ExportMenu } from '@/components/event-management/ExportMenu';
 import { ApplicationFilters, type FilterState } from '@/components/applications/ApplicationFilters';
 import { ApplicationListContainer } from '@/components/applications/ApplicationListContainer';
@@ -18,6 +17,8 @@ import { ShortlistPanelContainer } from '@/components/applications/ShortlistPane
 import { ApplicationBulkActions } from '@/components/applications/ApplicationBulkActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   useBulkApproveApplications,
   useBulkRejectApplications,
@@ -46,7 +47,7 @@ export default function ApplicationsTab({
 }: ApplicationsTabProps) {
   const { toast } = useToast();
 
-  // Fetch event title for export
+  // Fetch event info
   const { data: event } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
@@ -172,14 +173,7 @@ export default function ApplicationsTab({
 
   return (
     <div className={inModal ? "flex flex-col" : "flex h-full flex-col"}>
-      {/* Header - hidden in modal context */}
-      {!inModal && (
-        <EventManagementHeaderContainer
-          eventId={eventId}
-          userId={userId}
-          currentTab="applications"
-        />
-      )}
+      {/* Header removed - stats are shown in the stats grid below */}
 
       {/* Main Content Area */}
       <div className={inModal ? "flex flex-col gap-4" : "flex flex-1 overflow-hidden"}>
@@ -253,13 +247,13 @@ export default function ApplicationsTab({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Shortlisted</CardTitle>
-                <Star className="h-4 w-4 text-muted-foreground" />
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               </CardHeader>
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-12" />
                 ) : (
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-amber-500">
                     {stats?.shortlistedApplications || 0}
                   </div>
                 )}

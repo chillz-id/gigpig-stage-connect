@@ -49,7 +49,7 @@ export default function EventManagement() {
     data: event,
     isLoading: eventLoading,
     error: eventError,
-  } = useQuery<EventData & { organization_owner_id?: string | null }>({
+  } = useQuery<EventData & { organization_owner_id?: string | null; organization_slug?: string | null }>({
     queryKey: ['event', eventId],
     queryFn: async () => {
       if (!eventId) throw new Error('Event ID is required');
@@ -59,7 +59,8 @@ export default function EventManagement() {
         .select(`
           *,
           organization_profiles!events_organization_id_fkey (
-            owner_id
+            owner_id,
+            url_slug
           )
         `)
         .eq('id', eventId)
@@ -67,11 +68,12 @@ export default function EventManagement() {
 
       if (error) throw error;
 
-      // Flatten organization owner_id into event data
-      const orgOwner = (data as any)?.organization_profiles?.owner_id;
+      // Flatten organization data into event data
+      const orgProfiles = (data as any)?.organization_profiles;
       return {
         ...data,
-        organization_owner_id: orgOwner ?? null,
+        organization_owner_id: orgProfiles?.owner_id ?? null,
+        organization_slug: orgProfiles?.url_slug ?? null,
       };
     },
     enabled: !!eventId,
@@ -177,10 +179,17 @@ export default function EventManagement() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/events/${eventId}`)}
+              onClick={() => {
+                // Navigate to org events page if we have a slug, otherwise go to dashboard
+                if (event?.organization_slug) {
+                  navigate(`/org/${event.organization_slug}/events`);
+                } else {
+                  navigate('/dashboard');
+                }
+              }}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Event
+              Back to Events
             </Button>
           </div>
 
@@ -188,14 +197,16 @@ export default function EventManagement() {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">{event.title}</h1>
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(event.date)}
-                </span>
-                {event.venue_name && (
+                {(event.event_date || event.date) && (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(event.event_date || event.date)}
+                  </span>
+                )}
+                {(event.venue_name || event.venue) && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    {event.venue_name}
+                    {event.venue_name || event.venue}
                   </span>
                 )}
                 <span className="flex items-center gap-1">

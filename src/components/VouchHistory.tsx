@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 
 interface VouchHistoryProps {
   userId: string;
@@ -287,12 +287,11 @@ export function VouchHistory({ userId, mode }: VouchHistoryProps) {
           <div className="space-y-4">
             {editingVouch && (
               <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={editingVouch.vouchee_profile?.avatar_url} />
-                  <AvatarFallback>
-                    {(editingVouch.vouchee_profile?.name || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                src={editingVouch.vouchee_profile?.avatar_url}
+                name={editingVouch.vouchee_profile?.name || 'Unknown'}
+                className="w-8 h-8"
+              />
                 <div>
                   <p className="font-medium">
                     {editingVouch.vouchee_profile?.stage_name || editingVouch.vouchee_profile?.name || 'Unknown User'}
@@ -347,7 +346,7 @@ export function VouchHistory({ userId, mode }: VouchHistoryProps) {
             </div>
 
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button variant="secondary" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
               <Button

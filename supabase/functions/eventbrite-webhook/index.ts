@@ -1,5 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts';
+
+// Signals Gateway configuration
+const SIGNALS_GATEWAY_URL = 'https://sg.standupsydney.com';
+const META_PIXEL_ID = '199052578865232';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,6 +70,92 @@ interface EventbriteOrder {
     ticket_class_id: string;
     ticket_class_name: string;
   }>;
+}
+
+// SHA256 hash function for Meta user data
+async function sha256Hash(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input.toLowerCase().trim());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Send Purchase event to Meta Conversions API via Signals Gateway
+async function sendMetaPurchaseEvent(order: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  value: number;
+  currency: string;
+  orderId: string;
+  eventName: string;
+  quantity: number;
+}): Promise<void> {
+  try {
+    const accessToken = Deno.env.get('META_ACCESS_TOKEN');
+    if (!accessToken) {
+      console.log('META_ACCESS_TOKEN not configured, skipping Conversions API');
+      return;
+    }
+
+    // Hash user data for privacy
+    const hashedEmail = await sha256Hash(order.email);
+    const hashedFirstName = await sha256Hash(order.firstName);
+    const hashedLastName = await sha256Hash(order.lastName);
+
+    const eventData = {
+      data: [{
+        event_name: 'Purchase',
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: 'website',
+        event_source_url: 'https://standupsydney.com',
+        user_data: {
+          em: [hashedEmail],
+          fn: [hashedFirstName],
+          ln: [hashedLastName],
+        },
+        custom_data: {
+          currency: order.currency || 'AUD',
+          value: order.value,
+          content_type: 'product',
+          content_name: order.eventName,
+          content_category: 'Comedy Event Ticket',
+          num_items: order.quantity,
+          order_id: order.orderId,
+          contents: [{
+            id: `eventbrite_${order.orderId}`,
+            quantity: order.quantity,
+            item_price: order.value / order.quantity,
+          }],
+        },
+      }],
+      access_token: accessToken,
+    };
+
+    // Send to Signals Gateway Conversions API endpoint
+    const response = await fetch(
+      `${SIGNALS_GATEWAY_URL}/capi/${META_PIXEL_ID}/events`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Meta Conversions API error:', response.status, errorText);
+    } else {
+      const result = await response.json();
+      console.log('Meta Purchase event sent successfully:', result);
+    }
+  } catch (error) {
+    console.error('Failed to send Meta Purchase event:', error);
+    // Don't throw - we don't want to fail the webhook if Meta tracking fails
+  }
 }
 
 serve(async (req) => {
@@ -295,6 +386,25 @@ async function processOrderEvent(supabase: any, payload: EventbriteWebhookPayloa
 
   // Update sync timestamp
   await updateSyncTimestamp(supabase, ticketPlatform.event_id, 'eventbrite', eventbriteEventId);
+
+  // Send Purchase event to Meta Conversions API via Signals Gateway
+  // Fetch event name for better tracking
+  const { data: eventData } = await supabase
+    .from('events')
+    .select('name')
+    .eq('id', ticketPlatform.event_id)
+    .single();
+
+  await sendMetaPurchaseEvent({
+    email: order.email,
+    firstName: order.first_name,
+    lastName: order.last_name,
+    value: order.costs.gross.value / 100, // Convert cents to dollars
+    currency: order.costs.gross.currency,
+    orderId: order.id,
+    eventName: eventData?.name || `Eventbrite Event ${eventbriteEventId}`,
+    quantity: totalQuantity,
+  });
 
   return { success: true, message: 'Order processed successfully' };
 }

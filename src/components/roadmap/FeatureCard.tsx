@@ -2,7 +2,7 @@ import { FeatureRequest } from '@/services/roadmap/roadmap-service';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { useVoteFeature, useUnvoteFeature } from '@/hooks/useRoadmap';
 import { Heart, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,15 +56,6 @@ export function FeatureCard({
     if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -128,14 +119,12 @@ export function FeatureCard({
 
           {/* Creator */}
           <div className="flex items-center gap-1">
-            <Avatar className="h-6 w-6">
-              {feature.creator_avatar && (
-                <AvatarImage src={feature.creator_avatar} alt={feature.creator_name} />
-              )}
-              <AvatarFallback className="text-[10px]">
-                {getInitials(feature.creator_name || 'U')}
-              </AvatarFallback>
-            </Avatar>
+            <OptimizedAvatar
+              src={feature.creator_avatar}
+              name={feature.creator_name || 'U'}
+              className="h-6 w-6"
+              fallbackClassName="text-[10px]"
+            />
           </div>
         </div>
       </CardContent>

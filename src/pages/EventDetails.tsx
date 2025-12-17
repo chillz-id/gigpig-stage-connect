@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { 
   Calendar, 
   MapPin, 
@@ -246,12 +246,12 @@ const EventDetails = () => {
                       {filledSpots.map((spot, index) => (
                         <div key={spot.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                           <div className="flex items-center space-x-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src="" />
-                              <AvatarFallback className="bg-purple-500 text-white">
-                                {index + 1}
-                              </AvatarFallback>
-                            </Avatar>
+                            <OptimizedAvatar
+                              src=""
+                              name={`Spot ${index + 1}`}
+                              className="h-10 w-10"
+                              fallbackClassName="bg-purple-500 text-white"
+                            />
                             <div>
                               <p className="font-medium">{spot.spot_name}</p>
                               <p className="text-sm text-gray-300">{spot.duration_minutes} minutes</p>

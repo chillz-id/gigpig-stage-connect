@@ -8,8 +8,11 @@ const IGNORE_PATTERNS = [
   "dist",
   "legacy/**",
   "docs/archive/**",
-  "scripts/legacy/**",
-  "tests/legacy/**"
+  "scripts/**",
+  "tests/legacy/**",
+  "*.js",
+  "*.cjs",
+  ".worktrees/**"
 ];
 
 /**

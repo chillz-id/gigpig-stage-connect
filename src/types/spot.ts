@@ -4,13 +4,19 @@
 
 export type SpotType = 'MC' | 'Feature' | 'Headliner' | 'Guest';
 export type SpotStatus = 'available' | 'assigned' | 'confirmed' | 'cancelled';
+export type SpotCategory = 'act' | 'doors' | 'intermission' | 'custom';
 
 export interface SpotData {
   id: string;
   event_id: string;
   position: number;
-  time: string;
+  /** Calculated start time (computed from event start + cumulative durations) */
+  start_time?: string;
   type: SpotType;
+  /** Category: act, doors, intermission, or custom break */
+  category: SpotCategory;
+  /** Label for breaks (e.g., "Doors Open", "Intermission", custom name) */
+  label?: string;
   comedian_id?: string;
   comedian_name?: string;
   comedian_avatar?: string;
@@ -25,8 +31,9 @@ export interface SpotData {
 export interface SpotInsert {
   event_id: string;
   position: number;
-  time: string;
-  type: SpotType;
+  type?: SpotType;
+  category?: SpotCategory;
+  label?: string;
   comedian_id?: string;
   payment_amount?: number;
   status?: SpotStatus;
@@ -36,8 +43,9 @@ export interface SpotInsert {
 
 export interface SpotUpdate {
   position?: number;
-  time?: string;
   type?: SpotType;
+  category?: SpotCategory;
+  label?: string;
   comedian_id?: string;
   payment_amount?: number;
   status?: SpotStatus;

@@ -79,8 +79,10 @@ export const OrganizationProvider = ({ children }: OrganizationProviderProps) =>
 
   // Extract orgId from the found organization for backward compatibility
   const orgId = useMemo(() => {
-    return organization?.id || orgIdParam;
-  }, [organization, orgIdParam]);
+    const id = organization?.id || orgIdParam;
+    console.log('[OrganizationContext] slug:', slug, 'orgIdParam:', orgIdParam, 'organization:', organization?.organization_name, 'orgId:', id);
+    return id;
+  }, [organization, orgIdParam, slug]);
 
   // Permission checks - memoize to prevent re-renders
   const { isOwner, isAdmin, isMember } = useMemo(() => {

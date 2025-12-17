@@ -198,9 +198,12 @@ export const useOrganizationEvents = () => {
 export const useOrganizationUpcomingEvents = () => {
   const { orgId } = useOrganization();
 
+  console.log('[useOrganizationUpcomingEvents] orgId:', orgId);
+
   return useQuery({
     queryKey: ['organization-upcoming-events', orgId],
     queryFn: async () => {
+      console.log('[useOrganizationUpcomingEvents] Fetching for orgId:', orgId);
       if (!orgId) {
         throw new Error('Organization ID is required');
       }
@@ -232,11 +235,15 @@ export const useOrganizationUpcomingEvents = () => {
 
       const sessionEvents: OrganizationEvent[] = (sessions || []).map(transformSessionToEvent);
 
+      console.log('[useOrganizationUpcomingEvents] Native events:', nativeEvents?.length || 0);
+      console.log('[useOrganizationUpcomingEvents] Session events:', sessionEvents.length);
+
       // Combine and sort
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
       const allEvents = [...nativeTransformed, ...sessionEvents];
       allEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
 
+      console.log('[useOrganizationUpcomingEvents] Total events:', allEvents.length);
       return allEvents;
     },
     enabled: !!orgId,

@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Instagram, Youtube, Facebook, type LucideIcon } from 'lucide-react';
+import { Instagram, Youtube, Facebook, Globe, type LucideIcon } from 'lucide-react';
 import { XIcon } from '@/components/icons/XIcon';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 
 interface ComedianSocialLinksProps {
   instagram_url?: string | null;
@@ -9,6 +10,8 @@ interface ComedianSocialLinksProps {
   facebook_url?: string | null;
   youtube_url?: string | null;
   tiktok_url?: string | null;
+  website_url?: string | null;
+  className?: string;
 }
 
 const ComedianSocialLinks: React.FC<ComedianSocialLinksProps> = ({
@@ -17,6 +20,8 @@ const ComedianSocialLinks: React.FC<ComedianSocialLinksProps> = ({
   facebook_url,
   youtube_url,
   tiktok_url,
+  website_url,
+  className,
 }) => {
   // Build social links array with only URLs that exist
   const socialLinks: Array<{
@@ -62,13 +67,31 @@ const ComedianSocialLinks: React.FC<ComedianSocialLinksProps> = ({
     });
   }
 
+  if (tiktok_url) {
+    socialLinks.push({
+      icon: TikTokIcon,
+      href: tiktok_url,
+      label: 'TikTok',
+      color: 'hover:text-pink-400',
+    });
+  }
+
+  if (website_url) {
+    socialLinks.push({
+      icon: Globe,
+      href: website_url,
+      label: 'Website',
+      color: 'hover:text-emerald-400',
+    });
+  }
+
   // Don't render anything if no social links exist
   if (socialLinks.length === 0) {
     return null;
   }
 
   return (
-    <div className="absolute bottom-4 right-4 flex flex-col gap-3">
+    <div className={className || "flex items-center gap-4"}>
       {socialLinks.map(({ icon: Icon, href, label, color }, index) => (
         <a
           key={label}
@@ -79,7 +102,7 @@ const ComedianSocialLinks: React.FC<ComedianSocialLinksProps> = ({
           className={`text-gray-300 ${color} transition-all duration-200 hover:transform hover:-translate-y-0.5`}
           style={{ animationDelay: `${index * 100}ms` }}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-10 h-10" />
         </a>
       ))}
     </div>

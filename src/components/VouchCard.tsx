@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { MessageSquare, Crown, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -49,23 +49,13 @@ export const VouchCard: React.FC<VouchCardProps> = ({ vouch }) => {
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Avatar - show org logo if org vouch, otherwise user avatar */}
-          <Avatar className="h-10 w-10">
-            {isOrgVouch ? (
-              <>
-                <AvatarImage src={vouch.organization?.logo_url || undefined} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Building2 className="w-5 h-5" />
-                </AvatarFallback>
-              </>
-            ) : (
-              <>
-                <AvatarImage src={otherUser?.avatar} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {otherUser?.name[0]}
-                </AvatarFallback>
-              </>
-            )}
-          </Avatar>
+          <OptimizedAvatar
+            src={isOrgVouch ? (vouch.organization?.logo_url || undefined) : otherUser?.avatar}
+            name={isOrgVouch ? (vouch.organization?.display_name || 'Org') : (otherUser?.name || '?')}
+            className="h-10 w-10"
+            fallbackClassName="bg-primary text-primary-foreground"
+            fallbackIcon={isOrgVouch ? <Building2 className="w-5 h-5" /> : undefined}
+          />
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               {isOrgVouch ? (

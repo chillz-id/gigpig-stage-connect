@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,12 +11,12 @@ const MobileUserInfo: React.FC = () => {
 
   return (
     <div className="flex items-center gap-3 py-4 border-b border-border/50">
-      <Avatar className="h-12 w-12">
-        <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
-        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-          {profile.name ? profile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <OptimizedAvatar
+        src={profile.avatar_url || ''}
+        name={profile.name || user.email || 'User'}
+        className="h-12 w-12"
+        fallbackClassName="bg-primary/10 text-primary font-semibold"
+      />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-foreground truncate">
           {profile.name || user.email}
@@ -25,11 +25,6 @@ const MobileUserInfo: React.FC = () => {
           {hasRole('admin') && (
             <Badge key="admin" variant="secondary" className="text-xs capitalize bg-red-100 text-red-800">
               Admin
-            </Badge>
-          )}
-          {false && (
-            <Badge key="promoter" variant="secondary" className="text-xs capitalize bg-purple-100 text-purple-800">
-              Promoter
             </Badge>
           )}
           {(hasRole('comedian') || hasRole('comedian_lite')) && (

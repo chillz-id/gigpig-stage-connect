@@ -109,16 +109,13 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({
       }));
   }, [upcomingGigs]);
 
-  // Auto-scroll carousel every 5 seconds
+  // Auto-scroll carousel every 5 seconds (loop is enabled, so scrollNext always works)
   useEffect(() => {
     if (!api || isPaused || confirmedShows.length <= 1) return;
 
     scrollIntervalRef.current = setInterval(() => {
-      if (api.canScrollNext()) {
-        api.scrollNext();
-      } else {
-        api.scrollTo(0); // Loop back to start
-      }
+      // With loop: true, scrollNext() will automatically wrap to the beginning
+      api.scrollNext();
     }, 5000); // 5 seconds
 
     return () => {
@@ -196,8 +193,8 @@ const ComedianUpcomingShows: React.FC<ComedianUpcomingShowsProps> = ({
     <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-white text-2xl">
-            <Calendar className="w-6 h-6 text-purple-400" />
+          <CardTitle className="flex items-center gap-2 text-white text-xl sm:text-2xl">
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
             Upcoming Shows
           </CardTitle>
           {isOwnProfile && (

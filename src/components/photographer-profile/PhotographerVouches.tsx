@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Award, TrendingUp } from 'lucide-react';
@@ -140,15 +140,10 @@ const PhotographerVouches: React.FC<PhotographerVouchesProps> = ({
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
                 {/* Voucher Avatar */}
-                <Avatar>
-                  <AvatarImage 
-                    src={vouch.voucher_avatar_url || ''} 
-                    alt={vouch.voucher_name || ''} 
-                  />
-                  <AvatarFallback>
-                    {vouch.voucher_name?.charAt(0) || 'V'}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={vouch.voucher_avatar_url || undefined}
+                  name={vouch.voucher_name || 'V'}
+                />
 
                 {/* Vouch Content */}
                 <div className="flex-1">

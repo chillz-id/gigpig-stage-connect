@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import ComedianAvatar from './ComedianAvatar';
 import ComedianBasicInfo from './ComedianBasicInfo';
 import ComedianActions from './ComedianActions';
-import ComedianSocialLinks from './ComedianSocialLinks';
 import { BannerImage } from './BannerImage';
 import { BannerUpload } from './BannerUpload';
 import { BookingInquiryModal } from './BookingInquiryModal';
@@ -25,11 +24,6 @@ interface ComedianHeaderProps {
     banner_position?: { x: number; y: number; scale: number } | null;
     is_verified: boolean;
     email: string | null;
-    instagram_url?: string | null;
-    twitter_url?: string | null;
-    facebook_url?: string | null;
-    youtube_url?: string | null;
-    tiktok_url?: string | null;
   };
   isOwnProfile: boolean;
   onShare: () => void;
@@ -44,46 +38,18 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
   const [localBannerUrl, setLocalBannerUrl] = useState(comedian.banner_url);
 
   const handleBannerUpload = () => {
-    // Always open upload dialog to upload new banner
+    // Open upload dialog to upload new banner
     setIsBannerUploadOpen(true);
   };
 
-  const handleBannerSave = async (position: { x: number; y: number; scale: number }) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          banner_position: position
-        })
-        .eq('id', comedian.id);
-
-      if (error) throw error;
-
-      // Invalidate query cache to trigger refetch and update UI
-      await queryClient.invalidateQueries({
-        queryKey: ['comedian-profile-by-slug']
-      });
-
-      toast({
-        title: 'Banner position saved',
-        description: 'Your banner has been repositioned successfully.'
-      });
-    } catch (error) {
-      console.error('Error saving banner position:', error);
-      toast({
-        title: 'Failed to save position',
-        description: 'There was an error saving your banner position. Please try again.',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleBannerUploaded = (bannerUrl: string) => {
+  const handleBannerUploaded = async (bannerUrl: string) => {
     setLocalBannerUrl(bannerUrl);
     setIsBannerUploadOpen(false);
 
-    // TEMPORARY: Disabled to debug infinite refresh
-    // window.location.reload();
+    // Invalidate query cache to refresh banner without page reload
+    await queryClient.invalidateQueries({
+      queryKey: ['comedian-profile-by-slug']
+    });
   };
 
   const handleContact = () => {
@@ -93,15 +59,13 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-2xl">
-        {/* Banner Section - 8:3 aspect ratio (1200x450) */}
-        <div className="relative w-full aspect-[8/3]">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl">
+        {/* Banner Section - shorter on mobile (3:1), 16:9 on larger screens */}
+        <div className="relative w-full aspect-[3/1] sm:aspect-[21/9] md:aspect-video">
           <BannerImage
             banner_url={localBannerUrl || comedian.banner_url || null}
-            banner_position={comedian.banner_position || null}
             isOwnProfile={isOwnProfile}
             onEditClick={handleBannerUpload}
-            onRepositionSave={handleBannerSave}
           />
 
           {/* Fallback gradient background if no banner */}
@@ -119,13 +83,13 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
           )}
         </div>
 
-        {/* Content Section - gradient background continues */}
-        <CardContent className="relative p-6 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
-            {/* Avatar with negative margin to overlap banner */}
-            <div className="flex-shrink-0 -mt-8 lg:-mt-16 mx-auto lg:mx-0">
+        {/* Content Section - centered layout */}
+        <CardContent className="relative p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
+          <div className="flex flex-col items-center">
+            {/* Avatar - centered, 50% over banner */}
+            <div className="-mt-16 sm:-mt-20 md:-mt-24 mb-4">
               <div className="relative">
-                <div className="w-32 h-32">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48">
                   <ComedianAvatar
                     name={comedian.name}
                     avatar_url={comedian.avatar_url}
@@ -134,11 +98,12 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
                   />
                 </div>
                 {/* Glow effect */}
-                <div className="absolute -inset-3 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-xl -z-10" />
+                <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-xl -z-10" />
               </div>
             </div>
 
-            <div className="flex-1 text-center lg:text-left text-white">
+            {/* Name, Location, Tagline - centered */}
+            <div className="text-center text-white w-full max-w-xl">
               <ComedianBasicInfo
                 name={comedian.name}
                 location={comedian.location}
@@ -146,7 +111,7 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
                 is_verified={comedian.is_verified}
               />
 
-              {/* Reduced space for actions */}
+              {/* Book Now - centered under name */}
               <div className="mt-4">
                 <ComedianActions
                   email={comedian.email}
@@ -157,15 +122,6 @@ const ComedianHeader: React.FC<ComedianHeaderProps> = ({ comedian, isOwnProfile,
               </div>
             </div>
           </div>
-
-          {/* Social Links positioned at bottom right */}
-          <ComedianSocialLinks
-            instagram_url={comedian.instagram_url}
-            twitter_url={comedian.twitter_url}
-            facebook_url={comedian.facebook_url}
-            youtube_url={comedian.youtube_url}
-            tiktok_url={comedian.tiktok_url}
-          />
         </CardContent>
       </div>
 

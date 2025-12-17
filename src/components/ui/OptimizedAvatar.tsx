@@ -49,31 +49,38 @@ export const OptimizedAvatar: React.FC<OptimizedAvatarProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  // Resolve signed URL for Supabase storage images
+  // Resolve URL for images
   useEffect(() => {
     if (!src) {
       setResolvedSrc(null);
       return;
     }
 
-    // Check if it's a Supabase URL that needs signing
-    if (src.includes('supabase')) {
+    // Check if it's a marker URL that needs async resolution
+    if (src.startsWith('supabase-storage://')) {
       setIsLoading(true);
       generateSignedCDNUrl(src)
         .then((signedUrl) => {
-          setResolvedSrc(signedUrl);
+          setResolvedSrc(signedUrl || null);
         })
         .catch((err) => {
-          console.warn('[OptimizedAvatar] Failed to get signed URL:', err);
-          // Fallback to original URL (might fail but worth trying)
-          setResolvedSrc(src);
+          console.warn('[OptimizedAvatar] Failed to resolve marker URL:', err);
+          setResolvedSrc(null);
         })
         .finally(() => {
           setIsLoading(false);
         });
-    } else {
-      // Non-Supabase URLs can be used directly
+    } else if (src.includes('/object/public/')) {
+      // Public Supabase URLs can be used directly - no signing needed
       setResolvedSrc(src);
+    } else if (src.startsWith('http://') || src.startsWith('https://')) {
+      // Other external URLs can be used directly
+      setResolvedSrc(src);
+    } else {
+      // Relative path - try to construct a public URL
+      // Assume profile-images bucket for backwards compatibility
+      const publicUrl = `https://${import.meta.env.VITE_SUPABASE_URL?.replace('https://', '')}/storage/v1/object/public/profile-images/${src}`;
+      setResolvedSrc(publicUrl);
     }
   }, [src]);
 

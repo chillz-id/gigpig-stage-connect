@@ -23,6 +23,34 @@ export const useCreateSegment = () => {
     mutationFn: segmentService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['segments'] });
+      queryClient.invalidateQueries({ queryKey: ['segments-with-details'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-segment-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+  });
+};
+
+export const useUpdateSegment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: segmentService.update,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      queryClient.invalidateQueries({ queryKey: ['segments-with-details'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-segment-counts'] });
+    },
+  });
+};
+
+export const useDeleteSegment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: segmentService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      queryClient.invalidateQueries({ queryKey: ['segments-with-details'] });
       queryClient.invalidateQueries({ queryKey: ['customer-segment-counts'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
     },

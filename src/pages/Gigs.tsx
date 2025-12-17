@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
-import { Calendar, MapPin, Users, AlertCircle, Clock } from 'lucide-react';
+import { Calendar, CalendarDays, List, MapPin, Users, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { HorizontalAuthBanner } from '@/components/auth/HorizontalAuthBanner';
 import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
@@ -23,7 +23,9 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ImageCrop } from '@/components/ImageCrop';
 import { CalendarGridView } from '@/components/gigs/CalendarGridView';
+import { BrowseEventListView } from '@/components/gigs/BrowseEventListView';
 import { DayOfWeekSelector } from '@/components/gigs/DayOfWeekSelector';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -44,6 +46,7 @@ const Gigs = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isMobile } = useMobileLayout();
 
   // Get month from URL params
   const searchParams = new URLSearchParams(location.search);
@@ -60,8 +63,8 @@ const Gigs = () => {
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [showDateRange, setShowDateRange] = useState(false);
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
-  const [showPastEvents, setShowPastEvents] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>('sydney'); // 'sydney' or 'melbourne'
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
 
   // Image upload states for ProfileHeader
   const [selectedImage, setSelectedImage] = useState('');
@@ -107,7 +110,7 @@ const Gigs = () => {
   const { events, isLoading, error } = useSessionCalendar({
     startDate,
     endDate,
-    includePast: showPastEvents,
+    includePast: false,
     timezone: selectedTimezone
   });
   
@@ -180,7 +183,7 @@ const Gigs = () => {
           return dateA - dateB;
       }
     });
-  }, [events, locationFilter, showPastEvents, sortBy, useAdvancedFilters, searchTerm]);
+  }, [events, locationFilter, sortBy, useAdvancedFilters, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -189,7 +192,6 @@ const Gigs = () => {
     setDateRange({ start: null, end: null });
     setShowDateRange(false);
     setUseAdvancedFilters(false);
-    setShowPastEvents(false);
   };
 
   // Calculate active filters count
@@ -388,8 +390,8 @@ const Gigs = () => {
           </div>
         ) : null}
 
-        {/* Day of Week Selector (comedians only) */}
-        {isComedian && events && (
+        {/* Day of Week Selector (comedians only, calendar view only) */}
+        {isComedian && events && viewMode === 'calendar' && (
           <div className="mb-6">
             <DayOfWeekSelector
               events={events}
@@ -415,24 +417,6 @@ const Gigs = () => {
               <ProfileContextBadge size="sm" />
             </div>
             <div className="flex gap-2">
-              {/* Additional filter buttons */}
-              <button
-                onClick={() => setShowPastEvents(!showPastEvents)}
-                className={cn(
-                  "px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2",
-                  showPastEvents
-                    ? theme === 'pleasure'
-                      ? 'bg-purple-500/30 hover:bg-purple-500/40 text-white border border-purple-400/30'
-                      : 'bg-red-600/30 hover:bg-red-600/40 text-white border border-red-600/30'
-                    : theme === 'pleasure'
-                      ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                      : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
-                )}
-              >
-                <Clock size={14} />
-                {showPastEvents ? 'Hide Past' : 'Show Past'}
-              </button>
-
               {/* City filter dropdown */}
               <Select value={selectedCity} onValueChange={setSelectedCity}>
                 <SelectTrigger
@@ -465,38 +449,83 @@ const Gigs = () => {
                   }
                 }}
                 className={cn(
-                  "px-4 py-2 rounded-lg transition-colors text-sm font-medium",
-                  theme === 'pleasure'
-                    ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                    : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+                  "p-2 rounded-lg transition-colors",
+                  useAdvancedFilters
+                    ? theme === 'pleasure'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-red-600 text-white'
+                    : theme === 'pleasure'
+                      ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                      : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
                 )}
+                title="Advanced Filters"
               >
-                {useAdvancedFilters ? 'Use Month View' : 'Advanced Filters'}
+                <SlidersHorizontal size={18} />
               </button>
+
+              {/* View Mode Toggle */}
+              <div className={cn(
+                "flex gap-0.5 p-1 rounded-lg",
+                theme === 'pleasure'
+                  ? 'bg-white/10 border border-white/20'
+                  : 'bg-gray-700 border border-gray-600'
+              )}>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={cn(
+                    "p-2 rounded-md transition-colors",
+                    viewMode === 'calendar'
+                      ? theme === 'pleasure'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-red-600 text-white'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  )}
+                  title="Calendar View"
+                >
+                  <CalendarDays size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    "p-2 rounded-md transition-colors",
+                    viewMode === 'list'
+                      ? theme === 'pleasure'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-red-600 text-white'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  )}
+                  title="List View"
+                >
+                  <List size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Show either Month Filter or Advanced Filters */}
-          {!useAdvancedFilters ? (
-            <MonthFilter 
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={handleMonthChange}
-              events={events || []}
-            />
-          ) : (
-            <EventFilters
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              locationFilter={locationFilter}
-              setLocationFilter={setLocationFilter}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              dateRange={dateRange}
-              onDateRangeChange={handleDateRangeChange}
-              onClearFilters={clearFilters}
-              activeFiltersCount={activeFiltersCount}
-            />
+          {/* Month Filter - always shown, updates based on filtered events */}
+          <MonthFilter
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
+            events={useAdvancedFilters ? filteredEvents : (events || [])}
+          />
+
+          {/* Advanced Filters - shown below month filter when enabled */}
+          {useAdvancedFilters && (
+            <div className="mt-4">
+              <EventFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                locationFilter={locationFilter}
+                setLocationFilter={setLocationFilter}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                dateRange={dateRange}
+                onDateRangeChange={handleDateRangeChange}
+                onClearFilters={clearFilters}
+                activeFiltersCount={activeFiltersCount}
+              />
+            </div>
           )}
         </div>
 
@@ -506,7 +535,6 @@ const Gigs = () => {
             <p className="text-white/80">
               Found <span className="font-semibold">{filteredEvents.length}</span> events
               {activeFiltersCount > 0 && ` matching your filters`}
-              {showPastEvents && ' (including past events)'}
             </p>
             {filteredEvents.length > 10 && (
               <p className="text-white/60 text-sm">
@@ -538,15 +566,24 @@ const Gigs = () => {
           </div>
         )}
 
-        {/* Calendar Grid View */}
+        {/* Calendar or List View */}
         {filteredEvents.length > 0 ? (
-          <CalendarGridView
-            events={filteredEvents}
-            selectedMonth={new Date(selectedYear, selectedMonth)}
-            isComedian={isComedian}
-            selectedEventIds={selectedEvents}
-            onToggleAvailability={toggleEvent}
-          />
+          viewMode === 'calendar' ? (
+            <CalendarGridView
+              events={filteredEvents}
+              selectedMonth={new Date(selectedYear, selectedMonth)}
+              isComedian={isComedian}
+              selectedEventIds={selectedEvents}
+              onToggleAvailability={toggleEvent}
+            />
+          ) : (
+            <BrowseEventListView
+              events={filteredEvents}
+              isComedian={isComedian ?? false}
+              selectedEventIds={selectedEvents}
+              onToggleAvailability={toggleEvent}
+            />
+          )
         ) : (
           <div className="text-center py-16">
             <div className={cn(
@@ -566,9 +603,7 @@ const Gigs = () => {
               )}>
                 {activeFiltersCount > 0
                   ? "No events match your current filters. Try adjusting your search criteria."
-                  : showPastEvents
-                    ? "No past or upcoming events found. Check back later for new shows!"
-                    : "No upcoming events found for this period. Try showing past events or selecting a different date range."}
+                  : "No upcoming events found for this period. Try selecting a different month or city."}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

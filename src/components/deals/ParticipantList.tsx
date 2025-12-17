@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, Lock } from 'lucide-react';
 import type { ParticipantData } from '@/types/deal';
@@ -27,15 +27,6 @@ export function ParticipantList({
   dealAmount,
   canViewFinancials
 }: ParticipantListProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const formatCurrency = (amount: number) => {
     if (!canViewFinancials) {
       return (
@@ -81,10 +72,11 @@ export function ParticipantList({
           className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3"
         >
           {/* Avatar */}
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={participant.user_avatar} alt={participant.user_name} />
-            <AvatarFallback>{getInitials(participant.user_name)}</AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={participant.user_avatar}
+            name={participant.user_name}
+            className="h-10 w-10"
+          />
 
           {/* Name and Split */}
           <div className="flex-1 min-w-0">

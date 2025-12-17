@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useCustomLinks, CustomLink } from '@/hooks/useCustomLinks';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface CustomLinksProps {
@@ -126,8 +125,8 @@ export const CustomLinks: React.FC<CustomLinksProps> = ({
 
     return (
       <div key={section.id} className="space-y-3">
-        {/* Section heading */}
-        <h3 className="text-lg font-semibold text-white px-1">{section.title}</h3>
+        {/* Section heading - Linktree style */}
+        <h3 className="text-sm font-bold tracking-widest uppercase text-white/80 px-1">{section.title}</h3>
 
         {/* Links in section */}
         {isStacked ? (
@@ -160,10 +159,9 @@ export const CustomLinks: React.FC<CustomLinksProps> = ({
     );
   }
 
-  // Full card mode (for EPK profile tab)
+  // Full card mode (for EPK profile tab) - transparent to let link cards stand out
   return (
-    <Card className={cn('bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700', className)}>
-      <CardContent className="p-6 space-y-6">
+    <div className={cn('space-y-6', className)}>
         {/* Sectioned links */}
         {sectionedLinks.map(({ section, links }) => renderSection(section, links))}
 
@@ -171,15 +169,14 @@ export const CustomLinks: React.FC<CustomLinksProps> = ({
         {unsectionedLinks.length > 0 && (
           <div className="space-y-3">
             {sectionedLinks.length > 0 && (
-              <h3 className="text-lg font-semibold text-white px-1">Other Links</h3>
+              <h3 className="text-sm font-bold tracking-widest uppercase text-white/80 px-1">Other Links</h3>
             )}
             <div className="space-y-3">
               {unsectionedLinks.map(renderStackedLink)}
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 };
 
@@ -198,15 +195,15 @@ const StackedLinkCard: React.FC<{
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative overflow-hidden rounded-xl border-2 border-slate-600
-                 hover:border-purple-500 hover:scale-[1.02] transition-all duration-200
-                 bg-gradient-to-br from-slate-800 to-slate-900 shadow-md hover:shadow-lg"
+      className="group relative overflow-hidden rounded-2xl border border-white/10
+                 hover:border-white/30 hover:scale-[1.01] transition-all duration-200
+                 bg-slate-900/80 hover:bg-slate-800/80"
     >
-      <div className="relative flex items-center gap-4 px-6 py-4">
-        {/* Thumbnail or Icon */}
+      <div className="relative flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4">
+        {/* Thumbnail or Icon - Responsive: smaller on mobile */}
         <div className="flex-shrink-0">
           {thumbnailUrl && !imageError ? (
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/10 border border-white/10">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white/5">
               <img
                 src={thumbnailUrl}
                 alt={link.title}
@@ -215,23 +212,18 @@ const StackedLinkCard: React.FC<{
               />
             </div>
           ) : (
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center bg-white/5">
               {getIcon(link.icon_type)}
             </div>
           )}
         </div>
 
-        {/* Content */}
+        {/* Content - Mobile-first text sizing with line-clamp */}
         <div className="flex-grow text-left min-w-0">
-          <div className="font-semibold text-white truncate">{link.title}</div>
+          <div className="text-sm sm:text-base font-medium text-white line-clamp-2">{link.title}</div>
           {link.description && (
-            <div className="text-sm text-white/70 truncate">{link.description}</div>
+            <div className="text-xs sm:text-sm text-white/60 line-clamp-1">{link.description}</div>
           )}
-        </div>
-
-        {/* External link indicator */}
-        <div className="flex-shrink-0 text-white/40 group-hover:text-white/60 transition-colors">
-          <ExternalLink className="w-4 h-4" />
         </div>
 
         {/* Hidden badge */}
@@ -247,7 +239,7 @@ const StackedLinkCard: React.FC<{
   );
 };
 
-// Grid link card component
+// Grid link card component - Linktree style with title below image
 const GridLinkCard: React.FC<{
   link: CustomLink;
   isOwnProfile: boolean;
@@ -262,13 +254,12 @@ const GridLinkCard: React.FC<{
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group overflow-hidden rounded-xl border-2 border-slate-600
-                 hover:border-purple-500 hover:scale-[1.02] hover:shadow-lg
-                 transition-all duration-200 bg-gradient-to-br from-slate-800 to-slate-900
-                 shadow-md relative"
+      className="group overflow-hidden rounded-2xl border border-white/10
+                 hover:border-white/30 hover:scale-[1.02] hover:shadow-xl
+                 transition-all duration-200 bg-slate-900/80"
     >
-      {/* Thumbnail */}
-      <div className="aspect-[2/1] overflow-hidden relative">
+      {/* Thumbnail - clean, no overlay */}
+      <div className="aspect-video overflow-hidden relative">
         {thumbnailUrl && !imageError ? (
           <img
             src={thumbnailUrl}
@@ -277,20 +268,12 @@ const GridLinkCard: React.FC<{
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-purple-600/30 flex items-center justify-center">
-            <div className="text-white/60 scale-150">
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+            <div className="text-white/40 scale-150">
               {getIcon(link.icon_type)}
             </div>
           </div>
         )}
-
-        {/* Title overlay */}
-        <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-          <h3 className="font-semibold text-white text-sm truncate">{link.title}</h3>
-          {link.description && (
-            <p className="text-xs text-white/80 truncate mt-0.5">{link.description}</p>
-          )}
-        </div>
 
         {/* Hidden badge */}
         {!link.is_visible && isOwnProfile && (
@@ -299,6 +282,14 @@ const GridLinkCard: React.FC<{
               Hidden
             </span>
           </div>
+        )}
+      </div>
+
+      {/* Title below image - Linktree style */}
+      <div className="p-2 sm:p-3 text-center">
+        <h3 className="text-xs sm:text-sm font-medium text-white/90 line-clamp-2">{link.title}</h3>
+        {link.description && (
+          <p className="text-[10px] sm:text-xs text-white/50 line-clamp-1 mt-0.5">{link.description}</p>
         )}
       </div>
     </a>

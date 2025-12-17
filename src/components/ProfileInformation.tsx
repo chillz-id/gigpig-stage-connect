@@ -217,7 +217,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
         {/* Social Media Links */}
         <div className="space-y-4">
-          <Label className="text-base font-semibold">Social Media & Links</Label>
+          <Label className="text-base font-semibold">Social Media</Label>
 
           {/* Always visible: Instagram, YouTube, TikTok, Website */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

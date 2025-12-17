@@ -322,7 +322,7 @@ export const PWAInstaller: React.FC<PWAInstallerProps> = ({
 
           {onClose && (
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
               className={cn(isMobile && "touch-target-44")}
             >

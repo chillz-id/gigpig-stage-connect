@@ -1,22 +1,4 @@
-import { Resend } from 'resend';
-
-// Initialize Resend with API key from environment
-// Gracefully handle missing API key to prevent module load failures
-let resend: Resend | null = null;
-let resendInitError: string | null = null;
-
-try {
-  const apiKey = import.meta.env.VITE_RESEND_API_KEY;
-  if (apiKey) {
-    resend = new Resend(apiKey);
-  } else {
-    resendInitError = 'VITE_RESEND_API_KEY not configured';
-    console.warn('⚠️ Resend email service not configured. Welcome emails will not be sent.');
-  }
-} catch (error) {
-  resendInitError = `Resend initialization failed: ${error}`;
-  console.error('❌ Failed to initialize Resend:', error);
-}
+import { supabase } from '@/integrations/supabase/client';
 
 interface SendEmailParams {
   to: string | string[];
@@ -24,41 +6,31 @@ interface SendEmailParams {
   html?: string;
   text?: string;
   from?: string;
+  replyTo?: string;
 }
 
 /**
  * Email Service
- * Handles sending transactional emails via Resend API
+ * Handles sending transactional emails via AWS SES (through Supabase Edge Function)
  */
 export const emailService = {
   /**
-   * Send an email using Resend
+   * Send an email using AWS SES via Edge Function
    */
-  async sendEmail({ to, subject, html, text, from }: SendEmailParams) {
-    // Check if Resend is initialized
-    if (!resend) {
-      console.warn('⚠️ Email service not available:', resendInitError || 'Resend not initialized');
-      return {
-        success: false,
-        error: resendInitError || 'Email service not configured',
-        skipped: true
-      };
-    }
-
+  async sendEmail({ to, subject, html, text, from, replyTo }: SendEmailParams) {
     try {
-      const fromEmail = from || import.meta.env.VITE_RESEND_FROM_EMAIL || 'team@gigpigs.app';
-
-      const { data, error } = await resend.emails.send({
-        from: fromEmail,
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-        text,
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: { to, subject, html, text, from, replyTo },
       });
 
       if (error) {
-        console.error('Resend email error:', error);
+        console.error('Email service error:', error);
         return { success: false, error: error.message };
+      }
+
+      if (data && !data.success) {
+        console.error('Email send failed:', data.error);
+        return { success: false, error: data.error };
       }
 
       console.log('Email sent successfully:', data);
@@ -91,7 +63,7 @@ export const emailService = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎤 Welcome to Stand Up Sydney!</h1>
+              <h1>Welcome to Stand Up Sydney!</h1>
             </div>
             <div class="content">
               <p>Hi ${name},</p>
@@ -107,14 +79,14 @@ export const emailService = {
               </ul>
 
               <div style="text-align: center;">
-                <a href="https://stand-up-sydney.vercel.app/dashboard" class="button">
+                <a href="https://standupsydney.com/dashboard" class="button">
                   Go to Your Dashboard
                 </a>
               </div>
 
               <p>If you have any questions, feel free to reach out to our support team.</p>
 
-              <p>Break a leg! 🎭</p>
+              <p>Break a leg!</p>
 
               <p>
                 <strong>The Stand Up Sydney Team</strong>
@@ -124,7 +96,7 @@ export const emailService = {
               <p>Stand Up Sydney | Sydney's Premier Comedy Platform</p>
               <p>
                 <a href="https://standupsydney.com">Website</a> |
-                <a href="https://stand-up-sydney.vercel.app/help">Help Center</a>
+                <a href="https://standupsydney.com/help">Help Center</a>
               </p>
             </div>
           </div>
@@ -163,7 +135,7 @@ export const emailService = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎤 Confirm Your Email</h1>
+              <h1>Confirm Your Email</h1>
             </div>
             <div class="content">
               <p>Thanks for signing up with Stand Up Sydney!</p>
@@ -227,7 +199,7 @@ export const emailService = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎉 Gig Confirmed!</h1>
+              <h1>Gig Confirmed!</h1>
             </div>
             <div class="content">
               <p>Great news! Your spot has been confirmed.</p>
@@ -256,7 +228,7 @@ export const emailService = {
               </div>
 
               <div style="text-align: center;">
-                <a href="https://stand-up-sydney.vercel.app/dashboard/gigs" class="button">
+                <a href="https://standupsydney.com/dashboard/gigs" class="button">
                   View My Gigs
                 </a>
               </div>
@@ -269,7 +241,7 @@ export const emailService = {
                 <li>Have fun!</li>
               </ul>
 
-              <p>Break a leg! 🎤</p>
+              <p>Break a leg!</p>
             </div>
             <div class="footer">
               <p>Stand Up Sydney | Sydney's Premier Comedy Platform</p>

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Crown, Search, Building2, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useVouches } from '@/hooks/useVouches';
@@ -241,10 +241,11 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
                       onSelect={() => handleUserSelect(user)}
                       className="flex items-center gap-3 cursor-pointer"
                     >
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={user.avatar_url} />
-                        <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={user.avatar_url}
+                        name={user.name}
+                        className="w-8 h-8"
+                      />
                       <div className="flex-1">
                         <p className="font-medium">{user.stage_name || user.name}</p>
                         <div className="flex gap-1 mt-1">
@@ -266,10 +267,11 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
         {selectedUser && (
           <div className="mt-2 p-3 bg-muted rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={selectedUser.avatar_url} />
-                <AvatarFallback>{selectedUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <OptimizedAvatar
+                src={selectedUser.avatar_url}
+                name={selectedUser.name}
+                className="w-8 h-8"
+              />
               <div>
                 <p className="font-medium">{selectedUser.stage_name || selectedUser.name}</p>
                 <div className="flex gap-1">

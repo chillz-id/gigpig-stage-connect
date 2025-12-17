@@ -83,13 +83,13 @@ const CareerHighlights: React.FC<CareerHighlightsProps> = ({
               <p className="text-gray-300 flex-1">{item.accomplishment}</p>
 
               {isOwnProfile && (onEdit || onDelete) && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
                   {onEdit && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleEditClick(item)}
-                      className="h-7 px-2"
+                      className="h-7 w-7 sm:w-auto px-1 sm:px-2"
                     >
                       <Edit2 className="w-3 h-3" />
                     </Button>
@@ -99,7 +99,7 @@ const CareerHighlights: React.FC<CareerHighlightsProps> = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(item.id)}
-                      className="h-7 px-2 text-red-400 hover:text-red-300"
+                      className="h-7 w-7 sm:w-auto px-1 sm:px-2 text-red-400 hover:text-red-300"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>

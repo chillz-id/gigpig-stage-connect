@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -61,15 +61,12 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
       <div className="flex flex-col md:flex-row gap-6">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <Avatar className="w-32 h-32">
-            <AvatarImage 
-              src={photographer.avatar_url || ''} 
-              alt={photographer.name || ''} 
-            />
-            <AvatarFallback className="text-2xl">
-              {photographer.name?.charAt(0) || 'P'}
-            </AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={photographer.avatar_url}
+            name={photographer.name || 'Photographer'}
+            className="w-32 h-32"
+            fallbackClassName="text-2xl"
+          />
         </div>
 
         {/* Info */}

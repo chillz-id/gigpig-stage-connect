@@ -1,14 +1,16 @@
 /**
  * ShortlistPanel Component (Presentational)
  *
- * Sidebar panel showing shortlisted comedians with drag-and-drop reordering
+ * Sidebar panel showing confirmed and shortlisted comedians
+ * - Confirmed section at top
+ * - Shortlist section below
+ * - Individual confirm buttons on shortlisted items
  */
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { X, GripVertical, List, CheckCircle, Star } from 'lucide-react';
@@ -16,7 +18,9 @@ import type { ApplicationData } from '@/types/application';
 
 interface ShortlistPanelProps {
   shortlistedApplications: ApplicationData[];
+  confirmedApplications?: ApplicationData[];
   onRemove: (id: string) => void;
+  onConfirmSingle?: (id: string) => void;
   onReorder?: (sourceId: string, destinationId: string) => void;
   onConfirmAll?: () => void;
   onRemoveAll?: () => void;
@@ -26,29 +30,77 @@ interface ShortlistPanelProps {
 
 export function ShortlistPanel({
   shortlistedApplications,
+  confirmedApplications = [],
   onRemove,
+  onConfirmSingle,
   onReorder,
   onConfirmAll,
   onRemoveAll,
   isLoading = false,
   totalSpots
 }: ShortlistPanelProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const PanelContent = () => (
-    <div className="flex h-full flex-col">
-      {/* Header */}
+    <div className="flex h-full flex-col overflow-y-auto">
+      {/* Confirmed Section */}
+      {confirmedApplications.length > 0 && (
+        <>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <h3 className="text-lg font-semibold text-foreground">
+                Confirmed
+              </h3>
+              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                {confirmedApplications.length}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="space-y-2 px-4 pb-4">
+            {confirmedApplications.map((application, index) => (
+              <div
+                key={application.id}
+                className="group relative flex items-center gap-3 rounded-lg border border-green-200 bg-card p-3 dark:border-green-800"
+              >
+                {/* Position Number */}
+                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-800 dark:bg-green-900 dark:text-green-200">
+                  {index + 1}
+                </div>
+
+                {/* Avatar */}
+                <OptimizedAvatar
+                  src={application.comedian_avatar}
+                  name={application.comedian_name}
+                  className="h-10 w-10 flex-shrink-0"
+                />
+
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {application.comedian_name}
+                  </p>
+                  {application.spot_type && (
+                    <Badge variant="secondary" className="mt-1 text-xs">
+                      {application.spot_type}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Confirmed indicator */}
+                <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-500" />
+              </div>
+            ))}
+          </div>
+
+          <Separator />
+        </>
+      )}
+
+      {/* Shortlist Header */}
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-lg font-semibold text-foreground">
             Shortlist
           </h3>
           {totalSpots && (
@@ -83,7 +135,7 @@ export function ShortlistPanel({
                 onClick={onRemoveAll}
                 disabled={isLoading}
                 size="sm"
-                className="professional-button"
+                variant="secondary"
                 className="flex-1 gap-1"
                 aria-label="Clear shortlist"
               >
@@ -96,15 +148,15 @@ export function ShortlistPanel({
         </>
       )}
 
-      {/* List */}
-      <ScrollArea className="flex-1 p-4">
+      {/* Shortlist Items */}
+      <div className="flex-1 p-4">
         {shortlistedApplications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Star className="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <Star className="mb-3 h-12 w-12 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-muted-foreground">
               No comedians shortlisted yet
             </p>
-            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <p className="mt-1 text-xs text-muted-foreground/70">
               Add comedians to shortlist to prioritize them
             </p>
           </div>
@@ -113,7 +165,7 @@ export function ShortlistPanel({
             {shortlistedApplications.map((application, index) => (
               <div
                 key={application.id}
-                className="group relative flex items-center gap-3 rounded-lg border bg-white p-3 shadow-sm transition-all hover:shadow-md dark:bg-gray-900"
+                className="group relative flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-all hover:border-yellow-400/50"
               >
                 {/* Position Number */}
                 <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 text-xs font-bold text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
@@ -122,34 +174,46 @@ export function ShortlistPanel({
 
                 {/* Drag Handle (for future drag-drop implementation) */}
                 {onReorder && (
-                  <GripVertical className="h-4 w-4 flex-shrink-0 cursor-grab text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <GripVertical className="h-4 w-4 flex-shrink-0 cursor-grab text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 )}
 
                 {/* Avatar */}
-                <Avatar className="h-10 w-10 flex-shrink-0">
-                  <AvatarImage
-                    src={application.comedian_avatar}
-                    alt={application.comedian_name}
-                  />
-                  <AvatarFallback>{getInitials(application.comedian_name)}</AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={application.comedian_avatar}
+                  name={application.comedian_name}
+                  className="h-10 w-10 flex-shrink-0"
+                />
 
                 {/* Info */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {application.comedian_name}
                   </p>
                   {application.comedian_experience && (
-                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                    <p className="truncate text-xs text-muted-foreground">
                       {application.comedian_experience}
                     </p>
                   )}
                   {application.spot_type && (
-                    <Badge className="professional-button mt-1 text-xs">
+                    <Badge variant="secondary" className="mt-1 text-xs">
                       {application.spot_type}
                     </Badge>
                   )}
                 </div>
+
+                {/* Confirm Button */}
+                {onConfirmSingle && (
+                  <Button
+                    onClick={() => onConfirmSingle(application.id)}
+                    disabled={isLoading}
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 flex-shrink-0 p-0 text-green-600 hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900"
+                    aria-label={`Confirm ${application.comedian_name}`}
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                  </Button>
+                )}
 
                 {/* Remove Button */}
                 <Button
@@ -157,7 +221,7 @@ export function ShortlistPanel({
                   disabled={isLoading}
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 flex-shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="h-8 w-8 flex-shrink-0 p-0 text-muted-foreground hover:text-destructive"
                   aria-label={`Remove ${application.comedian_name} from shortlist`}
                 >
                   <X className="h-4 w-4" />
@@ -166,13 +230,13 @@ export function ShortlistPanel({
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 
   // Desktop: Fixed sidebar
   const DesktopPanel = () => (
-    <div className="hidden h-full w-80 flex-col border-l bg-gray-50 dark:bg-gray-900 lg:flex">
+    <div className="hidden h-full w-80 flex-col border-l border-border bg-muted lg:flex">
       <PanelContent />
     </div>
   );
@@ -182,8 +246,8 @@ export function ShortlistPanel({
     <Sheet>
       <SheetTrigger asChild>
         <Button
-          className="professional-button"
           size="sm"
+          variant="secondary"
           className="fixed bottom-20 right-4 z-40 gap-2 shadow-lg lg:hidden"
           aria-label="Open shortlist"
         >

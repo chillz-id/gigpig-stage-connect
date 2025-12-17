@@ -61,6 +61,8 @@ export const CustomerTable = ({
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
   const scrollParentRef = useRef<HTMLDivElement | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const topScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Apply resize cursor to body during drag for smooth experience
   useEffect(() => {
@@ -91,6 +93,36 @@ export const CustomerTable = ({
     : null;
 
   const visibleColumns = useMemo(() => columns.filter((column) => column.visible !== false), [columns]);
+
+  // Calculate total table width from visible columns
+  const calculatedTableWidth = useMemo(() => {
+    return visibleColumns.reduce((sum, col) => sum + col.width, 0);
+  }, [visibleColumns]);
+
+  // Sync scroll between top scrollbar and table container
+  const isScrollingRef = useRef(false);
+
+  const handleTopScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (isScrollingRef.current) return;
+    isScrollingRef.current = true;
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+    requestAnimationFrame(() => {
+      isScrollingRef.current = false;
+    });
+  }, []);
+
+  const handleTableScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (isScrollingRef.current) return;
+    isScrollingRef.current = true;
+    if (topScrollRef.current) {
+      topScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+    requestAnimationFrame(() => {
+      isScrollingRef.current = false;
+    });
+  }, []);
 
   if (isMobile) {
     if (isLoading) {
@@ -388,7 +420,7 @@ export const CustomerTable = ({
   );
 
   const tableHeader = (
-    <TableHeader>
+    <thead className="[&_tr]:border-b" style={{ position: 'static' }}>
       <TableRow>
         {visibleColumns.map((column) => {
           const alignmentClass =
@@ -438,7 +470,7 @@ export const CustomerTable = ({
           );
         })}
       </TableRow>
-    </TableHeader>
+    </thead>
   );
 
   const tableBody = virtualizationEnabled && rowVirtualizer
@@ -467,20 +499,43 @@ export const CustomerTable = ({
       );
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      {virtualizationEnabled ? (
-        <div ref={scrollParentRef} className="max-h-[70vh] overflow-auto">
-          <Table>
+    <div className="rounded-md border">
+      {/* Top scrollbar - syncs with table horizontal scroll */}
+      <div
+        ref={topScrollRef}
+        onScroll={handleTopScroll}
+        className="overflow-x-auto overflow-y-hidden"
+        style={{ height: '16px' }}
+      >
+        <div style={{ width: `${calculatedTableWidth}px`, height: '1px' }} />
+      </div>
+
+      {/* Table container */}
+      <div
+        ref={tableContainerRef}
+        onScroll={handleTableScroll}
+        className="overflow-x-auto"
+      >
+        {virtualizationEnabled ? (
+          <div ref={scrollParentRef}>
+            <table
+              className="w-full caption-bottom text-sm"
+              style={{ minWidth: `${calculatedTableWidth}px` }}
+            >
+              {tableHeader}
+              {tableBody}
+            </table>
+          </div>
+        ) : (
+          <table
+            className="w-full caption-bottom text-sm"
+            style={{ minWidth: `${calculatedTableWidth}px` }}
+          >
             {tableHeader}
             {tableBody}
-          </Table>
-        </div>
-      ) : (
-        <Table>
-          {tableHeader}
-          {tableBody}
-        </Table>
-      )}
+          </table>
+        )}
+      </div>
     </div>
   );
 };

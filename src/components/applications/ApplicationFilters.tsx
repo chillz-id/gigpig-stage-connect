@@ -82,6 +82,7 @@ export function ApplicationFilters({
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="accepted">Confirmed</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="withdrawn">Withdrawn</SelectItem>
             </SelectContent>
           </Select>
         </div>

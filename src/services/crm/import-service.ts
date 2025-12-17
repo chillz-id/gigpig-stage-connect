@@ -304,7 +304,8 @@ function isValidEmail(email: string): boolean {
 export async function importCustomers(
   rows: ImportCustomerRow[],
   batchSize: number = 50,
-  onProgress?: (processed: number, total: number) => void
+  onProgress?: (processed: number, total: number) => void,
+  segmentId?: string
 ): Promise<ImportResult> {
   const totalResult: ImportResult = {
     created: 0,
@@ -312,6 +313,9 @@ export async function importCustomers(
     failed: 0,
     errors: [],
   };
+
+  // Track successfully imported emails for segment assignment
+  const importedEmails: string[] = [];
 
   // Process in batches
   for (let i = 0; i < rows.length; i += batchSize) {
@@ -354,8 +358,10 @@ export async function importCustomers(
           });
         } else if (singleResult.is_new) {
           totalResult.created++;
+          importedEmails.push(row.email);
         } else {
           totalResult.updated++;
+          importedEmails.push(row.email);
         }
       }
     } else if (data) {
@@ -365,12 +371,58 @@ export async function importCustomers(
       if (data.errors?.length) {
         totalResult.errors.push(...data.errors);
       }
+      // Track emails from successful batch import
+      batch.forEach(row => {
+        const hasError = data.errors?.some((e: { email: string }) => e.email === row.email);
+        if (!hasError) {
+          importedEmails.push(row.email);
+        }
+      });
     }
 
     onProgress?.(Math.min(i + batchSize, rows.length), rows.length);
   }
 
+  // Assign imported customers to segment if segmentId provided
+  if (segmentId && importedEmails.length > 0) {
+    await assignCustomersToSegment(importedEmails, segmentId);
+  }
+
   return totalResult;
+}
+
+/**
+ * Assign customers to a segment by their email addresses
+ */
+async function assignCustomersToSegment(emails: string[], segmentId: string): Promise<void> {
+  // Get customer IDs for the imported emails
+  const { data: customers, error: fetchError } = await supabase
+    .from('customer_emails')
+    .select('customer_id, email')
+    .in('email', emails.map(e => e.toLowerCase()));
+
+  if (fetchError || !customers?.length) {
+    console.error('Failed to fetch customer IDs for segment assignment:', fetchError);
+    return;
+  }
+
+  // Get unique customer IDs (one customer might have multiple emails)
+  const customerIds = [...new Set(customers.map(c => c.customer_id as string))];
+
+  // Insert segment links (upsert to handle duplicates)
+  const { error: insertError } = await supabase
+    .from('customer_segment_links')
+    .upsert(
+      customerIds.map(customerId => ({
+        customer_id: customerId,
+        segment_id: segmentId,
+      })),
+      { onConflict: 'customer_id,segment_id', ignoreDuplicates: true }
+    );
+
+  if (insertError) {
+    console.error('Failed to assign customers to segment:', insertError);
+  }
 }
 
 export const importService = {

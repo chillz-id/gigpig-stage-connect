@@ -1,6 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { Plus, Download } from 'lucide-react';
 import type { SegmentCount } from '@/hooks/useCustomers';
 
 interface SegmentFilterProps {
@@ -9,7 +15,9 @@ interface SegmentFilterProps {
   onToggleSegment: (segment: string) => void;
   onClearSegments: () => void;
   onCreateSegment: () => void;
+  onExportSegment?: (segmentSlug: string) => void;
   isCreatingSegment: boolean;
+  isExporting?: boolean;
   totalCustomerCount?: number;
 }
 
@@ -19,7 +27,9 @@ export const SegmentFilter = ({
   onToggleSegment,
   onClearSegments,
   onCreateSegment,
+  onExportSegment,
   isCreatingSegment,
+  isExporting,
   totalCustomerCount,
 }: SegmentFilterProps) => {
   // Use the actual total customer count (all customers) instead of sum of segments
@@ -42,17 +52,29 @@ export const SegmentFilter = ({
       </Button>
 
       {segmentCounts?.map((segment) => (
-        <Button
-          key={segment.slug}
-          variant={selectedSegments.includes(segment.slug) ? 'default' : 'secondary'}
-          size="sm"
-          onClick={() => onToggleSegment(segment.slug)}
-        >
-          {segment.name}
-          <Badge variant="secondary" className="ml-2">
-            {segment.count}
-          </Badge>
-        </Button>
+        <ContextMenu key={segment.slug}>
+          <ContextMenuTrigger asChild>
+            <Button
+              variant={selectedSegments.includes(segment.slug) ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => onToggleSegment(segment.slug)}
+            >
+              {segment.name}
+              <Badge variant="secondary" className="ml-2">
+                {segment.count}
+              </Badge>
+            </Button>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              onClick={() => onExportSegment?.(segment.slug)}
+              disabled={isExporting}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export {segment.name} to CSV
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       ))}
 
       <Button

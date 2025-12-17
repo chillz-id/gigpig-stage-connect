@@ -24,6 +24,7 @@ import {
   Shield,
   Lightbulb,
   AlertTriangle,
+  BookUser,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -306,6 +307,15 @@ export const MENU_ITEMS: MenuItem[] = [
     roles: ['admin', 'agency_manager', 'venue_manager'],
     section: 'manager',
     requiresPermission: (permissions) => permissions.hasCRMAccess,
+  },
+  {
+    id: 'directory',
+    label: 'Directory',
+    path: '/admin/directory',
+    icon: BookUser,
+    roles: ['admin'],
+    section: 'admin',
+    requiresPermission: (permissions) => permissions.hasAdminAccess,
   },
   {
     id: 'users',

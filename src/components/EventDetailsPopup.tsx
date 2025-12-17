@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { 
   Calendar, 
   MapPin, 
@@ -205,12 +205,11 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                     {filledSpots.map((spot, index) => (
                       <div key={spot.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src="" />
-                            <AvatarFallback className="bg-primary text-primary-foreground">
-                              {index + 1}
-                            </AvatarFallback>
-                          </Avatar>
+                          <OptimizedAvatar
+                            name={String(index + 1)}
+                            className="h-10 w-10"
+                            fallbackClassName="bg-primary text-primary-foreground"
+                          />
                           <div>
                             <p className="font-medium">{spot.spot_name}</p>
                             <p className="text-sm text-muted-foreground">{spot.duration_minutes} minutes</p>

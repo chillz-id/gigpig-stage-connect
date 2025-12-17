@@ -35,7 +35,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Progress } from '@/components/ui/progress';
 import {
   ChevronLeft,
@@ -179,15 +179,6 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
     onComplete(dealInput);
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const formatCurrency = (amount?: number) => {
     if (!amount) return 'Not set';
     return new Intl.NumberFormat('en-AU', {
@@ -327,7 +318,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       <Button type="submit" className="w-full touch-target-44">
                         Next <ChevronRight className="ml-2 h-5 w-5" />
                       </Button>
-                      <Button type="button" variant="outline" className="w-full touch-target-44" onClick={onCancel}>
+                      <Button type="button" variant="secondary" className="w-full touch-target-44" onClick={onCancel}>
                         Cancel
                       </Button>
                     </>
@@ -379,17 +370,18 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className={cn(isMobile ? "h-12 w-12" : "h-10 w-10")}>
-                          <AvatarImage src={participant.avatar} />
-                          <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={participant.avatar}
+                          name={participant.name}
+                          className={cn(isMobile ? "h-12 w-12" : "h-10 w-10")}
+                        />
                         <div>
                           <p className="font-medium">{participant.name}</p>
                           <p className={cn("text-gray-500", isMobile ? "text-sm" : "text-sm")}>{participant.role}</p>
                         </div>
                       </div>
                       <Button
-                        variant={isMobile ? "outline" : "ghost"}
+                        variant={isMobile ? "secondary" : "ghost"}
                         size={isMobile ? "default" : "sm"}
                         onClick={() => handleRemoveParticipant(participant.id)}
                         className={cn(isMobile && "w-full touch-target-44")}
@@ -415,7 +407,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                     >
                       Next <ChevronRight className="ml-2 h-5 w-5" />
                     </Button>
-                    <Button variant="outline" className="w-full touch-target-44" onClick={() => setCurrentStep(1)}>
+                    <Button variant="secondary" className="w-full touch-target-44" onClick={() => setCurrentStep(1)}>
                       <ChevronLeft className="mr-2 h-5 w-5" /> Back
                     </Button>
                   </>
@@ -451,10 +443,11 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                     isMobile ? "p-3" : "p-4"
                   )}>
                     <div className="flex items-center gap-3">
-                      <Avatar className={cn(isMobile ? "h-10 w-10" : "h-8 w-8")}>
-                        <AvatarImage src={participant.avatar} />
-                        <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={participant.avatar}
+                        name={participant.name}
+                        className={cn(isMobile ? "h-10 w-10" : "h-8 w-8")}
+                      />
                       <div>
                         <p className="font-medium text-sm">{participant.name}</p>
                       </div>
@@ -556,7 +549,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                     >
                       Next <ChevronRight className="ml-2 h-5 w-5" />
                     </Button>
-                    <Button variant="outline" className="w-full touch-target-44" onClick={() => setCurrentStep(2)}>
+                    <Button variant="secondary" className="w-full touch-target-44" onClick={() => setCurrentStep(2)}>
                       <ChevronLeft className="mr-2 h-5 w-5" /> Back
                     </Button>
                   </>
@@ -615,10 +608,12 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                         )}
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <Avatar className={cn(isMobile ? "h-8 w-8" : "h-6 w-6")}>
-                            <AvatarImage src={p.avatar} />
-                            <AvatarFallback className={cn(isMobile ? "text-sm" : "text-xs")}>{getInitials(p.name)}</AvatarFallback>
-                          </Avatar>
+                          <OptimizedAvatar
+                            src={p.avatar}
+                            name={p.name}
+                            className={cn(isMobile ? "h-8 w-8" : "h-6 w-6")}
+                            fallbackClassName={cn(isMobile ? "text-sm" : "text-xs")}
+                          />
                           <span className={cn("truncate", isMobile && "text-sm")}>{p.name}</span>
                         </div>
                         <span className={cn("font-medium flex-shrink-0 ml-2", isMobile ? "text-base" : "text-sm")}>
@@ -643,7 +638,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       {isLoading ? 'Creating...' : 'Create Deal'}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       className="w-full touch-target-44"
                       onClick={() => setCurrentStep(3)}
                     >

@@ -21,9 +21,11 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [dimensionWarning, setDimensionWarning] = useState<string | null>(null);
 
+  // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
+  // Path: {userId}/my-files/events/Event Banners maps to MediaBrowser's my-files/events/Event Banners
   const { uploadFile } = useFileUpload({
-    bucket: 'comedian-media',
-    folder: `${user?.id}/EventBanners`,
+    bucket: 'media-library',
+    folder: `${user?.id}/my-files/events/Event Banners`,
     maxSize: 10 * 1024 * 1024, // 10MB max
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     onProgress: setUploadProgress

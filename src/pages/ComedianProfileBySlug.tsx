@@ -95,45 +95,7 @@ const ComedianProfileBySlug = () => {
         throw dbError;
       }
 
-      // Fallback: try to find by name-based slug for backward compatibility
-      const name = slug.split('-').map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ');
-
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          name,
-          stage_name,
-          bio,
-          location,
-          avatar_url,
-          banner_url,
-          banner_position,
-          is_verified,
-          email,
-          created_at,
-          phone,
-          website_url,
-          instagram_url,
-          twitter_url,
-          youtube_url,
-          facebook_url,
-          tiktok_url,
-          show_contact_in_epk,
-          custom_show_types,
-          profile_slug
-        `)
-        .or(`name.ilike.%${name}%,stage_name.ilike.%${name}%`)
-        .single();
-
-      if (fallbackData) {
-        return fallbackData;
-      }
-
-      // If no match found in database, return null to show error
-
+      // No fallback - if profile_slug doesn't match, profile doesn't exist
       throw new Error(`Comedian not found: ${slug}`);
     },
     enabled: !!slug,
