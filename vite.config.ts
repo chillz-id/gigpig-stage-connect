@@ -84,10 +84,13 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('@tiptap/')) {
             return 'editor';
           }
-          // Common utilities
-          if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge') ||
-              id.includes('node_modules/lucide-react')) {
+          // Common utilities (excluding lucide-react which needs to be with react-core)
+          if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge')) {
             return 'utils';
+          }
+          // Icon library - must be in same chunk as React to avoid forwardRef errors
+          if (id.includes('node_modules/lucide-react')) {
+            return 'react-core';
           }
           // Charts
           if (id.includes('node_modules/recharts')) {
@@ -154,6 +157,7 @@ export default defineConfig(({ mode }) => ({
     include: [
       'react',
       'react-dom',
+      'lucide-react',
       '@tanstack/react-query',
       '@supabase/supabase-js'
     ]
