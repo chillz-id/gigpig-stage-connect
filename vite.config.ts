@@ -47,60 +47,16 @@ export default defineConfig(({ mode }) => ({
     },
     // Enable source maps for production debugging
     sourcemap: true,
-    // Optimize chunk splitting
+    // Optimize chunk splitting - keep vendor dependencies together to avoid load order issues
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // React core libraries
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'react-core';
+          // All vendor dependencies in one chunk to ensure proper load order
+          // React and React-dependent packages must load together
+          if (id.includes('node_modules')) {
+            return 'vendor';
           }
-          // React Router
-          if (id.includes('node_modules/react-router')) {
-            return 'react-router';
-          }
-          // Radix UI - Core (dialogs, dropdowns)
-          if (id.includes('@radix-ui/react-dialog') || id.includes('@radix-ui/react-dropdown-menu')) {
-            return 'ui-core';
-          }
-          // Radix UI - Forms (select, checkbox, etc.)
-          if (id.includes('@radix-ui/react-select') || id.includes('@radix-ui/react-checkbox') ||
-              id.includes('@radix-ui/react-radio') || id.includes('@radix-ui/react-switch')) {
-            return 'ui-forms';
-          }
-          // Data fetching
-          if (id.includes('@tanstack/react-query') || id.includes('@supabase/supabase-js')) {
-            return 'data-fetching';
-          }
-          // Form validation
-          if (id.includes('react-hook-form') || id.includes('@hookform/resolvers') || id.includes('node_modules/zod')) {
-            return 'form-validation';
-          }
-          // Date utilities
-          if (id.includes('node_modules/date-fns')) {
-            return 'date-utils';
-          }
-          // Rich text editor
-          if (id.includes('@tiptap/')) {
-            return 'editor';
-          }
-          // Common utilities (excluding lucide-react which needs to be with react-core)
-          if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge')) {
-            return 'utils';
-          }
-          // Icon library - must be in same chunk as React to avoid forwardRef errors
-          if (id.includes('node_modules/lucide-react')) {
-            return 'react-core';
-          }
-          // Charts
-          if (id.includes('node_modules/recharts')) {
-            return 'charts';
-          }
-          // PDF generation
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
-            return 'pdf';
-          }
-          // Mobile-specific components (separate chunk for lazy loading on mobile)
+          // App-specific lazy-loaded chunks (these import from vendor, so load order is safe)
           if (id.includes('/mobile/') || id.includes('MobileFormWizard') ||
               id.includes('MobileFormSection') || id.includes('MobileDatePicker') ||
               id.includes('MobileSelect') || id.includes('useMobileLayout') ||
@@ -108,17 +64,8 @@ export default defineConfig(({ mode }) => ({
               id.includes('AddToHomeScreen') || id.includes('CreateEventFormMobile')) {
             return 'mobile';
           }
-          // PWA-specific components
           if (id.includes('/pwa/') || id.includes('pwaService')) {
             return 'pwa';
-          }
-          // Media/file handling
-          if (id.includes('MediaLibraryManager') || id.includes('node_modules/browser-image-compression')) {
-            return 'media';
-          }
-          // Keep other vendor chunks together
-          if (id.includes('node_modules')) {
-            return 'vendor';
           }
         },
         chunkFileNames: (chunkInfo) => {
