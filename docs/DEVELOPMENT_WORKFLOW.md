@@ -2,6 +2,60 @@
 
 This document outlines the development workflow for the Stand Up Sydney platform.
 
+---
+
+## Quick Reference
+
+```bash
+# Start new feature
+git checkout main && git pull origin main
+git checkout -b feature/my-feature-name
+
+# Commit (pre-commit hooks auto-run)
+git add . && git commit -m "feat: description"
+
+# Push for preview deployment
+git push -u origin feature/my-feature-name
+
+# Merge to production (after testing preview)
+git checkout main && git merge feature/my-feature-name && git push
+```
+
+**Vercel auto-deploys:** Preview URL for branches, production for `main`.
+
+---
+
+## Pros & Cons of This Workflow
+
+### Pros
+
+| Benefit | Why It Matters |
+|---------|----------------|
+| **Preview deployments** | Test every branch on a real URL before merging |
+| **Pre-commit hooks** | Catch lint errors before they reach CI |
+| **Fast feedback** | No waiting for CI - errors caught locally |
+| **Clean history** | Conventional commits make changes traceable |
+| **Easy rollback** | Each feature is isolated; revert one commit if needed |
+| **No broken main** | Main always deploys; branches catch issues first |
+
+### Cons
+
+| Drawback | Mitigation |
+|----------|------------|
+| **Branch proliferation** | Delete branches after merging (`git branch -d feature/x`) |
+| **Preview URL confusion** | Check Vercel dashboard or GitHub PR for correct URL |
+| **Pre-commit can slow commits** | Only runs on staged files; use `--no-verify` for WIP commits (sparingly) |
+| **Merge conflicts** | Keep branches short-lived; merge main into feature regularly |
+| **No staging environment** | Preview URLs serve as staging; add dedicated staging if needed later |
+
+### When to Skip This Process
+
+- **Typo fixes**: Can commit directly to main for single-character fixes
+- **Emergency hotfixes**: Use `hotfix/*` branch, merge ASAP, then clean up
+- **Documentation only**: `docs:` commits can go to main if no code changes
+
+---
+
 ## Branch Strategy
 
 | Branch | Purpose | Protection |
