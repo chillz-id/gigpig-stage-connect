@@ -2,23 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Critical: Working Directory
-
-**All development work must be done from `/root/agents/`**. This is the git repository root containing the Vite + React TypeScript application.
-
-```bash
-cd /root/agents  # Always start here
-```
-
-The `/root/` directory contains N8N workflows, legacy scripts, and operational utilities that are **not part of active development**.
-
 ## Development Commands
 
 ```bash
-cd /root/agents
+# Setup (use --legacy-peer-deps due to @toast-ui/react-image-editor requiring React 17)
+npm install --legacy-peer-deps
 
 # Core workflow
-npm run dev                           # Dev server on port 8080
+npm run dev                           # Dev server (port 8080 via vite.config.ts)
 npm run build                         # Production build (includes TypeScript checks)
 npm run lint                          # ESLint + TypeScript (must pass before commits)
 
@@ -37,7 +28,7 @@ npm run test:webhook:humanitix        # Test Humanitix webhook
 npm run test:webhook:eventbrite       # Test Eventbrite webhook
 npm run test:invoice                  # Invoice system verification
 
-# Database
+# Database migrations
 npm run migrate:dry-run               # Test migration safely
 npm run migrate:safe                  # Run safe migration
 ```
@@ -49,15 +40,15 @@ npm run migrate:safe                  # Run safe migration
 ## Architecture
 
 ### Tech Stack
-- **Vite + React 18 + TypeScript** with strict type checking
+- **Vite 7 + React 19 + TypeScript** with strict type checking
 - **shadcn/ui + Radix UI** styled with Tailwind CSS
 - **TanStack Query** for server state (5min stale, 10min cache)
 - **React Hook Form + Zod** for forms and validation
 - **Supabase** for database, auth, real-time, and RLS policies
-- **Stripe** for payments; **Xero** for accounting
+- **Xero** for accounting integration
 - **Vercel** for deployment
 
-### Key Directories (within /root/agents/)
+### Key Directories
 ```
 src/
 ├── pages/          # React Router pages (lazy-loaded except Index, Auth, AuthCallback)
@@ -69,12 +60,10 @@ src/
 ├── types/          # TypeScript type definitions
 └── utils/          # Utility functions
 tests/              # Jest unit tests, E2E in tests/e2e/
-scripts/            # Operational utilities
+scripts/            # Operational utilities (archive/ contains legacy scripts)
 supabase/
 ├── migrations/     # Database migrations
 └── functions/      # Edge Functions
-Architecture/       # System documentation
-Plans/              # Implementation plans
 ```
 
 ### Context Provider Order (App.tsx)
@@ -176,7 +165,7 @@ const form = useForm<FormSchema>({
 
 ## Environment Configuration
 
-Copy `.env.example` to `.env.local` with required variables:
+Copy `.env.example` to `.env` with required variables:
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - `VITE_GOOGLE_MAPS_API_KEY`
 - `VITE_APP_URL` (defaults to `http://localhost:8080`)
@@ -218,61 +207,10 @@ Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN`, Filestash config (
 | Invoicing | `src/components/InvoiceForm.tsx`, `src/services/invoiceService.ts` |
 | CRM | `src/components/crm/`, `src/pages/crm/`, `src/hooks/crm/` |
 
-## Workflow & Agent Delegation
-
-### Recommended Workflow
-
-For non-trivial tasks, consider following this workflow:
-
-1. **Brainstorm** - Use `superpowers:brainstorming` to refine the idea
-2. **Plan** - Use `/plan <task>` to create a plan file
-3. **Implement** - Write code following TDD where appropriate
-4. **Review** - Use `superpowers:requesting-code-review` to verify
-5. **Verify** - Use `/done` to run verification checklist
-
-### Slash Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/plan <task>` | Create a new implementation plan |
-| `/continue` | Resume the most recent active plan |
-| `/status` | List all active plans and progress |
-| `/frontend <task>` | Delegate to frontend-specialist agent |
-| `/backend <task>` | Delegate to backend-specialist agent |
-| `/n8n <task>` | Delegate to n8n-expert agent |
-| `/test <task>` | Delegate to testing-specialist agent |
-| `/done` | Run verification checklist before completion |
-
-### Specialized Agents
-
-Delegate domain-specific work to specialized agents:
-
-| Agent | When to Use |
-|-------|-------------|
-| `frontend-specialist` | React components, styling, Tailwind, UI bugs |
-| `backend-specialist` | APIs, hooks, Supabase queries, auth |
-| `database-admin` | Migrations, schema changes, RLS policies |
-| `testing-specialist` | Jest tests, Playwright E2E, coverage |
-| `n8n-expert` | N8N workflow automation |
-| `seo-specialist` | Meta tags, structured data, sitemaps |
-| `marketing-specialist` | Landing pages, CTAs, conversion |
-| `framer-specialist` | Framer components, CMS, design |
-
-### Plan Files
-
-All significant tasks should have a plan file:
-- **Location**: `/root/agents/Plans/YYYY-MM-DD-<task>.md`
-- **Template**: `/root/agents/Plans/TEMPLATE.md`
-- **Update as you go**: Mark completed items, add notes
-- **Reference in handoffs**: Always point agents to the plan
-
 ## Key Documentation
 
 | File | Purpose |
 |------|---------|
-| `Architecture/00-QUICK-START.md` | Agent onboarding guide with code locations |
-| `Architecture/01-SYSTEM-MAP.md` | High-level architecture diagrams |
-| `AGENTS.md` | Git workflow and profile routing details |
+| `AGENTS.md` | Profile routing details and ActiveProfileContext API |
 | `QUICK_REFERENCE.md` | Lineup & Deals component API reference |
 | `docs/features/PROFILE_URLS.md` | Profile URL system documentation |
-| `Plans/TEMPLATE.md` | Plan file template |
