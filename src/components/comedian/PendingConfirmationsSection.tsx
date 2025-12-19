@@ -209,11 +209,10 @@ export const PendingConfirmationsSection = () => {
                   
                   <div className="flex gap-2">
                     <Button
-                      className="professional-button"
+                      className="professional-button text-red-600 hover:text-red-700 hover:bg-red-50"
                       size="sm"
                       onClick={() => handleConfirmation(application.id, false)}
                       disabled={isUpdating}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Decline

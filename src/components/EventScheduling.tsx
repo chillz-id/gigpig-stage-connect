@@ -244,8 +244,7 @@ export const EventScheduling: React.FC<EventSchedulingProps> = ({
                       type="button"
                       onClick={addCustomDate}
                       size="sm"
-                      className="professional-button"
-                      className="border-white/20 text-white hover:bg-white/10"
+                      className="professional-button border-white/20 text-white hover:bg-white/10"
                     >
                       <Plus className="w-4 h-4 mr-1" />
                       Add Date

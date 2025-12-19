@@ -20,17 +20,6 @@ interface GatewayConfigForm {
 }
 
 const GATEWAY_CONFIGS = {
-  stripe: {
-    name: 'Stripe',
-    icon: CreditCard,
-    description: 'Accept credit and debit cards worldwide',
-    configFields: [
-      { key: 'publishableKey', label: 'Publishable Key', type: 'text', required: true },
-      { key: 'secretKey', label: 'Secret Key', type: 'password', required: true, credential: true },
-      { key: 'webhookSecret', label: 'Webhook Secret', type: 'password', required: false, credential: true },
-    ],
-    fees: '2.9% + $0.30 per transaction'
-  },
   paypal: {
     name: 'PayPal',
     icon: Banknote,
@@ -57,16 +46,15 @@ const GATEWAY_CONFIGS = {
 };
 
 export const PaymentGatewaySettings: React.FC = () => {
-  const { 
-    gatewaySettings, 
-    isLoadingGateways, 
-    updateGatewaySettings, 
-    isUpdatingGateway 
+  const {
+    gatewaySettings,
+    isLoadingGateways,
+    updateGatewaySettings,
+    isUpdatingGateway
   } = usePayments();
 
-  const [activeTab, setActiveTab] = useState<PaymentGateway>('stripe');
+  const [activeTab, setActiveTab] = useState<PaymentGateway>('paypal');
   const [formData, setFormData] = useState<Record<PaymentGateway, GatewayConfigForm>>({
-    stripe: { isEnabled: false, isDefault: false, configuration: {}, credentials: {} },
     paypal: { isEnabled: false, isDefault: false, configuration: {}, credentials: {} },
     bank_transfer: { isEnabled: false, isDefault: false, configuration: {}, credentials: {} }
   });
@@ -78,12 +66,14 @@ export const PaymentGatewaySettings: React.FC = () => {
         const next = { ...prev };
 
         gatewaySettings.forEach(setting => {
-          next[setting.gatewayName as PaymentGateway] = {
-            isEnabled: setting.isEnabled,
-            isDefault: setting.isDefault,
-            configuration: setting.configuration || {},
-            credentials: setting.credentials || {}
-          };
+          if (setting.gatewayName in next) {
+            next[setting.gatewayName as PaymentGateway] = {
+              isEnabled: setting.isEnabled,
+              isDefault: setting.isDefault,
+              configuration: setting.configuration || {},
+              credentials: setting.credentials || {}
+            };
+          }
         });
 
         return next;
@@ -140,8 +130,8 @@ export const PaymentGatewaySettings: React.FC = () => {
       // Validate required fields
       const requiredFields = gatewayConfig.configFields.filter(field => field.required);
       const missingFields = requiredFields.filter(field => {
-        const value = field.credential 
-          ? config.credentials[field.key] 
+        const value = field.credential
+          ? config.credentials[field.key]
           : config.configuration[field.key];
         return !value || value.trim() === '';
       });
@@ -168,12 +158,12 @@ export const PaymentGatewaySettings: React.FC = () => {
   const getGatewayStatus = (gateway: PaymentGateway) => {
     const config = formData[gateway];
     if (!config.isEnabled) return 'disabled';
-    
+
     const gatewayConfig = GATEWAY_CONFIGS[gateway];
     const requiredFields = gatewayConfig.configFields.filter(field => field.required);
     const hasAllRequired = requiredFields.every(field => {
-      const value = field.credential 
-        ? config.credentials[field.key] 
+      const value = field.credential
+        ? config.credentials[field.key]
         : config.configuration[field.key];
       return value && value.trim() !== '';
     });
@@ -199,7 +189,7 @@ export const PaymentGatewaySettings: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge 
+              <Badge
                 variant={status === 'configured' ? 'default' : status === 'incomplete' ? 'secondary' : 'secondary'}
                 className="capitalize"
               >
@@ -237,7 +227,7 @@ export const PaymentGatewaySettings: React.FC = () => {
 
               <div className="grid gap-4">
                 {gatewayConfig.configFields.map((field) => {
-                  const value = field.credential 
+                  const value = field.credential
                     ? config.credentials[field.key] || ''
                     : config.configuration[field.key] || '';
 
@@ -330,7 +320,7 @@ export const PaymentGatewaySettings: React.FC = () => {
               </AlertDialogContent>
             </AlertDialog>
 
-            <Button 
+            <Button
               onClick={() => handleSaveGateway(gateway)}
               disabled={isUpdatingGateway}
             >
@@ -363,11 +353,11 @@ export const PaymentGatewaySettings: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as PaymentGateway)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           {Object.entries(GATEWAY_CONFIGS).map(([key, config]) => {
             const status = getGatewayStatus(key as PaymentGateway);
             const Icon = config.icon;
-            
+
             return (
               <TabsTrigger key={key} value={key} className="relative">
                 <div className="flex items-center space-x-2">

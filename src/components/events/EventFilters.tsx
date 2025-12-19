@@ -118,8 +118,7 @@ export const EventFilters: React.FC<EventFiltersProps> = ({
         {/* Quick filters toggle */}
         <Button
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          className={cn("gap-2", getButtonStyles())}
-          className="professional-button"
+          className={cn("gap-2 professional-button", getButtonStyles())}
         >
           <Filter className="w-4 h-4" />
           Filters

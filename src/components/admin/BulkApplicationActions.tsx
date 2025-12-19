@@ -99,10 +99,9 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
           
           <Button
             size="sm"
-            className="professional-button"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
             onClick={handleBulkHide}
             disabled={isProcessing}
-            className="text-white border-white/30 hover:bg-white/10"
           >
             <XCircle className="w-4 h-4 mr-1" />
             Reject All
@@ -110,9 +109,8 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
           
           <Button
             size="sm"
-            className="professional-button"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
             onClick={onClearSelection}
-            className="text-white border-white/30 hover:bg-white/10"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Clear Selection

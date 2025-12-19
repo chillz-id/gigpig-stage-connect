@@ -22,8 +22,8 @@ interface EventTicketSectionProps {
   onFeeHandlingChange: (handling: 'absorb' | 'pass_to_customer') => void;
 }
 
-// Stripe fee calculation (2.9% + $0.30 AUD for domestic cards)
-const calculateStripeFee = (amount: number, currency: string = 'AUD') => {
+// Processing fee calculation (2.9% + $0.30 AUD for domestic cards)
+const calculateProcessingFee = (amount: number, currency: string = 'AUD') => {
   const feePercentage = 0.029; // 2.9%
   const fixedFee = currency === 'AUD' ? 0.30 : 0.30; // Simplified for demo
   return (amount * feePercentage) + fixedFee;
@@ -74,15 +74,15 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
   };
 
   const getTicketFeeBreakdown = (ticket: EventTicket) => {
-    const stripeFee = calculateStripeFee(ticket.price, ticket.currency);
+    const processingFee = calculateProcessingFee(ticket.price, ticket.currency);
     const gigpigsFee = calculateGigPigsFee(ticket.price);
-    const totalFees = stripeFee + gigpigsFee;
-    
+    const totalFees = processingFee + gigpigsFee;
+
     const customerPrice = feeHandling === 'pass_to_customer' ? ticket.price + totalFees : ticket.price;
     const promoterReceives = feeHandling === 'pass_to_customer' ? ticket.price : ticket.price - totalFees;
-    
+
     return {
-      stripeFee,
+      processingFee,
       gigpigsFee,
       totalFees,
       customerPrice,
@@ -208,12 +208,12 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
                 <Label className="text-sm font-medium text-blue-200 mb-2 block">Fee Preview</Label>
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <p className="text-gray-300">Stripe Fee: {newTicket.currency} {calculateStripeFee(newTicket.price, newTicket.currency).toFixed(2)}</p>
+                    <p className="text-gray-300">Processing Fee: {newTicket.currency} {calculateProcessingFee(newTicket.price, newTicket.currency).toFixed(2)}</p>
                     <p className="text-gray-300">GigPigs Fee: {newTicket.currency} {calculateGigPigsFee(newTicket.price).toFixed(2)}</p>
                   </div>
                   <div>
-                    <p className="text-white">Customer Pays: {newTicket.currency} {(feeHandling === 'pass_to_customer' ? newTicket.price + calculateStripeFee(newTicket.price, newTicket.currency) + calculateGigPigsFee(newTicket.price) : newTicket.price).toFixed(2)}</p>
-                    <p className="text-green-300">You Receive: {newTicket.currency} {(feeHandling === 'pass_to_customer' ? newTicket.price : newTicket.price - calculateStripeFee(newTicket.price, newTicket.currency) - calculateGigPigsFee(newTicket.price)).toFixed(2)}</p>
+                    <p className="text-white">Customer Pays: {newTicket.currency} {(feeHandling === 'pass_to_customer' ? newTicket.price + calculateProcessingFee(newTicket.price, newTicket.currency) + calculateGigPigsFee(newTicket.price) : newTicket.price).toFixed(2)}</p>
+                    <p className="text-green-300">You Receive: {newTicket.currency} {(feeHandling === 'pass_to_customer' ? newTicket.price : newTicket.price - calculateProcessingFee(newTicket.price, newTicket.currency) - calculateGigPigsFee(newTicket.price)).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export const EventTicketSection: React.FC<EventTicketSectionProps> = ({
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
                             <p className="text-gray-400">Fees: {ticket.currency} {feeBreakdown.totalFees.toFixed(2)}</p>
-                            <p className="text-gray-400">• Stripe: {feeBreakdown.stripeFee.toFixed(2)}</p>
+                            <p className="text-gray-400">• Processing: {feeBreakdown.processingFee.toFixed(2)}</p>
                             <p className="text-gray-400">• GigPigs: {feeBreakdown.gigpigsFee.toFixed(2)}</p>
                           </div>
                           <div className="text-right">

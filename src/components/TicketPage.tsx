@@ -72,7 +72,7 @@ export const TicketPage: React.FC<TicketPageProps> = ({
     });
     
     const platformFee = 1.00; // $1 platform fee
-    const processingFee = subtotal * 0.029 + 0.30; // Stripe fees
+    const processingFee = subtotal * 0.029 + 0.30; // Processing fees
     const total = subtotal + platformFee + processingFee;
     
     return {

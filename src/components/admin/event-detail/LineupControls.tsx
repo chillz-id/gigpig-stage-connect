@@ -38,8 +38,7 @@ const LineupControls: React.FC<LineupControlsProps> = ({
       <div className="flex gap-2">
         <Button
           onClick={onSelectAll}
-          className="professional-button"
-          className="border-white/20 text-white hover:bg-white/10"
+          className="professional-button border-white/20 text-white hover:bg-white/10"
         >
           {selectedCount === totalCount ? 'Deselect All' : 'Select All'}
         </Button>

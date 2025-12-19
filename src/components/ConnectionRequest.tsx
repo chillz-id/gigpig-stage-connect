@@ -43,9 +43,8 @@ const ConnectionRequest: React.FC<ConnectionRequestProps> = ({
           <div>
             <CardTitle className="flex items-center space-x-2">
               <span>Connect with {recipientName}</span>
-              <Badge 
-                className="professional-button" 
-                className={recipientRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}
+              <Badge
+                className={`professional-button ${recipientRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}`}
               >
                 {recipientRole}
               </Badge>

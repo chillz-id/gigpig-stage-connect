@@ -267,8 +267,7 @@ export function VisualArtistProfileForm({
                     .map((specialty) => (
                       <Badge
                         key={specialty}
-                        className="professional-button"
-                        className="cursor-pointer hover:bg-muted"
+                        className="professional-button cursor-pointer hover:bg-muted"
                         onClick={() => {
                           setFormData(prev => ({
                             ...prev,

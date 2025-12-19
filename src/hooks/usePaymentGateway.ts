@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { stripePaymentService } from '@/services/stripeService';
 import { flexPayService, PaymentGatewayConfig } from '@/services/paymentService';
-import { Invoice } from '@/types/invoice';
 import { toast } from 'sonner';
 
 export interface PaymentLink {
@@ -65,86 +63,41 @@ export const usePaymentGateway = () => {
     }
   }, [loadGateways, user]);
 
-  const createPaymentLink = async (invoice: Invoice): Promise<string | null> => {
+  const createPaymentLink = async (): Promise<string | null> => {
     if (!user) {
       toast.error('Please log in to create payment links');
       return null;
     }
 
-    try {
-      setLoading(true);
-      
-      // Initialize Stripe if not already done
-      if (!stripePaymentService.isInitialized()) {
-        await stripePaymentService.initializeFromEnv();
-      }
-
-      const response = await stripePaymentService.createPaymentLink(invoice);
-      
-      toast.success('Payment link created successfully!');
-      return response.url;
-    } catch (err) {
-      console.error('Failed to create payment link:', err);
-      toast.error('Failed to create payment link');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getPaymentLink = async (invoiceId: string): Promise<PaymentLink | null> => {
-    try {
-      const link = await stripePaymentService.getPaymentLink(invoiceId);
-      return link ? {
-        id: '',
-        invoiceId,
-        paymentLinkId: '',
-        url: link.url,
-        status: link.status as any,
-        expiresAt: '',
-        createdAt: ''
-      } : null;
-    } catch (err) {
-      console.error('Failed to get payment link:', err);
+    // Payment link creation requires a configured payment gateway
+    const defaultGateway = getDefaultGateway();
+    if (!defaultGateway) {
+      toast.error('No payment gateway configured. Please set up a payment gateway first.');
       return null;
     }
+
+    toast.info('Payment link feature coming soon with new payment provider');
+    return null;
   };
 
-  const getPaymentStatus = async (invoiceId: string): Promise<PaymentStatus | null> => {
-    try {
-      const status = await stripePaymentService.getPaymentStatus(invoiceId);
-      return status ? {
-        status: status.status as any,
-        amount: status.amount,
-        paymentDate: status.paymentDate,
-        paymentMethod: status.paymentMethod
-      } : null;
-    } catch (err) {
-      console.error('Failed to get payment status:', err);
-      return null;
-    }
+  const getPaymentLink = async (): Promise<PaymentLink | null> => {
+    // Placeholder - payment link retrieval will be implemented with new provider
+    return null;
   };
 
-  const getPaymentHistory = async (invoiceId: string): Promise<PaymentHistoryEntry[]> => {
-    try {
-      const history = await stripePaymentService.getPaymentHistory(invoiceId);
-      return history;
-    } catch (err) {
-      console.error('Failed to get payment history:', err);
-      return [];
-    }
+  const getPaymentStatus = async (): Promise<PaymentStatus | null> => {
+    // Placeholder - payment status will be implemented with new provider
+    return null;
   };
 
-  const cancelPaymentLink = async (invoiceId: string): Promise<boolean> => {
-    try {
-      await stripePaymentService.cancelPaymentLink(invoiceId);
-      toast.success('Payment link cancelled successfully');
-      return true;
-    } catch (err) {
-      console.error('Failed to cancel payment link:', err);
-      toast.error('Failed to cancel payment link');
-      return false;
-    }
+  const getPaymentHistory = async (): Promise<PaymentHistoryEntry[]> => {
+    // Placeholder - payment history will be implemented with new provider
+    return [];
+  };
+
+  const cancelPaymentLink = async (): Promise<boolean> => {
+    toast.info('Payment link cancellation will be available with new payment provider');
+    return false;
   };
 
   const updateGatewaySettings = async (
@@ -158,12 +111,12 @@ export const usePaymentGateway = () => {
 
     try {
       setLoading(true);
-      
-      await flexPayService.updateGatewaySettings(user.id, gatewayName as any, config);
-      
+
+      await flexPayService.updateGatewaySettings(user.id, gatewayName as 'paypal' | 'bank_transfer', config);
+
       // Reload gateways to reflect changes
       await loadGateways();
-      
+
       toast.success(`${gatewayName} settings updated successfully`);
       return true;
     } catch (err) {
@@ -187,7 +140,7 @@ export const usePaymentGateway = () => {
   const isGatewayConfigured = (gatewayName: string): boolean => {
     const gateway = gateways.find(g => g.gatewayName === gatewayName);
     if (!gateway || !gateway.isEnabled) return false;
-    
+
     // Check if required credentials are present
     const hasCredentials = Object.keys(gateway.credentials || {}).length > 0;
     return hasCredentials;

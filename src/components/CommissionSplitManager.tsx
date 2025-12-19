@@ -338,7 +338,6 @@ export const CommissionSplitManager: React.FC = () => {
                       <SelectContent>
                         <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                         <SelectItem value="paypal">PayPal</SelectItem>
-                        <SelectItem value="stripe_connect">Stripe Connect</SelectItem>
                         <SelectItem value="manual">Manual Payment</SelectItem>
                       </SelectContent>
                     </Select>

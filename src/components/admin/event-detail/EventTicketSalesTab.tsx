@@ -336,10 +336,9 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
             )}
             <Button
               onClick={handleSyncTickets}
-              className="professional-button"
+              className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
               size="sm"
               disabled={syncing}
-              className="border-white text-white hover:bg-white hover:text-purple-900"
             >
               {syncing ? (
                 <>
@@ -397,18 +396,16 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
         <div className="flex gap-2">
           <Button
             onClick={fetchTicketSales}
-            className="professional-button"
+            className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
             size="sm"
-            className="border-white text-white hover:bg-white hover:text-purple-900"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
           <Button
             onClick={handleExportData}
-            className="professional-button"
+            className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
             size="sm"
-            className="border-white text-white hover:bg-white hover:text-purple-900"
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV

@@ -617,9 +617,8 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                             <div>
                               <p className="font-medium">{getDisplayName(application)}</p>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Badge 
-                                  className="professional-button"
-                                  className={`${getStatusColor(application.status || 'pending')} text-white`}
+                                <Badge
+                                  className={`professional-button ${getStatusColor(application.status || 'pending')} text-white`}
                                 >
                                   {application.spot_type}
                                 </Badge>

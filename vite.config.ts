@@ -45,6 +45,8 @@ export default defineConfig(({ mode }) => ({
         safari10: true,
       },
     },
+    // Suppress CSS warnings from third-party libraries (e.g., tui-image-editor typo)
+    cssMinify: 'esbuild',
     // Enable source maps for production debugging
     sourcemap: true,
     // Optimize chunk splitting - keep vendor dependencies together to avoid load order issues
@@ -94,8 +96,8 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Increase chunk size warning limit
-    chunkSizeWarningLimit: 1000,
+    // Increase chunk size warning limit (vendor chunk is ~4MB intentionally)
+    chunkSizeWarningLimit: 4000,
     // Better tree shaking
     reportCompressedSize: false,
   },
@@ -111,4 +113,10 @@ export default defineConfig(({ mode }) => ({
   },
   // Asset optimization
   assetsInclude: ['**/*.webp', '**/*.avif'],
+  // Suppress CSS warnings from third-party libraries (tui-image-editor has a typo)
+  esbuild: {
+    logOverride: {
+      'unsupported-css-property': 'silent',
+    },
+  },
 }));

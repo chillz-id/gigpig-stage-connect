@@ -1,6 +1,7 @@
 // Task Management Dashboard - Main page for task management
 import React, { useState, useMemo } from 'react';
 import { Plus, Filter, Calendar, BarChart3, FileText, Search, SortAsc } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,10 +225,9 @@ export default function TaskDashboard() {
           My Tasks
         </Button>
         <Button
-          className="professional-button"
+          className={cn("professional-button", filters.due_date_range?.start === new Date().toISOString().split('T')[0] && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('due-today')}
-          className={filters.due_date_range?.start === new Date().toISOString().split('T')[0] ? 'bg-primary text-primary-foreground' : ''}
         >
           Due Today
           {dashboard.tasksDueToday.length > 0 && (
@@ -249,10 +249,9 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          className="professional-button"
+          className={cn("professional-button", filters.is_overdue && 'bg-destructive text-destructive-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('overdue')}
-          className={filters.is_overdue ? 'bg-destructive text-destructive-foreground' : ''}
         >
           Overdue
           {dashboard.overdueTasks.length > 0 && (
@@ -262,18 +261,16 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          className="professional-button"
+          className={cn("professional-button", (filters.priority?.includes('urgent') || filters.priority?.includes('high')) && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('high-priority')}
-          className={filters.priority?.includes('urgent') || filters.priority?.includes('high') ? 'bg-primary text-primary-foreground' : ''}
         >
           High Priority
         </Button>
         <Button
-          className="professional-button"
+          className={cn("professional-button", filters.status?.includes('in_progress') && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('in-progress')}
-          className={filters.status?.includes('in_progress') ? 'bg-primary text-primary-foreground' : ''}
         >
           In Progress
         </Button>
@@ -308,13 +305,12 @@ export default function TaskDashboard() {
         </Select>
 
         <Button
-          className="professional-button"
+          className="professional-button flex items-center gap-2"
           size="sm"
-          onClick={() => setSort(prev => ({ 
-            ...prev, 
-            direction: prev.direction === 'asc' ? 'desc' : 'asc' 
+          onClick={() => setSort(prev => ({
+            ...prev,
+            direction: prev.direction === 'asc' ? 'desc' : 'asc'
           }))}
-          className="flex items-center gap-2"
         >
           <SortAsc className="w-4 h-4" />
           {sort.direction === 'asc' ? 'Asc' : 'Desc'}

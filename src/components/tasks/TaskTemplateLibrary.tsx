@@ -119,8 +119,7 @@ export default function TaskTemplateLibrary({ onSelectTemplate }: TaskTemplateLi
 
               <Button
                 onClick={() => handleSelectTemplate(template)}
-                className="w-full gap-2"
-                className="professional-button"
+                className="professional-button w-full gap-2"
               >
                 Use Template
                 <ArrowRight className="h-4 w-4" />

@@ -56,9 +56,8 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <h4 className="font-medium">{request.senderName}</h4>
-                    <Badge 
-                      className="professional-button" 
-                      className={request.senderRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}
+                    <Badge
+                      className={`professional-button ${request.senderRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}`}
                     >
                       {request.senderRole}
                     </Badge>
@@ -74,20 +73,18 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                       <UserCheck className="w-4 h-4 mr-1" />
                       Accept
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
-                      className="professional-button"
+                      className="professional-button text-white border-white/30 hover:bg-white/10"
                       onClick={() => onDeclineRequest(request.id)}
-                      className="text-white border-white/30 hover:bg-white/10"
                     >
                       <UserX className="w-4 h-4 mr-1" />
                       Decline
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
-                      className="professional-button"
+                      className="professional-button text-red-300 border-red-300 hover:bg-red-500/20"
                       onClick={() => onBlockUser(request.senderId)}
-                      className="text-red-300 border-red-300 hover:bg-red-500/20"
                     >
                       <Shield className="w-4 h-4 mr-1" />
                       Block

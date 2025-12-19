@@ -75,11 +75,10 @@ export const TicketsBySuburbChart: React.FC<TicketsBySuburbChartProps> = ({
           <MapPin className="w-5 h-5" />
           Tickets by Suburb
         </CardTitle>
-        <Button 
-          className="professional-button" 
-          size="sm" 
+        <Button
+          className="professional-button text-white border-white/20 hover:bg-white/10"
+          size="sm"
           onClick={onExport}
-          className="text-white border-white/20 hover:bg-white/10"
         >
           <Download className="w-4 h-4 mr-2" />
           Export
