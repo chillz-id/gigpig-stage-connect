@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSessionCalendar } from '@/hooks/useSessionCalendar';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
@@ -19,13 +19,20 @@ import { HorizontalAuthBanner } from '@/components/auth/HorizontalAuthBanner';
 import { EventAvailabilityCard } from '@/components/comedian/EventAvailabilityCard';
 import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 import { Loader2 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ImageCrop } from '@/components/ImageCrop';
 import { CalendarGridView } from '@/components/gigs/CalendarGridView';
 import { BrowseEventListView } from '@/components/gigs/BrowseEventListView';
 import { DayOfWeekSelector } from '@/components/gigs/DayOfWeekSelector';
+import { LoadMoreMonthButton } from '@/components/gigs/LoadMoreMonthButton';
+import { MobileCalendarView } from '@/components/gigs/MobileCalendarView';
+import { DayEventsModal } from '@/components/gigs/DayEventsModal';
+import { CoinAnimationPortal, useCoinAnimation } from '@/components/gigs/CoinAnimation';
+import { usePrefetchNextMonth } from '@/hooks/usePrefetchNextMonth';
+import { formatEventTime } from '@/utils/formatEventTime';
 import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { useFirstEventMonth } from '@/hooks/useFirstEventMonth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -56,6 +63,12 @@ const Gigs = () => {
   const [selectedMonth, setSelectedMonth] = useState<number>(initialDate.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(initialDate.getFullYear());
 
+  // Progressive loading state - start with current month + next month
+  const [loadedMonthsEnd, setLoadedMonthsEnd] = useState<Date>(() => {
+    const now = new Date();
+    return endOfMonth(addMonths(now, 1)); // End of next month
+  });
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -70,18 +83,74 @@ const Gigs = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [showImageCrop, setShowImageCrop] = useState(false);
 
-  // Calculate date range for session calendar based on month/year or custom range
+  // Day events modal state (for mobile calendar)
+  const [dayModalState, setDayModalState] = useState<{
+    isOpen: boolean;
+    date: Date | null;
+    events: Array<{
+      id: string;
+      title: string;
+      event_date: string;
+      start_time: string | null;
+      venue: string | null;
+    }>;
+  }>({ isOpen: false, date: null, events: [] });
+
+  // Coin animation hook (for single-event taps)
+  const { animation: coinAnimation, triggerAnimation, clearAnimation } = useCoinAnimation();
+
+  // Get first event month for the selected city (for auto-jump)
+  const { firstEventMonth, hasEvents: cityHasEvents } = useFirstEventMonth({
+    city: selectedCity,
+    enabled: true,
+  });
+
+  // Auto-jump to first month with events when switching cities
+  useEffect(() => {
+    if (firstEventMonth && cityHasEvents) {
+      // Check if current loaded range has no events for this city
+      // If so, jump to the first month with events
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      // If first event is in a future month beyond our current range, auto-navigate
+      if (firstEventMonth.year > currentYear ||
+          (firstEventMonth.year === currentYear && firstEventMonth.month > currentMonth + 1)) {
+        // Update loaded months to include the first event month
+        const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
+        setLoadedMonthsEnd(endOfMonth(firstEventDate));
+        setSelectedMonth(firstEventMonth.month);
+        setSelectedYear(firstEventMonth.year);
+
+        toast({
+          title: `Jumped to ${format(firstEventDate, 'MMMM yyyy')}`,
+          description: `First available events for ${selectedCity === 'melbourne' ? 'Melbourne' : 'Sydney'}`,
+        });
+      }
+    }
+  }, [selectedCity, firstEventMonth, cityHasEvents]);
+
+  // Calculate date range for session calendar based on view mode and filters
   const getDateRange = () => {
     if (useAdvancedFilters && (dateRange.start || dateRange.end)) {
-      // Use custom date range
+      // Use custom date range from advanced filters
       const start = dateRange.start || new Date(selectedYear, selectedMonth, 1);
       const end = dateRange.end || new Date(selectedYear, selectedMonth + 1, 0);
       return {
         startDate: start.toISOString().split('T')[0],
         endDate: end.toISOString().split('T')[0]
       };
+    } else if (viewMode === 'list') {
+      // List view: Progressive loading from today to loadedMonthsEnd
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return {
+        startDate: today.toISOString().split('T')[0],
+        endDate: loadedMonthsEnd.toISOString().split('T')[0]
+      };
     } else {
-      // Use month/year range
+      // Calendar view: Use single month range
       const start = new Date(selectedYear, selectedMonth, 1);
       const end = new Date(selectedYear, selectedMonth + 1, 0);
       return {
@@ -89,6 +158,17 @@ const Gigs = () => {
         endDate: end.toISOString().split('T')[0]
       };
     }
+  };
+
+  // Handler to load the next month (for progressive loading)
+  const handleLoadNextMonth = useCallback(() => {
+    setLoadedMonthsEnd(prevEnd => endOfMonth(addMonths(prevEnd, 1)));
+  }, []);
+
+  // Get the next month label for the "See More" button
+  const getNextMonthLabel = () => {
+    const nextMonth = addMonths(loadedMonthsEnd, 1);
+    return format(nextMonth, 'MMMM');
   };
 
   const { startDate, endDate } = getDateRange();
@@ -106,6 +186,55 @@ const Gigs = () => {
   };
 
   const selectedTimezone = getTimezoneFromCity(selectedCity);
+
+  // Prefetch adjacent months for instant navigation
+  const { prefetchAdjacentMonths } = usePrefetchNextMonth({
+    currentMonth: new Date(selectedYear, selectedMonth),
+    timezone: selectedTimezone,
+  });
+
+  // Trigger prefetch when month changes
+  useEffect(() => {
+    prefetchAdjacentMonths();
+  }, [selectedMonth, selectedYear, prefetchAdjacentMonths]);
+
+  // Handler for mobile calendar day clicks
+  const handleMobileDayClick = useCallback((date: Date, dayEvents: Array<{
+    id: string;
+    title: string;
+    event_date: string;
+    start_time: string | null;
+    venue: string | null;
+  }>) => {
+    if (dayEvents.length === 0) return;
+
+    if (dayEvents.length === 1) {
+      // Single event: Mark available + coin animation
+      const event = dayEvents[0];
+      if (isComedian && toggleEvent) {
+        // Get the element position for animation
+        const activeElement = document.activeElement;
+        if (activeElement && 'getBoundingClientRect' in activeElement) {
+          const eventTime = formatEventTime(event.event_date);
+          triggerAnimation(eventTime, activeElement as HTMLElement);
+        }
+        toggleEvent(event.id);
+      }
+    } else {
+      // Multiple events: Open modal
+      setDayModalState({
+        isOpen: true,
+        date,
+        events: dayEvents,
+      });
+    }
+  }, [isComedian, toggleEvent, triggerAnimation]);
+
+  // Handler for mobile calendar month change
+  const handleMobileMonthChange = useCallback((newDate: Date) => {
+    setSelectedMonth(newDate.getMonth());
+    setSelectedYear(newDate.getFullYear());
+  }, []);
 
   const { events, isLoading, error } = useSessionCalendar({
     startDate,
@@ -569,20 +698,40 @@ const Gigs = () => {
         {/* Calendar or List View */}
         {filteredEvents.length > 0 ? (
           viewMode === 'calendar' ? (
-            <CalendarGridView
-              events={filteredEvents}
-              selectedMonth={new Date(selectedYear, selectedMonth)}
-              isComedian={isComedian}
-              selectedEventIds={selectedEvents}
-              onToggleAvailability={toggleEvent}
-            />
+            isMobile ? (
+              <MobileCalendarView
+                events={filteredEvents}
+                selectedMonth={new Date(selectedYear, selectedMonth)}
+                onMonthChange={handleMobileMonthChange}
+                isComedian={isComedian ?? false}
+                selectedEventIds={selectedEvents}
+                onToggleAvailability={toggleEvent}
+                onDayClick={handleMobileDayClick}
+              />
+            ) : (
+              <CalendarGridView
+                events={filteredEvents}
+                selectedMonth={new Date(selectedYear, selectedMonth)}
+                isComedian={isComedian}
+                selectedEventIds={selectedEvents}
+                onToggleAvailability={toggleEvent}
+              />
+            )
           ) : (
-            <BrowseEventListView
-              events={filteredEvents}
-              isComedian={isComedian ?? false}
-              selectedEventIds={selectedEvents}
-              onToggleAvailability={toggleEvent}
-            />
+            <>
+              <BrowseEventListView
+                events={filteredEvents}
+                isComedian={isComedian ?? false}
+                selectedEventIds={selectedEvents}
+                onToggleAvailability={toggleEvent}
+              />
+              {/* Load More Button for progressive loading */}
+              <LoadMoreMonthButton
+                nextMonthLabel={getNextMonthLabel()}
+                onLoadMore={handleLoadNextMonth}
+                isLoading={isLoading}
+              />
+            </>
           )
         ) : (
           <div className="text-center py-16">
@@ -673,6 +822,23 @@ const Gigs = () => {
         onClose={() => setShowImageCrop(false)}
         onCrop={handleCroppedImage}
         imageUrl={selectedImage}
+      />
+
+      {/* Day Events Modal (for mobile calendar) */}
+      <DayEventsModal
+        isOpen={dayModalState.isOpen}
+        onClose={() => setDayModalState(prev => ({ ...prev, isOpen: false }))}
+        date={dayModalState.date}
+        events={dayModalState.events}
+        isComedian={isComedian ?? false}
+        selectedEventIds={selectedEvents}
+        onToggleAvailability={toggleEvent}
+      />
+
+      {/* Coin Animation Portal (for single-event taps) */}
+      <CoinAnimationPortal
+        animation={coinAnimation}
+        onComplete={clearAnimation}
       />
     </div>
   );
