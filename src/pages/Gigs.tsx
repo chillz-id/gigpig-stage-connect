@@ -30,7 +30,6 @@ import { MobileCalendarView } from '@/components/gigs/MobileCalendarView';
 import { DayEventsModal } from '@/components/gigs/DayEventsModal';
 import { CoinAnimationPortal, useCoinAnimation } from '@/components/gigs/CoinAnimation';
 import { usePrefetchNextMonth } from '@/hooks/usePrefetchNextMonth';
-import { formatEventTime } from '@/utils/formatEventTime';
 import { useMobileLayout } from '@/hooks/useMobileLayout';
 import { useFirstEventMonth } from '@/hooks/useFirstEventMonth';
 import { supabase } from '@/integrations/supabase/client';
@@ -198,38 +197,6 @@ const Gigs = () => {
     prefetchAdjacentMonths();
   }, [selectedMonth, selectedYear, prefetchAdjacentMonths]);
 
-  // Handler for mobile calendar day clicks
-  const handleMobileDayClick = useCallback((date: Date, dayEvents: Array<{
-    id: string;
-    title: string;
-    event_date: string;
-    start_time: string | null;
-    venue: string | null;
-  }>) => {
-    if (dayEvents.length === 0) return;
-
-    if (dayEvents.length === 1) {
-      // Single event: Mark available + coin animation
-      const event = dayEvents[0];
-      if (isComedian && toggleEvent) {
-        // Get the element position for animation
-        const activeElement = document.activeElement;
-        if (activeElement && 'getBoundingClientRect' in activeElement) {
-          const eventTime = formatEventTime(event.event_date);
-          triggerAnimation(eventTime, activeElement as HTMLElement);
-        }
-        toggleEvent(event.id);
-      }
-    } else {
-      // Multiple events: Open modal
-      setDayModalState({
-        isOpen: true,
-        date,
-        events: dayEvents,
-      });
-    }
-  }, [isComedian, toggleEvent, triggerAnimation]);
-
   // Handler for mobile calendar month change
   const handleMobileMonthChange = useCallback((newDate: Date) => {
     setSelectedMonth(newDate.getMonth());
@@ -265,6 +232,38 @@ const Gigs = () => {
   const { selectedEvents, toggleEvent, selectWeekday, isSaving, lastSaved, hasPendingChanges } = useAvailabilitySelection(
     isComedian && user ? user.id : null
   );
+
+  // Handler for mobile calendar day clicks
+  const handleMobileDayClick = useCallback((date: Date, dayEvents: Array<{
+    id: string;
+    title: string;
+    event_date: string;
+    start_time: string | null;
+    venue: string | null;
+  }>) => {
+    if (dayEvents.length === 0) return;
+
+    if (dayEvents.length === 1) {
+      // Single event: Mark available + coin animation
+      const event = dayEvents[0];
+      if (isComedian && toggleEvent) {
+        // Get the element position for animation
+        const activeElement = document.activeElement;
+        if (activeElement && 'getBoundingClientRect' in activeElement) {
+          const eventTime = formatEventTime(event.event_date);
+          triggerAnimation(eventTime, activeElement as HTMLElement);
+        }
+        toggleEvent(event.id);
+      }
+    } else {
+      // Multiple events: Open modal
+      setDayModalState({
+        isOpen: true,
+        date,
+        events: dayEvents,
+      });
+    }
+  }, [isComedian, toggleEvent, triggerAnimation]);
 
   // Filter events based on selected month/year, date range, and other filters
   const filteredEvents = React.useMemo(() => {
