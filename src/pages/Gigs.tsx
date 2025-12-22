@@ -360,6 +360,14 @@ const Gigs = () => {
     setSelectedMonth(month);
     setSelectedYear(year);
 
+    // For list view, extend loadedMonthsEnd to include the clicked month if needed
+    if (viewMode === 'list') {
+      const clickedMonthEnd = endOfMonth(new Date(year, month));
+      if (clickedMonthEnd > loadedMonthsEnd) {
+        setLoadedMonthsEnd(clickedMonthEnd);
+      }
+    }
+
     // Update URL
     const url = new URL(window.location.href);
     const dateStr = new Date(year, month).toISOString().slice(0, 7);
@@ -633,12 +641,12 @@ const Gigs = () => {
             </div>
           </div>
 
-          {/* Month Filter - always shown, updates based on filtered events */}
+          {/* Month Filter - always shown, fetches events for selected city */}
           <MonthFilter
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onMonthChange={handleMonthChange}
-            events={useAdvancedFilters ? filteredEvents : (events || [])}
+            city={selectedCity}
           />
 
           {/* Advanced Filters - shown below month filter when enabled */}

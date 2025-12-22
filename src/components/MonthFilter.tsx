@@ -11,14 +11,26 @@ interface MonthFilterProps {
   selectedMonth: number;
   selectedYear: number;
   onMonthChange: (month: number, year: number) => void;
-  events?: any[]; // Add events prop to check which months have events
+  city?: string; // City to filter events ('sydney' or 'melbourne')
 }
+
+// Map city to timezone
+const getTimezoneFromCity = (city: string): string => {
+  switch (city?.toLowerCase()) {
+    case 'sydney':
+      return 'Australia/Sydney';
+    case 'melbourne':
+      return 'Australia/Melbourne';
+    default:
+      return 'Australia/Sydney';
+  }
+};
 
 export const MonthFilter: React.FC<MonthFilterProps> = ({
   selectedMonth,
   selectedYear,
   onMonthChange,
-  events = []
+  city = 'sydney'
 }) => {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -40,23 +52,27 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
     setTempYear(selectedYear);
   }, [selectedMonth, selectedYear]);
 
-  // Fetch which months have events in the next 12 months
+  const timezone = getTimezoneFromCity(city);
+
+  // Fetch which months have events for the selected city (next 12 months)
   const { data: monthsWithEventsMap } = useQuery({
-    queryKey: ['months-with-events-next-12'],
+    queryKey: ['months-with-events', city, timezone],
     queryFn: async () => {
       const today = new Date();
-      const startDate = today.toISOString();
+      today.setHours(0, 0, 0, 0);
+      const startDateTime = `${today.toISOString().split('T')[0]} 00:00:00`;
 
       // Calculate 12 months from today
       const endDate = new Date(today);
       endDate.setMonth(endDate.getMonth() + 12);
-      const endDateISO = endDate.toISOString();
+      const endDateTime = `${endDate.toISOString().split('T')[0]} 23:59:59`;
 
       const { data, error } = await supabase
         .from('session_complete')
         .select('session_start_local')
-        .gte('session_start_local', startDate)
-        .lte('session_start_local', endDateISO);
+        .ilike('timezone', timezone)
+        .gte('session_start_local', startDateTime)
+        .lte('session_start_local', endDateTime);
 
       if (error) {
         console.error('Error fetching months with events:', error);
@@ -66,7 +82,8 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
       // Build a map of "YYYY-MM" to boolean (has events)
       const monthsMap = new Map<string, boolean>();
       data?.forEach(session => {
-        const date = new Date(session.session_start_local);
+        // Parse session_start_local (format: "YYYY-MM-DD HH:MM:SS")
+        const date = new Date(session.session_start_local.replace(' ', 'T'));
         const yearMonth = `${date.getFullYear()}-${date.getMonth()}`;
         monthsMap.set(yearMonth, true);
       });
@@ -78,7 +95,7 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
 
   // Helper function to check if a month NAME has events anywhere in the next 12 months
   const hasEventsInMonthName = (monthIndex: number) => {
-    if (!monthsWithEventsMap) return false;
+    if (!monthsWithEventsMap || monthsWithEventsMap.size === 0) return false;
 
     // Check if this month name appears in any year within the next 12 months
     for (const [yearMonth] of monthsWithEventsMap) {
