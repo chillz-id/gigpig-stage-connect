@@ -459,6 +459,7 @@ export async function autoAddComedianManager(
  * Get pending approvals for a user
  */
 export async function getPendingApprovalsForUser(userId: string): Promise<DealParticipantWithDetails[]> {
+  // Note: We filter by deal.status client-side because PostgREST doesn't support .eq() on embedded fields
   const { data, error } = await supabase
     .from('deal_participants')
     .select(`
@@ -475,21 +476,23 @@ export async function getPendingApprovalsForUser(userId: string): Promise<DealPa
       )
     `)
     .eq('participant_id', userId)
-    .eq('approval_status', 'pending')
-    .eq('deal.status', 'pending_approval');
+    .eq('approval_status', 'pending');
 
   if (error) {
     console.error('Error fetching pending approvals:', error);
     throw error;
   }
 
-  return data as unknown as DealParticipantWithDetails[];
+  // Filter to only deals with pending_approval status
+  const filteredData = (data || []).filter(item => item.deal?.status === 'pending_approval');
+  return filteredData as unknown as DealParticipantWithDetails[];
 }
 
 /**
  * Get all participants for events owned by promoter
  */
 export async function getParticipantsByPromoter(promoterId: string): Promise<DealParticipantWithDetails[]> {
+  // Note: We filter by promoter_id client-side because PostgREST doesn't support .eq() on deeply nested embedded fields
   const { data, error } = await supabase
     .from('deal_participants')
     .select(`
@@ -507,15 +510,16 @@ export async function getParticipantsByPromoter(promoterId: string): Promise<Dea
           promoter_id
         )
       )
-    `)
-    .eq('deal.event.promoter_id', promoterId);
+    `);
 
   if (error) {
     console.error('Error fetching participants by promoter:', error);
     throw error;
   }
 
-  return data as unknown as DealParticipantWithDetails[];
+  // Filter to only participants for this promoter's events
+  const filteredData = (data || []).filter(item => item.deal?.event?.promoter_id === promoterId);
+  return filteredData as unknown as DealParticipantWithDetails[];
 }
 
 /**

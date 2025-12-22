@@ -24,6 +24,7 @@ export const useUpcomingGigs = () => {
       }
 
       // Get confirmed applications for upcoming events (applications is the source of truth)
+      // Note: We filter by date client-side because PostgREST doesn't support .gte() on embedded fields
       const { data, error } = await supabase
         .from('applications')
         .select(
@@ -43,16 +44,21 @@ export const useUpcomingGigs = () => {
         `
         )
         .eq('comedian_id', user.id)
-        .eq('status', 'accepted')
-        .gte('events.event_date', new Date().toISOString());
+        .eq('status', 'accepted');
 
       if (error) {
         console.error('Error fetching upcoming gigs:', error);
         throw error;
       }
 
-      // Map and sort by event date in JavaScript (can't order by nested field in PostgREST)
+      const now = new Date();
+
+      // Map, filter to upcoming events, and sort by event date
       return (data || [])
+        .filter((application: any) => {
+          const eventDate = application.events?.event_date;
+          return eventDate && new Date(eventDate) >= now;
+        })
         .map((application: any) => ({
           id: application.id,
           event_id: application.event_id,

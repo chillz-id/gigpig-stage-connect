@@ -81,20 +81,28 @@ export const useEarnings = (dateRange?: DateRange) => {
 
 async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: Date) {
   // Query comedian bookings for performance fees
-  const { data: bookings, error: bookingsError } = await supabase
+  // Note: We fetch all confirmed bookings and filter by date client-side
+  // because PostgREST doesn't support .gte()/.lte() on embedded table fields
+  const { data: allBookings, error: bookingsError } = await supabase
     .from('comedian_bookings')
     .select(`
       fee,
       events!comedian_bookings_event_id_fkey!inner(title, event_date)
     `)
     .eq('comedian_id', userId)
-    .gte('events.event_date', startDate.toISOString())
-    .lte('events.event_date', endDate.toISOString())
     .eq('status', 'confirmed');
 
   if (bookingsError) {
     console.error('Error fetching bookings:', bookingsError);
   }
+
+  // Filter bookings by date range client-side
+  const bookings = (allBookings || []).filter(booking => {
+    const eventDate = booking.events?.event_date;
+    if (!eventDate) return false;
+    const date = new Date(eventDate);
+    return date >= startDate && date <= endDate;
+  });
 
   // Query invoices for additional earnings
   const { data: invoices, error: invoicesError } = await supabase
