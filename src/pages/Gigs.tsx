@@ -62,7 +62,12 @@ const Gigs = () => {
   const [selectedMonth, setSelectedMonth] = useState<number>(initialDate.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(initialDate.getFullYear());
 
-  // Progressive loading state - start with current month + next month
+  // Progressive loading state - tracks start and end of loaded range
+  // Initially: current month + next month
+  const [loadedMonthsStart, setLoadedMonthsStart] = useState<Date>(() => {
+    const now = new Date();
+    return startOfMonth(now); // Start of current month
+  });
   const [loadedMonthsEnd, setLoadedMonthsEnd] = useState<Date>(() => {
     const now = new Date();
     return endOfMonth(addMonths(now, 1)); // End of next month
@@ -118,10 +123,11 @@ const Gigs = () => {
       // Mark that we've handled this city
       hasJumpedForCityRef.current = selectedCity;
 
-      const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
+      const firstEventDate = startOfMonth(new Date(firstEventMonth.year, firstEventMonth.month, 1));
 
       // Update loaded range to first event month + next month
       const nextMonthEnd = endOfMonth(addMonths(firstEventDate, 1));
+      setLoadedMonthsStart(firstEventDate);
       setLoadedMonthsEnd(nextMonthEnd);
       setSelectedMonth(firstEventMonth.month);
       setSelectedYear(firstEventMonth.year);
@@ -144,11 +150,9 @@ const Gigs = () => {
         endDate: end.toISOString().split('T')[0]
       };
     } else if (viewMode === 'list') {
-      // List view: Progressive loading from today to loadedMonthsEnd
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // List view: Show from loadedMonthsStart to loadedMonthsEnd
       return {
-        startDate: today.toISOString().split('T')[0],
+        startDate: loadedMonthsStart.toISOString().split('T')[0],
         endDate: loadedMonthsEnd.toISOString().split('T')[0]
       };
     } else {
@@ -360,12 +364,12 @@ const Gigs = () => {
     setSelectedMonth(month);
     setSelectedYear(year);
 
-    // For list view, extend loadedMonthsEnd to include the clicked month if needed
+    // For list view, set the loaded range to clicked month + next month
     if (viewMode === 'list') {
-      const clickedMonthEnd = endOfMonth(new Date(year, month));
-      if (clickedMonthEnd > loadedMonthsEnd) {
-        setLoadedMonthsEnd(clickedMonthEnd);
-      }
+      const clickedMonthStart = startOfMonth(new Date(year, month));
+      const nextMonthEnd = endOfMonth(addMonths(clickedMonthStart, 1));
+      setLoadedMonthsStart(clickedMonthStart);
+      setLoadedMonthsEnd(nextMonthEnd);
     }
 
     // Update URL
