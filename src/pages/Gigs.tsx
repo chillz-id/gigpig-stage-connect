@@ -107,17 +107,15 @@ const Gigs = () => {
   // Auto-jump to first month with events when switching cities
   useEffect(() => {
     if (firstEventMonth && cityHasEvents) {
-      // Check if current loaded range has no events for this city
-      // If so, jump to the first month with events
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
+      // Jump to first month with events if it's different from currently selected
+      const isCurrentMonthDifferent =
+        firstEventMonth.year !== selectedYear ||
+        firstEventMonth.month !== selectedMonth;
 
-      // If first event is in a future month beyond our current range, auto-navigate
-      if (firstEventMonth.year > currentYear ||
-          (firstEventMonth.year === currentYear && firstEventMonth.month > currentMonth + 1)) {
-        // Update loaded months to include the first event month
+      if (isCurrentMonthDifferent) {
         const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
+
+        // Update loaded range to include the first event month
         setLoadedMonthsEnd(endOfMonth(firstEventDate));
         setSelectedMonth(firstEventMonth.month);
         setSelectedYear(firstEventMonth.year);
