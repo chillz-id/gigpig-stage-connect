@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSessionCalendar } from '@/hooks/useSessionCalendar';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
@@ -99,34 +99,37 @@ const Gigs = () => {
   const { animation: coinAnimation, triggerAnimation, clearAnimation } = useCoinAnimation();
 
   // Get first event month for the selected city (for auto-jump)
-  const { firstEventMonth, hasEvents: cityHasEvents } = useFirstEventMonth({
+  const { firstEventMonth, hasEvents: cityHasEvents, isLoading: isLoadingFirstEvent } = useFirstEventMonth({
     city: selectedCity,
     enabled: true,
   });
 
+  // Track which city we've already jumped for (prevents infinite loops)
+  const hasJumpedForCityRef = useRef<string | null>(null);
+
   // Auto-jump to first month with events when switching cities
   useEffect(() => {
-    if (firstEventMonth && cityHasEvents) {
-      // Jump to first month with events if it's different from currently selected
-      const isCurrentMonthDifferent =
-        firstEventMonth.year !== selectedYear ||
-        firstEventMonth.month !== selectedMonth;
+    // Wait for loading to complete and data to be available
+    if (isLoadingFirstEvent) return;
 
-      if (isCurrentMonthDifferent) {
-        const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
+    // Only jump if we have data and haven't already jumped for this city
+    if (firstEventMonth && cityHasEvents && hasJumpedForCityRef.current !== selectedCity) {
+      // Mark that we've handled this city
+      hasJumpedForCityRef.current = selectedCity;
 
-        // Update loaded range to include the first event month
-        setLoadedMonthsEnd(endOfMonth(firstEventDate));
-        setSelectedMonth(firstEventMonth.month);
-        setSelectedYear(firstEventMonth.year);
+      const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
 
-        toast({
-          title: `Jumped to ${format(firstEventDate, 'MMMM yyyy')}`,
-          description: `First available events for ${selectedCity === 'melbourne' ? 'Melbourne' : 'Sydney'}`,
-        });
-      }
+      // Update loaded range to include the first event month
+      setLoadedMonthsEnd(endOfMonth(firstEventDate));
+      setSelectedMonth(firstEventMonth.month);
+      setSelectedYear(firstEventMonth.year);
+
+      toast({
+        title: `Jumped to ${format(firstEventDate, 'MMMM yyyy')}`,
+        description: `First available events for ${selectedCity === 'melbourne' ? 'Melbourne' : 'Sydney'}`,
+      });
     }
-  }, [selectedCity, firstEventMonth, cityHasEvents]);
+  }, [selectedCity, firstEventMonth, cityHasEvents, isLoadingFirstEvent]);
 
   // Calculate date range for session calendar based on view mode and filters
   const getDateRange = () => {

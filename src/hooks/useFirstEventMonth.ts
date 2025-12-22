@@ -41,12 +41,14 @@ export function useFirstEventMonth({ city, enabled = true }: UseFirstEventMonthO
       const todayStr = today.toISOString().split('T')[0];
 
       // Query for the first upcoming event in this city
+      // Use session_start_local column (matches event-browse-service)
+      const todayDateTime = `${todayStr} 00:00:00`;
       const { data, error } = await supabase
         .from('session_complete')
-        .select('event_date')
-        .eq('timezone', timezone)
-        .gte('event_date', todayStr)
-        .order('event_date', { ascending: true })
+        .select('session_start_local')
+        .ilike('timezone', timezone)
+        .gte('session_start_local', todayDateTime)
+        .order('session_start_local', { ascending: true })
         .limit(1)
         .single();
 
@@ -58,11 +60,12 @@ export function useFirstEventMonth({ city, enabled = true }: UseFirstEventMonthO
         throw error;
       }
 
-      if (!data?.event_date) {
+      if (!data?.session_start_local) {
         return null;
       }
 
-      const eventDate = new Date(data.event_date);
+      // Parse session_start_local (format: "YYYY-MM-DD HH:MM:SS")
+      const eventDate = new Date(data.session_start_local.replace(' ', 'T'));
       return {
         year: eventDate.getFullYear(),
         month: eventDate.getMonth(),

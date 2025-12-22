@@ -25,6 +25,10 @@ export function usePrefetchNextMonth({
     const startDate = startOfMonth(nextMonth).toISOString().split('T')[0];
     const endDate = endOfMonth(nextMonth).toISOString().split('T')[0];
 
+    // Use datetime format matching event-browse-service
+    const startDateTime = `${startDate} 00:00:00`;
+    const endDateTime = `${endDate} 23:59:59`;
+
     // Prefetch the next month's events
     await queryClient.prefetchQuery({
       queryKey: ['session-calendar', startDate, endDate, timezone, false],
@@ -32,10 +36,10 @@ export function usePrefetchNextMonth({
         const { data, error } = await supabase
           .from('session_complete')
           .select('*')
-          .eq('timezone', timezone)
-          .gte('event_date', startDate)
-          .lte('event_date', `${endDate}T23:59:59`)
-          .order('event_date', { ascending: true });
+          .ilike('timezone', timezone)
+          .gte('session_start_local', startDateTime)
+          .lte('session_start_local', endDateTime)
+          .order('session_start_local', { ascending: true });
 
         if (error) throw error;
         return data;
@@ -49,6 +53,10 @@ export function usePrefetchNextMonth({
     const startDate = startOfMonth(prevMonth).toISOString().split('T')[0];
     const endDate = endOfMonth(prevMonth).toISOString().split('T')[0];
 
+    // Use datetime format matching event-browse-service
+    const startDateTime = `${startDate} 00:00:00`;
+    const endDateTime = `${endDate} 23:59:59`;
+
     // Prefetch the previous month's events
     await queryClient.prefetchQuery({
       queryKey: ['session-calendar', startDate, endDate, timezone, false],
@@ -56,10 +64,10 @@ export function usePrefetchNextMonth({
         const { data, error } = await supabase
           .from('session_complete')
           .select('*')
-          .eq('timezone', timezone)
-          .gte('event_date', startDate)
-          .lte('event_date', `${endDate}T23:59:59`)
-          .order('event_date', { ascending: true });
+          .ilike('timezone', timezone)
+          .gte('session_start_local', startDateTime)
+          .lte('session_start_local', endDateTime)
+          .order('session_start_local', { ascending: true });
 
         if (error) throw error;
         return data;
