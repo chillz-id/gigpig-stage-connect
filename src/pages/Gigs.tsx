@@ -105,7 +105,8 @@ const Gigs = () => {
   });
 
   // Track which city we've already jumped for (prevents infinite loops)
-  const hasJumpedForCityRef = useRef<string | null>(null);
+  // Initialize to current city to prevent auto-jump on first load
+  const hasJumpedForCityRef = useRef<string>(selectedCity);
 
   // Auto-jump to first month with events when switching cities
   useEffect(() => {
@@ -119,8 +120,9 @@ const Gigs = () => {
 
       const firstEventDate = new Date(firstEventMonth.year, firstEventMonth.month, 1);
 
-      // Update loaded range to include the first event month
-      setLoadedMonthsEnd(endOfMonth(firstEventDate));
+      // Update loaded range to first event month + next month
+      const nextMonthEnd = endOfMonth(addMonths(firstEventDate, 1));
+      setLoadedMonthsEnd(nextMonthEnd);
       setSelectedMonth(firstEventMonth.month);
       setSelectedYear(firstEventMonth.year);
 
