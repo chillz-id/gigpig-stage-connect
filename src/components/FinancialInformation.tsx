@@ -23,10 +23,7 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
   // Use provided config or derive from profileType (backwards compatibility)
   const config = propConfig ?? getProfileConfig(profileType);
 
-  // Hide entire section for profile types without financial information (e.g., managers)
-  if (!config.fields.hasFinancial) {
-    return null;
-  }
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS (React Rules of Hooks)
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -199,6 +196,12 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
     const timeoutId = setTimeout(performLookup, 500);
     return () => clearTimeout(timeoutId);
   }, [financialInfo.abn]);
+
+  // Hide entire section for profile types without financial information (e.g., managers)
+  // This check MUST be after all hooks to comply with React Rules of Hooks
+  if (!config.fields.hasFinancial) {
+    return null;
+  }
 
   const handleSaveFinancialInfo = async () => {
     if (!user?.id) {
