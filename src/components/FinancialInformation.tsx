@@ -117,7 +117,9 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
     };
 
     loadFinancialInfo();
-  }, [profileId, tableName, toast]);
+    // Note: toast is a stable reference from context, not included to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, tableName]);
 
   // ABN Lookup effect
   useEffect(() => {
