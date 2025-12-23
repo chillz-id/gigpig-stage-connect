@@ -81,16 +81,15 @@ export const useEarnings = (dateRange?: DateRange) => {
 
 async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: Date) {
   // Query comedian bookings for performance fees
-  // Note: We fetch all confirmed bookings and filter by date client-side
+  // Note: We fetch all bookings and filter by date client-side
   // because PostgREST doesn't support .gte()/.lte() on embedded table fields
   const { data: allBookings, error: bookingsError } = await supabase
     .from('comedian_bookings')
     .select(`
-      fee,
+      performance_fee,
       events!comedian_bookings_event_id_fkey!inner(title, event_date)
     `)
-    .eq('comedian_id', userId)
-    .eq('status', 'confirmed');
+    .eq('comedian_id', userId);
 
   if (bookingsError) {
     console.error('Error fetching bookings:', bookingsError);
@@ -118,16 +117,16 @@ async function fetchEarningsForPeriod(userId: string, startDate: Date, endDate: 
   }
 
   // Calculate total earnings
-  const bookingEarnings = (bookings || []).reduce((sum, booking) => sum + (booking.fee || 0), 0);
+  const bookingEarnings = (bookings || []).reduce((sum, booking) => sum + (booking.performance_fee || 0), 0);
   const invoiceEarnings = (invoices || []).reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
-  
+
   const total = bookingEarnings + invoiceEarnings;
 
   // Create detailed breakdown
   const details = [
     ...(bookings || []).map(booking => ({
       eventTitle: booking.events?.title || 'Unknown Event',
-      amount: booking.fee || 0,
+      amount: booking.performance_fee || 0,
       date: booking.events?.event_date || '',
       type: 'performance' as const
     })),
