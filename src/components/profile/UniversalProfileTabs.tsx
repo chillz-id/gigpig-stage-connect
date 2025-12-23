@@ -46,12 +46,18 @@ export const UniversalProfileTabs: React.FC<UniversalProfileTabsProps> = ({
       <ContactInformation
         profileType={profileType}
         config={config}
+        user={user}
+        organizationId={organizationId}
+        onSave={onSave}
       />
     ),
     financial: (
       <FinancialInformation
         profileType={profileType}
         config={config}
+        user={user}
+        organizationId={organizationId}
+        onSave={onSave}
       />
     ),
     highlights: config.tables.accomplishments ? (

@@ -294,17 +294,16 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
   const filterColumn = organizationId ? 'organization_id' : 'user_id';
   const filterId = organizationId || profileId;
 
-  // NOTE: These hooks need to be updated to accept tableName and organizationId parameters
-  // For now, they only support user-based queries with hardcoded table names
+  // These hooks now support both user and organization profiles
   const { links, addLink, updateLink, deleteLink } = useCustomLinks({
-    userId: filterId || '',
+    userId: profileId || '',
     includeHidden: true,
-    // TODO: Add tableName parameter when hooks are refactored
+    organizationId: organizationId,
   });
 
   const { sections, addSection, updateSection, deleteSection } = useLinkSections({
-    userId: filterId || '',
-    // TODO: Add tableName parameter when hooks are refactored
+    userId: profileId || '',
+    organizationId: organizationId,
   });
 
   const { fetchOGData, isLoading: isFetchingOG } = useOGFetch();

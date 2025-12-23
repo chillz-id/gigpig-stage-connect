@@ -21,7 +21,19 @@ interface ContactDetail {
   show: boolean;
 }
 
-export const ContactInformation: React.FC<ProfileAwareProps> = ({ profileType, config }) => {
+interface ContactInformationProps extends ProfileAwareProps {
+  user?: any; // Profile data being edited (may differ from logged-in user)
+  organizationId?: string; // If editing an organization profile
+  onSave?: (data: any) => Promise<void>;
+}
+
+export const ContactInformation: React.FC<ContactInformationProps> = ({
+  profileType,
+  config,
+  user: _user, // Available for future data loading
+  organizationId: _organizationId, // Available for future data loading
+  onSave: _onSave, // Available for future save functionality
+}) => {
   const { toast } = useToast();
   
   const [contactSettings, setContactSettings] = useState({

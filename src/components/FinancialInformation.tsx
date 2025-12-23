@@ -13,12 +13,26 @@ import { supabase } from '@/integrations/supabase/client';
 import type { ProfileAwareProps } from '@/types/universalProfile';
 import { getProfileConfig } from '@/utils/profileConfig';
 
-export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
+interface FinancialInformationProps extends Partial<ProfileAwareProps> {
+  user?: any; // Profile data being edited (may differ from logged-in user)
+  organizationId?: string; // If editing an organization profile
+  onSave?: (data: any) => Promise<void>;
+}
+
+export const FinancialInformation: React.FC<FinancialInformationProps> = ({
   profileType = 'comedian',
-  config: propConfig
+  config: propConfig,
+  user: propUser,
+  organizationId,
+  onSave,
 }) => {
   const { toast } = useToast();
-  const { hasRole, user } = useAuth();
+  const { hasRole, user: authUser } = useAuth();
+
+  // Determine which ID and table to use for queries
+  // Priority: organizationId > propUser.id > authUser.id
+  const profileId = organizationId || propUser?.id || authUser?.id;
+  const tableName = organizationId ? 'organization_profiles' : 'profiles';
 
   // Use provided config or derive from profileType (backwards compatibility)
   const config = propConfig ?? getProfileConfig(profileType);
@@ -61,16 +75,16 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
   // Load financial information on mount
   useEffect(() => {
     const loadFinancialInfo = async () => {
-      if (!user?.id) {
+      if (!profileId) {
         setLoading(false);
         return;
       }
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from(tableName)
           .select('abn, account_name, bsb, account_number, gst_registered, entity_name, entity_type, gst_effective_date, entity_address, entity_state_code, entity_postcode')
-          .eq('id', user.id)
+          .eq('id', profileId)
           .single();
 
         if (error) throw error;
@@ -103,7 +117,7 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
     };
 
     loadFinancialInfo();
-  }, [user?.id, toast]);
+  }, [profileId, tableName, toast]);
 
   // ABN Lookup effect
   useEffect(() => {
@@ -154,10 +168,10 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
         setFinancialInfo(prev => ({ ...prev, ...updates }));
 
         // Auto-save the ABN enrichment data to prevent race condition
-        if (user?.id) {
+        if (profileId) {
           try {
             await supabase
-              .from('profiles')
+              .from(tableName)
               .update({
                 gst_registered: result.gstRegistered,
                 entity_name: result.entityName || null,
@@ -168,7 +182,7 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
                 entity_postcode: result.postcode || null,
                 ...(updates.accountName && { account_name: updates.accountName }),
               })
-              .eq('id', user.id);
+              .eq('id', profileId);
           } catch (error) {
             console.error('Error auto-saving ABN enrichment data:', error);
           }
@@ -204,10 +218,10 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
   }
 
   const handleSaveFinancialInfo = async () => {
-    if (!user?.id) {
+    if (!profileId) {
       toast({
         title: 'Error',
-        description: 'You must be logged in to save financial information.',
+        description: 'Unable to save - no profile ID available.',
         variant: 'destructive',
       });
       return;
@@ -217,7 +231,7 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from(tableName)
         .update({
           abn: financialInfo.abn || null,
           account_name: financialInfo.accountName || null,
@@ -231,7 +245,7 @@ export const FinancialInformation: React.FC<Partial<ProfileAwareProps>> = ({
           entity_state_code: financialInfo.entityStateCode || null,
           entity_postcode: financialInfo.entityPostcode || null,
         })
-        .eq('id', user.id);
+        .eq('id', profileId);
 
       if (error) throw error;
 
