@@ -90,10 +90,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
 
   // Get visibility label based on profile type
   const getVisibilityLabel = (isVisible: boolean) => {
-    if (profileType === 'organization') {
-      return isVisible ? 'Public' : 'Platform Only';
-    }
-    return isVisible ? 'Public' : 'Platform Only';
+    return isVisible ? 'Public' : 'Platform';
   };
 
   return (
@@ -106,10 +103,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
           <span className="text-xs text-muted-foreground">(shown on your public profile)</span>
         </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1 mr-3 space-y-2">
+                <div className="flex items-center gap-2">
                   <Label htmlFor="email" className="text-sm">Email</Label>
                   {contactSettings.email.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
                 </div>
@@ -120,7 +116,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   className="text-sm"
                 />
               </div>
-              <div className="pt-10">
+              <div className="pt-6">
                 <Switch
                   checked={contactSettings.email.show}
                   onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
@@ -128,10 +124,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               </div>
             </div>
 
-            <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="w-4 h-4" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1 mr-3 space-y-2">
+                <div className="flex items-center gap-2">
                   <Label htmlFor="phone" className="text-sm">Phone</Label>
                   {contactSettings.phone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
                 </div>
@@ -141,7 +136,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   className="text-sm"
                 />
               </div>
-              <div className="pt-10">
+              <div className="pt-6">
                 <Switch
                   checked={contactSettings.phone.show}
                   onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
@@ -159,10 +154,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               <h3 className="font-semibold">Manager Contact</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex-1 mr-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Mail className="w-4 h-4" />
+              <div className="flex items-start justify-between">
+                <div className="flex-1 mr-3 space-y-2">
+                  <div className="flex items-center gap-2">
                     <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
                     {contactSettings.managerEmail.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
                   </div>
@@ -173,7 +167,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                     className="text-sm"
                   />
                 </div>
-                <div className="pt-10">
+                <div className="pt-6">
                   <Switch
                     checked={contactSettings.managerEmail.show}
                     onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
@@ -181,10 +175,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex-1 mr-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4" />
+              <div className="flex items-start justify-between">
+                <div className="flex-1 mr-3 space-y-2">
+                  <div className="flex items-center gap-2">
                     <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
                     {contactSettings.managerPhone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
                   </div>
@@ -194,7 +187,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                     className="text-sm"
                   />
                 </div>
-                <div className="pt-10">
+                <div className="pt-6">
                   <Switch
                     checked={contactSettings.managerPhone.show}
                     onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}
@@ -227,18 +220,8 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="email">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                Email
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="phone">
-                              <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                Phone
-                              </div>
-                            </SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="phone">Phone</SelectItem>
                           </SelectContent>
                         </Select>
                         <Input
@@ -274,8 +257,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                         onCheckedChange={(checked) => updateAdditionalContact(contact.id, 'show', checked)}
                       />
                       <Button
-                        className="professional-button h-6 w-6 p-0"
+                        variant="ghost"
                         size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                         onClick={() => removeAdditionalContact(contact.id)}
                       >
                         <X className="w-3 h-3" />

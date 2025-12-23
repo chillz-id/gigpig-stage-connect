@@ -135,7 +135,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   return (
     <div className="space-y-4">
         <div className={`grid grid-cols-1 ${isLastNameRequired ? 'md:grid-cols-2' : ''} gap-4`}>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
             <Input
               id="first-name"
@@ -146,7 +146,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
           {/* Hide Last Name for organizations */}
           {isLastNameRequired && (
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="last-name">Last Name *</Label>
               <Input
                 id="last-name"
@@ -161,14 +161,9 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         {/* Conditionally show secondary name field (Stage Name for comedians, Legal Name for organizations) */}
         {config.fields.hasSecondaryName && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="stage-name" className="flex items-center gap-1">
+            <div className="space-y-2">
+              <Label htmlFor="stage-name">
                 {config.labels.secondaryName || 'Stage Name'}
-                {profileType === 'organization' && (
-                  <span className="text-xs text-muted-foreground" title="Your business legal name">
-                    (?)
-                  </span>
-                )}
               </Label>
               <Input
                 id="stage-name"
@@ -186,7 +181,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                 </p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="name-display">Name Display Preference</Label>
               <Select
                 value={formData.nameDisplayPreference}
@@ -215,7 +210,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
@@ -230,7 +225,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               Contact support to change your email address
             </p>
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <PhoneInput
               value={formData.phone}
@@ -241,7 +236,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
         {/* Location - dropdown for organizations, text input for others */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="location">{profileType === 'organization' ? 'State' : 'Location'}</Label>
             {config.fields.hasStateDropdown ? (
               <Select
@@ -268,7 +263,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               />
             )}
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="country">Country</Label>
             <Input
               id="country"
@@ -279,7 +274,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="bio">{config.labels.bio || 'Bio'}</Label>
           <Textarea
             id="bio"
