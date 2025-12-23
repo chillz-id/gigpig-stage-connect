@@ -103,7 +103,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
           <span className="text-xs text-muted-foreground">(shown on your public profile)</span>
         </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <Label htmlFor="email" className="text-sm">Email</Label>
                 <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <Label htmlFor="phone" className="text-sm">Phone</Label>
                 <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               <h3 className="font-semibold">Manager Contact</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
                   <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
                   <div className="flex items-center gap-2">
