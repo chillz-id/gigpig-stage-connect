@@ -56,6 +56,20 @@ supabase/.temp/
 data/reports/
 data/imports/
 
+# Database dumps and backups (NEVER commit)
+backups/
+*.dump
+*.sql.gz
+*.tar.gz
+
+# Temporary/generated files
+file_listing.csv
+*.local.backup
+desktop.ini
+
+# Archived scripts (kept for reference but not active)
+scripts/archive/
+
 # Files with hardcoded secrets (NEVER commit)
 scripts/legacy/setup-humanitix-env.cjs
 duplicate-detection-system.cjs
