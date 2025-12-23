@@ -103,45 +103,41 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
           <span className="text-xs text-muted-foreground">(shown on your public profile)</span>
         </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 mr-3 space-y-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email" className="text-sm">Email</Label>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="email" className="text-sm">Email</Label>
-                  {contactSettings.email.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.email.show)}</Badge>
+                  <Switch
+                    checked={contactSettings.email.show}
+                    onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
+                  />
                 </div>
-                <Input
-                  id="email"
-                  value={contactSettings.email.value}
-                  onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
-                  className="text-sm"
-                />
               </div>
-              <div className="pt-6">
-                <Switch
-                  checked={contactSettings.email.show}
-                  onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
-                />
-              </div>
+              <Input
+                id="email"
+                value={contactSettings.email.value}
+                onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
+                className="text-sm"
+              />
             </div>
 
-            <div className="flex items-start justify-between">
-              <div className="flex-1 mr-3 space-y-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="phone" className="text-sm">Phone</Label>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="phone" className="text-sm">Phone</Label>
-                  {contactSettings.phone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.phone.show)}</Badge>
+                  <Switch
+                    checked={contactSettings.phone.show}
+                    onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
+                  />
                 </div>
-                <PhoneInput
-                  value={contactSettings.phone.value}
-                  onChange={(value) => updateContactSetting('phone', 'value', value)}
-                  className="text-sm"
-                />
               </div>
-              <div className="pt-6">
-                <Switch
-                  checked={contactSettings.phone.show}
-                  onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
-                />
-              </div>
+              <PhoneInput
+                value={contactSettings.phone.value}
+                onChange={(value) => updateContactSetting('phone', 'value', value)}
+                className="text-sm"
+              />
             </div>
           </div>
         </div>
@@ -154,45 +150,41 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               <h3 className="font-semibold">Manager Contact</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 mr-3 space-y-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
-                    {contactSettings.managerEmail.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerEmail.show)}</Badge>
+                    <Switch
+                      checked={contactSettings.managerEmail.show}
+                      onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
+                    />
                   </div>
-                  <Input
-                    id="managerEmail"
-                    value={contactSettings.managerEmail.value}
-                    onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
-                    className="text-sm"
-                  />
                 </div>
-                <div className="pt-6">
-                  <Switch
-                    checked={contactSettings.managerEmail.show}
-                    onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
-                  />
-                </div>
+                <Input
+                  id="managerEmail"
+                  value={contactSettings.managerEmail.value}
+                  onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
+                  className="text-sm"
+                />
               </div>
 
-              <div className="flex items-start justify-between">
-                <div className="flex-1 mr-3 space-y-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
-                    {contactSettings.managerPhone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerPhone.show)}</Badge>
+                    <Switch
+                      checked={contactSettings.managerPhone.show}
+                      onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}
+                    />
                   </div>
-                  <PhoneInput
-                    value={contactSettings.managerPhone.value}
-                    onChange={(value) => updateContactSetting('managerPhone', 'value', value)}
-                    className="text-sm"
-                  />
                 </div>
-                <div className="pt-6">
-                  <Switch
-                    checked={contactSettings.managerPhone.show}
-                    onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}
-                  />
-                </div>
+                <PhoneInput
+                  value={contactSettings.managerPhone.value}
+                  onChange={(value) => updateContactSetting('managerPhone', 'value', value)}
+                  className="text-sm"
+                />
               </div>
             </div>
           </div>
@@ -230,7 +222,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                           placeholder="Label"
                           className="text-xs h-6 flex-1"
                         />
-                        {contact.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                        <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contact.show)}</Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         {getContactIcon(contact.type)}
