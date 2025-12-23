@@ -57,7 +57,9 @@ export const SocialMediaInput: React.FC<SocialMediaInputProps> = ({
     if (result.isValid) {
       onChange(result.url);
     }
-  }, [inputValue, platform, onChange]);
+    // Note: onChange is intentionally excluded - it's a callback that shouldn't trigger re-processing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue, platform]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
