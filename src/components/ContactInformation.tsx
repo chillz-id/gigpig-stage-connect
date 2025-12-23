@@ -111,7 +111,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4" />
                   <Label htmlFor="email" className="text-sm">Email</Label>
-                  {contactSettings.email.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.email.show)}</Badge>
                 </div>
                 <Input
                   id="email"
@@ -133,7 +133,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                 <div className="flex items-center gap-2 mb-2">
                   <Phone className="w-4 h-4" />
                   <Label htmlFor="phone" className="text-sm">Phone</Label>
-                  {contactSettings.phone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.phone.show)}</Badge>
                 </div>
                 <PhoneInput
                   value={contactSettings.phone.value}
@@ -164,7 +164,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="w-4 h-4" />
                     <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
-                    {contactSettings.managerEmail.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerEmail.show)}</Badge>
                   </div>
                   <Input
                     id="managerEmail"
@@ -186,7 +186,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="w-4 h-4" />
                     <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
-                    {contactSettings.managerPhone.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerPhone.show)}</Badge>
                   </div>
                   <PhoneInput
                     value={contactSettings.managerPhone.value}
@@ -237,7 +237,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                           placeholder="Label"
                           className="text-xs h-6 flex-1"
                         />
-                        {contact.show && <Badge variant="secondary" className="text-xs">{getVisibilityLabel(true)}</Badge>}
+                        <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contact.show)}</Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         {getContactIcon(contact.type)}
