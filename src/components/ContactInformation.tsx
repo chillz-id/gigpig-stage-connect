@@ -91,9 +91,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
   // Get visibility label based on profile type
   const getVisibilityLabel = (isVisible: boolean) => {
     if (profileType === 'organization') {
-      return isVisible ? 'Public' : 'Platform Only';
+      return isVisible ? 'Public' : 'Platform';
     }
-    return isVisible ? 'Public' : 'Platform Only';
+    return isVisible ? 'Public' : 'Platform';
   };
 
   return (
@@ -227,18 +227,8 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="email">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                Email
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="phone">
-                              <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                Phone
-                              </div>
-                            </SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="phone">Phone</SelectItem>
                           </SelectContent>
                         </Select>
                         <Input
@@ -274,7 +264,8 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                         onCheckedChange={(checked) => updateAdditionalContact(contact.id, 'show', checked)}
                       />
                       <Button
-                        className="professional-button h-6 w-6 p-0"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
                         size="sm"
                         onClick={() => removeAdditionalContact(contact.id)}
                       >

@@ -162,13 +162,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         {config.fields.hasSecondaryName && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="stage-name" className="flex items-center gap-1">
+              <Label htmlFor="stage-name">
                 {config.labels.secondaryName || 'Stage Name'}
-                {profileType === 'organization' && (
-                  <span className="text-xs text-muted-foreground" title="Your business legal name">
-                    (?)
-                  </span>
-                )}
               </Label>
               <Input
                 id="stage-name"
