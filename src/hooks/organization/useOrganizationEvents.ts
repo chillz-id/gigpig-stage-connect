@@ -225,9 +225,9 @@ export const useOrganizationUpcomingEvents = () => {
       }
 
       // Use RPC to get upcoming sessions efficiently (joins session_partners + session_complete)
+      // Note: Can't chain .limit() after .rpc() - it causes 500 errors
       const { data: sessions, error: sessionsError } = await supabase
-        .rpc('get_org_upcoming_sessions', { p_org_id: orgId })
-        .limit(100);
+        .rpc('get_org_upcoming_sessions', { p_org_id: orgId });
 
       if (sessionsError) {
         console.error('Error fetching upcoming session details:', sessionsError);
