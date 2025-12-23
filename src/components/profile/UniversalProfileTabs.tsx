@@ -6,6 +6,7 @@ import { FinancialInformation } from '@/components/FinancialInformation';
 import { CareerHighlightsManager } from '@/components/profile/CareerHighlightsManager';
 import { PressReviewsManager } from '@/components/profile/PressReviewsManager';
 import { CustomLinksManager } from '@/components/comedian-profile/CustomLinksManager';
+import { OrganizationMediaPortfolio } from '@/components/organization/OrganizationMediaPortfolio';
 import type { ProfileType, ProfileConfig } from '@/types/universalProfile';
 import {
   User,
@@ -65,6 +66,7 @@ export const UniversalProfileTabs: React.FC<UniversalProfileTabsProps> = ({
         tableName={config.tables.accomplishments}
         userId={organizationId ? undefined : user?.id}
         organizationId={organizationId}
+        profileType={profileType}
       />
     ) : null,
     reviews: config.tables.reviews ? (
@@ -81,7 +83,12 @@ export const UniversalProfileTabs: React.FC<UniversalProfileTabsProps> = ({
         organizationId={organizationId}
       />
     ) : null,
-    media: (
+    media: organizationId ? (
+      <OrganizationMediaPortfolio
+        organizationId={organizationId}
+        isEditable={true}
+      />
+    ) : (
       <div className="p-6 bg-muted/20 rounded-lg text-center">
         <ImageIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
         <p className="text-muted-foreground">

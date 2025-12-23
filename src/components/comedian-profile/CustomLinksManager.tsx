@@ -26,7 +26,6 @@ import { useCustomLinks, CustomLink } from '@/hooks/useCustomLinks';
 import { useLinkSections, LinkSection } from '@/hooks/useLinkSections';
 import { useOGFetch } from '@/hooks/useOGFetch';
 import type { TableAwareProps } from '@/types/universalProfile';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -529,51 +528,48 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
   };
 
   return (
-    <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-white">Custom Links</CardTitle>
-            <p className="text-sm text-gray-300 mt-1">
-              Organize your links with drag-and-drop sections
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                setEditingLink(null);
-                setLinkForm({
-                  title: '',
-                  url: '',
-                  description: '',
-                  section_id: null,
-                  thumbnail_url: null,
-                  custom_thumbnail_url: null,
-                  is_visible: true,
-                });
-                setIsLinkDialogOpen(true);
-              }}
-              className="professional-button"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Link
-            </Button>
-            <Button
-              onClick={() => {
-                setEditingSection(null);
-                setIsSectionDialogOpen(true);
-              }}
-              variant="secondary"
-              className="border-purple-500 text-purple-400 hover:bg-purple-500/10"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Section
-            </Button>
-          </div>
+    <div className="space-y-4">
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Organize your links with drag-and-drop sections
+        </p>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setEditingLink(null);
+              setLinkForm({
+                title: '',
+                url: '',
+                description: '',
+                section_id: null,
+                thumbnail_url: null,
+                custom_thumbnail_url: null,
+                is_visible: true,
+              });
+              setIsLinkDialogOpen(true);
+            }}
+            className="professional-button"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Link
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingSection(null);
+              setIsSectionDialogOpen(true);
+            }}
+            variant="secondary"
+            className="border-purple-500 text-purple-400 hover:bg-purple-500/10"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Section
+          </Button>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      {/* Links Content */}
+      <div>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -636,7 +632,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
             )}
           </div>
         </DndContext>
-      </CardContent>
+      </div>
 
       {/* Link Dialog */}
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
@@ -763,6 +759,6 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
         section={editingSection}
         nextDisplayOrder={sections.length}
       />
-    </Card>
+    </div>
   );
 };

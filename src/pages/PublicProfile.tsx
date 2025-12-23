@@ -14,7 +14,7 @@ import { Crown } from 'lucide-react';
 import { OrganizationProfileWrapper } from '@/components/organization/OrganizationProfileWrapper';
 
 // Lazy load organization pages
-const UniversalProfileEditor = lazy(() => import('@/pages/UniversalProfileEditor').then(m => ({ default: m.UniversalProfileEditor })));
+const OrganizationProfileEditorLayout = lazy(() => import('@/components/organization/OrganizationProfileEditorLayout').then(m => ({ default: m.OrganizationProfileEditorLayout })));
 const OrganizationDashboard = lazy(() => import('@/pages/organization/OrganizationDashboard'));
 const OrganizationEvents = lazy(() => import('@/pages/organization/OrganizationEvents'));
 const OrganizationTeam = lazy(() => import('@/pages/organization/OrganizationTeam'));
@@ -171,7 +171,7 @@ export default function PublicProfile({ type }: PublicProfileProps) {
           >
             <Routes>
             <Route index element={<OrganizationProfileWrapper />} />
-            <Route path="edit" element={<UniversalProfileEditor profileType="organization" organizationId={profile.id} />} />
+            <Route path="edit" element={<OrganizationProfileEditorLayout />} />
             <Route path="dashboard" element={<OrganizationDashboard />} />
             <Route path="events" element={<OrganizationEvents />} />
             <Route path="events/create" element={<CreateOrganizationEvent />} />

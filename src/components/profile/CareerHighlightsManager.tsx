@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import type { TableAwareProps } from '@/types/universalProfile';
+import type { TableAwareProps, ProfileType } from '@/types/universalProfile';
 import {
   Dialog,
   DialogContent,
@@ -102,11 +102,30 @@ const SortableAccomplishment: React.FC<{
   );
 };
 
-export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
+interface CareerHighlightsManagerProps extends TableAwareProps {
+  profileType?: ProfileType;
+}
+
+export const CareerHighlightsManager: React.FC<CareerHighlightsManagerProps> = ({
   tableName,
   userId,
-  organizationId
+  organizationId,
+  profileType = 'comedian',
 }) => {
+  // Dynamic labels based on profile type
+  const isOrganization = profileType === 'organization';
+  const labels = {
+    sectionName: isOrganization ? 'Company Highlights' : 'Career Highlights',
+    addButton: isOrganization ? '+ Company Highlight' : 'Add Career Highlight',
+    dialogTitle: isOrganization ? 'Company Highlight' : 'Career Highlight',
+    emptyTitle: isOrganization ? 'No company highlights yet' : 'No career highlights yet',
+    emptyDescription: isOrganization
+      ? 'Add your notable accomplishments, awards, and company milestones'
+      : 'Add your notable accomplishments, awards, and career milestones',
+    toastAdded: isOrganization ? 'Company Highlight Added' : 'Career Highlight Added',
+    toastUpdated: isOrganization ? 'Company Highlight Updated' : 'Career Highlight Updated',
+    toastDeleted: isOrganization ? 'Company Highlight Deleted' : 'Career Highlight Deleted',
+  };
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -168,7 +187,7 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accomplishments'] });
       toast({
-        title: 'Career Highlight Added',
+        title: labels.toastAdded,
         description: 'Your accomplishment has been added successfully',
       });
       resetForm();
@@ -204,7 +223,7 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accomplishments'] });
       toast({
-        title: 'Career Highlight Updated',
+        title: labels.toastUpdated,
         description: 'Your accomplishment has been updated successfully',
       });
       resetForm();
@@ -232,7 +251,7 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accomplishments'] });
       toast({
-        title: 'Career Highlight Deleted',
+        title: labels.toastDeleted,
         description: 'Accomplishment has been removed',
       });
     },
@@ -333,7 +352,7 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Loading career highlights...</p>
+        <p className="text-muted-foreground">Loading {labels.sectionName.toLowerCase()}...</p>
       </div>
     );
   }
@@ -346,13 +365,13 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
           <DialogTrigger asChild>
             <Button className="professional-button">
               <Plus className="w-4 h-4 mr-2" />
-              Add Career Highlight
+              {labels.addButton}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingItem ? 'Edit Career Highlight' : 'Add Career Highlight'}
+                {editingItem ? `Edit ${labels.dialogTitle}` : `Add ${labels.dialogTitle}`}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -400,9 +419,9 @@ export const CareerHighlightsManager: React.FC<TableAwareProps> = ({
       {accomplishments.length === 0 ? (
         <div className="text-center py-12 bg-muted/20 rounded-lg">
           <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground mb-4">No career highlights yet</p>
+          <p className="text-muted-foreground mb-4">{labels.emptyTitle}</p>
           <p className="text-sm text-muted-foreground">
-            Add your notable accomplishments, awards, and career milestones
+            {labels.emptyDescription}
           </p>
         </div>
       ) : (

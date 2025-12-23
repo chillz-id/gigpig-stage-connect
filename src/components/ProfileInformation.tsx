@@ -12,6 +12,18 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import type { ProfileAwareProps } from '@/types/universalProfile';
 import { getProfileConfig } from '@/utils/profileConfig';
 
+// Australian states for location dropdown
+const AUSTRALIAN_STATES = [
+  { value: 'NSW', label: 'NSW' },
+  { value: 'VIC', label: 'VIC' },
+  { value: 'QLD', label: 'QLD' },
+  { value: 'WA', label: 'WA' },
+  { value: 'SA', label: 'SA' },
+  { value: 'TAS', label: 'TAS' },
+  { value: 'NT', label: 'NT' },
+  { value: 'ACT', label: 'ACT' },
+];
+
 interface ProfileData {
   firstName: string;
   lastName: string;
@@ -21,6 +33,7 @@ interface ProfileData {
   phone: string;
   bio: string;
   location: string;
+  country: string;
   customShowTypes: string[];
   instagramUrl: string;
   twitterUrl: string;
@@ -28,6 +41,7 @@ interface ProfileData {
   youtubeUrl: string;
   facebookUrl: string;
   tiktokUrl: string;
+  linkedinUrl: string;
 }
 
 interface ProfileInformationProps extends Partial<ProfileAwareProps> {
@@ -57,14 +71,16 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
     email: user?.email || user?.contact_email || '',
     phone: user?.phone || user?.contact_phone || '',
     bio: user?.bio || '',
-    location: user?.location || user?.city || '',
+    location: user?.location || user?.city || user?.state || '',
+    country: user?.country || 'Australia',
     customShowTypes: user?.custom_show_types || [],
     instagramUrl: user?.instagram_url || '',
     twitterUrl: user?.twitter_url || '',
     websiteUrl: user?.website_url || '',
     youtubeUrl: user?.youtube_url || '',
     facebookUrl: user?.facebook_url || '',
-    tiktokUrl: user?.tiktok_url || ''
+    tiktokUrl: user?.tiktok_url || '',
+    linkedinUrl: user?.linkedin_url || ''
   };
 
   const [formData, setFormData] = useState<ProfileData>(initialFormData);
@@ -80,12 +96,18 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   };
 
 
+  // Check if lastName is required (not required for organizations)
+  const isLastNameRequired = config.fields.hasLastName !== false;
+
   const handleSubmit = async () => {
-    // Basic validation
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+    // Basic validation - lastName not required for organizations
+    const isLastNameValid = !isLastNameRequired || formData.lastName.trim();
+    if (!formData.firstName.trim() || !isLastNameValid || !formData.email.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields (First Name, Last Name, Email).",
+        description: isLastNameRequired
+          ? "Please fill in all required fields (First Name, Last Name, Email)."
+          : "Please fill in all required fields (Name, Email).",
         variant: "destructive"
       });
       return;
@@ -112,7 +134,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
   return (
     <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${isLastNameRequired ? 'md:grid-cols-2' : ''} gap-4`}>
           <div>
             <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
             <Input
@@ -122,28 +144,47 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               required
             />
           </div>
-          <div>
-            <Label htmlFor="last-name">Last Name *</Label>
-            <Input
-              id="last-name"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-              required
-            />
-          </div>
+          {/* Hide Last Name for organizations */}
+          {isLastNameRequired && (
+            <div>
+              <Label htmlFor="last-name">Last Name *</Label>
+              <Input
+                id="last-name"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                required
+              />
+            </div>
+          )}
         </div>
 
         {/* Conditionally show secondary name field (Stage Name for comedians, Legal Name for organizations) */}
         {config.fields.hasSecondaryName && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="stage-name">{config.labels.secondaryName || 'Stage Name'}</Label>
+              <Label htmlFor="stage-name" className="flex items-center gap-1">
+                {config.labels.secondaryName || 'Stage Name'}
+                {profileType === 'organization' && (
+                  <span className="text-xs text-muted-foreground" title="Your business legal name">
+                    (?)
+                  </span>
+                )}
+              </Label>
               <Input
                 id="stage-name"
                 value={formData.stageName}
                 onChange={(e) => handleInputChange('stageName', e.target.value)}
-                placeholder={`Your ${config.labels.secondaryName?.toLowerCase() || 'stage name'}`}
+                placeholder={
+                  profileType === 'organization'
+                    ? 'Your business legal name'
+                    : `Your ${config.labels.secondaryName?.toLowerCase() || 'stage name'}`
+                }
               />
+              {profileType === 'organization' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your business legal name as registered
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="name-display">Name Display Preference</Label>
@@ -155,9 +196,18 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                   <SelectValue placeholder="Select how your name is displayed" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="real">Real name only</SelectItem>
-                  <SelectItem value="stage">{config.labels.secondaryName || 'Stage name'} only</SelectItem>
-                  <SelectItem value="both">Both ({config.labels.secondaryName || 'Stage name'} - Real name)</SelectItem>
+                  {profileType === 'organization' ? (
+                    <>
+                      <SelectItem value="real">Organization Name</SelectItem>
+                      <SelectItem value="stage">Legal Name</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="real">Real name only</SelectItem>
+                      <SelectItem value="stage">{config.labels.secondaryName || 'Stage name'} only</SelectItem>
+                      <SelectItem value="both">Both ({config.labels.secondaryName || 'Stage name'} - Real name)</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -189,14 +239,44 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="location">Location</Label>
-          <Input 
-            id="location" 
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            placeholder="Sydney, NSW"
-          />
+        {/* Location - dropdown for organizations, text input for others */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="location">{profileType === 'organization' ? 'State' : 'Location'}</Label>
+            {config.fields.hasStateDropdown ? (
+              <Select
+                value={formData.location}
+                onValueChange={(value) => handleInputChange('location', value)}
+              >
+                <SelectTrigger id="location">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUSTRALIAN_STATES.map((state) => (
+                    <SelectItem key={state.value} value={state.value}>
+                      {state.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder="Sydney, NSW"
+              />
+            )}
+          </div>
+          <div>
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              value={formData.country}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              placeholder="Australia"
+            />
+          </div>
         </div>
 
         <div>
@@ -251,7 +331,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
             />
           </div>
 
-          {/* Collapsible section for Facebook and Twitter */}
+          {/* Collapsible section for Facebook, Twitter, and LinkedIn */}
           <div>
             <Button
               type="button"
@@ -277,6 +357,12 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                   platform="twitter"
                   value={formData.twitterUrl}
                   onChange={(value) => handleInputChange('twitterUrl', value)}
+                />
+                <SocialMediaInput
+                  id="linkedin"
+                  platform="linkedin"
+                  value={formData.linkedinUrl}
+                  onChange={(value) => handleInputChange('linkedinUrl', value)}
                 />
               </div>
             )}
