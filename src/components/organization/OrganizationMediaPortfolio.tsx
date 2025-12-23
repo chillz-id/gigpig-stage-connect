@@ -452,7 +452,7 @@ export const OrganizationMediaPortfolio: React.FC<OrganizationMediaPortfolioProp
 
       {/* Media grid */}
       {media.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-muted/20 rounded-lg">
           <Video className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground mb-4">No media uploaded yet</p>
           {isEditable && (

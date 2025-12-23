@@ -116,7 +116,7 @@ export const CareerHighlightsManager: React.FC<CareerHighlightsManagerProps> = (
   const isOrganization = profileType === 'organization';
   const labels = {
     sectionName: isOrganization ? 'Company Highlights' : 'Career Highlights',
-    addButton: isOrganization ? 'Company Highlight' : 'Add Career Highlight',
+    addButton: isOrganization ? '+ Company Highlight' : 'Add Career Highlight',
     dialogTitle: isOrganization ? 'Company Highlight' : 'Career Highlight',
     emptyTitle: isOrganization ? 'No company highlights yet' : 'No career highlights yet',
     emptyDescription: isOrganization
@@ -417,7 +417,7 @@ export const CareerHighlightsManager: React.FC<CareerHighlightsManagerProps> = (
 
       {/* Accomplishments List */}
       {accomplishments.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-muted/20 rounded-lg">
           <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground mb-4">{labels.emptyTitle}</p>
           <p className="text-sm text-muted-foreground">
