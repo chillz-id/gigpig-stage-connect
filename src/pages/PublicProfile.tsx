@@ -5,6 +5,7 @@ import { useActiveProfile } from '@/contexts/ProfileContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { NotFoundHandler } from '@/components/profile/NotFoundHandler';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GiveVouchForm } from '@/components/GiveVouchForm';
@@ -160,14 +161,15 @@ export default function PublicProfile({ type }: PublicProfileProps) {
   if (type === 'organization') {
     return (
       <OrganizationProvider>
-        <Suspense
-          fallback={
-            <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          }
-        >
-          <Routes>
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+                <LoadingSpinner size="lg" />
+              </div>
+            }
+          >
+            <Routes>
             <Route index element={<OrganizationProfileWrapper />} />
             <Route path="edit" element={<UniversalProfileEditor profileType="organization" organizationId={profile.id} />} />
             <Route path="dashboard" element={<OrganizationDashboard />} />
@@ -181,8 +183,9 @@ export default function PublicProfile({ type }: PublicProfileProps) {
             <Route path="invoices" element={<OrganizationInvoices />} />
             <Route path="book-comedian" element={<OrganizationBookComedian />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </OrganizationProvider>
     );
   }
