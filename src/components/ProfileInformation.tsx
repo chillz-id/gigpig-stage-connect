@@ -133,7 +133,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-2">
         <div className={`grid grid-cols-1 ${isLastNameRequired ? 'md:grid-cols-2' : ''} gap-4`}>
           <div className="space-y-1.5">
             <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
