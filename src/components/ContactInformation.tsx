@@ -58,7 +58,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
     const newContact: ContactDetail = {
       id: `contact_${Date.now()}`,
       type: 'email',
-      label: 'New Contact',
+      label: 'New Contact (eg. Manager)',
       value: '',
       show: false
     };
@@ -98,13 +98,9 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Public Contact */}
+      {/* Contact Information */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <User className="w-4 h-4" />
-          <h3 className="font-semibold">Public Contact</h3>
-          <span className="text-xs text-muted-foreground">(shown on your public profile)</span>
-        </div>
+        <p className="text-xs text-muted-foreground mb-4">Add contacts & toggle platform only or public</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex-1 mr-3">
