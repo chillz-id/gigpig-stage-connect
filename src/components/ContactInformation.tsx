@@ -120,7 +120,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   className="text-sm"
                 />
               </div>
-              <div className="pt-10">
+              <div className="pt-8">
                 <Switch
                   checked={contactSettings.email.show}
                   onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
@@ -141,7 +141,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                   className="text-sm"
                 />
               </div>
-              <div className="pt-10">
+              <div className="pt-8">
                 <Switch
                   checked={contactSettings.phone.show}
                   onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
@@ -173,7 +173,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                     className="text-sm"
                   />
                 </div>
-                <div className="pt-10">
+                <div className="pt-8">
                   <Switch
                     checked={contactSettings.managerEmail.show}
                     onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
@@ -194,7 +194,7 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                     className="text-sm"
                   />
                 </div>
-                <div className="pt-10">
+                <div className="pt-8">
                   <Switch
                     checked={contactSettings.managerPhone.show}
                     onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}

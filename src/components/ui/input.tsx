@@ -9,9 +9,9 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
     
     const getThemeStyles = () => {
       if (theme === 'pleasure') {
-        return "bg-white/[0.08] border-0 backdrop-blur-md text-white placeholder:text-white/50 focus:bg-white/[0.12] focus:ring-2 focus:ring-white/20 shadow-lg shadow-black/10";
+        return "bg-white/[0.08] border-0 backdrop-blur-md text-white placeholder:text-white/50 focus:bg-white/[0.12] focus:ring-1 focus:ring-white/20 shadow-lg shadow-black/10";
       }
-      return "bg-gray-800/60 border-0 backdrop-blur-md text-gray-100 placeholder:text-gray-400 focus:bg-gray-700/60 focus:ring-2 focus:ring-gray-500/40 shadow-lg shadow-black/20";
+      return "bg-gray-800/60 border-0 backdrop-blur-md text-gray-100 placeholder:text-gray-400 focus:bg-gray-700/60 focus:ring-1 focus:ring-gray-500/40 shadow-lg shadow-black/20";
     };
 
     return (

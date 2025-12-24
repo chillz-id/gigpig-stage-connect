@@ -140,7 +140,7 @@ export function PhoneInput({
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
-            className="w-[110px] justify-between professional-button"
+            className="h-8 w-[110px] justify-between professional-button"
             disabled={disabled}
             aria-label={`Selected country: ${selectedCountry.name}`}
           >
