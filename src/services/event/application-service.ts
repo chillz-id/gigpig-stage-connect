@@ -160,6 +160,7 @@ export const eventApplicationService = {
   },
 
   async listForComedian(comedianId: string): Promise<ComedianApplicationRecord[]> {
+    // Fetch all applications (both event-based and session-based)
     const { data, error } = await supabaseClient
       .from('applications')
       .select(
@@ -181,11 +182,80 @@ export const eventApplicationService = {
       `
       )
       .eq('comedian_id', comedianId)
-      .not('event_id', 'is', null)
       .order('applied_at', { ascending: false });
 
     if (error) throw error;
-    return ((data ?? []) as any[]).map(mapComedianApplication);
+
+    const applications = (data ?? []) as any[];
+
+    // Get session_source_ids for applications without event_id
+    const sessionSourceIds = applications
+      .filter((app) => !app.event_id && app.session_source_id)
+      .map((app) => app.session_source_id);
+
+    // Fetch session data from sessions_htx for session-based applications
+    let sessionMap: Record<string, any> = {};
+    if (sessionSourceIds.length > 0) {
+      const { data: sessionsData } = await supabaseClient
+        .from('sessions_htx')
+        .select('source_id, name, venue_name, start_date_local')
+        .in('source_id', sessionSourceIds);
+
+      if (sessionsData) {
+        sessionMap = sessionsData.reduce((acc: Record<string, any>, session: any) => {
+          acc[session.source_id] = session;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Map applications, enriching session-based ones with session data
+    return applications.map((row) => {
+      // If has event_id, use the standard mapper
+      if (row.event_id && row.events) {
+        return mapComedianApplication(row);
+      }
+
+      // For session-based applications, build event data from sessions_htx
+      const session = sessionMap[row.session_source_id];
+      const base: EventApplication = {
+        id: row.id,
+        event_id: row.event_id,
+        comedian_id: row.comedian_id,
+        status: row.status,
+        message: row.message,
+        spot_type: row.spot_type,
+        availability_confirmed: row.availability_confirmed,
+        requirements_acknowledged: row.requirements_acknowledged,
+        applied_at: row.applied_at,
+        responded_at: row.responded_at,
+      };
+
+      if (!session) {
+        return base;
+      }
+
+      return {
+        ...base,
+        event: {
+          id: row.session_source_id, // Use session_source_id as identifier
+          title: session.name ?? '',
+          venue: session.venue_name ?? '',
+          address: null,
+          event_date: session.start_date_local
+            ? session.start_date_local.split('T')[0]
+            : '',
+          start_time: session.start_date_local
+            ? session.start_date_local.split('T')[1]?.substring(0, 5)
+            : null,
+          city: '',
+          state: '',
+          status: null,
+          banner_url: null,
+          promoter: null,
+        },
+      };
+    });
   },
 
   async hasExistingApplication(eventId: string, comedianId: string): Promise<boolean> {

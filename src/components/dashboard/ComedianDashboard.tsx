@@ -29,13 +29,21 @@ export function ComedianDashboard() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { isMobile } = useMobileLayout();
-  const { confirmedGigCount, nextGig, isLoading: gigsLoading } = useUpcomingGigs();
+  const { confirmedGigCount, nextGig, totalConfirmedGigs, thisMonthGigCount, totalMinutesPerformed, thisMonthMinutes, isLoading: gigsLoading } = useUpcomingGigs();
   const { userApplications, isLoadingUserApplications } = useEventApplications();
 
-  // Count pending confirmations
-  const pendingConfirmations = userApplications?.filter(app =>
-    app.status === 'accepted' && !app.availability_confirmed
-  ) || [];
+  // Count upcoming applications only (not past events)
+  const today = new Date().toISOString().split('T')[0];
+
+  // Count pending confirmations (upcoming events only)
+  const pendingConfirmations = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return app.status === 'accepted' && !app.availability_confirmed && eventDate && eventDate >= today;
+  }) || [];
+  const upcomingApplications = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return eventDate && eventDate >= today;
+  }) || [];
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -136,14 +144,14 @@ export function ComedianDashboard() {
             </CardHeader>
             <CardContent>
               <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>
-                {isLoadingUserApplications ? '...' : (userApplications?.length || 0)}
+                {isLoadingUserApplications ? '...' : upcomingApplications.length}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {isLoadingUserApplications
                   ? 'Loading...'
                   : pendingConfirmations.length > 0
                     ? `${pendingConfirmations.length} need confirmation`
-                    : `${userApplications?.filter(app => app.status === 'pending').length || 0} pending responses`
+                    : `${upcomingApplications.filter(app => app.status === 'pending').length} pending responses`
                 }
               </p>
             </CardContent>
@@ -174,12 +182,12 @@ export function ComedianDashboard() {
                 isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
               )}>
                 <Button
-                  onClick={() => navigate('/shows')}
+                  onClick={() => navigate('/gigs')}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
                   <Eye className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
-                  Browse Shows
+                  Browse Gigs
                 </Button>
 
                 <Button
@@ -232,22 +240,20 @@ export function ComedianDashboard() {
             <CardContent>
               <div className={cn(isMobile ? "space-y-3" : "space-y-4")}>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total Performances</span>
-                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>{gigsLoading ? '...' : confirmedGigCount + 12}</span>
+                  <span className="text-sm text-muted-foreground">Total Confirmed Gigs</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>{gigsLoading ? '...' : totalConfirmedGigs}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Acceptance Rate</span>
+                  <span className="text-sm text-muted-foreground">Total Minutes Performed</span>
                   <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>
-                    {isLoadingUserApplications ? '...' :
-                      userApplications && userApplications.length > 0
-                        ? `${Math.round((userApplications.filter(a => a.status === 'accepted').length / userApplications.length) * 100)}%`
-                        : 'N/A'
-                    }
+                    {gigsLoading ? '...' : `${totalMinutesPerformed}mins`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">This Month</span>
-                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>{gigsLoading ? '...' : Math.min(confirmedGigCount, 4)}</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>
+                    {gigsLoading ? '...' : `${thisMonthGigCount} | ${thisMonthMinutes}mins`}
+                  </span>
                 </div>
               </div>
             </CardContent>

@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEventApplications } from '@/hooks/useEventApplications';
-import { CalendarDays, Clock, MapPin, ChevronRight, Filter } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Filter, ExternalLink, XCircle } from 'lucide-react';
+import { generateGoogleMapsUrl } from '@/utils/maps';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -13,15 +14,35 @@ import { Skeleton } from '@/components/ui/skeleton';
 type ApplicationStatus = 'all' | 'pending' | 'accepted' | 'rejected';
 
 export const ApplicationsListSection = () => {
-  const { userApplications, isLoadingUserApplications } = useEventApplications();
+  const { userApplications, isLoadingUserApplications, updateApplication, isUpdating } = useEventApplications();
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>('all');
   const navigate = useNavigate();
 
-  // Filter applications based on status
-  const filteredApplications = userApplications?.filter(app => {
+  const handleWithdraw = (applicationId: string) => {
+    updateApplication({
+      id: applicationId,
+      status: 'withdrawn',
+    });
+  };
+
+  // Filter applications: only upcoming events + status filter, sorted by event date
+  const today = new Date().toISOString().split('T')[0];
+  const filteredApplications = (userApplications?.filter(app => {
+    // Only show upcoming events
+    const eventDate = app.event?.event_date;
+    if (!eventDate || eventDate < today) return false;
+
+    // Apply status filter
     if (statusFilter === 'all') return true;
     return app.status === statusFilter;
-  }) || [];
+  }) || []).sort((a, b) => {
+    // Sort chronologically by event date and start time
+    const dateA = a.event?.event_date || '';
+    const dateB = b.event?.event_date || '';
+    const timeA = a.event?.start_time || '00:00';
+    const timeB = b.event?.start_time || '00:00';
+    return `${dateA}T${timeA}`.localeCompare(`${dateB}T${timeB}`);
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -38,9 +59,15 @@ export const ApplicationsListSection = () => {
     }
   };
 
+  // Get upcoming applications for counts
+  const upcomingApplications = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return eventDate && eventDate >= today;
+  }) || [];
+
   const getStatusCount = (status: ApplicationStatus) => {
-    if (status === 'all') return userApplications?.length || 0;
-    return userApplications?.filter(app => app.status === status).length || 0;
+    if (status === 'all') return upcomingApplications.length;
+    return upcomingApplications.filter(app => app.status === status).length;
   };
 
   if (isLoadingUserApplications) {
@@ -106,14 +133,13 @@ export const ApplicationsListSection = () => {
             {filteredApplications.map((application) => (
               <div
                 key={application.id}
-                className="group relative p-4 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer"
-                onClick={() => navigate(`/events/${application.event_id}`)}
+                className="p-4 border rounded-lg"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
-                      <h4 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                        {application.events?.title || 'Event'}
+                      <h4 className="font-semibold text-lg">
+                        {application.event?.title || 'Event'}
                       </h4>
                       {getStatusBadge(application.status)}
                     </div>
@@ -121,13 +147,36 @@ export const ApplicationsListSection = () => {
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        <span>{application.events?.venue || 'Venue'}</span>
+                        <span>{application.event?.venue || 'Venue'}</span>
+                        {(() => {
+                          const mapsUrl = generateGoogleMapsUrl({
+                            address: application.event?.address,
+                            venue: application.event?.venue,
+                            city: application.event?.city,
+                            state: application.event?.state,
+                          });
+                          return mapsUrl ? (
+                            <a
+                              href={mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-primary hover:text-primary/80"
+                              title="Open in Google Maps"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null;
+                        })()}
                       </div>
-                      
-                      {application.events?.event_date && (
+
+                      {application.event?.event_date && (
                         <div className="flex items-center gap-1">
                           <CalendarDays className="h-3 w-3" />
-                          <span>{format(new Date(application.events.event_date), 'MMM d, yyyy')}</span>
+                          <span>
+                            {format(new Date(application.event.event_date), 'MMM d, yyyy')}
+                            {application.event?.start_time && ` • ${application.event.start_time.substring(0, 5)}`}
+                          </span>
                         </div>
                       )}
                       
@@ -149,8 +198,19 @@ export const ApplicationsListSection = () => {
                       </p>
                     )}
                   </div>
-                  
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+
+                  {application.status === 'pending' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleWithdraw(application.id)}
+                      disabled={isUpdating}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
