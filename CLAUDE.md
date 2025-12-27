@@ -182,6 +182,80 @@ Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN`, Filestash config (
 
 **Pre-commit**: Run `npm run lint` and `npm run test`
 
+### Atomic Commits (REQUIRED)
+
+Each commit should be:
+1. **Single-purpose** - One logical change per commit
+2. **Self-contained** - Can be reverted independently without breaking other features
+3. **Testable** - The fix can be verified in isolation
+
+**DO NOT** bundle multiple unrelated fixes in one commit. If a commit message needs "and" to describe changes, split it.
+
+```bash
+# WRONG - bundled commit
+git commit -m "fix: applications display, org profile state, and lineup drag-drop"
+
+# CORRECT - atomic commits
+git commit -m "fix(applications): fix session-based apps date parsing"
+git commit -m "fix(org-profile): map location field to state column"
+git commit -m "fix(lineup): implement drag-drop reorder mutation"
+```
+
+### Pre-Commit Verification Checklist
+
+**Before committing any fix, verify it works with REAL production data:**
+
+```bash
+# 1. Run TypeScript check
+npx tsc --noEmit
+
+# 2. Run linter
+npm run lint
+
+# 3. CRITICAL: Query production data to verify the fix
+# Use Supabase MCP to test with real data, not assumptions
+```
+
+**For data-dependent fixes, ALWAYS:**
+
+1. **Query the actual data format** before writing parsing code
+   ```sql
+   -- Example: Check actual date format before writing parser
+   SELECT start_date_local FROM sessions_htx LIMIT 5;
+   -- Result: "2025-12-29 19:00:00" (space separator, NOT ISO "T")
+   ```
+
+2. **Simulate the fix with SQL** to verify it works
+   ```sql
+   -- Test the parsing logic against real data
+   SELECT
+     SPLIT_PART(start_date_local::text, ' ', 1) as parsed_date,
+     SPLIT_PART(start_date_local::text, ' ', 2) as parsed_time
+   FROM sessions_htx WHERE ...;
+   ```
+
+3. **Test in browser** after hot-reload before committing
+
+**Common verification queries:**
+```sql
+-- Check if RLS allows access
+SELECT * FROM table_name LIMIT 1;
+
+-- Verify data format assumptions
+SELECT column_name, pg_typeof(column_name) FROM table_name LIMIT 1;
+
+-- Test join conditions
+SELECT a.*, b.* FROM table_a a LEFT JOIN table_b b ON a.id = b.ref_id LIMIT 5;
+```
+
+### Post-Push Verification
+
+After pushing, verify on deployed preview:
+1. Clear browser cache (Ctrl+Shift+R)
+2. Test the specific feature that was fixed
+3. Check browser console for errors
+4. If broken, revert immediately: `git revert HEAD && git push`
+
 ## Database Notes
 
 **Supabase Types**: Auto-generated in `src/integrations/supabase/types/`. Regenerate via MCP if schema changes.
