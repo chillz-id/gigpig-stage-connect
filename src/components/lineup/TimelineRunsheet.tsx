@@ -310,12 +310,12 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
               {isUnassigned ? (
                 <button
                   onClick={onAssign}
-                  className="truncate text-muted-foreground italic hover:text-primary hover:underline cursor-pointer py-0.5"
+                  className="text-muted-foreground italic hover:text-primary hover:underline cursor-pointer shrink-0"
                 >
                   {assignment}
                 </button>
               ) : (
-                <span className="truncate py-0.5">
+                <span className="truncate">
                   {assignment}
                 </span>
               )}
