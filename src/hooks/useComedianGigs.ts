@@ -12,6 +12,9 @@ export interface ComedianGig {
   venue: string;
   status: 'confirmed' | 'pending' | 'cancelled';
   calendar_sync_status: 'pending' | 'synced' | 'failed';
+  banner_url?: string | null;
+  ticket_link?: string | null;
+  description?: string | null;
   created_at: string;
   updated_at: string;
   // Event details if linked
@@ -62,15 +65,8 @@ export const useComedianGigs = (comedianId?: string) => {
             title,
             venue,
             address,
-            city,
-            state,
-            start_time,
-            end_time,
-            promoter_id,
-            profiles:promoter_id (
-              name,
-              email
-            )
+            event_date,
+            promoter_id
           )
         `)
         .eq('comedian_id', targetComedianId)
@@ -88,16 +84,8 @@ export const useComedianGigs = (comedianId?: string) => {
             title,
             venue,
             address,
-            city,
-            state,
-            start_time,
-            end_time,
             event_date,
-            promoter_id,
-            profiles:promoter_id (
-              name,
-              email
-            )
+            promoter_id
           )
         `)
         .eq('comedian_id', targetComedianId)
@@ -115,6 +103,9 @@ export const useComedianGigs = (comedianId?: string) => {
         venue: event.venue,
         status: event.status,
         calendar_sync_status: event.calendar_sync_status,
+        banner_url: event.banner_url,
+        ticket_link: event.ticket_link,
+        description: event.description,
         created_at: event.created_at,
         updated_at: event.updated_at,
         event: event.events ? {
@@ -122,12 +113,11 @@ export const useComedianGigs = (comedianId?: string) => {
           title: event.events.title,
           venue: event.events.venue,
           address: event.events.address,
-          city: event.events.city,
-          state: event.events.state,
-          start_time: event.events.start_time,
-          end_time: event.events.end_time,
-          promoter_id: event.events.promoter_id,
-          promoter: event.events.profiles
+          city: undefined, // Not in events table
+          state: undefined, // Not in events table
+          start_time: event.events.event_date,
+          end_time: undefined, // Not in events table
+          promoter_id: event.events.promoter_id
         } : undefined
       }));
 
@@ -140,6 +130,8 @@ export const useComedianGigs = (comedianId?: string) => {
         venue: spot.events?.venue || 'TBA',
         status: 'confirmed' as const,
         calendar_sync_status: 'pending' as const,
+        ticket_link: null,
+        description: null,
         created_at: spot.created_at,
         updated_at: spot.updated_at,
         event: spot.events ? {
@@ -147,12 +139,11 @@ export const useComedianGigs = (comedianId?: string) => {
           title: spot.events.title,
           venue: spot.events.venue,
           address: spot.events.address,
-          city: spot.events.city,
-          state: spot.events.state,
-          start_time: spot.events.start_time,
-          end_time: spot.events.end_time,
-          promoter_id: spot.events.promoter_id,
-          promoter: spot.events.profiles
+          city: undefined, // Not in events table
+          state: undefined, // Not in events table
+          start_time: spot.events.event_date,
+          end_time: undefined, // Not in events table
+          promoter_id: spot.events.promoter_id
         } : undefined,
         event_spot: {
           id: spot.id,
@@ -183,25 +174,43 @@ export const useComedianGigs = (comedianId?: string) => {
       event_date: string;
       venue: string;
       status?: 'confirmed' | 'pending';
+      banner_url?: string | null;
+      ticket_link?: string | null;
+      description?: string | null;
     }) => {
+      console.log('📅 [useComedianGigs] addGig mutation triggered with:', gig);
+      console.log('📅 [useComedianGigs] user.id:', user?.id);
+
       if (!user?.id) throw new Error('Must be logged in');
+
+      const insertData = {
+        comedian_id: user.id,
+        title: gig.title,
+        event_date: gig.event_date,
+        venue: gig.venue,
+        status: gig.status || 'confirmed',
+        banner_url: gig.banner_url || null,
+        ticket_link: gig.ticket_link || null,
+        description: gig.description || null,
+        calendar_sync_status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('📅 [useComedianGigs] Inserting data:', insertData);
 
       const { data, error } = await supabase
         .from('calendar_events')
-        .insert({
-          comedian_id: user.id,
-          title: gig.title,
-          event_date: gig.event_date,
-          venue: gig.venue,
-          status: gig.status || 'confirmed',
-          calendar_sync_status: 'pending',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [useComedianGigs] Insert error:', error);
+        throw error;
+      }
+
+      console.log('✅ [useComedianGigs] Insert successful:', data);
       return data;
     },
     onSuccess: async (newGig) => {

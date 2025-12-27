@@ -3,7 +3,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { useOrganizationTeamMembers, useUpdateTeamMemberRole, useRemoveTeamMember } from '@/hooks/useOrganizationProfiles';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -280,12 +280,11 @@ export default function OrganizationTeam() {
           <CardContent>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={owner.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {owner.first_name?.[0]}{owner.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={owner.avatar_url}
+                  name={`${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Owner'}
+                  className="h-12 w-12"
+                />
                 <div>
                   <h3 className="font-medium">
                     {owner.first_name} {owner.last_name}
@@ -313,12 +312,11 @@ export default function OrganizationTeam() {
             {admins.map((member) => (
               <div key={member.user_id} className="flex items-center justify-between rounded-lg border p-4">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {member.first_name?.[0]}{member.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  <OptimizedAvatar
+                    src={member.avatar_url}
+                    name={`${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Member'}
+                    className="h-10 w-10"
+                  />
                   <div>
                     <h4 className="font-medium">
                       {member.first_name} {member.last_name}
@@ -383,12 +381,11 @@ export default function OrganizationTeam() {
                 <div key={member.user_id} className="rounded-lg border p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {member.first_name?.[0]}{member.last_name?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={member.avatar_url}
+                        name={`${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Manager'}
+                        className="h-10 w-10"
+                      />
                       <div>
                         <h4 className="font-medium">
                           {member.first_name} {member.last_name}
@@ -484,12 +481,11 @@ export default function OrganizationTeam() {
               {members.map((member) => (
                 <div key={member.user_id} className="flex items-center justify-between rounded-lg border p-4">
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={member.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {member.first_name?.[0]}{member.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
+                    <OptimizedAvatar
+                      src={member.avatar_url}
+                      name={`${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Member'}
+                      className="h-10 w-10"
+                    />
                     <div>
                       <h4 className="font-medium">
                         {member.first_name} {member.last_name}

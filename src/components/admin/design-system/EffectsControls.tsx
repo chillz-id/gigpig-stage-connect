@@ -41,7 +41,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({ settings, updateSetti
               <Sparkles className="w-5 h-5" />
               Visual Effects
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={resetEffects}>
+            <Button className="professional-button" size="sm" onClick={resetEffects}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>
@@ -157,10 +157,9 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({ settings, updateSetti
             <div className="bg-muted rounded-lg p-4">
               <h4 className="font-medium mb-3">Animation Speed Demo</h4>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  className="professional-button transition-all"
                   size="sm"
-                  className="transition-all"
                   style={{
                     transitionDuration: settings.effects.animationSpeed === 'slow' ? '0.5s' :
                                      settings.effects.animationSpeed === 'normal' ? '0.3s' :

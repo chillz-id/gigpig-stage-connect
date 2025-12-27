@@ -1,275 +1,237 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { User, Shield, Mail, Phone, Plus, X } from 'lucide-react';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { Mail, Phone, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import type { ProfileAwareProps } from '@/types/universalProfile';
 
-interface ContactDetail {
-  id: string;
-  type: 'email' | 'phone';
-  label: string;
-  value: string;
-  show: boolean;
+interface ContactInformationProps extends ProfileAwareProps {
+  user?: any; // Profile data being edited
+  organizationId?: string; // If editing an organization profile
+  onSave?: (data: any) => Promise<void>;
 }
 
-export const ContactInformation: React.FC = () => {
+export const ContactInformation: React.FC<ContactInformationProps> = ({
+  profileType,
+  config,
+  user,
+  organizationId,
+  onSave,
+}) => {
   const { toast } = useToast();
-  
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Determine the profile ID and table based on whether this is an org or user
+  const profileId = organizationId || user?.id;
+  const tableName = organizationId ? 'organization_profiles' : 'profiles';
+
+  // Contact settings state
   const [contactSettings, setContactSettings] = useState({
-    email: { show: true, value: 'alex@example.com' },
-    phone: { show: false, value: '+1 (555) 123-4567' },
-    managerEmail: { show: true, value: 'manager@agency.com' },
-    managerPhone: { show: false, value: '+1 (555) 987-6543' },
+    email: '',
+    phone: '',
+    showEmailPublic: true,
+    showPhonePublic: false,
+    showContactInEpk: true,
   });
 
-  const [additionalContacts, setAdditionalContacts] = useState<ContactDetail[]>([]);
+  // Load contact data from user prop or fetch if needed
+  useEffect(() => {
+    if (user) {
+      setContactSettings({
+        email: organizationId
+          ? (user.contact_email || '')
+          : (user.email || ''),
+        phone: organizationId
+          ? (user.contact_phone || '')
+          : (user.phone || ''),
+        showEmailPublic: user.show_email_public ?? true,
+        showPhonePublic: user.show_phone_public ?? false,
+        showContactInEpk: user.show_contact_in_epk ?? true,
+      });
+    }
+  }, [user, organizationId]);
 
-  const updateContactSetting = (key: string, field: 'show' | 'value', value: boolean | string) => {
+  const handleInputChange = (field: keyof typeof contactSettings, value: string | boolean) => {
     setContactSettings(prev => ({
       ...prev,
-      [key]: {
-        ...prev[key as keyof typeof prev],
-        [field]: value
-      }
+      [field]: value,
     }));
   };
 
-  const addContactDetail = () => {
-    const newContact: ContactDetail = {
-      id: `contact_${Date.now()}`,
-      type: 'email',
-      label: 'New Contact',
-      value: '',
-      show: false
-    };
-    setAdditionalContacts(prev => [...prev, newContact]);
+  const handleSaveContactSettings = async () => {
+    if (!profileId) {
+      toast({
+        title: 'Error',
+        description: 'Unable to save - no profile ID available.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Build update object based on profile type
+      const updateData: Record<string, any> = organizationId
+        ? {
+            contact_email: contactSettings.email,
+            contact_phone: contactSettings.phone,
+            show_contact_in_epk: contactSettings.showContactInEpk,
+          }
+        : {
+            phone: contactSettings.phone,
+            show_email_public: contactSettings.showEmailPublic,
+            show_phone_public: contactSettings.showPhonePublic,
+          };
+
+      const { error } = await supabase
+        .from(tableName)
+        .update(updateData)
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Contact Settings Saved',
+        description: 'Your contact information has been updated.',
+      });
+    } catch (error) {
+      console.error('Error saving contact settings:', error);
+      toast({
+        title: 'Error saving contact settings',
+        description: 'Could not save your contact details. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const updateAdditionalContact = (id: string, field: keyof ContactDetail, value: any) => {
-    setAdditionalContacts(prev => 
-      prev.map(contact => 
-        contact.id === id ? { ...contact, [field]: value } : contact
-      )
+  // Get visibility label based on profile type
+  const getVisibilityLabel = (isVisible: boolean) => {
+    return isVisible ? 'Public' : 'Platform Only';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
     );
-  };
-
-  const removeAdditionalContact = (id: string) => {
-    setAdditionalContacts(prev => prev.filter(contact => contact.id !== id));
-  };
-
-  const handleSaveContactSettings = () => {
-    toast({
-      title: "Contact Settings Saved",
-      description: "Your contact visibility preferences have been updated.",
-    });
-  };
-
-  const getContactIcon = (type: 'email' | 'phone') => {
-    return type === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />;
-  };
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Phone className="w-5 h-5" />
-          Contact Information
-        </CardTitle>
-        <CardDescription>
-          Your contact details for booking and collaboration
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Personal Contact */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <User className="w-4 h-4" />
-            <h3 className="font-semibold">Personal Contact</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4" />
-                  <Label htmlFor="email" className="text-sm">Email</Label>
-                  {contactSettings.email.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
-                </div>
-                <Input
-                  id="email"
-                  value={contactSettings.email.value}
-                  onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-              <Switch
-                checked={contactSettings.email.show}
-                onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
-              />
-            </div>
+    <div className="space-y-6">
+      {/* Info note */}
+      <div className="p-4 bg-muted/50 rounded-lg">
+        <p className="text-sm text-muted-foreground">
+          <strong>Visibility Controls:</strong> Toggle whether your contact information is visible
+          to everyone (Public) or only to registered platform users (Platform Only).
+        </p>
+      </div>
 
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="w-4 h-4" />
-                  <Label htmlFor="phone" className="text-sm">Phone</Label>
-                  {contactSettings.phone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
-                </div>
-                <Input
-                  id="phone"
-                  value={contactSettings.phone.value}
-                  onChange={(e) => updateContactSetting('phone', 'value', e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-              <Switch
-                checked={contactSettings.phone.show}
-                onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
-              />
-            </div>
+      {/* Contact Information */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Email */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            <Label htmlFor="contact-email" className="text-sm font-medium">
+              {organizationId ? 'Contact Email' : 'Email'}
+            </Label>
+            {!organizationId && (
+              <Badge variant="secondary" className="text-xs">
+                {getVisibilityLabel(contactSettings.showEmailPublic)}
+              </Badge>
+            )}
           </div>
+          <div className="flex items-center gap-3">
+            <Input
+              id="contact-email"
+              type="email"
+              value={contactSettings.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="contact@example.com"
+              className="flex-1"
+              disabled={!organizationId} // Users can't change their auth email here
+            />
+            {!organizationId && (
+              <Switch
+                checked={contactSettings.showEmailPublic}
+                onCheckedChange={(checked) => handleInputChange('showEmailPublic', checked)}
+              />
+            )}
+          </div>
+          {!organizationId && (
+            <p className="text-xs text-muted-foreground">
+              Contact support to change your email address
+            </p>
+          )}
         </div>
 
-        {/* Manager Contact */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4" />
-            <h3 className="font-semibold">Manager Contact</h3>
+        {/* Phone */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            <Label htmlFor="contact-phone" className="text-sm font-medium">
+              {organizationId ? 'Contact Phone' : 'Phone'}
+            </Label>
+            {!organizationId && (
+              <Badge variant="secondary" className="text-xs">
+                {getVisibilityLabel(contactSettings.showPhonePublic)}
+              </Badge>
+            )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4" />
-                  <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
-                  {contactSettings.managerEmail.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
-                </div>
-                <Input
-                  id="managerEmail"
-                  value={contactSettings.managerEmail.value}
-                  onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
-                  className="text-sm"
-                />
-              </div>
+          <div className="flex items-center gap-3">
+            <PhoneInput
+              value={contactSettings.phone}
+              onChange={(value) => handleInputChange('phone', value)}
+              className="flex-1"
+            />
+            {!organizationId && (
               <Switch
-                checked={contactSettings.managerEmail.show}
-                onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
+                checked={contactSettings.showPhonePublic}
+                onCheckedChange={(checked) => handleInputChange('showPhonePublic', checked)}
               />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="w-4 h-4" />
-                  <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
-                  {contactSettings.managerPhone.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
-                </div>
-                <Input
-                  id="managerPhone"
-                  value={contactSettings.managerPhone.value}
-                  onChange={(e) => updateContactSetting('managerPhone', 'value', e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-              <Switch
-                checked={contactSettings.managerPhone.show}
-                onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}
-              />
-            </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Additional Contact Details */}
-        {additionalContacts.length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-4 h-4" />
-                <h3 className="font-semibold">Additional Contact Details</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {additionalContacts.map((contact) => (
-                  <div key={contact.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1 mr-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Select
-                          value={contact.type}
-                          onValueChange={(value) => updateAdditionalContact(contact.id, 'type', value)}
-                        >
-                          <SelectTrigger className="w-20 h-6 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="email">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                Email
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="phone">
-                              <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                Phone
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          value={contact.label}
-                          onChange={(e) => updateAdditionalContact(contact.id, 'label', e.target.value)}
-                          placeholder="Label"
-                          className="text-xs h-6 flex-1"
-                        />
-                        {contact.show && <Badge variant="outline" className="text-xs">Visible</Badge>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getContactIcon(contact.type)}
-                        <Input
-                          value={contact.value}
-                          onChange={(e) => updateAdditionalContact(contact.id, 'value', e.target.value)}
-                          placeholder={contact.type === 'email' ? 'contact@example.com' : '+1 (555) 123-4567'}
-                          className="text-xs flex-1"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Switch
-                        checked={contact.show}
-                        onCheckedChange={(checked) => updateAdditionalContact(contact.id, 'show', checked)}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeAdditionalContact(contact.id)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="flex justify-between items-center pt-4">
-          <Button variant="outline" onClick={addContactDetail} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add More Contact Details
-          </Button>
-          <Button onClick={handleSaveContactSettings} className="professional-button">
-            Save Contact Settings
-          </Button>
+      {/* EPK visibility toggle for organizations */}
+      {organizationId && (
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <Label className="text-sm font-medium">Show Contact in Public Profile</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              When enabled, your contact information will be visible on your public organization page
+            </p>
+          </div>
+          <Switch
+            checked={contactSettings.showContactInEpk}
+            onCheckedChange={(checked) => handleInputChange('showContactInEpk', checked)}
+          />
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Save Button */}
+      <div className="flex justify-end pt-4">
+        <Button
+          onClick={handleSaveContactSettings}
+          className="professional-button"
+          disabled={saving}
+        >
+          {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {saving ? 'Saving...' : 'Save Contact Settings'}
+        </Button>
+      </div>
+    </div>
   );
 };

@@ -129,7 +129,7 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                   {presetColorSchemes.map((scheme, index) => (
                     <Button
                       key={index}
-                      variant="outline"
+                      className="professional-button"
                       onClick={() => applyPresetScheme(scheme)}
                       className="flex flex-col items-center space-y-2 h-auto p-3 text-white border-white/30 hover:bg-white/10"
                     >
@@ -189,7 +189,7 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
                         </div>
                       )}
                       <Button
-                        variant="outline"
+                        className="professional-button"
                         size="sm"
                         className="text-white border-white/30 hover:bg-white/10"
                       >
@@ -267,7 +267,7 @@ const BrandingCustomization: React.FC<BrandingCustomizationProps> = ({
           </Tabs>
           <div className="flex justify-between pt-6">
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={resetToDefault}
               className="text-white border-white/30 hover:bg-white/10"
             >

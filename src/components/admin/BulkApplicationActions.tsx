@@ -78,7 +78,7 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
     <div className="bg-white/10 backdrop-blur-sm border-white/20 rounded-lg p-4 mb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-white border-white/30">
+          <Badge className="professional-button text-white border-white/30">
             {selectedApplications.length} selected
           </Badge>
           <span className="text-white text-sm">
@@ -99,10 +99,9 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
           
           <Button
             size="sm"
-            variant="outline"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
             onClick={handleBulkHide}
             disabled={isProcessing}
-            className="text-white border-white/30 hover:bg-white/10"
           >
             <XCircle className="w-4 h-4 mr-1" />
             Reject All
@@ -110,9 +109,8 @@ const BulkApplicationActions: React.FC<BulkApplicationActionsProps> = ({
           
           <Button
             size="sm"
-            variant="outline"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
             onClick={onClearSelection}
-            className="text-white border-white/30 hover:bg-white/10"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Clear Selection

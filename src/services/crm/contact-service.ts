@@ -46,7 +46,10 @@ interface ProfileRecord {
   } | null;
 }
 
-const buildDisplayName = (profile: ProfileRecord) => {
+const buildDisplayName = (profile: ProfileRecord & { organization_name?: string; display_name?: string }) => {
+  // Handle organization profiles
+  if (profile.organization_name) return profile.organization_name;
+  if (profile.display_name) return profile.display_name;
   if (profile.full_name) return profile.full_name;
   const parts = [profile.first_name, profile.last_name].filter(Boolean);
   if (parts.length) return parts.join(' ');

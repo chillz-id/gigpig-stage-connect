@@ -2,18 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  CreditCard, 
-  Calendar, 
-  DollarSign, 
+import {
+  CreditCard,
+  Calendar,
   RefreshCw,
   CheckCircle,
   XCircle,
   Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { stripePaymentService } from '@/services/stripeService';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentHistoryProps {
   invoiceId: string;
@@ -29,9 +27,9 @@ interface PaymentRecord {
   gatewayTransactionId?: string;
 }
 
-export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ 
-  invoiceId, 
-  currency = 'AUD' 
+export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
+  invoiceId,
+  currency = 'AUD'
 }) => {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,18 +39,36 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
-      // Initialize Stripe if not already done
-      if (!stripePaymentService.isInitialized()) {
-        await stripePaymentService.initializeFromEnv();
-      }
-      
-      const history = await stripePaymentService.getPaymentHistory(invoiceId);
+
+      // Query payment records directly from database
+      const { data, error: dbError } = await supabase
+        .from('invoice_payments')
+        .select(`
+          id,
+          amount,
+          status,
+          payment_date,
+          payment_method,
+          reference_number
+        `)
+        .eq('invoice_id', invoiceId)
+        .order('created_at', { ascending: false });
+
+      if (dbError) throw dbError;
+
+      const history: PaymentRecord[] = (data || []).map(p => ({
+        id: p.id,
+        amount: p.amount,
+        status: p.status,
+        paymentDate: p.payment_date,
+        paymentMethod: p.payment_method,
+        gatewayTransactionId: p.reference_number
+      }));
+
       setPayments(history);
     } catch (err) {
       console.error('Failed to load payment history:', err);
       setError('Failed to load payment history');
-      toast.error('Failed to load payment history');
     } finally {
       setLoading(false);
     }
@@ -102,8 +118,6 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
         return 'Bank Transfer';
       case 'paypal_account':
         return 'PayPal';
-      case 'stripe_checkout':
-        return 'Stripe Checkout';
       default:
         return method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ');
     }
@@ -141,7 +155,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
           <div className="text-center py-8">
             <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={loadPaymentHistory} variant="outline" size="sm">
+            <Button onClick={loadPaymentHistory} className="professional-button" size="sm">
               <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>
@@ -177,7 +191,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
           <CreditCard className="w-5 h-5" />
           Payment History
         </CardTitle>
-        <Button onClick={loadPaymentHistory} variant="outline" size="sm">
+        <Button onClick={loadPaymentHistory} className="professional-button" size="sm">
           <RefreshCw className="w-4 h-4" />
         </Button>
       </CardHeader>

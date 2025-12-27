@@ -169,7 +169,7 @@ CREATE POLICY "Users can delete own media"
         </div>
 
         <div className="flex gap-4 pt-4">
-          <Button variant="outline" asChild>
+          <Button className="professional-button" asChild>
             <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer">
               Open Supabase Dashboard
             </a>

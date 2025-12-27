@@ -9,6 +9,7 @@ import React, { useState, useMemo } from 'react';
 import { ApplicationList } from './ApplicationList';
 import { ApplicationCardContainer } from './ApplicationCardContainer';
 import { useApplicationsByEvent } from '@/hooks/useApplicationApproval';
+import { useUserFavourites, useHiddenComedians } from '@/hooks/useUserPreferences';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -19,7 +20,7 @@ import type { ApplicationData } from '@/types/application';
 interface ApplicationListContainerProps {
   eventId: string;
   userId: string;
-  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'all';
+  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'all';
   showHidden?: boolean;
   hiddenComedianIds?: string[];
   onSelectionChange?: (selectedIds: string[]) => void;
@@ -42,15 +43,29 @@ export function ApplicationListContainer({
     refetch
   } = useApplicationsByEvent(eventId, statusFilter);
 
+  // Fetch favourites and hidden lists ONCE for all cards (prevents N+1 queries)
+  const { data: favouritedComedianIds = [] } = useUserFavourites(userId);
+  const { data: hiddenComedianIdsFromDb = [] } = useHiddenComedians(userId, eventId);
+
+  // Create Sets for O(1) lookups
+  const favouritedSet = useMemo(
+    () => new Set(favouritedComedianIds),
+    [favouritedComedianIds]
+  );
+  const hiddenSet = useMemo(
+    () => new Set([...hiddenComedianIds, ...hiddenComedianIdsFromDb]),
+    [hiddenComedianIds, hiddenComedianIdsFromDb]
+  );
+
   // Filter hidden applications unless showHidden is true
   const filteredApplications = useMemo(() => {
     if (!applications) return [];
     if (showHidden) return applications;
 
     return applications.filter(
-      (app) => !hiddenComedianIds.includes(app.comedian_id)
+      (app) => !hiddenSet.has(app.comedian_id)
     );
-  }, [applications, showHidden, hiddenComedianIds]);
+  }, [applications, showHidden, hiddenSet]);
 
   // Handle selection changes
   const handleSelectionChange = (applicationId: string, isSelected: boolean) => {
@@ -95,7 +110,7 @@ export function ApplicationListContainer({
               ? `Failed to load applications: ${error.message}`
               : 'Failed to load applications. Please try again.'}
           </span>
-          <Button onClick={() => refetch()} variant="outline" size="sm">
+          <Button onClick={() => refetch()} className="professional-button" size="sm">
             Retry
           </Button>
         </AlertDescription>
@@ -106,6 +121,8 @@ export function ApplicationListContainer({
   // Render application cards with selection checkbox
   const renderCard = (application: ApplicationData) => {
     const isSelected = selectedIds.includes(application.id);
+    const isFavourited = favouritedSet.has(application.comedian_id);
+    const isHidden = hiddenSet.has(application.comedian_id);
 
     return (
       <div key={application.id} className="relative">
@@ -127,6 +144,8 @@ export function ApplicationListContainer({
           application={application}
           userId={userId}
           eventId={eventId}
+          isFavourited={isFavourited}
+          isHidden={isHidden}
         />
       </div>
     );
@@ -154,14 +173,14 @@ export function ApplicationListContainer({
     <div className="space-y-4">
       {/* Select All / Clear All (only if multi-select enabled) */}
       {onSelectionChange && filteredApplications.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg border bg-gray-50 p-3 dark:bg-gray-900">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+          <span className="text-sm text-muted-foreground">
             {selectedIds.length} of {filteredApplications.length} selected
           </span>
           <div className="flex gap-2">
             <Button
               onClick={handleSelectAll}
-              variant="outline"
+              className="professional-button"
               size="sm"
               disabled={selectedIds.length === filteredApplications.length}
             >
@@ -169,7 +188,7 @@ export function ApplicationListContainer({
             </Button>
             <Button
               onClick={handleClearSelection}
-              variant="outline"
+              className="professional-button"
               size="sm"
               disabled={selectedIds.length === 0}
             >

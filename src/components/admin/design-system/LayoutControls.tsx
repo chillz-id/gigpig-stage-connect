@@ -33,7 +33,7 @@ const LayoutControls: React.FC<LayoutControlsProps> = ({ settings, updateSetting
               <Layout className="w-5 h-5" />
               Layout & Spacing
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={resetLayout}>
+            <Button className="professional-button" size="sm" onClick={resetLayout}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>

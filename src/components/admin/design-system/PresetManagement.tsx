@@ -134,10 +134,9 @@ const PresetManagement: React.FC<PresetManagementProps> = ({ settings, onSave, o
             {isSaving ? 'Applying...' : 'Apply Changes'}
           </Button>
           
-          <Button 
-            onClick={handleReset} 
-            variant="outline"
-            className="w-full"
+          <Button
+            onClick={handleReset}
+            className="professional-button w-full"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset to Default
@@ -178,10 +177,9 @@ const PresetManagement: React.FC<PresetManagementProps> = ({ settings, onSave, o
           <CardTitle>Export/Import</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button 
+          <Button
             onClick={exportSettings}
-            variant="outline"
-            className="w-full"
+            className="professional-button w-full"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Settings
@@ -195,10 +193,9 @@ const PresetManagement: React.FC<PresetManagementProps> = ({ settings, onSave, o
               className="hidden"
               id="import-settings"
             />
-            <Button 
+            <Button
               onClick={() => document.getElementById('import-settings')?.click()}
-              variant="outline"
-              className="w-full"
+              className="professional-button w-full"
             >
               <Upload className="w-4 h-4 mr-2" />
               Import Settings

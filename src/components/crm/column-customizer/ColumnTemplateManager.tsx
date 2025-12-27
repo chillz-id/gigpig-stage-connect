@@ -56,7 +56,7 @@ export const ColumnTemplateManager = ({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={onRequestSave} className="justify-start">
+        <Button className="professional-button justify-start">
           <Save className="mr-2 h-4 w-4" />
           Save as New Template
         </Button>

@@ -147,7 +147,7 @@ export const EventSpotManager: React.FC<EventSpotManagerProps> = ({ spots, onSpo
               {spots.map((spot, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-white border-white/30">
+                    <Badge className="professional-button text-white border-white/30">
                       #{index + 1}
                     </Badge>
                     <div>
@@ -167,7 +167,7 @@ export const EventSpotManager: React.FC<EventSpotManagerProps> = ({ spots, onSpo
                   </div>
                   <Button
                     type="button"
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={() => removeSpot(index)}
                     className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"

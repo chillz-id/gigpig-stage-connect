@@ -2,9 +2,9 @@
 // Provides offline functionality, caching, and push notifications
 // Enhanced with advanced caching strategies and background sync
 
-const CACHE_NAME = 'standup-sydney-v1.2.0';
-const STATIC_CACHE = 'standup-sydney-static-v1.2.0';
-const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.2.0';
+const CACHE_NAME = 'standup-sydney-v1.3.0';
+const STATIC_CACHE = 'standup-sydney-static-v1.3.0';
+const DYNAMIC_CACHE = 'standup-sydney-dynamic-v1.3.0';
 
 // Cache strategies by resource type
 const CACHE_STRATEGIES = {
@@ -103,7 +103,19 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith('http')) {
     return;
   }
-  
+
+  // Skip Vite dev server requests (HMR, source files, node_modules)
+  // These should not be cached as they change frequently during development
+  if (url.pathname.startsWith('/src/') ||
+      url.pathname.startsWith('/@') ||
+      url.pathname.startsWith('/node_modules/') ||
+      url.pathname.includes('.tsx') ||
+      url.pathname.includes('.ts') ||
+      url.pathname.includes('.jsx') ||
+      url.pathname.endsWith('.map')) {
+    return;
+  }
+
   // Handle different types of requests
   if (url.pathname.startsWith('/static/') || STATIC_ASSETS.includes(url.pathname)) {
     // Static assets - cache first

@@ -233,7 +233,9 @@ export default function OrganizationTasks() {
                             <div className="flex items-center gap-1">
                               <User className="h-4 w-4" />
                               <span>
-                                {task.assigned_to_profile.first_name} {task.assigned_to_profile.last_name}
+                                {task.assigned_to_profile.first_name && task.assigned_to_profile.last_name
+                                  ? `${task.assigned_to_profile.first_name} ${task.assigned_to_profile.last_name}`
+                                  : task.assigned_to_profile.display_name || 'Unnamed'}
                               </span>
                             </div>
                           )}
@@ -363,7 +365,7 @@ export default function OrganizationTasks() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button type="button" className="professional-button" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit">Create Task</Button>

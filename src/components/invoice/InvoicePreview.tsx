@@ -400,18 +400,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
             <div className="flex flex-wrap gap-2 justify-between w-full">
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  className="professional-button flex items-center gap-2"
                   onClick={handlePrint}
-                  className="flex items-center gap-2"
                 >
                   <Printer className="w-4 h-4" />
                   Print
                 </Button>
                 {onDownload && (
                   <Button
-                    variant="outline"
+                    className="professional-button flex items-center gap-2"
                     onClick={onDownload}
-                    className="flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
                     Download PDF
@@ -422,9 +420,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
               <div className="flex gap-2">
                 {onEdit && (
                   <Button
-                    variant="outline"
+                    className="professional-button flex items-center gap-2"
                     onClick={onEdit}
-                    className="flex items-center gap-2"
                   >
                     <Edit className="w-4 h-4" />
                     Edit
@@ -433,9 +430,8 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 {onSave && (
                   <>
                     <Button
-                      variant="outline"
+                      className="professional-button flex items-center gap-2"
                       onClick={() => onSave('draft')}
-                      className="flex items-center gap-2"
                     >
                       <Save className="w-4 h-4" />
                       Save Draft
@@ -449,7 +445,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     </Button>
                   </>
                 )}
-                <Button variant="outline" onClick={onClose}>
+                <Button className="professional-button" onClick={onClose}>
                   Close
                 </Button>
               </div>

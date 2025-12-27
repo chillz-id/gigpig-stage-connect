@@ -170,7 +170,7 @@ export function OrganizationLogoUpload({ currentLogoUrl, onLogoUpdate }: Organiz
           />
           <Button
             type="button"
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -181,7 +181,7 @@ export function OrganizationLogoUpload({ currentLogoUrl, onLogoUpdate }: Organiz
           {previewUrl && (
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={handleRemoveLogo}
               disabled={isUploading}

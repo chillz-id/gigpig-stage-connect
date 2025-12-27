@@ -34,11 +34,10 @@ export const TicketsByProviderChart: React.FC<TicketsByProviderChartProps> = ({
           <TrendingUp className="w-5 h-5" />
           Tickets by Provider
         </CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          className="professional-button text-white border-white/20 hover:bg-white/10"
+          size="sm"
           onClick={onExport}
-          className="text-white border-white/20 hover:bg-white/10"
         >
           <Download className="w-4 h-4 mr-2" />
           Export

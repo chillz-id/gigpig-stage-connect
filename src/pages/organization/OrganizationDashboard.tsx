@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Calendar, Users, CheckSquare, Image, Award, TrendingUp, Plus } from 'lucide-react';
+import { getOrgTypeLabels, type OrgType } from '@/config/organizationTypes';
 
 export default function OrganizationDashboard() {
   const { organization, orgId, isLoading: orgLoading } = useOrganization();
@@ -38,23 +39,27 @@ export default function OrganizationDashboard() {
   const pendingTasks = tasks?.filter(t => t.status === 'todo' || t.status === 'in_progress') || [];
   const nextUpcomingEvents = upcomingEvents?.slice(0, 3) || [];
 
+  // Use slug-based URLs for navigation
+  const orgSlug = organization.url_slug;
+  const baseUrl = `/org/${orgSlug}`;
+
   return (
     <div className="container mx-auto space-y-8 py-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">{organization.organization_name}</h1>
-          <p className="mt-1 text-gray-600">{organization.organization_type?.replace('_', ' ').toUpperCase()} Dashboard</p>
+          <p className="mt-1 text-gray-600">{getOrgTypeLabels((organization.organization_type || []) as OrgType[])} Dashboard</p>
         </div>
         <div className="flex gap-3">
-          <Link to={`/org/${orgId}/events/create`}>
+          <Link to={`${baseUrl}/events/create`}>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Create Event
             </Button>
           </Link>
-          <Link to={`/org/${orgId}/profile`}>
-            <Button variant="outline">Edit Profile</Button>
+          <Link to={baseUrl}>
+            <Button className="professional-button">Edit Profile</Button>
           </Link>
         </div>
       </div>
@@ -124,7 +129,7 @@ export default function OrganizationDashboard() {
                 <CardTitle>Upcoming Events</CardTitle>
                 <CardDescription>Next events on your calendar</CardDescription>
               </div>
-              <Link to={`/org/${orgId}/events`}>
+              <Link to={`${baseUrl}/events`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </div>
@@ -143,30 +148,46 @@ export default function OrganizationDashboard() {
                 {nextUpcomingEvents.map((event) => (
                   <Link
                     key={event.id}
-                    to={`/events/${event.id}`}
-                    className="block rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                    to={event.source === 'native' ? `/events/${event.id}` : event.ticket_link || '#'}
+                    target={event.source !== 'native' ? '_blank' : undefined}
+                    rel={event.source !== 'native' ? 'noopener noreferrer' : undefined}
+                    className="block rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium">{event.title || event.name || 'Untitled Event'}</h4>
-                        <p className="mt-1 text-sm text-gray-600">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium truncate">{event.event_name || 'Untitled Event'}</h4>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                           {new Date(event.event_date).toLocaleDateString('en-AU', {
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
                           })}
                         </p>
+                        {event.venue && (
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+                            {event.venue.name}
+                          </p>
+                        )}
                       </div>
-                      {event.status === 'published' ? (
-                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">
-                          Published
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">
-                          Draft
-                        </span>
-                      )}
+                      <div className="flex flex-col items-end gap-1 ml-2">
+                        {event.is_published ? (
+                          <span className="rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-1 text-xs text-green-800 dark:text-green-300">
+                            Published
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs text-gray-800 dark:text-gray-300">
+                            Draft
+                          </span>
+                        )}
+                        {event.source !== 'native' && (
+                          <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-1 text-xs text-purple-800 dark:text-purple-300 capitalize">
+                            {event.source}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 ))}
@@ -183,7 +204,7 @@ export default function OrganizationDashboard() {
                 <CardTitle>Pending Tasks</CardTitle>
                 <CardDescription>Tasks requiring attention</CardDescription>
               </div>
-              <Link to={`/org/${orgId}/tasks`}>
+              <Link to={`${baseUrl}/tasks`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </div>
@@ -245,26 +266,26 @@ export default function OrganizationDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Link to={`/org/${orgId}/events/create`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/events/create`}>
+              <Button className="professional-button w-full justify-start">
                 <Calendar className="mr-2 h-4 w-4" />
                 Create Event
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/book-comedian`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/book-comedian`}>
+              <Button className="professional-button w-full justify-start">
                 <Users className="mr-2 h-4 w-4" />
                 Book Comedian
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/team`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/team`}>
+              <Button className="professional-button w-full justify-start">
                 <Users className="mr-2 h-4 w-4" />
                 Manage Team
               </Button>
             </Link>
-            <Link to={`/org/${orgId}/analytics`}>
-              <Button variant="outline" className="w-full justify-start">
+            <Link to={`${baseUrl}/analytics`}>
+              <Button className="professional-button w-full justify-start">
                 <TrendingUp className="mr-2 h-4 w-4" />
                 View Analytics
               </Button>

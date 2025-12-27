@@ -4,7 +4,7 @@
 Core Vite + React TypeScript code sits in `src/`, with components, hooks, and styles colocated by feature. Shared assets live in `public/`, while `tailwind.config.ts` and `vite.config.ts` define global build and styling rules. Automation scripts belong in `scripts/` or the existing top-level utilities (`*.cjs`/`*.mjs`) so related tasks stay grouped. Tests land in `tests/`, and integration references such as `supabase/`, `docs/`, and gitignored `credentials/` document external systems.
 
 ## Build, Test, and Development Commands
-- `npm run dev` – start the hot-reloading dev server on port 5173.
+- `npm run dev` – start the hot-reloading dev server on port 8080.
 - `npm run build` / `npm run build:dev` – output production or dev bundles to `dist/`.
 - `npm run preview` – serve the compiled bundle for smoke checks.
 - `npm run lint` – apply the shared ESLint rules across TypeScript and React files.

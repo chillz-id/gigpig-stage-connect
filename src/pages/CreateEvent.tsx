@@ -6,12 +6,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { CreateEventForm } from '@/components/CreateEventForm';
+import { CreateEventFormMobile } from '@/components/CreateEventFormMobile';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 import { cn } from '@/lib/utils';
 
 const CreateEvent = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { isMobile } = useMobileLayout();
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
@@ -53,13 +56,21 @@ const CreateEvent = () => {
     <div className={cn("min-h-screen", getBackgroundStyles())}>
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create New Event</h1>
-          <p className={cn("text-sm sm:text-base", theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300')}>
-            Build your shows and start receiving applications
+          <h1 className={cn(
+            "font-bold text-white mb-2",
+            isMobile ? "text-xl" : "text-2xl sm:text-3xl"
+          )}>
+            Create New Event
+          </h1>
+          <p className={cn(
+            "text-sm sm:text-base",
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            {isMobile ? 'Step-by-step event creation' : 'Build your shows and start receiving applications'}
           </p>
         </div>
 
-        <CreateEventForm />
+        {isMobile ? <CreateEventFormMobile /> : <CreateEventForm />}
       </div>
     </div>
   );

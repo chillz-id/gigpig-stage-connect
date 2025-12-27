@@ -170,8 +170,7 @@ export const TicketingInfo: React.FC<TicketingInfoProps> = ({
                   type="button"
                   onClick={addTicket}
                   size="sm"
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="professional-button border-white/20 text-white hover:bg-white/10"
                   disabled={!newTicket.name || newTicket.price < 0}
                 >
                   <Plus className="w-4 h-4" />
@@ -195,11 +194,11 @@ export const TicketingInfo: React.FC<TicketingInfoProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{ticket.name}</span>
-                        <Badge variant="outline" className="border-white/20 text-white">
+                        <Badge className="professional-button border-white/20 text-white">
                           ${ticket.price.toFixed(2)}
                         </Badge>
                         {ticket.quantity && (
-                          <Badge variant="outline" className="border-white/20 text-white">
+                          <Badge className="professional-button border-white/20 text-white">
                             Qty: {ticket.quantity}
                           </Badge>
                         )}

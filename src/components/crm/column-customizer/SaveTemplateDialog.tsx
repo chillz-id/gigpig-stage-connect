@@ -56,7 +56,7 @@ export const SaveTemplateDialog = ({
         </div>
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <Button className="professional-button" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
         <Button onClick={onSubmit}>Save Template</Button>

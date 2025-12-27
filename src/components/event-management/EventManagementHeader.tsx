@@ -74,7 +74,7 @@ export function EventManagementHeader({
                 {stats.shortlisted_count}
               </span>
               {stats.pending_shortlisted > 0 && (
-                <Badge variant="outline" className="w-fit text-xs">
+                <Badge className="professional-button w-fit text-xs">
                   {stats.pending_shortlisted} pending
                 </Badge>
               )}

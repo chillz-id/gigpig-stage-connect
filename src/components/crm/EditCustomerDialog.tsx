@@ -296,7 +296,7 @@ export const EditCustomerDialog = ({ customer, open, onOpenChange }: EditCustome
                     key={segment.slug}
                     type="button"
                     size="sm"
-                    variant={active ? 'default' : 'outline'}
+                    variant={active ? 'default' : 'secondary'}
                     onClick={() => toggleSegment(segment.slug)}
                   >
                     {segment.name}
@@ -413,7 +413,7 @@ export const EditCustomerDialog = ({ customer, open, onOpenChange }: EditCustome
           <DialogFooter className="gap-2 sm:justify-end">
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => onOpenChange(false)}
               disabled={updateCustomer.isPending}
             >

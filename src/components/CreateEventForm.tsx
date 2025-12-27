@@ -15,6 +15,7 @@ import { EventBannerUpload } from './EventBannerUpload';
 import { EventTemplateLoader } from './EventTemplateLoader';
 import { EventTemplateSaver } from './EventTemplateSaver';
 import { EventCostsSection } from './EventCostsSection';
+import { DuplicateEventDialog } from './event-management/DuplicateEventDialog';
 
 export const CreateEventForm: React.FC = () => {
   const { isLoaded, loadScript } = useGoogleMaps();
@@ -35,6 +36,15 @@ export const CreateEventForm: React.FC = () => {
     onSubmit,
     onSaveDraft,
     navigate,
+    // Duplicate detection
+    showDuplicateDialog,
+    duplicateCandidates,
+    isCheckingDuplicates,
+    isMergingData,
+    pendingEventData,
+    handleSelectSyncedEvent,
+    handleCreateNewAnyway,
+    handleDismissDuplicateDialog,
   } = useCreateEventForm();
 
   const { handleSubmit, control, formState: { errors } } = form;
@@ -53,12 +63,34 @@ export const CreateEventForm: React.FC = () => {
     }
   }, [isLoaded, loadScript, hasTriedLoading]);
 
+  // Derive isProcessing to disable form during any async operation
+  const isProcessing = isCreating || isCheckingDuplicates || isMergingData;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {showMapsSetup && (
         <GoogleMapsSetupCard onDismiss={() => setShowMapsSetup(false)} />
       )}
-      
+
+      {/* Duplicate Detection Dialog */}
+      {pendingEventData && (
+        <DuplicateEventDialog
+          open={showDuplicateDialog}
+          onOpenChange={(open) => {
+            if (!open) handleDismissDuplicateDialog();
+          }}
+          candidates={duplicateCandidates}
+          newEventData={{
+            title: pendingEventData.title,
+            event_date: pendingEventData.date,
+            venue: pendingEventData.venue,
+          }}
+          onSelectSyncedEvent={handleSelectSyncedEvent}
+          onCreateNew={handleCreateNewAnyway}
+          isLoading={isMergingData}
+        />
+      )}
+
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex justify-end">
@@ -109,11 +141,12 @@ export const CreateEventForm: React.FC = () => {
           />
 
           <div className="flex gap-4 justify-end">
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="destructive"
               onClick={() => navigate('/dashboard')}
               className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isProcessing}
             >
               Cancel
             </Button>
@@ -122,21 +155,22 @@ export const CreateEventForm: React.FC = () => {
               eventSpots={eventSpots}
               recurringSettings={recurringSettings}
             />
-            <Button 
+            <Button
               type="button"
-              variant="outline"
-              disabled={isCreating}
+              variant="secondary"
+              disabled={isProcessing}
               onClick={handleSubmit(onSaveDraft)}
               className="border-gray-300 hover:bg-gray-100"
             >
               {isCreating ? 'Saving...' : 'Save as Draft'}
             </Button>
-            <Button 
+            <Button
               type="submit"
-              disabled={isCreating}
+              disabled={isProcessing}
               className="bg-primary hover:bg-primary/90"
             >
-              {isCreating ? 'Publishing...' : 
+              {isCheckingDuplicates ? 'Checking...' :
+               isCreating ? 'Publishing...' :
                recurringSettings.isRecurring ? 'Publish Recurring Events' : 'Publish Event'}
             </Button>
           </div>

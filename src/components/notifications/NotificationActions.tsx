@@ -22,7 +22,7 @@ const NotificationActions = ({
       </span>
       <div className="flex gap-2">
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={onMarkAllRead}
           disabled={unreadCount === 0}
@@ -32,7 +32,7 @@ const NotificationActions = ({
           Mark All Read
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={onSendTest}
           className="text-white border-white/20"

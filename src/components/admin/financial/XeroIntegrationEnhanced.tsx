@@ -108,7 +108,7 @@ export const XeroIntegrationEnhanced: React.FC = () => {
                   <Button 
                     onClick={handleSync} 
                     disabled={isSyncing}
-                    variant="outline"
+                    className="professional-button"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                     {isSyncing ? 'Syncing...' : 'Sync Now'}
@@ -174,7 +174,7 @@ export const XeroIntegrationEnhanced: React.FC = () => {
                         <Badge variant={
                           invoice.invoice_status === 'PAID' ? 'default' :
                           invoice.invoice_status === 'AUTHORISED' ? 'secondary' :
-                          'outline'
+                          'destructive'
                         }>
                           {invoice.invoice_status}
                         </Badge>

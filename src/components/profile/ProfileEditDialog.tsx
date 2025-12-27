@@ -7,12 +7,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import {
   ComedianProfileForm,
-  PromoterProfileForm,
   ManagerProfileForm,
   PhotographerProfileForm,
   VideographerProfileForm,
   type ComedianProfileFormData,
-  type PromoterProfileFormData,
   type ManagerProfileFormData,
   type PhotographerProfileFormData,
   type VideographerProfileFormData,
@@ -27,7 +25,6 @@ interface ProfileEditDialogProps {
 
 type ProfileFormData =
   | ComedianProfileFormData
-  | PromoterProfileFormData
   | ManagerProfileFormData
   | PhotographerProfileFormData
   | VideographerProfileFormData;
@@ -67,14 +64,13 @@ export function ProfileEditDialog({
 
         if (baseError) throw baseError;
 
-        // For comedian and promoter, use base profile data
-        if (profileType === 'comedian' || profileType === 'promoter') {
+        // For comedian, use base profile data
+        if (profileType === 'comedian') {
           setProfileData(baseProfile);
         } else {
           // Fetch profile-specific data
           const tableMap: Record<ProfileTypeValue, string> = {
             comedian: 'profiles',
-            promoter: 'profiles',
             manager: 'manager_profiles',
             photographer: 'photographer_profiles',
             videographer: 'videographer_profiles',
@@ -114,8 +110,8 @@ export function ProfileEditDialog({
 
     setIsSaving(true);
     try {
-      // Update base profile data for comedian and promoter
-      if (profileType === 'comedian' || profileType === 'promoter') {
+      // Update base profile data for comedian
+      if (profileType === 'comedian') {
         const { error: profileError } = await supabase
           .from('profiles')
           .update(data)
@@ -195,15 +191,6 @@ export function ProfileEditDialog({
               {profileType === 'comedian' && profileData && (
                 <ComedianProfileForm
                   initialData={profileData as ComedianProfileFormData}
-                  onSubmit={handleSubmit}
-                  onCancel={onClose}
-                  submitLabel={isSaving ? 'Saving...' : 'Save Changes'}
-                />
-              )}
-
-              {profileType === 'promoter' && profileData && (
-                <PromoterProfileForm
-                  initialData={profileData as PromoterProfileFormData}
                   onSubmit={handleSubmit}
                   onCancel={onClose}
                   submitLabel={isSaving ? 'Saving...' : 'Save Changes'}

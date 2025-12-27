@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, MapPin, Star, Zap, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,12 +111,12 @@ const ComedianMarketplace = () => {
   };
 
   useEffect(() => {
-    if (hasRole('promoter') || hasRole('admin')) {
+    if (hasRole('admin')) {
       fetchComedians();
     }
   }, [fetchComedians, hasRole]);
 
-  if (!hasRole('promoter') && !hasRole('admin')) {
+  if (!hasRole('admin')) {
     return (
       <Card>
         <CardHeader>
@@ -174,12 +174,11 @@ const ComedianMarketplace = () => {
             <Card key={comedian.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-center space-x-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={comedian.avatar_url} />
-                    <AvatarFallback>
-                      {comedian.name?.charAt(0) || comedian.stage_name?.charAt(0) || 'C'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <OptimizedAvatar
+                    src={comedian.avatar_url}
+                    name={comedian.name || comedian.stage_name || 'Comedian'}
+                    className="w-12 h-12"
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">{comedian.stage_name || comedian.name}</h3>

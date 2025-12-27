@@ -81,7 +81,7 @@ const PhotographerInfo: React.FC<PhotographerInfoProps> = ({ photographer }) => 
               </h4>
               <div className="flex flex-wrap gap-2">
                 {profile.specialties.map((specialty, index) => (
-                  <Badge key={index} variant="outline">
+                  <Badge key={index} className="professional-button">
                     {specialty}
                   </Badge>
                 ))}

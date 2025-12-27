@@ -133,7 +133,7 @@ export function DealApprovalPanel({
         };
       default:
         return {
-          variant: 'outline' as const,
+          variant: 'secondary' as const,
           icon: <Clock className="h-4 w-4" />,
           text: 'Pending',
           className: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
@@ -315,7 +315,7 @@ export function DealApprovalPanel({
               <DialogFooter>
                 <Button
                   type="button"
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => {
                     setRequestChangesOpen(false);
                     reset();

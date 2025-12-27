@@ -111,6 +111,11 @@ export const XeroSyncButton: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Sync your financial information with XERO for automated invoicing and expense tracking.
               </p>
+              {integration?.tenant_name && (
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  Connected to: {integration.tenant_name}
+                </p>
+              )}
               {integration?.last_sync_at && (
                 <p className="text-xs text-muted-foreground">
                   Last synced: {new Date(integration.last_sync_at).toLocaleString('en-AU')}
@@ -118,9 +123,23 @@ export const XeroSyncButton: React.FC = () => {
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Connect to XERO to automatically sync your financial information and generate invoices.
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Connect to XERO to automatically sync your financial information and generate invoices.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Don't have Xero?{' '}
+                <a
+                  href="https://referrals.xero.com/l2mxbjnerobj"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600 underline font-medium inline-flex items-center gap-1"
+                >
+                  Get 90% off your first 3 months
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </p>
+            </div>
           )}
         </div>
         
@@ -130,7 +149,7 @@ export const XeroSyncButton: React.FC = () => {
               <Button
                 onClick={handleSync}
                 disabled={isSyncing}
-                variant="outline"
+                className="professional-button"
                 size="sm"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -139,7 +158,7 @@ export const XeroSyncButton: React.FC = () => {
               <Button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                variant="outline"
+                className="professional-button"
                 size="sm"
               >
                 <Unlink className="w-4 h-4 mr-2" />

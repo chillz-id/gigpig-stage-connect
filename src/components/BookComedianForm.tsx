@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CalendarIcon, User, DollarSign, MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { bookingRequestService, CreateBookingRequestData } from '@/services/bookingRequestService';
 
 interface BookComedianFormProps {
   prefilledComedianId?: string;
@@ -43,27 +43,13 @@ export const BookComedianForm: React.FC<BookComedianFormProps> = ({
   );
 
   const createBookingRequest = useMutation({
-    mutationFn: async (requestData: {
-      event_date: string;
-      event_time: string;
-      venue: string;
-      budget?: number;
-      requested_comedian_id?: string;
-      notes?: string;
-    }) => {
+    mutationFn: async (requestData: Omit<CreateBookingRequestData, 'requester_id'>) => {
       if (!user?.id) throw new Error('User not authenticated');
-      
-      const { data, error } = await supabase
-        .from('booking_requests')
-        .insert({
-          requester_id: user.id,
-          ...requestData,
-        })
-        .select()
-        .single();
 
-      if (error) throw error;
-      return data;
+      return bookingRequestService.create({
+        requester_id: user.id,
+        ...requestData,
+      });
     },
     onSuccess: () => {
       toast({
@@ -163,8 +149,7 @@ export const BookComedianForm: React.FC<BookComedianFormProps> = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  className="professional-button w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {selectedDate ? format(selectedDate, 'PPP') : 'Select event date'}

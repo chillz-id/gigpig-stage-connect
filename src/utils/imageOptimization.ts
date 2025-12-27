@@ -1,5 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Cache for signed URLs to avoid excessive API calls
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const SIGNED_URL_CACHE_DURATION = 55 * 60 * 1000; // 55 minutes (URLs expire in 60 min)
+
 // Image size presets for different use cases
 export const IMAGE_SIZES = {
   thumbnail: { width: 150, height: 150, quality: 80 },
@@ -43,8 +47,71 @@ export interface ResponsiveImageUrls {
 }
 
 /**
+ * Parse Supabase storage URL to extract bucket and path
+ */
+function parseSupabaseStorageUrl(url: string): { bucket: string; path: string } | null {
+  try {
+    const urlObj = new URL(url);
+
+    // Match patterns like /storage/v1/object/public/bucket-name/path/to/file
+    const publicMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
+    if (publicMatch) {
+      return { bucket: publicMatch[1], path: publicMatch[2] };
+    }
+
+    // Match patterns like /object/public/bucket-name/path/to/file
+    const shortMatch = urlObj.pathname.match(/\/object\/public\/([^/]+)\/(.+)/);
+    if (shortMatch) {
+      return { bucket: shortMatch[1], path: shortMatch[2] };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get a signed URL for a Supabase storage file
+ * Uses caching to avoid excessive API calls
+ */
+export async function getSignedUrl(bucket: string, path: string, expiresIn = 3600): Promise<string | null> {
+  const cacheKey = `${bucket}/${path}`;
+  const cached = signedUrlCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.url;
+  }
+
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresIn);
+
+    if (error || !data?.signedUrl) {
+      console.warn(`[imageOptimization] Failed to get signed URL for ${bucket}/${path}:`, error);
+      return null;
+    }
+
+    // Cache the signed URL
+    signedUrlCache.set(cacheKey, {
+      url: data.signedUrl,
+      expiresAt: Date.now() + SIGNED_URL_CACHE_DURATION
+    });
+
+    return data.signedUrl;
+  } catch (err) {
+    console.warn(`[imageOptimization] Error getting signed URL:`, err);
+    return null;
+  }
+}
+
+/**
  * Generate CDN URL with image transformations
  * Supports Supabase Storage transformations and fallback CDN options
+ *
+ * For public buckets, returns the public URL directly.
+ * For marker URLs (supabase-storage://), converts to public URL.
  */
 export function generateCDNUrl(
   path: string,
@@ -52,32 +119,109 @@ export function generateCDNUrl(
 ): string {
   if (!path) return '';
 
-  // If already a full URL, check if it's a Supabase URL
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    const url = new URL(path);
-    
-    // Apply transformations to Supabase URLs
-    if (url.hostname.includes('supabase')) {
-      const { width, height, quality = 90, format = 'webp' } = options;
-      
-      // Supabase image transformation API
-      if (width) url.searchParams.set('width', width.toString());
-      if (height) url.searchParams.set('height', height.toString());
-      url.searchParams.set('quality', quality.toString());
-      url.searchParams.set('format', format);
-      
-      return url.toString();
+  // Handle marker URLs - convert to public URLs
+  if (path.startsWith('supabase-storage://')) {
+    const parsed = parseStorageMarkerUrl(path);
+    if (parsed) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      return `${supabaseUrl}/storage/v1/object/public/${parsed.bucket}/${parsed.path}`;
     }
-    
+    return '';
+  }
+
+  // If already a full URL, return as-is (public URLs work directly)
+  if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
 
-  // For relative paths, construct full Supabase URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('profile-images')
-    .getPublicUrl(path);
+  // For relative paths, construct public URL for profile-images bucket
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  return `${supabaseUrl}/storage/v1/object/public/profile-images/${path}`;
+}
 
-  return generateCDNUrl(publicUrl, options);
+/**
+ * Async version of generateCDNUrl that returns actual signed URLs
+ * Use this when you need a working URL immediately
+ *
+ * Handles:
+ * - Marker URLs (supabase-storage://bucket/path)
+ * - Full Supabase URLs (https://xxx.supabase.co/storage/...)
+ * - Relative paths (userid/filename.jpg)
+ * - External URLs (returns as-is)
+ */
+export async function generateSignedCDNUrl(
+  path: string,
+  options: ImageOptimizationOptions = {}
+): Promise<string> {
+  if (!path) return '';
+
+  // Handle marker URLs (supabase-storage://bucket/path)
+  if (isSupabaseStorageUrl(path)) {
+    const parsed = parseStorageMarkerUrl(path);
+    if (parsed) {
+      const signedUrl = await getSignedUrl(parsed.bucket, parsed.path);
+      if (signedUrl) {
+        return signedUrl;
+      }
+    }
+    // Fallback: marker URL can't be used directly, return empty for fallback
+    console.warn('[imageOptimization] Failed to resolve marker URL:', path);
+    return '';
+  }
+
+  // If already a full URL, check if it's a Supabase URL
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    try {
+      const url = new URL(path);
+
+      // Check if it's a Supabase URL
+      if (url.hostname.includes('supabase')) {
+        // Parse the storage URL to extract bucket and path
+        const parsed = parseSupabaseStorageUrl(path);
+        if (parsed) {
+          const signedUrl = await getSignedUrl(parsed.bucket, parsed.path);
+          if (signedUrl) {
+            return signedUrl;
+          }
+        }
+
+        // Fallback to original URL if signing fails
+        return path;
+      }
+
+      return path;
+    } catch {
+      // Invalid URL, try treating as path
+      console.warn('[imageOptimization] Invalid URL, treating as path:', path);
+    }
+  }
+
+  // For relative paths, assume profile-images bucket and get signed URL
+  const signedUrl = await getSignedUrl('profile-images', path);
+  return signedUrl || path;
+}
+
+/**
+ * Check if a URL is a Supabase storage marker URL
+ */
+export function isSupabaseStorageUrl(url: string): boolean {
+  return url.startsWith('supabase-storage://');
+}
+
+/**
+ * Parse a Supabase storage marker URL
+ */
+export function parseStorageMarkerUrl(url: string): { bucket: string; path: string } | null {
+  if (!url.startsWith('supabase-storage://')) return null;
+
+  const rest = url.replace('supabase-storage://', '');
+  const firstSlash = rest.indexOf('/');
+  if (firstSlash === -1) return null;
+
+  return {
+    bucket: rest.substring(0, firstSlash),
+    path: rest.substring(firstSlash + 1)
+  };
 }
 
 /**

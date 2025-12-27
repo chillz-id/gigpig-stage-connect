@@ -57,7 +57,7 @@ export function TourWorkspaceHeader({
 
       <div className="flex gap-3">
         <Button
-          variant="outline"
+          className="professional-button"
           className="border-blue-400/30 text-blue-200 hover:bg-blue-500/20"
           onClick={onRefresh}
         >
@@ -68,7 +68,7 @@ export function TourWorkspaceHeader({
         {isEditable && (
           <>
             <Button
-              variant="outline"
+              className="professional-button"
               className="border-purple-400/30 text-purple-200 hover:bg-purple-500/20"
               onClick={onToggleDrag}
             >

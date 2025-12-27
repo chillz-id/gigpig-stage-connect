@@ -99,15 +99,12 @@
         "APIFY_API_TOKEN": "${APIFY_TOKEN}"
       }
     },
-    "n8n": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@eekfonky/n8n-mcp-modern@latest"
-      ],
-      "env": {
-        "N8N_API_KEY": "${N8N_API_KEY}",
-        "N8N_API_URL": "${N8N_API_URL}"
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://n8n.gigpigs.app/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer ${N8N_MCP_ACCESS_TOKEN}",
+        "Accept": "application/json, text/event-stream"
       }
     },
     "linear": {
@@ -146,6 +143,20 @@
       "url": "https://mcp.wix.com/mcp",
       "apiKey": "IST.eyJraWQiOiJQb3pIX2FDMiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiaWRcIjpcIjBjMzA4MTBhLTlmOWEtNDM3Yy04ODA2LTRlNTRkNWI1ZDNlY1wiLFwiaWRlbnRpdHlcIjp7XCJ0eXBlXCI6XCJhcHBsaWNhdGlvblwiLFwiaWRcIjpcIjIwZDc4Nzk0LWE0OTItNDU1MC05ZTkyLTc0YzlkZWFjNDAwMFwifSxcInRlbmFudFwiOntcInR5cGVcIjpcImFjY291bnRcIixcImlkXCI6XCJmNDk0NTFlNS05MGMxLTQ0NTEtODc2My0zMThhOTIzMDhjMGNcIn19IiwiaWF0IjoxNzUwNDkxNjU1fQ.aqW6d1WZ-uzaAtCRgs8lnLADHu7jbn38pzijreT54rs9-_nz0QILgw_7tMYgwlVpLx6icIhs--e7FTc3zNJ0yP92a_oFc8ZghjuRKSvN9SZAz8j7UhotHzzIld0luujXpRSN1wICP2Punn4b0-907dxCSe2UL8WIIB_QfQorbKqv_FuFHioZ9iV2fVvE5LqNPjXOekTrMQhT5uET9yQHXw-gN02y41cbUzyuY7i2Tcobr2Bf9ImkQrdGDpZfygK-3R9uJmb7bhH0efFbRYBWcGMrJdEWnIzm4jEOYK2731JaDHJt-dF0rp4684YfkGLX7eh0wg44ap5JCVHu_5ryIw",
       "accountId": "f49451e5-90c1-4451-8763-318a92308c0c"
+    },
+    "framer": {
+      "type": "sse",
+      "url": "${FRAMER_MCP_URL}"
+    },
+    "perplexity": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@nicholasio/perplexity-mcp-server"
+      ],
+      "env": {
+        "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}"
+      }
     }
   }
 }

@@ -23,14 +23,14 @@ const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({ settings }) => {
           </CardTitle>
           <div className="flex gap-1">
             <Button
-              variant={viewMode === 'desktop' ? 'default' : 'outline'}
+              variant={viewMode === 'desktop' ? 'default' : 'secondary'}
               size="sm"
               onClick={() => setViewMode('desktop')}
             >
               <Monitor className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'mobile' ? 'default' : 'outline'}
+              variant={viewMode === 'mobile' ? 'default' : 'secondary'}
               size="sm"
               onClick={() => setViewMode('mobile')}
             >

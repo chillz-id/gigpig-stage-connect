@@ -203,8 +203,7 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button
-              variant="outline"
-              className="h-32 flex flex-col items-center justify-center gap-3"
+              className="professional-button h-32 flex flex-col items-center justify-center gap-3"
               onClick={() => setStep('create')}
             >
               <Plus className="h-8 w-8" />
@@ -217,8 +216,7 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
             </Button>
 
             <Button
-              variant="outline"
-              className="h-32 flex flex-col items-center justify-center gap-3"
+              className="professional-button h-32 flex flex-col items-center justify-center gap-3"
               onClick={() => setStep('join')}
             >
               <Search className="h-8 w-8" />
@@ -299,7 +297,7 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setStep('choice')} disabled={isSubmitting}>
+            <Button className="professional-button" onClick={() => setStep('choice')} disabled={isSubmitting}>
               Back
             </Button>
             <Button onClick={handleCreateOrganization} disabled={isSubmitting} className="flex-1">
@@ -404,7 +402,7 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
           )}
 
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setStep('choice')} disabled={isSubmitting}>
+            <Button className="professional-button" onClick={() => setStep('choice')} disabled={isSubmitting}>
               Back
             </Button>
             <Button

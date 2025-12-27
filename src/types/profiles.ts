@@ -31,7 +31,7 @@ export interface ProfileWithNames {
   last_name: string;
   full_name?: string; // Auto-generated from first_name + last_name
   name?: string; // Legacy field for backward compatibility
-  role: 'comedian' | 'promoter' | 'admin';
+  role: 'comedian' | 'admin';
   stage_name?: string | null;
   name_display_preference?: 'real' | 'stage' | 'both';
   bio?: string | null;

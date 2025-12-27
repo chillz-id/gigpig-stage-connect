@@ -277,7 +277,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Customize Template</h2>
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={() => setShowCustomizer(false)}
             >
               Back to Gallery
@@ -350,7 +350,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <Button className="professional-button" onClick={() => setShowCreateDialog(false)}>
                 Cancel
               </Button>
               <Button onClick={handleCreateTemplate} disabled={!newTemplate.name}>

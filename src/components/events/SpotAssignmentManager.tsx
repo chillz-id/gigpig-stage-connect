@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -423,7 +423,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 onClick={() => setSelectedApplications([])}
               >
                 Clear Selection
@@ -471,7 +471,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                             {isAssigned && <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />}
                             <div>
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline">#{index + 1}</Badge>
+                                <Badge className="professional-button">#{index + 1}</Badge>
                                 <span className="font-medium">{spot.spot_name}</span>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
@@ -502,12 +502,11 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                           <div className="mt-3 pt-3 border-t border-green-200">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage src={assignedComedian.profiles?.profile_picture} />
-                                  <AvatarFallback>
-                                    {getDisplayName(assignedComedian).charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <OptimizedAvatar
+                                  src={assignedComedian.profiles?.profile_picture}
+                                  name={getDisplayName(assignedComedian)}
+                                  className="w-8 h-8"
+                                />
                                 <div>
                                   <p className="font-medium">{getDisplayName(assignedComedian)}</p>
                                   <p className="text-sm text-gray-600">{assignedComedian.spot_type}</p>
@@ -515,7 +514,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                               </div>
                               <Button
                                 size="sm"
-                                variant="outline"
+                                className="professional-button"
                                 onClick={() => handleRemoveFromSpot(spot.id)}
                                 disabled={assigningSpots.has(spot.id)}
                               >
@@ -559,7 +558,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                 </h3>
                 <Button
                   size="sm"
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => {
                     if (selectedApplications.length === approvedApplications.length) {
                       setSelectedApplications([]);
@@ -610,18 +609,16 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                               }}
                             />
                             <GripVertical className="w-4 h-4 text-gray-400" />
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={application.profiles?.profile_picture} />
-                              <AvatarFallback>
-                                {getDisplayName(application).charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <OptimizedAvatar
+                              src={application.profiles?.profile_picture}
+                              name={getDisplayName(application)}
+                              className="w-10 h-10"
+                            />
                             <div>
                               <p className="font-medium">{getDisplayName(application)}</p>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Badge 
-                                  variant="outline"
-                                  className={`${getStatusColor(application.status || 'pending')} text-white`}
+                                <Badge
+                                  className={`professional-button ${getStatusColor(application.status || 'pending')} text-white`}
                                 >
                                   {application.spot_type}
                                 </Badge>

@@ -152,7 +152,7 @@ export const SitemapMonitor = () => {
                     </div>
                     <Button
                       size="sm"
-                      variant="outline"
+                      className="professional-button"
                       className="w-full"
                       onClick={() => handleRegenerate(type)}
                       disabled={regenerating === type}
@@ -237,7 +237,7 @@ export const SitemapMonitor = () => {
               Regenerate All Sitemaps
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               onClick={() => window.open('https://search.google.com/search-console', '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />

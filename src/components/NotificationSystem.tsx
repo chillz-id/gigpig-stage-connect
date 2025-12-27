@@ -146,7 +146,7 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({ userId }
                       <div className="flex items-center gap-2 mb-1">
                         <h5 className="font-medium text-sm">{notification.title}</h5>
                         <Badge 
-                          variant="outline" 
+                          className="professional-button" 
                           className={`text-xs ${getNotificationBadgeColor(notification.type)}`}
                         >
                           {notification.type === 'comedian_confirmed' && 'Comedian Update'}

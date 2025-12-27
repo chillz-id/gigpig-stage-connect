@@ -32,10 +32,13 @@ export const useProfileUrl = () => {
         return { error: new Error('Slug already taken') };
       }
 
-      // Update the profile with new slug
+      // Update the profile with new slug and timestamp in a single update
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_slug: newSlug })
+        .update({
+          profile_slug: newSlug,
+          url_slug_last_changed: new Date().toISOString()
+        })
         .eq('id', userId);
 
       if (updateError) throw updateError;

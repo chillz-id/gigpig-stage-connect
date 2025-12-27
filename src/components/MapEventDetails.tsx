@@ -26,7 +26,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
   const { user, hasRole } = useAuth();
   
   // Determine if user is a consumer (not an industry user)
-  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
+  const isConsumer = !user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'));
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border">
@@ -59,7 +59,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
                     Comedian Pro
                   </Badge>
                 )}
-                <Badge variant="outline">{selectedShow.type}</Badge>
+                <Badge className="professional-button">{selectedShow.type}</Badge>
               </>
             )}
           </div>
@@ -85,11 +85,11 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
 
         {/* Only show age restriction for consumers */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-foreground border-border">
+          <Badge className="professional-button text-foreground border-border">
             {selectedShow.age_restriction}
           </Badge>
           {!isConsumer && selectedShow.type && (
-            <Badge variant="outline" className="text-foreground border-border">
+            <Badge className="professional-button text-foreground border-border">
               {selectedShow.type}
             </Badge>
           )}
@@ -121,8 +121,7 @@ export const MapEventDetails: React.FC<MapEventDetailsProps> = ({
         </div>
 
         <Button 
-          variant="outline" 
-          className="w-full"
+          className="professional-button w-full"
           onClick={onBackToList}
         >
           Back to Event List

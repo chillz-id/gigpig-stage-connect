@@ -4,7 +4,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Progress } from '../ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { OptimizedAvatar } from '../ui/OptimizedAvatar';
 import { 
   Users, 
   DollarSign, 
@@ -267,11 +267,11 @@ const AgencyManagerDashboard: React.FC<AgencyManagerDashboardProps> = ({ agencyI
               <div className="flex items-center justify-between">
                 <CardTitle>All Recent Deals</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     <Search className="h-4 w-4 mr-2" />
                     Search
                   </Button>
@@ -321,11 +321,9 @@ const AgencyManagerDashboard: React.FC<AgencyManagerDashboardProps> = ({ agencyI
                       <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-medium">
                         #{index + 1}
                       </div>
-                      <Avatar>
-                        <AvatarFallback>
-                          {artist.artist_name?.substring(0, 2).toUpperCase() || 'AR'}
-                        </AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        name={artist.artist_name || 'AR'}
+                      />
                       <div>
                         <h4 className="font-medium">{artist.artist_name}</h4>
                         <p className="text-sm text-gray-600">{artist.bookings_count} bookings</p>

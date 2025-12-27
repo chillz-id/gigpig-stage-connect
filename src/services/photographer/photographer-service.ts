@@ -100,13 +100,58 @@ const attachVouchStats = async (
 };
 
 export const photographerService = {
+  async getBySlug(slug: string): Promise<PhotographerWithStats | null> {
+    const { data, error } = await supabaseClient
+      .from('photographer_profiles')
+      .select(
+        `
+          id,
+          url_slug,
+          bio,
+          portfolio_url,
+          specialties,
+          services_offered,
+          experience_years,
+          rate_per_hour,
+          rate_per_event,
+          available_for_events,
+          equipment_list,
+          instagram_portfolio,
+          youtube_channel,
+          profiles!inner (
+            id,
+            name,
+            stage_name,
+            avatar_url,
+            location,
+            website_url,
+            instagram_url,
+            facebook_url,
+            twitter_url
+          )
+        `
+      )
+      .eq('url_slug', slug)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return null;
+
+    const stats = await photographerService.getVouchStats(data.id);
+
+    return {
+      ...(data as any as PhotographerProfile),
+      vouch_stats: stats ?? defaultVouchStats(data.id),
+    };
+  },
+
   async list(filters?: PhotographerFilters): Promise<PhotographerWithStats[]> {
     const baseQuery = supabaseClient
       .from('profiles')
       .select(
         `
           *,
-          photographer_profile:photographer_profiles!id(*)
+          photographer_profile:photographer_profiles!id(url_slug, *)
         `
       );
 
@@ -149,7 +194,7 @@ export const photographerService = {
       .select(
         `
           *,
-          photographer_profile:photographer_profiles!id(*),
+          photographer_profile:photographer_profiles!id(url_slug, *),
           portfolio:photographer_portfolio!photographer_id(*)
         `
       )

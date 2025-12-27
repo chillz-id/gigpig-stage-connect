@@ -1,0 +1,254 @@
+{
+  "name": "Supabase to Framer CMS Sync",
+  "active": false,
+  "versionId": "1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, -100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "framer-cms-sync",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Supabase Change Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 100],
+      "webhookId": "framer-cms-sync"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (slug)\n  slug,\n  event_name,\n  description,\n  banner_image_url,\n  venue_name,\n  venue_address,\n  url_tickets_popup,\n  tags,\n  session_start\nFROM session_complete\nWHERE is_past = false\nORDER BY slug, session_start ASC"
+      },
+      "id": "supabase-query",
+      "name": "Query Supabase Events",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [280, 0],
+      "credentials": {
+        "supabaseApi": {
+          "id": "aPlSNptc31TjuDti",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform Supabase data to Framer CMS format\n// Collection ID: vskEl8KrG\n// Field IDs from Framer CMS:\n// - Oak7VV4uq: Banner Image (image)\n// - ALBTDQP8K: Title (string)\n// - eFt_IqEQL: Description (formattedText)\n// - c3gfTQjYw: Tags (string)\n// - bqlUUsfQb: Next Show Date (string)\n// - CTS8l19Wu: Venue Name (string)\n// - L75TkSp83: Venue Address (string)\n// - LstqUouVh: Ticket URL (link)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // Format the next show date nicely\n  const nextShowDate = data.session_start \n    ? new Date(data.session_start).toLocaleDateString('en-AU', {\n        weekday: 'long',\n        day: 'numeric',\n        month: 'long',\n        year: 'numeric'\n      })\n    : '';\n  \n  results.push({\n    json: {\n      slug: data.slug,\n      collectionId: 'vskEl8KrG',\n      fieldData: {\n        'Oak7VV4uq': { type: 'image', value: data.banner_image_url || null },\n        'ALBTDQP8K': { type: 'string', value: data.event_name || '' },\n        'eFt_IqEQL': { type: 'formattedText', value: data.description || '<p></p>' },\n        'c3gfTQjYw': { type: 'string', value: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '') },\n        'bqlUUsfQb': { type: 'string', value: nextShowDate },\n        'CTS8l19Wu': { type: 'string', value: data.venue_name || '' },\n        'L75TkSp83': { type: 'string', value: data.venue_address || '' },\n        'LstqUouVh': { type: 'link', value: data.url_tickets_popup || null }\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "transform-data",
+      "name": "Transform for Framer CMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.framer.com/v1/sites/REPLACE_WITH_SITE_ID/cms/collections/vskEl8KrG/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"slug\": \"{{ $json.slug }}\",\n  \"draft\": false,\n  \"fieldData\": {{ JSON.stringify($json.fieldData) }}\n}"
+      },
+      "id": "upsert-framer-cms",
+      "name": "Upsert to Framer CMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Framer API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "error-check",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-errors",
+      "name": "Check for Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [940, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success-count",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "slug",
+              "name": "slug",
+              "value": "={{ $json.slug }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "success-output",
+      "name": "Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1160, -100]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-status",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "error-message",
+              "name": "error",
+              "value": "={{ $json.error || $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "slug",
+              "name": "slug",
+              "value": "={{ $json.slug }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "error-output",
+      "name": "Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1160, 100]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Query Supabase Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Change Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Supabase Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Supabase Events": {
+      "main": [
+        [
+          {
+            "node": "Transform for Framer CMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform for Framer CMS": {
+      "main": [
+        [
+          {
+            "node": "Upsert to Framer CMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert to Framer CMS": {
+      "main": [
+        [
+          {
+            "node": "Check for Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Errors": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Syncs events from Supabase to Framer CMS. Triggers: 1) Every 6 hours (backup), 2) Webhook from Supabase database trigger (real-time)",
+    "templateCredsSetupCompleted": false
+  }
+}

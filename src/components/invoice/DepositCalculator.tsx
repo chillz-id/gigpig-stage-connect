@@ -159,9 +159,8 @@ export const DepositCalculator: React.FC<DepositCalculatorProps> = ({
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "professional-button w-full justify-start text-left font-normal",
                           !invoiceData.eventDate && "text-muted-foreground"
                         )}
                       >

@@ -226,7 +226,7 @@ export const EditEventForm: React.FC<EditEventFormProps> = ({ event }) => {
                 type="button"
                 onClick={() => handleStatusChange('closed')}
                 disabled={isUpdating}
-                variant="outline"
+                className="professional-button"
               >
                 Mark as Sold Out
               </Button>
@@ -234,7 +234,7 @@ export const EditEventForm: React.FC<EditEventFormProps> = ({ event }) => {
                 type="button"
                 onClick={() => handleStatusChange('draft')}
                 disabled={isUpdating}
-                variant="outline"
+                className="professional-button"
               >
                 Unpublish
               </Button>
@@ -263,9 +263,13 @@ export const EditEventForm: React.FC<EditEventFormProps> = ({ event }) => {
         </div>
       </div>
 
-      <EventBannerUpload 
-        imageUrl={formData.imageUrl}
-        onImageChange={(url) => handleFormDataChange({ imageUrl: url })}
+      <EventBannerUpload
+        bannerUrl={formData.imageUrl}
+        bannerPosition={formData.bannerPosition}
+        onBannerChange={(data) => handleFormDataChange({
+          imageUrl: data.url,
+          bannerPosition: data.position
+        })}
       />
 
       <EventBasicInfo

@@ -1,21 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap')
+layer(base);
+@import 'tailwindcss';
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config '../tailwind.config.ts';
 
-/* Image optimization animations */
-@keyframes skeleton-shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
   }
 }
 
-.skeleton-shimmer {
-  animation: skeleton-shimmer 2s infinite;
+@utility dynamic-blur {
+  /* Dynamic blur utilities using design system variable */
+  backdrop-filter: blur(var(--blur-intensity, 8px));
+  -webkit-backdrop-filter: blur(var(--blur-intensity, 8px));
+}
+
+@utility glass-card {
+  @apply rounded-2xl shadow-xl border dynamic-blur;
+
+  .theme-pleasure & {
+    @apply bg-purple-800/70 border-purple-600/30 shadow-black/20;
+  }
+
+  .theme-business & {
+    @apply bg-gray-800/75 border-gray-600/40 shadow-black/25;
+  }
+}
+
+@utility theme-pleasure {
+  & .glass-card {
+    @apply bg-purple-800/70 border-purple-600/30 shadow-black/20;
+  }
+
+  & .solid-card {
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
+  }
+
+  & .solid-button {
+    @apply bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/25;
+  }
+
+  & .solid-input {
+    @apply bg-purple-700/80 border-purple-500/40 text-white placeholder:text-purple-200 focus:bg-purple-600/80 focus:ring-purple-400/50;
+  }
+
+  & .professional-card {
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
+  }
+}
+
+@utility theme-business {
+  & .glass-card {
+    @apply bg-gray-800/75 border-gray-600/40 shadow-black/25;
+  }
+
+  & .solid-card {
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
+  }
+
+  & .solid-button {
+    @apply bg-gray-700 hover:bg-gray-600 text-white shadow-black/25;
+  }
+
+  & .solid-input {
+    @apply bg-gray-700/90 border-gray-500/50 text-gray-100 placeholder:text-gray-300 focus:bg-gray-600/90 focus:ring-gray-400/50;
+  }
+
+  & .professional-card {
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
+  }
+}
+
+@utility solid-card {
+  /* Solid card utilities - no blur effects */
+  @apply rounded-2xl shadow-xl border;
+
+  .theme-pleasure & {
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
+  }
+
+  .theme-business & {
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
+  }
+}
+
+@utility solid-button {
+  /* Solid button utilities */
+  @apply rounded-xl shadow-lg transition-all duration-300 hover:scale-105;
+
+  .theme-pleasure & {
+    @apply bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/25;
+  }
+
+  .theme-business & {
+    @apply bg-gray-700 hover:bg-gray-600 text-white shadow-black/25;
+  }
+}
+
+@utility solid-input {
+  /* Input styling without blur */
+  @apply rounded-xl shadow-md border focus:ring-2 transition-all duration-200;
+
+  .theme-pleasure & {
+    @apply bg-purple-700/80 border-purple-500/40 text-white placeholder:text-purple-200 focus:bg-purple-600/80 focus:ring-purple-400/50;
+  }
+
+  .theme-business & {
+    @apply bg-gray-700/90 border-gray-500/50 text-gray-100 placeholder:text-gray-300 focus:bg-gray-600/90 focus:ring-gray-400/50;
+  }
+}
+
+@utility floating {
+  /* Floating effect without blur */
+  @apply hover:shadow-2xl hover:scale-[1.02] transition-all duration-300;
+}
+
+@utility professional-card {
+  /* Professional styling (theme-aware) without glass effects - removed circular reference */
+  @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] rounded-2xl shadow-xl border;
+
+  .theme-pleasure & {
+    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
+  }
+
+  .theme-business & {
+    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
+  }
+}
+
+@utility professional-button {
+  /* Professional button styling with shadow and state-based text color */
+  @apply relative px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  @apply shadow-lg hover:shadow-xl;
+  @apply bg-gray-800 border border-gray-600/40;
+
+  &:not(:disabled) {
+    @apply text-white hover:bg-gray-700;
+  }
+
+  &:disabled {
+    @apply text-gray-400 cursor-not-allowed opacity-75;
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility shadow-3xl {
+  /* Custom shadow levels */
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+@utility theme-bg {
+  /* Theme-aware backgrounds */
+  background: var(--bg-gradient);
+}
+
+@layer utilities {
+  /* Image optimization animations */
+  @keyframes skeleton-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .skeleton-shimmer {
+    animation: skeleton-shimmer 2s infinite;
+  }
 }
 
 @layer base {
@@ -129,99 +297,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
-  }
-}
-
-@layer components {
-  /* Dynamic blur utilities using design system variable */
-  .dynamic-blur {
-    backdrop-filter: blur(var(--blur-intensity, 8px));
-    -webkit-backdrop-filter: blur(var(--blur-intensity, 8px));
-  }
-  
-  .glass-card {
-    @apply rounded-2xl shadow-xl border dynamic-blur;
-  }
-  
-  .theme-pleasure .glass-card {
-    @apply bg-purple-800/70 border-purple-600/30 shadow-black/20;
-  }
-  
-  .theme-business .glass-card {
-    @apply bg-gray-800/75 border-gray-600/40 shadow-black/25;
-  }
-  
-  /* Solid card utilities - no blur effects */
-  .solid-card {
-    @apply rounded-2xl shadow-xl border;
-  }
-  
-  .theme-pleasure .solid-card {
-    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
-  }
-  
-  .theme-business .solid-card {
-    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
-  }
-  
-  /* Solid button utilities */
-  .solid-button {
-    @apply rounded-xl shadow-lg transition-all duration-300 hover:scale-105;
-  }
-  
-  .theme-pleasure .solid-button {
-    @apply bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/25;
-  }
-  
-  .theme-business .solid-button {
-    @apply bg-gray-700 hover:bg-gray-600 text-white shadow-black/25;
-  }
-
-  /* Input styling without blur */
-  .solid-input {
-    @apply rounded-xl shadow-md border focus:ring-2 transition-all duration-200;
-  }
-  
-  .theme-pleasure .solid-input {
-    @apply bg-purple-700/80 border-purple-500/40 text-white placeholder:text-purple-200 focus:bg-purple-600/80 focus:ring-purple-400/50;
-  }
-  
-  .theme-business .solid-input {
-    @apply bg-gray-700/90 border-gray-500/50 text-gray-100 placeholder:text-gray-300 focus:bg-gray-600/90 focus:ring-gray-400/50;
-  }
-
-  /* Floating effect without blur */
-  .floating {
-    @apply hover:shadow-2xl hover:scale-[1.02] transition-all duration-300;
-  }
-
-  /* Professional styling (theme-aware) without glass effects - removed circular reference */
-  .professional-card {
-    @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] rounded-2xl shadow-xl border;
-  }
-  
-  .theme-pleasure .professional-card {
-    @apply bg-purple-800/90 border-purple-600/30 shadow-black/20;
-  }
-  
-  .theme-business .professional-card {
-    @apply bg-gray-800/95 border-gray-600/40 shadow-black/25;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  /* Custom shadow levels */
-  .shadow-3xl {
-    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-  }
-  
-  /* Theme-aware backgrounds */
-  .theme-bg {
-    background: var(--bg-gradient);
   }
 }
 

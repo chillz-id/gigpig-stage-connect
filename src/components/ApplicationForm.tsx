@@ -195,7 +195,7 @@ export function ApplicationForm({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >

@@ -25,12 +25,11 @@ export const InvoiceItemsList: React.FC<InvoiceItemsListProps> = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Invoice Items</h3>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
+        <Button
+          type="button"
+          className="professional-button flex items-center gap-2"
+          size="sm"
           onClick={onAddItem}
-          className="flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
           Add Item

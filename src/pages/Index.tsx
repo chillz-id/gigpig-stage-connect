@@ -1,15 +1,26 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Drama, Calendar, Users, Trophy, ArrowRight, Star, Mic, MapPin } from 'lucide-react';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
 import HeroVideoShowreel from '@/components/HeroVideoShowreel';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) return <LoadingSpinner size="lg" />;
+  if (!user) return null;
 
   const features = [
     {
@@ -76,10 +87,9 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/dashboard">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      className="professional-button border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto min-h-[56px] text-lg px-8 shadow-xl"
                       size="lg"
-                      className="border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto min-h-[56px] text-lg px-8 shadow-xl"
                     >
                       My Dashboard
                     </Button>
@@ -98,10 +108,9 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/browse">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      className="professional-button border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto min-h-[56px] text-lg px-8 shadow-xl"
                       size="lg"
-                      className="border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto min-h-[56px] text-lg px-8 shadow-xl"
                     >
                       Browse Shows
                     </Button>

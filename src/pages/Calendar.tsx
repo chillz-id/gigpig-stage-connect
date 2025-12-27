@@ -129,7 +129,7 @@ export default function Calendar() {
         {/* Download and Subscribe buttons */}
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            className="professional-button"
             onClick={handleDownloadICS}
             disabled={isDownloading || !gigs || gigs.length === 0}
           >
@@ -141,7 +141,7 @@ export default function Calendar() {
             Download .ics
           </Button>
           <Button
-            variant="outline"
+            className="professional-button"
             onClick={() => setSubscriptionDialogOpen(true)}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />

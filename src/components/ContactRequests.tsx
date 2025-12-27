@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Mail, Clock, CheckCircle, X, Send } from 'lucide-react';
@@ -179,21 +179,19 @@ export const ContactRequests: React.FC = () => {
               <Card key={request.id} className="border-2">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src={request.requester?.avatar_url} />
-                      <AvatarFallback>
-                        {request.requester?.name?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <OptimizedAvatar
+                      src={request.requester?.avatar_url}
+                      name={request.requester?.name || 'U'}
+                    />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-medium">
                           {request.requester?.name || 'Unknown User'}
                         </span>
                         {request.requester?.is_verified && (
-                          <Badge variant="outline">Verified</Badge>
+                          <Badge className="professional-button">Verified</Badge>
                         )}
-                        <Badge variant="outline">Promoter</Badge>
+                        <Badge className="professional-button">Promoter</Badge>
                         <span className="text-sm text-muted-foreground">•</span>
                         <span className="text-sm text-muted-foreground">
                           {new Date(request.created_at).toLocaleDateString()}
@@ -223,7 +221,7 @@ export const ContactRequests: React.FC = () => {
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              className="professional-button"
                               onClick={() => handleDeny(request.id)}
                               disabled={updateRequestMutation.isPending}
                             >
@@ -245,7 +243,7 @@ export const ContactRequests: React.FC = () => {
                           </Badge>
                         )}
                         {request.status === 'pending' && (
-                          <Badge variant="outline">
+                          <Badge className="professional-button">
                             <Clock className="w-3 h-3 mr-1" />
                             Pending
                           </Badge>
@@ -289,7 +287,7 @@ export const ContactRequests: React.FC = () => {
                 {updateRequestMutation.isPending ? 'Approving...' : 'Approve & Share Contact'}
               </Button>
               <Button
-                variant="outline"
+                className="professional-button"
                 onClick={() => setIsResponseDialogOpen(false)}
                 disabled={updateRequestMutation.isPending}
               >

@@ -260,7 +260,7 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
       case 'processed':
         return <Badge variant="destructive">Refunded</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge className="professional-button">Unknown</Badge>;
     }
   };
 
@@ -336,10 +336,9 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
             )}
             <Button
               onClick={handleSyncTickets}
-              variant="outline"
+              className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
               size="sm"
               disabled={syncing}
-              className="border-white text-white hover:bg-white hover:text-purple-900"
             >
               {syncing ? (
                 <>
@@ -397,18 +396,16 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
         <div className="flex gap-2">
           <Button
             onClick={fetchTicketSales}
-            variant="outline"
+            className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
             size="sm"
-            className="border-white text-white hover:bg-white hover:text-purple-900"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
           <Button
             onClick={handleExportData}
-            variant="outline"
+            className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
             size="sm"
-            className="border-white text-white hover:bg-white hover:text-purple-900"
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV
@@ -459,7 +456,7 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
                       {new Date(sale.purchase_date).toLocaleDateString()}
                     </td>
                     <td className="text-white p-3">
-                      <Badge variant="outline" className="border-white/20 text-white/80">
+                      <Badge className="professional-button border-white/20 text-white/80">
                         {sale.platform}
                       </Badge>
                     </td>

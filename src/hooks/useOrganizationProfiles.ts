@@ -5,6 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 
 import type { ManagerType, OrganizationPermissions } from '@/types/permissions';
 
+// Stable empty object to prevent infinite loops from new object references
+const EMPTY_ORGANIZATIONS: Record<string, OrganizationProfile> = {};
+
 export interface OrganizationProfile {
   id: string;
   display_name: string;
@@ -26,6 +29,7 @@ export interface OrganizationProfile {
   facebook_url?: string;
   twitter_url?: string;
   tiktok_url?: string;
+  url_slug?: string;
 }
 
 /**
@@ -39,7 +43,8 @@ export function useOrganizationProfiles() {
   return useQuery({
     queryKey: ['organization-profiles', user?.id],
     queryFn: async () => {
-      if (!user) return {};
+      console.log('[useOrganizationProfiles] Fetching organizations for user:', user?.id);
+      if (!user) return EMPTY_ORGANIZATIONS;
 
       // Use the database function to get user's organizations
       const { data: organizations, error } = await supabase
@@ -48,14 +53,14 @@ export function useOrganizationProfiles() {
       if (error) {
         console.error('Error fetching organizations:', error);
         // Return empty object instead of throwing - allows base profiles to work
-        return {};
+        return EMPTY_ORGANIZATIONS;
       }
 
       // Fetch full organization details for each org
       const orgIds = organizations?.map((org: { org_id: string }) => org.org_id) || [];
 
       if (orgIds.length === 0) {
-        return {};
+        return EMPTY_ORGANIZATIONS;
       }
 
       const { data: orgProfiles, error: profilesError } = await supabase
@@ -66,7 +71,7 @@ export function useOrganizationProfiles() {
       if (profilesError) {
         console.error('Error fetching organization profiles:', profilesError);
         // Return empty object instead of throwing - allows base profiles to work
-        return {};
+        return EMPTY_ORGANIZATIONS;
       }
 
       // Create a map of org_id -> org data with membership info
@@ -96,14 +101,19 @@ export function useOrganizationProfiles() {
           facebook_url: profile.facebook_url,
           twitter_url: profile.twitter_url,
           tiktok_url: profile.tiktok_url,
+          url_slug: profile.url_slug,
         };
       });
 
+      console.log('[useOrganizationProfiles] Organizations fetched:', Object.keys(orgMap).length);
       return orgMap;
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // CRITICAL: Prevent refetch on window focus
+    refetchOnMount: false, // CRITICAL: Don't refetch on every mount
+    refetchOnReconnect: true, // Only refetch on network reconnect
   });
 }
 
@@ -210,12 +220,12 @@ export interface OrganizationTeamMember {
   custom_permissions?: OrganizationPermissions | null;
   created_at: string;
   updated_at: string;
-  user?: {
-    id: string;
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-  };
+  is_owner: boolean;
+  // Flattened user properties for easier access
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  avatar_url?: string;
 }
 
 /**
@@ -231,6 +241,21 @@ export function useOrganizationTeamMembers(orgId: string) {
         return [];
       }
 
+      // First, get the organization's owner_id
+      const { data: orgData, error: orgError } = await supabase
+        .from('organization_profiles')
+        .select('owner_id')
+        .eq('id', orgId)
+        .single();
+
+      if (orgError) {
+        console.error('Error fetching organization owner:', orgError);
+        throw orgError;
+      }
+
+      const ownerId = orgData?.owner_id;
+
+      // Then fetch team members with user profile data
       const { data, error } = await supabase
         .from('organization_team_members')
         .select(`
@@ -239,18 +264,40 @@ export function useOrganizationTeamMembers(orgId: string) {
             id,
             first_name,
             last_name,
-            email
+            email,
+            avatar_url
           )
         `)
         .eq('organization_id', orgId)
-        .order('created_at', { ascending: true });
+        .order('joined_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching team members:', error);
         throw error;
       }
 
-      return data as OrganizationTeamMember[];
+      // Transform data to flatten user properties and compute is_owner
+      const transformedData: OrganizationTeamMember[] = (data || []).map((member) => {
+        const user = member.user as { id: string; first_name?: string; last_name?: string; email?: string; avatar_url?: string } | null;
+        return {
+          id: member.id,
+          organization_id: member.organization_id,
+          user_id: member.user_id,
+          role: member.role,
+          manager_type: member.manager_type,
+          custom_permissions: member.custom_permissions,
+          created_at: member.joined_at || member.created_at,
+          updated_at: member.joined_at || member.created_at,
+          is_owner: member.user_id === ownerId,
+          // Flatten user properties
+          first_name: user?.first_name,
+          last_name: user?.last_name,
+          email: user?.email,
+          avatar_url: user?.avatar_url,
+        };
+      });
+
+      return transformedData;
     },
     enabled: !!orgId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -357,6 +404,142 @@ export function useRemoveTeamMember() {
     onError: (error: Error) => {
       toast({
         title: 'Error removing team member',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+/**
+ * Hook to create a new organization
+ *
+ * Creates both profile and organization_profiles records
+ * with proper cache invalidation
+ */
+export function useCreateOrganization() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: {
+      organization_name: string;
+      display_name: string;
+      legal_name: string;
+      display_name_preference: 'display' | 'legal';
+      organization_type: string;
+      abn?: string;
+      bio?: string;
+      contact_email: string;
+      contact_phone?: string;
+      website_url?: string;
+      instagram_url?: string;
+      facebook_url?: string;
+      twitter_url?: string;
+    }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Step 1: Create profile record for organization
+      const { data: newProfile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          email: data.contact_email,
+          name: data.organization_name,
+          display_name: data.display_name,
+          bio: data.bio,
+          website_url: data.website_url,
+          instagram_url: data.instagram_url,
+          facebook_url: data.facebook_url,
+          twitter_url: data.twitter_url,
+          abn: data.abn,
+        })
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
+      if (!newProfile) throw new Error('Failed to create organization profile');
+
+      // Step 2: Create organization_profiles record
+      const { data: org, error: orgError } = await supabase
+        .from('organization_profiles')
+        .insert({
+          id: newProfile.id,
+          owner_id: user.id,
+          ...data,
+        })
+        .select()
+        .single();
+
+      if (orgError) {
+        // Rollback: delete the profile if organization creation fails
+        await supabase.from('profiles').delete().eq('id', newProfile.id);
+        throw orgError;
+      }
+
+      return org;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-profiles', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-profiles', user?.id] });
+      toast({
+        title: 'Organization created',
+        description: 'Your organization has been created successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error creating organization',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+/**
+ * Hook to delete an organization
+ *
+ * Deletes the organization and invalidates caches
+ */
+export function useDeleteOrganization() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (orgId: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Delete organization (CASCADE will handle team members)
+      const { error: orgError } = await supabase
+        .from('organization_profiles')
+        .delete()
+        .eq('id', orgId);
+
+      if (orgError) throw orgError;
+
+      // Delete the profile record (CASCADE should handle this, but explicit is safer)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', orgId);
+
+      if (profileError) {
+        console.error('Profile deletion error (may be expected if CASCADE handled it):', profileError);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-profiles', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-profiles', user?.id] });
+      toast({
+        title: 'Organization deleted',
+        description: 'Organization has been deleted successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error deleting organization',
         description: error.message,
         variant: 'destructive',
       });

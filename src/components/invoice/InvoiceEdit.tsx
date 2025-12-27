@@ -326,7 +326,7 @@ export const InvoiceEdit: React.FC<InvoiceEditProps> = ({
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       className={cn(
                         "w-full justify-start text-left font-normal",
                         !editData.issueDate && "text-muted-foreground"
@@ -351,7 +351,7 @@ export const InvoiceEdit: React.FC<InvoiceEditProps> = ({
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      className="professional-button"
                       className={cn(
                         "w-full justify-start text-left font-normal",
                         !editData.dueDate && "text-muted-foreground"
@@ -389,7 +389,7 @@ export const InvoiceEdit: React.FC<InvoiceEditProps> = ({
                 <Label className="text-base font-medium">Invoice Items</Label>
                 <Button
                   onClick={addItem}
-                  variant="outline"
+                  className="professional-button"
                   size="sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -480,7 +480,7 @@ export const InvoiceEdit: React.FC<InvoiceEditProps> = ({
           <DialogFooter>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                className="professional-button"
                 onClick={handlePreview}
               >
                 <Eye className="w-4 h-4 mr-2" />
@@ -502,7 +502,7 @@ export const InvoiceEdit: React.FC<InvoiceEditProps> = ({
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={onClose}>
+              <Button className="professional-button" onClick={onClose}>
                 Cancel
               </Button>
             </div>

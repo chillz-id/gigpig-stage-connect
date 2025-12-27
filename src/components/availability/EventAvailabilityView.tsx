@@ -173,7 +173,7 @@ export function EventAvailabilityView() {
                     {selectedEventSubmissions.length} comedian{selectedEventSubmissions.length !== 1 ? 's' : ''} available
                   </p>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={exportToCSV}
                     className="flex items-center gap-2"

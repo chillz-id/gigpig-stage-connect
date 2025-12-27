@@ -5,13 +5,11 @@ import { Star } from 'lucide-react';
 
 interface ShowCardBadgesProps {
   show: any;
-  isMemberView?: boolean;
   isShowFull: boolean;
 }
 
 export const ShowCardBadges: React.FC<ShowCardBadgesProps> = ({
   show,
-  isMemberView = false,
   isShowFull,
 }) => {
   // Function to get recurring type badge text
@@ -36,13 +34,13 @@ export const ShowCardBadges: React.FC<ShowCardBadgesProps> = ({
 
   return (
     <div className="flex gap-2">
-      {!isMemberView && show.is_verified_only && (
+      {show.is_verified_only && (
         <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
           <Star className="w-3 h-3 mr-1" />
           Comedian Pro
         </Badge>
       )}
-      {!isMemberView && isShowFull && (
+      {isShowFull && (
         <Badge variant="destructive">Full</Badge>
       )}
       {recurringBadgeText && (

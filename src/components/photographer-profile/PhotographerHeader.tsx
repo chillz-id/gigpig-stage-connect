@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -61,15 +61,12 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
       <div className="flex flex-col md:flex-row gap-6">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <Avatar className="w-32 h-32">
-            <AvatarImage 
-              src={photographer.avatar_url || ''} 
-              alt={photographer.name || ''} 
-            />
-            <AvatarFallback className="text-2xl">
-              {photographer.name?.charAt(0) || 'P'}
-            </AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={photographer.avatar_url}
+            name={photographer.name || 'Photographer'}
+            className="w-32 h-32"
+            fallbackClassName="text-2xl"
+          />
         </div>
 
         {/* Info */}
@@ -137,7 +134,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.website_url && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.open(photographer.website_url!, '_blank')}
                   >
                     <Globe className="w-4 h-4 mr-1" />
@@ -147,7 +144,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.instagram_url && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.open(photographer.instagram_url!, '_blank')}
                   >
                     <Instagram className="w-4 h-4 mr-1" />
@@ -157,7 +154,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.email && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.location.href = `mailto:${photographer.email}`}
                   >
                     <Mail className="w-4 h-4 mr-1" />
@@ -167,7 +164,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
                 {photographer.phone && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => window.location.href = `tel:${photographer.phone}`}
                   >
                     <Phone className="w-4 h-4 mr-1" />
@@ -181,7 +178,7 @@ const PhotographerHeader: React.FC<PhotographerHeaderProps> = ({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />

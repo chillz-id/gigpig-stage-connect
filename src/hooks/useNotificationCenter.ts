@@ -1,73 +1,27 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import {
   Notification,
   NotificationPreferences,
   NotificationFilterPriority,
   NotificationFilterType,
   NotificationFiltersState,
+  NotificationType,
+  NotificationPriority,
 } from '@/components/notifications/types';
-import { useToast } from '@/hooks/use-toast';
+import type { Notification as DBNotification } from '@/services/notifications/NotificationManager';
 
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'booking',
-    title: 'New Event Application',
-    message: 'Sarah Mitchell has applied to perform at "Comedy Night" on Jan 15th',
-    timestamp: '2025-01-02T14:30:00Z',
-    is_read: false,
-    priority: 'high',
-    actionUrl: '/admin/events/123/applications',
-    actionText: 'Review Application',
-    fromUser: 'Sarah Mitchell',
-  },
-  {
-    id: '2',
-    type: 'payment',
-    title: 'Payment Received',
-    message: 'Invoice INV-2025-001 has been paid by The Comedy Store ($2,500.00)',
-    timestamp: '2025-01-02T12:15:00Z',
-    is_read: false,
-    priority: 'medium',
-    actionUrl: '/admin/invoices/inv-001',
-    actionText: 'View Invoice',
-  },
-  {
-    id: '3',
-    type: 'event',
-    title: 'Event Published',
-    message: 'Your event "New Year Comedy Gala" is now live and accepting bookings',
-    timestamp: '2025-01-02T10:00:00Z',
-    is_read: true,
-    priority: 'low',
-    actionUrl: '/events/nye-gala',
-    actionText: 'View Event',
-  },
-  {
-    id: '4',
-    type: 'system',
-    title: 'System Maintenance',
-    message: 'Scheduled maintenance will occur tonight from 2-4 AM AEDT',
-    timestamp: '2025-01-01T18:00:00Z',
-    is_read: true,
-    priority: 'urgent',
-    actionUrl: '/admin/system',
-    actionText: 'Learn More',
-  },
-  {
-    id: '5',
-    type: 'reminder',
-    title: 'Event Reminder',
-    message: 'Comedy Night at The Basement starts in 2 hours',
-    timestamp: '2025-01-01T16:00:00Z',
-    is_read: false,
-    priority: 'medium',
-    actionUrl: '/events/comedy-basement',
-    actionText: 'View Event',
-  },
-];
+const defaultFilters: NotificationFiltersState = {
+  searchTerm: '',
+  type: 'all',
+  priority: 'all',
+  unreadOnly: false,
+};
 
-const mockPreferences: NotificationPreferences = {
+const defaultPreferences: NotificationPreferences = {
   email: {
     enabled: true,
     eventUpdates: true,
@@ -88,54 +42,151 @@ const mockPreferences: NotificationPreferences = {
     enabled: true,
     sound: true,
     desktop: true,
-    priority: 'high',
+    priority: 'all',
   },
 };
 
-const defaultFilters: NotificationFiltersState = {
-  searchTerm: '',
-  type: 'all',
-  priority: 'all',
-  unreadOnly: false,
+// Map database notification types to UI notification types
+const mapDBTypeToUIType = (dbType: string): NotificationType => {
+  // Event types
+  if (dbType.startsWith('tour_') || dbType.startsWith('event_') ||
+      dbType.includes('collaboration_')) {
+    return 'event';
+  }
+  // Booking types (spots, applications)
+  if (dbType.startsWith('spot_') || dbType.startsWith('application_')) {
+    return 'booking';
+  }
+  // Payment types
+  if (dbType.startsWith('payment_')) {
+    return 'payment';
+  }
+  // System types
+  if (dbType === 'system_update' || dbType === 'general') {
+    return 'system';
+  }
+  // Task/reminder types
+  if (dbType.startsWith('task_') || dbType.startsWith('flight_')) {
+    return 'reminder';
+  }
+  // Default fallback
+  return 'system';
 };
 
+// Map database priority to UI priority (they should match but ensure safety)
+const mapDBPriorityToUIPriority = (dbPriority: string): NotificationPriority => {
+  const validPriorities: NotificationPriority[] = ['low', 'medium', 'high', 'urgent'];
+  if (validPriorities.includes(dbPriority as NotificationPriority)) {
+    return dbPriority as NotificationPriority;
+  }
+  return 'medium';
+};
+
+// Transform database notification to UI notification
+const transformDBNotification = (dbNotification: DBNotification): Notification => ({
+  id: dbNotification.id,
+  type: mapDBTypeToUIType(dbNotification.type),
+  title: dbNotification.title,
+  message: dbNotification.message,
+  timestamp: dbNotification.created_at,
+  is_read: dbNotification.is_read,
+  priority: mapDBPriorityToUIPriority(dbNotification.priority),
+  actionUrl: dbNotification.action_url,
+  actionText: dbNotification.action_label,
+  metadata: dbNotification.data,
+});
+
 export const useNotificationCenter = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<NotificationFiltersState>(defaultFilters);
 
-  const loadNotifications = useCallback(async () => {
-    try {
-      setNotifications(mockNotifications);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load notifications',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
+  // Fetch notifications from database
+  const {
+    data: notificationsData,
+    isLoading: notificationsLoading,
+    refetch: refetchNotifications,
+  } = useQuery({
+    queryKey: ['notification-center', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
 
-  const loadPreferences = useCallback(async () => {
-    try {
-      setPreferences(mockPreferences);
-    } catch (error) {
-      console.error('Failed to load preferences:', error);
-    }
-  }, []);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      setLoading(true);
-      await Promise.all([loadNotifications(), loadPreferences()]);
-      setLoading(false);
-    };
+      if (error) {
+        console.error('Failed to fetch notifications:', error);
+        throw error;
+      }
 
-    bootstrap();
-  }, [loadNotifications, loadPreferences]);
+      return (data || []).map(transformDBNotification);
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+  });
 
+  // Fetch notification preferences
+  const {
+    data: preferencesData,
+    isLoading: preferencesLoading,
+  } = useQuery({
+    queryKey: ['notification-preferences', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return defaultPreferences;
+
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to fetch preferences:', error);
+        throw error;
+      }
+
+      // Map database preferences to UI preferences format
+      if (!data) return defaultPreferences;
+
+      return {
+        email: {
+          enabled: data.email_notifications ?? true,
+          eventUpdates: true,
+          bookingNotifications: true,
+          paymentAlerts: true,
+          systemMessages: true,
+          promotions: false,
+          frequency: 'immediate' as const,
+        },
+        push: {
+          enabled: data.push_notifications ?? true,
+          eventUpdates: true,
+          bookingNotifications: true,
+          paymentAlerts: true,
+          systemMessages: false,
+        },
+        inApp: {
+          enabled: true,
+          sound: true,
+          desktop: true,
+          priority: 'all' as const,
+        },
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: 300000,
+  });
+
+  const notifications = notificationsData || [];
+  const preferences = preferencesData || defaultPreferences;
+  const loading = notificationsLoading || preferencesLoading;
+
+  // Filtered notifications based on current filters
   const filteredNotifications = useMemo(() => {
     return notifications.filter((notification) => {
       const matchesSearch =
@@ -149,8 +200,12 @@ export const useNotificationCenter = () => {
     });
   }, [notifications, filters]);
 
-  const unreadCount = useMemo(() => notifications.filter((notification) => !notification.is_read).length, [notifications]);
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.is_read).length,
+    [notifications]
+  );
 
+  // Filter setters
   const setSearchTerm = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: value }));
   }, []);
@@ -167,55 +222,154 @@ export const useNotificationCenter = () => {
     setFilters((prev) => ({ ...prev, unreadOnly: !prev.unreadOnly }));
   }, []);
 
-  const markAsRead = useCallback((notificationId: string) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId ? { ...notification, is_read: true } : notification,
-      ),
-    );
-  }, []);
+  // Mark as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-center'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+    },
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-center'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+      toast({
+        title: 'Success',
+        description: 'All notifications marked as read',
+      });
+    },
+  });
+
+  // Delete notification mutation
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-center'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+      toast({
+        title: 'Notification Deleted',
+        description: 'Notification has been removed',
+      });
+    },
+  });
+
+  // Update preferences mutation
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (nextPreferences: NotificationPreferences) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('notification_preferences')
+        .upsert({
+          user_id: user.id,
+          email_notifications: nextPreferences.email.enabled,
+          push_notifications: nextPreferences.push.enabled,
+          sms_notifications: false,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      return nextPreferences;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+      toast({
+        title: 'Preferences Updated',
+        description: 'Your notification preferences have been saved',
+      });
+    },
+  });
+
+  // Action wrappers
+  const markAsRead = useCallback(
+    (notificationId: string) => {
+      markAsReadMutation.mutate(notificationId);
+    },
+    [markAsReadMutation]
+  );
 
   const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, is_read: true })));
-    toast({
-      title: 'Success',
-      description: 'All notifications marked as read',
-    });
-  }, [toast]);
+    markAllAsReadMutation.mutate();
+  }, [markAllAsReadMutation]);
 
-  const deleteNotification = useCallback((notificationId: string) => {
-    setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
-    toast({
-      title: 'Notification Deleted',
-      description: 'Notification has been removed',
-    });
-  }, [toast]);
+  const deleteNotification = useCallback(
+    (notificationId: string) => {
+      deleteNotificationMutation.mutate(notificationId);
+    },
+    [deleteNotificationMutation]
+  );
 
-  const sendTestNotification = useCallback(() => {
-    const testNotification: Notification = {
-      id: Date.now().toString(),
-      type: 'system',
-      title: 'Test Notification',
-      message: 'This is a test notification to verify your settings are working correctly.',
-      timestamp: new Date().toISOString(),
-      is_read: false,
-      priority: 'medium',
-    };
+  const sendTestNotification = useCallback(async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to send test notifications',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    setNotifications((prev) => [testNotification, ...prev]);
-    toast({
-      title: 'Test Notification Sent',
-      description: 'Check your notification preferences',
-    });
-  }, [toast]);
+    try {
+      const { error } = await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'general',
+        title: 'Test Notification',
+        message: 'This is a test notification to verify your settings are working correctly.',
+        priority: 'medium',
+        is_read: false,
+      });
 
-  const updatePreferences = useCallback((nextPreferences: NotificationPreferences) => {
-    setPreferences(nextPreferences);
-    toast({
-      title: 'Preferences Updated',
-      description: 'Your notification preferences have been saved',
-    });
-  }, [toast]);
+      if (error) throw error;
+
+      await refetchNotifications();
+      toast({
+        title: 'Test Notification Sent',
+        description: 'Check your notification list',
+      });
+    } catch (error) {
+      console.error('Failed to send test notification:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send test notification',
+        variant: 'destructive',
+      });
+    }
+  }, [user?.id, refetchNotifications, toast]);
+
+  const updatePreferences = useCallback(
+    (nextPreferences: NotificationPreferences) => {
+      updatePreferencesMutation.mutate(nextPreferences);
+    },
+    [updatePreferencesMutation]
+  );
 
   return {
     loading,

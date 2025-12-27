@@ -433,7 +433,7 @@ const UserManagement = () => {
                 <div className="flex items-center justify-end gap-4 pt-4">
                   <Button
                     type="button"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => setIsAddUserOpen(false)}
                     disabled={isCreatingUser}
                   >
@@ -539,8 +539,7 @@ const UserManagement = () => {
             <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No users found matching your criteria.</p>
             <Button 
-              variant="outline" 
-              className="mt-4 text-white border-white/20 hover:bg-white/10"
+              className="professional-button mt-4 text-white border-white/20 hover:bg-white/10"
               onClick={() => {
                 setSearchTerm('');
                 setRoleFilter('all');

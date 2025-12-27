@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useApplications } from '@/hooks/useApplications';
+import { useComedianApplications } from '@/hooks/useComedianApplications';
 import { useEvents } from '@/hooks/data/useEvents';
 import { useSpotAssignment } from '@/hooks/useSpotAssignment';
 import ApplicationStats from '@/components/admin/ApplicationStats';
@@ -16,13 +18,231 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { ProfileContextBadge } from '@/components/profile/ProfileContextBadge';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Calendar, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
 
-const Applications = () => {
+// Comedian view component for their own applications
+const ComedianApplicationsView = () => {
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  const {
+    applications,
+    isLoading,
+    error,
+    withdrawApplication,
+    isWithdrawing,
+    getPendingApplications,
+    getAcceptedApplications,
+    getRejectedApplications
+  } = useComedianApplications();
+
+  const getBackgroundStyles = () => {
+    if (theme === 'pleasure') {
+      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+    }
+    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+  };
+
+  const getStatusBadgeVariant = (status: string | null) => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'accepted': return 'default';
+      case 'rejected': return 'destructive';
+      case 'withdrawn': return 'secondary';
+      default: return 'secondary';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", getBackgroundStyles())}>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", getBackgroundStyles())}>
+        <div className="text-center text-white">
+          <h2 className="text-xl font-bold mb-2">Error Loading Applications</h2>
+          <p className="text-sm opacity-80">{error instanceof Error ? error.message : 'Failed to load applications'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const pending = getPendingApplications();
+  const accepted = getAcceptedApplications();
+  const rejected = getRejectedApplications();
+
+  return (
+    <div className={cn("min-h-screen", getBackgroundStyles())}>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">My Applications</h1>
+            <ProfileContextBadge />
+          </div>
+          <p className={cn(
+            theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
+          )}>
+            Track your gig applications and their status
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <Card className="bg-gray-800/60 border-gray-700">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-white">{applications.length}</div>
+              <div className="text-sm text-gray-400">Total</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-yellow-900/40 border-yellow-700/50">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-yellow-400">{pending.length}</div>
+              <div className="text-sm text-yellow-300/70">Pending</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-900/40 border-green-700/50">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-green-400">{accepted.length}</div>
+              <div className="text-sm text-green-300/70">Accepted</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-red-900/40 border-red-700/50">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-red-400">{rejected.length}</div>
+              <div className="text-sm text-red-300/70">Declined</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Applications List */}
+        {applications.length === 0 ? (
+          <Card className="bg-gray-800/60 border-gray-700">
+            <CardContent className="p-8 text-center">
+              <p className="text-gray-400 mb-4">You haven't applied to any gigs yet.</p>
+              <Button onClick={() => navigate('/shows')} variant="secondary">
+                Browse Available Gigs
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {applications.map((app) => (
+              <Card key={app.id} className="bg-gray-800/60 border-gray-700 hover:bg-gray-800/80 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Event Image */}
+                    {app.event.banner_url && (
+                      <div className="w-full sm:w-32 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={app.event.banner_url}
+                          alt={app.event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Event Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-white truncate">
+                          {app.event.title}
+                        </h3>
+                        <Badge variant={getStatusBadgeVariant(app.status)}>
+                          {app.status || 'pending'}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-1 text-sm text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {app.event.event_date
+                              ? format(new Date(app.event.event_date), 'EEEE, MMMM d, yyyy')
+                              : 'Date TBA'}
+                          </span>
+                        </div>
+                        {app.event.start_time && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            <span>{app.event.start_time}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{app.event.venue}, {app.event.city}</span>
+                        </div>
+                      </div>
+
+                      {/* Applied info & spot type */}
+                      <div className="flex flex-wrap items-center gap-2 mt-3 text-xs text-gray-500">
+                        <span>Applied {app.applied_at ? format(new Date(app.applied_at), 'MMM d, yyyy') : ''}</span>
+                        {app.spot_type && (
+                          <>
+                            <span>•</span>
+                            <span>Requested: {app.spot_type}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex sm:flex-col gap-2 sm:items-end">
+                      {app.status === 'pending' && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => withdrawApplication(app.id)}
+                          disabled={isWithdrawing}
+                          className="text-red-400 border-red-400/50 hover:bg-red-400/10"
+                        >
+                          Withdraw
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/events/${app.event_id}`)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View Event
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Application Message */}
+                  {app.message && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <p className="text-sm text-gray-400">
+                        <span className="text-gray-500">Your message:</span> {app.message}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Promoter/Manager view for managing incoming applications
+const PromoterApplicationsView = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
   const { activeProfile } = useProfile();
   const navigate = useNavigate();
-  
+
   // Fetch real data
   const { applications, isLoading, error, updateApplication, bulkUpdateApplications } = useApplications();
   const { userEvents } = useEvents();
@@ -252,7 +472,7 @@ const Applications = () => {
 
   // Transform events for the filter
   const eventOptions = useMemo(() => {
-    return userEvents.map(event => ({
+    return (userEvents || []).map(event => ({
       id: event.id,
       title: event.title
     }));
@@ -359,6 +579,24 @@ const Applications = () => {
       </div>
     </div>
   );
+};
+
+// Main Applications page - determines which view to show based on user role
+const Applications = () => {
+  const { hasRole } = useAuth();
+
+  // Check if user is a comedian (comedian or comedian_lite role)
+  const isComedian = hasRole('comedian') || hasRole('comedian_lite');
+
+  // Comedians see their own applications
+  // Others (organization owners, co-promoters, etc.) see the promoter/manager view
+  // The useApplications hook handles filtering to only show events they manage
+  if (isComedian) {
+    return <ComedianApplicationsView />;
+  }
+
+  // Default to promoter view for event managers (organization owners, co-promoters)
+  return <PromoterApplicationsView />;
 };
 
 export default Applications;

@@ -174,7 +174,7 @@ export const RecurringEventDateSelector: React.FC<RecurringEventDateSelectorProp
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={handleClose}>
+            <Button className="professional-button" onClick={handleClose}>
               Cancel
             </Button>
             <Button 

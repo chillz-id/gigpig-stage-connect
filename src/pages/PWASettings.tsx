@@ -148,7 +148,7 @@ const PWASettings: React.FC = () => {
                 </p>
               </div>
               <Button 
-                variant="outline"
+                className="professional-button"
                 onClick={() => shareContent({
                   title: 'Stand Up Sydney',
                   text: 'Check out this amazing comedy platform!',
@@ -183,12 +183,12 @@ const PWASettings: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant={offlineActionsCount > 0 ? "secondary" : "outline"}>
+              <Badge variant={offlineActionsCount > 0 ? "secondary" : "secondary"}>
                 {offlineActionsCount} pending
               </Badge>
               {offlineActionsCount > 0 && (
                 <Button 
-                  variant="outline" 
+                  className="professional-button" 
                   size="sm"
                   onClick={clearOfflineActions}
                 >
@@ -222,7 +222,7 @@ const PWASettings: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-mono">{formatBytes(cacheSize)}</span>
                 <Button 
-                  variant="outline" 
+                  className="professional-button" 
                   size="sm"
                   onClick={clearCache}
                 >
@@ -245,7 +245,7 @@ const PWASettings: React.FC = () => {
                 </p>
               </div>
               <Button 
-                variant="outline" 
+                className="professional-button" 
                 size="sm"
                 onClick={requestPersistentStorage}
               >

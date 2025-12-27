@@ -282,7 +282,7 @@ const PlatformAnalyticsDashboard: React.FC = () => {
           </Select>
 
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
@@ -301,7 +301,7 @@ const PlatformAnalyticsDashboard: React.FC = () => {
           </Button>
 
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={handleExportData}
           >

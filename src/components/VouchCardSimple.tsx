@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Crown, MessageSquare } from 'lucide-react';
 
 interface VouchCardSimpleProps {
@@ -35,22 +35,30 @@ interface VouchCardSimpleProps {
 export const VouchCardSimple: React.FC<VouchCardSimpleProps> = ({ vouch }) => {
   const otherUser = vouch.type === 'received' ? vouch.fromUser : vouch.toUser;
 
+  const formatRole = (role: string) => {
+    // Convert role from snake_case to Title Case
+    return role
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <Card className="bg-card/50 backdrop-blur-sm">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={otherUser?.avatar} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {otherUser?.name[0]}
-            </AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={otherUser?.avatar}
+            name={otherUser?.name || '?'}
+            className="h-10 w-10"
+            fallbackClassName="bg-primary text-primary-foreground"
+          />
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <p className="font-medium">{otherUser?.name}</p>
-                <Badge variant="outline" className="text-xs">
-                  {otherUser?.role}
+                <Badge variant="secondary" className="text-xs">
+                  {formatRole(otherUser?.role || 'User')}
                 </Badge>
               </div>
               <Crown className="w-5 h-5 text-yellow-500 fill-current" title="Vouched" />
@@ -61,12 +69,7 @@ export const VouchCardSimple: React.FC<VouchCardSimpleProps> = ({ vouch }) => {
                 <p className="text-sm text-muted-foreground flex-1">{vouch.comment}</p>
               </div>
             )}
-            <div className="flex justify-between items-center">
-              <p className="text-xs text-muted-foreground">{vouch.date}</p>
-              <Badge variant={vouch.type === 'received' ? 'default' : 'secondary'}>
-                {vouch.type === 'received' ? 'Received' : 'Given'}
-              </Badge>
-            </div>
+            <p className="text-xs text-muted-foreground">{vouch.date}</p>
           </div>
         </div>
       </CardContent>

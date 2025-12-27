@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { generateCDNUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
+import { generateSignedCDNUrl } from '@/utils/imageOptimization';
 import { cn } from '@/lib/utils';
 
 export interface OptimizedAvatarProps {
@@ -38,10 +38,9 @@ export const OptimizedAvatar: React.FC<OptimizedAvatarProps> = ({
   fallbackClassName,
   priority = false
 }) => {
-  // Generate optimized URL based on size
-  const imageSize = size === 'xl' ? 'avatarLarge' : 'avatar';
-  const optimizedSrc = src ? generateCDNUrl(src, IMAGE_SIZES[imageSize]) : null;
-  
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   // Generate fallback initials
   const initials = name
     .split(' ')
@@ -50,16 +49,51 @@ export const OptimizedAvatar: React.FC<OptimizedAvatarProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
+  // Resolve URL for images
+  useEffect(() => {
+    if (!src) {
+      setResolvedSrc(null);
+      return;
+    }
+
+    // Check if it's a marker URL that needs async resolution
+    if (src.startsWith('supabase-storage://')) {
+      setIsLoading(true);
+      generateSignedCDNUrl(src)
+        .then((signedUrl) => {
+          setResolvedSrc(signedUrl || null);
+        })
+        .catch((err) => {
+          console.warn('[OptimizedAvatar] Failed to resolve marker URL:', err);
+          setResolvedSrc(null);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else if (src.includes('/object/public/')) {
+      // Public Supabase URLs can be used directly - no signing needed
+      setResolvedSrc(src);
+    } else if (src.startsWith('http://') || src.startsWith('https://')) {
+      // Other external URLs can be used directly
+      setResolvedSrc(src);
+    } else {
+      // Relative path - try to construct a public URL
+      // Assume profile-images bucket for backwards compatibility
+      const publicUrl = `https://${import.meta.env.VITE_SUPABASE_URL?.replace('https://', '')}/storage/v1/object/public/profile-images/${src}`;
+      setResolvedSrc(publicUrl);
+    }
+  }, [src]);
+
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
-      {optimizedSrc && (
+      {resolvedSrc && !isLoading && (
         <AvatarImage
-          src={optimizedSrc}
+          src={resolvedSrc}
           alt={alt || name}
           loading={priority ? 'eager' : 'lazy'}
         />
       )}
-      <AvatarFallback 
+      <AvatarFallback
         className={cn(
           textSizeClasses[size],
           'bg-primary text-primary-foreground font-medium',

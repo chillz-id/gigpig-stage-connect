@@ -8,9 +8,6 @@
 export { ComedianProfileForm } from './ComedianProfileForm';
 export type { ComedianProfileFormData } from './ComedianProfileForm';
 
-export { PromoterProfileForm } from './PromoterProfileForm';
-export type { PromoterProfileFormData } from './PromoterProfileForm';
-
 export { ManagerProfileForm } from './ManagerProfileForm';
 export type { ManagerProfileFormData } from './ManagerProfileForm';
 

@@ -132,13 +132,13 @@ export const EventTemplatePreview: React.FC<EventTemplatePreviewProps> = ({
                   <Badge variant="secondary">{data.showLevel}</Badge>
                 )}
                 {data.showType && (
-                  <Badge variant="outline">{data.showType}</Badge>
+                  <Badge className="professional-button">{data.showType}</Badge>
                 )}
                 {data.ageRestriction && (
-                  <Badge variant="outline">{data.ageRestriction}</Badge>
+                  <Badge className="professional-button">{data.ageRestriction}</Badge>
                 )}
                 {data.dresscode && (
-                  <Badge variant="outline">{data.dresscode}</Badge>
+                  <Badge className="professional-button">{data.dresscode}</Badge>
                 )}
               </div>
 

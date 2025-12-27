@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, PROFILE_TYPES, type ProfileTypeValue, type BaseProfileType, isOrganizationProfile } from '@/contexts/ProfileContext';
@@ -10,12 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ComedianProfileForm,
-  PromoterProfileForm,
   ManagerProfileForm,
   VisualArtistProfileForm,
   OrganizationProfileForm,
   type ComedianProfileFormData,
-  type PromoterProfileFormData,
   type ManagerProfileFormData,
   type VisualArtistProfileFormData,
   type OrganizationProfileFormData,
@@ -45,7 +43,6 @@ interface ProfileCreationWizardProps {
 
 type ProfileFormData =
   | ComedianProfileFormData
-  | PromoterProfileFormData
   | ManagerProfileFormData
   | VisualArtistProfileFormData
   | OrganizationProfileFormData;
@@ -56,13 +53,33 @@ export function ProfileCreationWizard({
   defaultProfileType
 }: ProfileCreationWizardProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { availableProfiles, switchProfile } = useProfile();
   const { toast } = useToast();
   const [step, setStep] = useState<'select' | 'form'>('select');
   const [selectedType, setSelectedType] = useState<ProfileTypeValue | 'organization' | null>(defaultProfileType || null);
   const [formData, setFormData] = useState<ProfileFormData | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Prevent comedian_lite users from creating new profiles
+  const isComedianLite = hasRole('comedian_lite');
+
+  // If comedian_lite tries to access, show error and close
+  useEffect(() => {
+    if (isOpen && isComedianLite) {
+      toast({
+        title: "Profile Creation Restricted",
+        description: "Comedian Lite accounts cannot create additional profiles. Please upgrade your account to unlock this feature.",
+        variant: "destructive"
+      });
+      onClose();
+    }
+  }, [isOpen, isComedianLite, toast, onClose]);
+
+  // Don't render the dialog for comedian_lite users
+  if (isComedianLite) {
+    return null;
+  }
 
   // Get base profile types that user doesn't have yet
   const availableBaseProfileTypes = Object.values(PROFILE_TYPES).filter(
@@ -103,10 +120,31 @@ export function ProfileCreationWizard({
       if (selectedType === 'organization') {
         const orgData = data as OrganizationProfileFormData;
 
-        // Generate independent UUID for organization
-        const { data: newOrg, error } = await supabase
+        // Step 1: Create separate profile record for organization (not shared with user)
+        const { data: newProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            email: orgData.contact_email,
+            name: orgData.organization_name,
+            display_name: orgData.display_name,
+            bio: orgData.bio,
+            website_url: orgData.website_url,
+            instagram_url: orgData.instagram_url,
+            facebook_url: orgData.facebook_url,
+            twitter_url: orgData.twitter_url,
+            abn: orgData.abn,
+          })
+          .select()
+          .single();
+
+        if (profileError) throw profileError;
+        if (!newProfile) throw new Error('Failed to create organization profile');
+
+        // Step 2: Create organization_profiles record using the new profile ID
+        const { data: newOrg, error: orgError } = await supabase
           .from('organization_profiles')
           .insert({
+            id: newProfile.id, // Use the profile ID (satisfies FK constraint)
             owner_id: user.id,
             organization_name: orgData.organization_name,
             display_name: orgData.display_name,
@@ -125,13 +163,17 @@ export function ProfileCreationWizard({
           .select()
           .single();
 
-        if (error) throw error;
+        if (orgError) {
+          // Rollback: delete the profile if organization creation fails
+          await supabase.from('profiles').delete().eq('id', newProfile.id);
+          throw orgError;
+        }
         if (!newOrg) throw new Error('Failed to create organization');
 
         // New profile ID is org:{uuid}
         newProfileId = `org:${newOrg.id}` as ProfileTypeValue;
       } else {
-        // For base profiles (comedian, promoter, manager, visual_artist)
+        // For base profiles (comedian, manager, visual_artist)
         // Create user role if it doesn't exist
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -144,8 +186,8 @@ export function ProfileCreationWizard({
 
         if (roleError) throw roleError;
 
-        // Update base profile data for comedian and promoter
-        if (selectedType === 'comedian' || selectedType === 'promoter') {
+        // Update base profile data for comedian
+        if (selectedType === 'comedian') {
           const { error: profileError } = await supabase
             .from('profiles')
             .update(data)
@@ -314,13 +356,6 @@ export function ProfileCreationWizard({
                 />
               )}
 
-              {selectedType === 'promoter' && (
-                <PromoterProfileForm
-                  onSubmit={handleFormSubmit}
-                  submitLabel={isCreating ? 'Creating...' : 'Create Profile'}
-                />
-              )}
-
               {selectedType === 'manager' && (
                 <ManagerProfileForm
                   onSubmit={handleFormSubmit}
@@ -353,10 +388,9 @@ export function ProfileCreationWizard({
 function getProfileDescription(type: ProfileTypeValue | 'organization'): string {
   const descriptions: Record<string, string> = {
     comedian: 'Perform at shows, manage bookings, and build your comedy career',
-    promoter: 'Organize events, book talent, and manage venues',
     manager: 'Represent comedians, negotiate bookings, and manage client rosters',
     visual_artist: 'Capture events and create content through photography and videography',
-    organization: 'Create team-based organization with full promoter capabilities'
+    organization: 'Create team-based organization with event management capabilities'
   };
   return descriptions[type] || 'Unknown profile type';
 }

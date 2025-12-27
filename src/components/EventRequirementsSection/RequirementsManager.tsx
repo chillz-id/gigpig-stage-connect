@@ -54,7 +54,7 @@ export const RequirementsManager: React.FC<RequirementsManagerProps> = ({
       {requirements.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {requirements.map((req, index) => (
-            <Badge key={index} variant="outline" className="text-white border-white/30">
+            <Badge key={index} className="professional-button text-white border-white/30">
               {req}
               <X 
                 className="w-3 h-3 ml-1 cursor-pointer" 

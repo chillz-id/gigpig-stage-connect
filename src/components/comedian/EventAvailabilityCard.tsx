@@ -5,18 +5,10 @@ import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, MapPin } from 'lucide-react';
-
-interface EventHtx {
-  id: string;
-  name: string | null;
-  start_date: string | null;
-  venue_name: string | null;
-  source_id: string | null;
-  created_at: string | null;
-}
+import { Event } from '@/types/event';
 
 interface EventAvailabilityCardProps {
-  event: EventHtx;
+  event: Event;
   userId: string;
 }
 
@@ -30,12 +22,12 @@ export function EventAvailabilityCard({ event, userId }: EventAvailabilityCardPr
   const isSelected = selectedEvents.has(event.id);
 
   // Format date: "Fri, Nov 15"
-  const formattedDate = event.start_date
-    ? format(new Date(event.start_date), 'EEE, MMM d')
+  const formattedDate = event.event_date
+    ? format(new Date(event.event_date), 'EEE, MMM d')
     : 'TBC';
 
   // Format time: "8:00pm"
-  const formattedTime = formatEventTime(event.start_date);
+  const formattedTime = formatEventTime(event.event_date);
 
   // Format saved time: "3:45pm"
   const formatSavedTime = (date: Date) => {
@@ -64,7 +56,7 @@ export function EventAvailabilityCard({ event, userId }: EventAvailabilityCardPr
               checked={isSelected}
               onCheckedChange={() => toggleEvent(event.id)}
               disabled={isSaving}
-              aria-label={`Select availability for ${event.name || 'event'}`}
+              aria-label={`Select availability for ${event.title || 'event'}`}
               className="h-5 w-5"
             />
           </div>
@@ -73,7 +65,7 @@ export function EventAvailabilityCard({ event, userId }: EventAvailabilityCardPr
           <div className="flex-1 min-w-0">
             {/* Event Name */}
             <h3 className="font-semibold text-lg mb-2 text-foreground">
-              {event.name || 'Untitled Event'}
+              {event.title || 'Untitled Event'}
             </h3>
 
             {/* Date & Time */}
@@ -89,10 +81,10 @@ export function EventAvailabilityCard({ event, userId }: EventAvailabilityCardPr
             </div>
 
             {/* Venue */}
-            {event.venue_name && (
+            {event.venue && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <MapPin className="h-4 w-4" />
-                <span>{event.venue_name}</span>
+                <span>{event.venue}</span>
               </div>
             )}
 

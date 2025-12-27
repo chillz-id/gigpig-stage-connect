@@ -42,13 +42,12 @@ export default function SpotConfirmationPage() {
             address,
             description,
             requirements,
-            promoter:profiles!events_promoter_id_fkey (
+            organization:organization_profiles!events_organization_id_fkey (
               id,
-              first_name,
-              last_name,
-              email,
-              phone,
-              avatar_url
+              organization_name,
+              contact_email,
+              contact_phone,
+              logo_url
             )
           )
         `)
@@ -268,10 +267,9 @@ export default function SpotConfirmationPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <Button 
+          <Button
             onClick={() => navigate('/dashboard')}
-            variant="outline"
-            className="mb-4"
+            className="professional-button mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
@@ -292,10 +290,9 @@ export default function SpotConfirmationPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
         {/* Back button */}
-        <Button 
+        <Button
           onClick={() => navigate('/dashboard')}
-          variant="outline"
-          className="mb-6"
+          className="professional-button mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
@@ -328,7 +325,7 @@ export default function SpotConfirmationPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge className="professional-button text-xs">
                           {item.action.charAt(0).toUpperCase() + item.action.slice(1)}
                         </Badge>
                         <span className="text-xs text-gray-500">

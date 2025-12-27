@@ -135,17 +135,17 @@ const PublicAvailabilityCalendar: React.FC<PublicAvailabilityCalendarProps> = ({
       <CardContent className="space-y-6">
         {/* Week Navigation */}
         <div className="flex items-center justify-between">
-          <Button onClick={goToPreviousWeek} variant="outline" size="sm">
+          <Button onClick={goToPreviousWeek} className="professional-button" size="sm">
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <div className="font-medium">
             {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
           </div>
           <div className="flex gap-2">
-            <Button onClick={goToCurrentWeek} variant="outline" size="sm">
+            <Button onClick={goToCurrentWeek} className="professional-button" size="sm">
               Today
             </Button>
-            <Button onClick={goToNextWeek} variant="outline" size="sm">
+            <Button onClick={goToNextWeek} className="professional-button" size="sm">
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -259,8 +259,7 @@ const PublicAvailabilityCalendar: React.FC<PublicAvailabilityCalendarProps> = ({
         {/* General Booking Button */}
         <div className="border-t pt-4">
           <Button 
-            variant="outline" 
-            className="w-full"
+            className="professional-button w-full"
             onClick={() => {
               if (!user) {
                 navigate('/signin', { state: { from: `/comedians/${comedianId}` } });

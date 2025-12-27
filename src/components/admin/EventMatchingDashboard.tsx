@@ -211,22 +211,22 @@ export const EventMatchingDashboard: React.FC = () => {
                               {topMatch?.match_reasons && (
                                 <div className="mt-2 flex gap-2 flex-wrap">
                                   {topMatch.match_reasons.title_match && (
-                                    <Badge variant="outline" className="text-xs">Title Match</Badge>
+                                    <Badge className="professional-button text-xs">Title Match</Badge>
                                   )}
                                   {topMatch.match_reasons.venue_match && (
-                                    <Badge variant="outline" className="text-xs">Venue Match</Badge>
+                                    <Badge className="professional-button text-xs">Venue Match</Badge>
                                   )}
                                   {topMatch.match_reasons.date_match && (
-                                    <Badge variant="outline" className="text-xs">Date Match</Badge>
+                                    <Badge className="professional-button text-xs">Date Match</Badge>
                                   )}
                                   {topMatch.match_reasons.exact_time_match && (
-                                    <Badge variant="outline" className="text-xs bg-green-50">Exact Time</Badge>
+                                    <Badge className="professional-button text-xs bg-green-50">Exact Time</Badge>
                                   )}
                                   {!topMatch.match_reasons.exact_time_match && topMatch.match_reasons.time_match_quality === 'very_close' && (
-                                    <Badge variant="outline" className="text-xs bg-blue-50">±30min</Badge>
+                                    <Badge className="professional-button text-xs bg-blue-50">±30min</Badge>
                                   )}
                                   {topMatch.match_reasons.time_match_quality === 'close' && (
-                                    <Badge variant="outline" className="text-xs bg-yellow-50">±1hr</Badge>
+                                    <Badge className="professional-button text-xs bg-yellow-50">±1hr</Badge>
                                   )}
                                 </div>
                               )}
@@ -275,7 +275,7 @@ export const EventMatchingDashboard: React.FC = () => {
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          className="professional-button"
                           onClick={() => ignoreMatchMutation.mutate({
                             platform: match.platform,
                             externalId: match.external_event_id

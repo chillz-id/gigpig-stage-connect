@@ -28,13 +28,12 @@ export const useSpotConfirmations = () => {
             address,
             description,
             requirements,
-            promoter:profiles!events_promoter_id_fkey (
+            organization:organization_profiles!events_organization_id_fkey (
               id,
-              first_name,
-              last_name,
-              email,
-              phone,
-              avatar_url
+              organization_name,
+              contact_email,
+              contact_phone,
+              logo_url
             )
           )
         `)
@@ -113,13 +112,12 @@ export const useSpotConfirmations = () => {
           address,
           description,
           requirements,
-          promoter:profiles!events_promoter_id_fkey (
+          organization:organization_profiles!events_organization_id_fkey (
             id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            avatar_url
+            organization_name,
+            contact_email,
+            contact_phone,
+            logo_url
           )
         )
       `)

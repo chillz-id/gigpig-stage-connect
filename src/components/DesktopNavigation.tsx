@@ -10,7 +10,7 @@ const DesktopNavigation: React.FC = () => {
 
   // Admin should have access to everything
   const isAdmin = hasRole('admin');
-  const isPromoter = hasRole('promoter') || isAdmin;
+  const isPromoter = false;
   const isComedian = hasRole('comedian') || isAdmin;
 
   return (

@@ -163,8 +163,7 @@ const EventDetail = () => {
               </h2>
               <Button
                 onClick={() => navigate('/admin')}
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-purple-900"
+                className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Admin
@@ -227,9 +226,8 @@ const EventDetail = () => {
                     Manage Event
                   </Button>
                   <Button
-                    variant="outline"
+                    className="professional-button border-white text-white hover:bg-white hover:text-purple-900"
                     size="sm"
-                    className="border-white text-white hover:bg-white hover:text-purple-900"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Event

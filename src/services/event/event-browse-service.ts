@@ -9,7 +9,8 @@ interface BrowseEventsOptions {
   includePast?: boolean;
   statuses?: string[];
   type?: string;
-  city?: string;
+  city?: string; // DEPRECATED - use timezone instead (city is unreliable, could be suburbs)
+  timezone?: string; // Preferred filter method - e.g. 'Australia/Sydney', 'Australia/Melbourne'
   includeDraftsForOwner?: boolean;
   userId?: string | null;
 }
@@ -153,6 +154,7 @@ export const eventBrowseService = {
       statuses,
       type,
       city,
+      timezone,
       includeDraftsForOwner = false,
       userId,
     } = options;
@@ -188,14 +190,14 @@ export const eventBrowseService = {
           session_start,
           session_start_local,
           timezone,
-          ticket_url,
-          total_capacity,
+          url,
+          capacity,
+          banner_image_url,
+          venue_lat_lng,
           venue_name,
           venue_address,
           venue_city,
           venue_country,
-          venue_lat_lng,
-          banner_image_url,
           is_past,
           days_until,
           latitude,
@@ -217,7 +219,14 @@ export const eventBrowseService = {
     // These are Humanitix/Eventbrite scraped events, not internal Supabase events
     // Filtering by status/type not applicable
 
-    if (city) {
+    // Timezone filter (preferred) - more reliable than city filter
+    if (timezone) {
+      query = query.ilike('timezone', timezone);
+    }
+
+    // Legacy city filter (DEPRECATED - kept for backward compatibility)
+    // Note: city can be suburb names (e.g. "Newtown", "Surry Hills") so timezone is more reliable
+    if (city && !timezone) {
       query = query.ilike('venue_city', `%${city}%`);
     }
 
@@ -294,7 +303,7 @@ export const eventBrowseService = {
 
       // session_complete doesn't track applications/spots for scraped events
       // These events are external, so no internal booking/application system
-      const totalCapacity = typeof event.total_capacity === 'number' ? event.total_capacity : null;
+      const totalCapacity = typeof event.capacity === 'number' ? event.capacity : null;
 
       return {
         id: publicId,
@@ -306,7 +315,7 @@ export const eventBrowseService = {
         canonicalSource: typeof event.canonical_source === 'string' ? event.canonical_source : null,
         title: finalTitle,
         event_date: eventDateString,
-        start_time: startTime,
+        start_time: eventDateString, // Full datetime string for EventPill to parse
         end_time: null, // session_complete doesn't have end time
         venue: event.venue_name ?? null,
         address: event.venue_address ?? null,
@@ -316,11 +325,11 @@ export const eventBrowseService = {
         status: null, // Not applicable for scraped events
         type: null, // Not in session_complete
         ticket_price: null, // Not in session_complete (could derive from financial data)
-        ticket_url: event.ticket_url ?? null,
-        external_ticket_url: event.ticket_url ?? null,
+        ticket_url: event.url ?? null,
+        external_ticket_url: event.url ?? null,
         promoter_id: null, // Not applicable for scraped events
         co_promoter_ids: null,
-        spots: totalCapacity, // Use total_capacity as spots
+        spots: totalCapacity, // Use capacity as spots
         applied_spots: null, // No internal application system for scraped events
         filled_slots: typeof event.total_ticket_count === 'number' ? event.total_ticket_count : null,
         is_recurring: false,

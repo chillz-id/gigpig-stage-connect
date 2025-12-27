@@ -39,7 +39,7 @@ export class EventsApi extends BaseApi<Event> {
         .select(`
           *,
           venue:venues(*),
-          promoter:profiles!events_promoter_id_fkey(*)
+          organization:organization_profiles!events_organization_id_fkey(*)
         `)
         .single();
       
@@ -161,6 +161,17 @@ export class EventsApi extends BaseApi<Event> {
           total_spots,
           promoter_id,
           co_promoter_ids,
+          source,
+          source_id,
+          canonical_session_source_id,
+          synced_at,
+          is_synced,
+          ticket_count,
+          gross_dollars,
+          net_dollars,
+          fees_dollars,
+          order_count,
+          last_order_at,
           event_spots(count),
           applications(count)
         `);
@@ -223,7 +234,7 @@ export class EventsApi extends BaseApi<Event> {
         const eventDate = new Date(event.event_date);
         const now = new Date();
         const isPast = eventDate < now;
-        
+
         return {
           ...event,
           spots_count: event.event_spots?.[0]?.count || 0,
@@ -231,9 +242,14 @@ export class EventsApi extends BaseApi<Event> {
           is_full: (event.event_spots?.[0]?.count || 0) >= (event.total_spots || 0),
           is_past: isPast,
           days_until: isPast ? null : Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+          // Sync-related fields are already included via spread
+          // Use synced financial data if available, otherwise fall back to platform data
+          effective_ticket_count: event.ticket_count ?? event.event_spots?.[0]?.count ?? 0,
+          effective_gross: event.gross_dollars ?? null,
+          effective_net: event.net_dollars ?? null,
         };
       });
-      
+
       return { data: transformedData, error: null };
     } catch (error) {
       return { data: null, error };
@@ -249,12 +265,15 @@ export class EventsApi extends BaseApi<Event> {
     my_events?: boolean;
   }) {
     try {
+      // Note: Using * will include all sync-related fields from the events table
+      // (source, source_id, canonical_session_source_id, synced_at, is_synced,
+      //  ticket_count, gross_dollars, net_dollars, fees_dollars, order_count, last_order_at, ticket_url)
       let query = supabase
         .from('events')
         .select(`
           *,
           venue:venues(*),
-          promoter:profiles!events_promoter_id_fkey(*),
+          organization:organization_profiles!events_organization_id_fkey(*),
           event_spots(
             *,
             performer:profiles(*)

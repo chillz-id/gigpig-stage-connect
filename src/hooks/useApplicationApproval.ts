@@ -43,7 +43,7 @@ export const applicationsKeys = {
  */
 export function useApplicationsByEvent(
   eventId: string | undefined,
-  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'all'
+  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'all'
 ) {
   const { toast } = useToast();
 
@@ -134,9 +134,17 @@ export function useApproveApplication() {
       queryClient.invalidateQueries({
         queryKey: applicationsKeys.byEvent(eventId)
       });
+      // Invalidate shortlist (approved comedian moves from shortlist to confirmed)
+      queryClient.invalidateQueries({
+        queryKey: applicationsKeys.shortlisted(eventId)
+      });
       // Invalidate shortlist stats
       queryClient.invalidateQueries({
         queryKey: applicationsKeys.shortlistStats(eventId)
+      });
+      // Invalidate application stats
+      queryClient.invalidateQueries({
+        queryKey: ['application-stats', eventId]
       });
       toast({
         title: 'Application approved',
@@ -211,9 +219,17 @@ export function useBulkApproveApplications() {
       queryClient.invalidateQueries({
         queryKey: applicationsKeys.byEvent(eventId)
       });
+      // Invalidate shortlist (approved comedians move from shortlist to confirmed)
+      queryClient.invalidateQueries({
+        queryKey: applicationsKeys.shortlisted(eventId)
+      });
       // Invalidate shortlist stats
       queryClient.invalidateQueries({
         queryKey: applicationsKeys.shortlistStats(eventId)
+      });
+      // Invalidate application stats (updates Shortlisted count in stats cards)
+      queryClient.invalidateQueries({
+        queryKey: ['application-stats', eventId]
       });
       toast({
         title: 'Applications approved',

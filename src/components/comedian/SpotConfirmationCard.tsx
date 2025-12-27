@@ -188,7 +188,7 @@ const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
               )}
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               className="flex-1"
               onClick={handleDecline}
               disabled={isConfirming || isDeclining}

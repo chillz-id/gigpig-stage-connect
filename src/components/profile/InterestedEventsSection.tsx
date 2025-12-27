@@ -66,13 +66,13 @@ export const InterestedEventsSection: React.FC<InterestedEventsSectionProps> = (
                       )}
                     </div>
                   </div>
-                  <Badge variant="outline" className="border-pink-400 text-pink-400 flex items-center gap-1">
+                  <Badge className="professional-button border-pink-400 text-pink-400 flex items-center gap-1">
                     <Heart className="w-3 h-3 fill-pink-400" />
                     Interested
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" className="professional-button flex-1">
                     View Event
                   </Button>
                   <Button size="sm" variant="ghost" className="text-muted-foreground">

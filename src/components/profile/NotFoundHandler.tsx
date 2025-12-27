@@ -61,7 +61,7 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
   const browsePath = profileType ? `/${profileType}s` : '/dashboard';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -132,7 +132,7 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
                 Check out other {profileTypeLabel.toLowerCase()} profiles on our platform
               </p>
 
-              <Button asChild variant="outline" size="lg" className="w-full">
+              <Button asChild className="professional-button w-full">
                 <Link to={browsePath}>
                   <Search className="mr-2 h-4 w-4" />
                   Browse {profileTypeLabel}s

@@ -4,7 +4,7 @@ import { Vouch, VouchWithProfiles, VouchFormData, VouchStats, UserSearchResult }
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-export const useVouches = () => {
+export const useVouches = (profileId?: string) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const toastRef = useRef(toast);
@@ -15,21 +15,17 @@ export const useVouches = () => {
   const [vouches, setVouches] = useState<VouchWithProfiles[]>([]);
   const [stats, setStats] = useState<VouchStats | null>(null);
 
-  // Fetch vouches for current user
+  // Use provided profileId or fall back to authenticated user's ID
+  const activeProfileId = profileId || user?.id;
+
+  // Fetch vouches for current profile
   const fetchVouches = useCallback(async () => {
-    if (!user?.id) return;
+    if (!activeProfileId) return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('vouches')
-        .select(`
-          *,
-          voucher_profile:voucher_id(id, name, stage_name, avatar_url),
-          vouchee_profile:vouchee_id(id, name, stage_name, avatar_url)
-        `)
-        .or(`voucher_id.eq.${user.id},vouchee_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        .rpc('get_vouches_with_profiles', { user_id_param: activeProfileId });
 
       if (error) throw error;
       // Empty array is a valid state, not an error
@@ -47,28 +43,29 @@ export const useVouches = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [activeProfileId]);
 
   // Fetch vouch statistics
   const fetchStats = useCallback(async () => {
-    if (!user?.id) return;
+    if (!activeProfileId) return;
 
     try {
       const { data, error } = await supabase
-        .rpc('get_vouch_stats', { user_id_param: user.id });
+        .rpc('get_vouch_stats', { user_id_param: activeProfileId });
 
       if (error) throw error;
       setStats(data?.[0] || null);
     } catch (error) {
       console.error('Error fetching vouch stats:', error);
     }
-  }, [user?.id]);
+  }, [activeProfileId]);
 
-  // Search for users to vouch for
-  const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
-    if (!query.trim() || !user?.id) return [];
+  // Search for users and organizations to vouch for
+  const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
+    if (!query.trim() || !activeProfileId) return [];
 
     try {
+      // Use LEFT JOIN to include both regular profiles (with user_roles) and organizations (without user_roles)
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -76,10 +73,11 @@ export const useVouches = () => {
           name,
           stage_name,
           avatar_url,
-          user_roles!inner(role)
+          user_roles(role),
+          organization_profiles(organization_name)
         `)
-        .neq('id', user.id) // Exclude current user
-        .or(`name.ilike.%${query}%,stage_name.ilike.%${query}%`)
+        .neq('id', activeProfileId) // Exclude current profile
+        .or(`name.ilike.%${query}%,stage_name.ilike.%${query}%,organization_profiles.organization_name.ilike.%${query}%`)
         .limit(10);
 
       if (error) throw error;
@@ -89,23 +87,23 @@ export const useVouches = () => {
         name: profile.name || '',
         stage_name: profile.stage_name,
         avatar_url: profile.avatar_url,
-        roles: profile.user_roles.map((r: any) => r.role)
+        roles: profile.user_roles?.map((r: any) => r.role) || (profile.organization_profiles ? ['organization'] : [])
       }));
     } catch (error) {
       console.error('Error searching users:', error);
       return [];
     }
-  };
+  }, [activeProfileId]);
 
-  // Check if vouch already exists between two users
-  const checkExistingVouch = async (voucheeId: string): Promise<Vouch | null> => {
-    if (!user?.id) return null;
+  // Check if vouch already exists between two profiles
+  const checkExistingVouch = useCallback(async (voucheeId: string): Promise<Vouch | null> => {
+    if (!activeProfileId) return null;
 
     try {
       const { data, error } = await supabase
-        .rpc('get_existing_vouch', { 
-          giver_id: user.id, 
-          receiver_id: voucheeId 
+        .rpc('get_existing_vouch', {
+          giver_id: activeProfileId,
+          receiver_id: voucheeId
         });
 
       if (error) throw error;
@@ -114,11 +112,12 @@ export const useVouches = () => {
       console.error('Error checking existing vouch:', error);
       return null;
     }
-  };
+  }, [activeProfileId]);
 
   // Create a new vouch
   const createVouch = async (formData: VouchFormData) => {
     if (!user?.id) throw new Error('User not authenticated');
+    if (!activeProfileId) throw new Error('Profile not found');
 
     try {
       // Check if vouch already exists
@@ -130,10 +129,11 @@ export const useVouches = () => {
       const { data, error } = await supabase
         .from('vouches')
         .insert({
-          voucher_id: user.id,
+          voucher_id: activeProfileId, // Use active profile
           vouchee_id: formData.vouchee_id,
           message: formData.message,
-          rating: formData.rating
+          rating: formData.rating,
+          organization_id: formData.organization_id || null // When set, vouch is on behalf of org
         })
         .select()
         .single();
@@ -149,12 +149,12 @@ export const useVouches = () => {
       return data;
     } catch (error: any) {
       console.error('Error creating vouch:', error);
-      
+
       // Handle specific database constraint errors
       if (error.code === '23505') {
         throw new Error('You have already vouched for this person. Check your vouch history to edit your existing vouch.');
       }
-      
+
       throw error;
     }
   };
@@ -162,16 +162,20 @@ export const useVouches = () => {
   // Update an existing vouch
   const updateVouch = async (vouchId: string, formData: Partial<VouchFormData>) => {
     if (!user?.id) throw new Error('User not authenticated');
+    if (!activeProfileId) throw new Error('Profile not found');
 
     try {
+      // Use auth user's ID for the voucher check (RLS requires auth.uid() = voucher_id)
+      // This works whether viewing personal profile or org profile
       const { data, error } = await supabase
         .from('vouches')
         .update({
           message: formData.message,
-          rating: formData.rating
+          rating: formData.rating,
+          organization_id: formData.organization_id ?? undefined // Only update if provided
         })
         .eq('id', vouchId)
-        .eq('voucher_id', user.id) // Ensure user owns this vouch
+        .eq('voucher_id', user.id) // Use auth user ID (RLS will verify this)
         .select()
         .single();
 
@@ -190,23 +194,32 @@ export const useVouches = () => {
     }
   };
 
-  // Delete a vouch
+  // Delete a vouch (either one you gave or one you received)
   const deleteVouch = async (vouchId: string) => {
     if (!user?.id) throw new Error('User not authenticated');
+    if (!activeProfileId) throw new Error('Profile not found');
 
     try {
-      const { error } = await supabase
+      // First try to delete as voucher (vouch you gave) - uses auth user ID for RLS
+      const { error: voucherError, count: voucherCount } = await supabase
         .from('vouches')
         .delete()
         .eq('id', vouchId)
-        .eq('voucher_id', user.id); // Ensure user owns this vouch
+        .eq('voucher_id', user.id) // Use auth user ID (works for both personal and org view)
+        .select('*', { count: 'exact', head: true });
 
-      if (error) throw error;
+      if (voucherError) throw voucherError;
 
-      toastRef.current({
-        title: "Vouch Deleted",
-        description: "Your vouch has been successfully deleted.",
-      });
+      // If no rows affected as voucher, try as vouchee (vouch you received)
+      if (voucherCount === 0) {
+        const { error: voucheeError } = await supabase
+          .from('vouches')
+          .delete()
+          .eq('id', vouchId)
+          .eq('vouchee_id', activeProfileId);
+
+        if (voucheeError) throw voucheeError;
+      }
 
       await fetchVouches(); // Refresh the list
     } catch (error) {
@@ -215,22 +228,25 @@ export const useVouches = () => {
     }
   };
 
-  // Get vouches received by current user
+  // Get vouches received by current profile
   const getReceivedVouches = () => {
-    return vouches.filter(vouch => vouch.vouchee_id === user?.id);
+    return vouches.filter(vouch => vouch.vouchee_id === activeProfileId);
   };
 
-  // Get vouches given by current user
+  // Get vouches given by current profile (includes vouches given on behalf of this org)
   const getGivenVouches = () => {
-    return vouches.filter(vouch => vouch.voucher_id === user?.id);
+    return vouches.filter(vouch =>
+      vouch.voucher_id === activeProfileId ||
+      vouch.organization_id === activeProfileId
+    );
   };
 
   useEffect(() => {
-    if (user?.id) {
+    if (activeProfileId) {
       fetchVouches();
       fetchStats();
     }
-  }, [fetchStats, fetchVouches, user?.id]);
+  }, [fetchStats, fetchVouches, activeProfileId]);
 
   return {
     loading,

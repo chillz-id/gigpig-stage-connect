@@ -76,7 +76,7 @@ export const DealFilters = ({
       {/* Quick Filters */}
       <div className="flex gap-2 flex-wrap items-center">
         <Button
-          variant={!filters.dealType ? 'default' : 'outline'}
+          variant={!filters.dealType ? 'default' : 'secondary'}
           size="sm"
           onClick={() => handleDealTypeChange('all')}
         >
@@ -86,7 +86,7 @@ export const DealFilters = ({
         {dealTypes.map(({ value, label }) => (
           <Button
             key={value}
-            variant={filters.dealType === value ? 'default' : 'outline'}
+            variant={filters.dealType === value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => handleDealTypeChange(value)}
           >
@@ -95,7 +95,7 @@ export const DealFilters = ({
         ))}
 
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
         >
@@ -151,7 +151,7 @@ export const DealFilters = ({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     className="w-full justify-start text-left font-normal"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
@@ -179,7 +179,7 @@ export const DealFilters = ({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     className="w-full justify-start text-left font-normal"
                   >
                     <Calendar className="mr-2 h-4 w-4" />

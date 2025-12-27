@@ -11,7 +11,7 @@ export const MessageActivity = ({ metadata }: MessageActivityProps) => (
     <div className="flex items-center gap-2">
       <h4 className="font-semibold">Message</h4>
       {metadata.is_read ? (
-        <Badge variant="outline" className="text-xs">
+        <Badge className="professional-button text-xs">
           Read
         </Badge>
       ) : (

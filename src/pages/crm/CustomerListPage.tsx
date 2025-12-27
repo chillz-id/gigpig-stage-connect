@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   useCustomers,
   useExportCustomers,
@@ -33,13 +34,29 @@ import { DEFAULT_CUSTOMER_COLUMNS } from '@/types/column-config';
  * - Click row to view customer detail
  */
 export const CustomerListPage = () => {
-  const [filters, setFilters] = useState<CustomerFilters>({});
+  const [searchParams, setSearchParams] = useSearchParams();
+  const segmentFromUrl = searchParams.get('segment');
+
+  const [filters, setFilters] = useState<CustomerFilters>(() => {
+    // Initialize with segment from URL if present
+    if (segmentFromUrl) {
+      return { segments: [segmentFromUrl] };
+    }
+    return {};
+  });
   const [sort, setSort] = useState<CustomerSortOptions>({
     column: 'last_order_date',
     ascending: false,
   });
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
+
+  // Sync URL segment parameter with filters
+  useEffect(() => {
+    if (segmentFromUrl) {
+      setFilters((prev) => ({ ...prev, segments: [segmentFromUrl] }));
+    }
+  }, [segmentFromUrl]);
 
   const { data, isLoading, refetch, isFetching } = useCustomers(
     filters,
@@ -87,14 +104,35 @@ export const CustomerListPage = () => {
     }
   };
 
+  const handleExportSegment = async (segmentSlug: string) => {
+    try {
+      const count = await exportMutation.mutateAsync({ segments: [segmentSlug] });
+      toast.success(`Exported ${count} customers from segment to CSV`);
+    } catch (error) {
+      toast.error('Failed to export segment');
+      console.error('Export error:', error);
+    }
+  };
+
   const handleFiltersChange = (newFilters: CustomerFilters) => {
     setFilters(newFilters);
     setPage(0); // Reset to first page when filters change
+
+    // Sync segment to URL
+    if (newFilters.segments?.length === 1) {
+      setSearchParams({ segment: newFilters.segments[0] }, { replace: true });
+    } else if (!newFilters.segments?.length && segmentFromUrl) {
+      setSearchParams({}, { replace: true });
+    }
   };
 
   const handleFiltersReset = () => {
     setFilters({});
     setPage(0);
+    // Clear URL params
+    if (segmentFromUrl) {
+      setSearchParams({}, { replace: true });
+    }
   };
 
   const handleSortChange = (newSort: CustomerSortOptions) => {
@@ -155,7 +193,7 @@ export const CustomerListPage = () => {
             onTemplateDelete={onTemplateDelete}
           />
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
@@ -180,6 +218,9 @@ export const CustomerListPage = () => {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onReset={handleFiltersReset}
+        onExportSegment={handleExportSegment}
+        isExporting={exportMutation.isPending}
+        totalCustomerCount={stats?.total_count}
       />
 
       {/* Table */}
@@ -200,7 +241,7 @@ export const CustomerListPage = () => {
           </p>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => setPage(page - 1)}
               disabled={page === 0 || isLoading}
@@ -208,7 +249,7 @@ export const CustomerListPage = () => {
               Previous
             </Button>
             <Button
-              variant="outline"
+              className="professional-button"
               size="sm"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages - 1 || isLoading}

@@ -1,0 +1,35 @@
+%%{init: {'theme': 'base'}}%%
+erDiagram
+    auth_users ||--|| profiles : "has"
+    profiles ||--o{ user_roles : "has_many"
+    profiles ||--o{ comedians : "extends"
+    profiles ||--o{ managers : "extends"
+    profiles ||--o{ photographers : "extends"
+    profiles ||--o{ videographers : "extends"
+    profiles ||--o{ organization_team_members : "belongs_to"
+
+    organization_profiles ||--o{ events : "owns"
+    organization_profiles ||--o{ organization_team_members : "has_many"
+    organization_profiles ||--o{ invoices : "has_many"
+
+    events ||--o{ applications : "receives"
+    events ||--o{ event_spots : "has_many"
+    events ||--o{ sessions : "has_many"
+    events ||--o{ ticket_sales : "has_many"
+    events ||--o{ comedian_bookings : "has_many"
+    events ||--o{ invoices : "related_to"
+
+    profiles ||--o{ applications : "submits"
+    profiles ||--o{ comedian_bookings : "has_many"
+    profiles ||--o{ invoices : "creates"
+    profiles ||--o{ calendar_events : "owns"
+
+    invoices ||--o{ invoice_items : "contains"
+    invoices ||--o{ invoice_recipients : "sent_to"
+    invoices ||--o{ invoice_payments : "receives"
+
+    sessions ||--o{ orders : "sells"
+    orders ||--o{ tickets : "contains"
+
+    agencies ||--o{ artist_management : "manages"
+    agencies ||--o{ deal_negotiations : "negotiates"

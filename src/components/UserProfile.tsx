@@ -23,8 +23,8 @@ const UserProfile: React.FC = () => {
             {profile.is_verified && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
           </div>
           <div className="flex items-center space-x-1">
-            <Badge variant="outline" className="text-xs text-primary border-primary/30 bg-primary/5">
-              {hasRole('admin') ? 'ADMIN' : hasRole('promoter') ? 'PROMOTER' : 'COMEDIAN'}
+            <Badge className="professional-button text-xs text-primary border-primary/30 bg-primary/5">
+              {hasRole('admin') ? 'ADMIN' : 'COMEDIAN'}
             </Badge>
           </div>
         </div>
@@ -35,7 +35,7 @@ const UserProfile: React.FC = () => {
   return (
     <div className="flex items-center space-x-3">
       <Link to="/auth">
-        <Button variant="outline" className="text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg">
+        <Button className="professional-button text-foreground border-border hover:bg-accent transition-all duration-200 rounded-lg">
           Sign In
         </Button>
       </Link>

@@ -94,7 +94,7 @@ const TicketSalesCard = ({ ticketSales, onClose }: TicketSalesCardProps) => {
                     <TableCell className="text-white">{sale.ticket_quantity}</TableCell>
                     <TableCell className="text-white">${sale.total_amount.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge className="professional-button text-xs">
                         {sale.platform}
                       </Badge>
                     </TableCell>

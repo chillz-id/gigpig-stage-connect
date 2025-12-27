@@ -69,7 +69,7 @@ export function ConnectedChannels() {
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <Badge variant="outline" className="capitalize mb-2">
+                        <Badge className="professional-button capitalize mb-2">
                           {channel.platform}
                         </Badge>
                         <CardTitle className="text-base">{channel.name}</CardTitle>
@@ -123,7 +123,7 @@ export function ConnectedChannels() {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {Object.keys(PLATFORM_COLORS).map(platform => (
-              <Badge key={platform} variant="outline" className="capitalize">
+              <Badge key={platform} className="professional-button capitalize">
                 {platform}
               </Badge>
             ))}

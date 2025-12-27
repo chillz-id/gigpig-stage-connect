@@ -624,6 +624,7 @@ export async function getDealsByStatus(
   promoterId: string,
   status: DealStatus
 ): Promise<EventDealWithDetails[]> {
+  // Note: We filter by promoter_id client-side because PostgREST doesn't support .eq() on embedded fields
   const { data, error } = await supabase
     .from('event_deals')
     .select(`
@@ -636,7 +637,6 @@ export async function getDealsByStatus(
         promoter_id
       )
     `)
-    .eq('event.promoter_id', promoterId)
     .eq('status', status)
     .order('created_at', { ascending: false });
 
@@ -645,13 +645,16 @@ export async function getDealsByStatus(
     throw error;
   }
 
-  return data as unknown as EventDealWithDetails[];
+  // Filter to only this promoter's events
+  const filteredData = (data || []).filter(deal => deal.event?.promoter_id === promoterId);
+  return filteredData as unknown as EventDealWithDetails[];
 }
 
 /**
  * Get pending approvals for a user (deals they need to approve as participant)
  */
 export async function getPendingApprovalsForUser(userId: string): Promise<EventDealWithDetails[]> {
+  // Note: We filter by deal.status client-side because PostgREST doesn't support .eq() on embedded fields
   const { data, error } = await supabase
     .from('deal_participants')
     .select(`
@@ -666,15 +669,17 @@ export async function getPendingApprovalsForUser(userId: string): Promise<EventD
       )
     `)
     .eq('participant_id', userId)
-    .eq('approval_status', 'pending')
-    .eq('deal.status', 'pending_approval');
+    .eq('approval_status', 'pending');
 
   if (error) {
     console.error('Error fetching pending approvals:', error);
     throw error;
   }
 
-  return data.map(item => item.deal) as unknown as EventDealWithDetails[];
+  // Filter to only deals with pending_approval status
+  return (data || [])
+    .filter(item => item.deal?.status === 'pending_approval')
+    .map(item => item.deal) as unknown as EventDealWithDetails[];
 }
 
 /**

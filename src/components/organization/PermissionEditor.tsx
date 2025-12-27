@@ -209,7 +209,7 @@ export function PermissionEditor({
         </ScrollArea>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+          <Button className="professional-button" onClick={handleCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!hasChanges || isLoading}>
@@ -219,7 +219,7 @@ export function PermissionEditor({
 
         {hasChanges && (
           <div className="absolute top-4 right-16">
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+            <Badge className="professional-button bg-yellow-50 text-yellow-800 border-yellow-300">
               Unsaved changes
             </Badge>
           </div>

@@ -28,17 +28,35 @@ interface PlatformLayoutProps {
 }
 
 export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
-  const { activeProfile } = useProfile();
-  const { user } = useAuth();
+  const { activeProfile, isLoading: isProfileLoading } = useProfile();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const location = useLocation();
+
+  const currentPath = location.pathname.toLowerCase();
 
   // Hide platform sidebar on CRM routes, homepage, and when not authenticated
   // CRM has its own layout, homepage is public marketing page
-  const hidesSidebar = !user || location.pathname === '/' || location.pathname.startsWith('/crm');
+  const hidesSidebar =
+    !user ||
+    currentPath === '/' ||
+    currentPath.startsWith('/crm') ||
+    currentPath === '/susgigs';
 
   // If sidebar should be hidden, render outlet without sidebar
   if (hidesSidebar) {
     return <>{children || <Outlet />}</>;
+  }
+
+  // Show loading state while auth OR profile is loading to prevent sidebar flash
+  if (isAuthLoading || isProfileLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-red-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+          <p className="text-white text-sm">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

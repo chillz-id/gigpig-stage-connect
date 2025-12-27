@@ -24,6 +24,7 @@ jest.mock('@/contexts/ThemeContext');
 jest.mock('@/hooks/data/useEvents');
 jest.mock('@/hooks/useBrowseLogic');
 jest.mock('@/hooks/useAvailabilitySelection');
+jest.mock('@/hooks/useSessionCalendar');
 jest.mock('@/components/FeaturedEventsCarousel', () => ({
   FeaturedEventsCarousel: () => <div data-testid="featured-carousel">Featured Carousel</div>,
 }));
@@ -64,14 +65,14 @@ import Gigs from '@/pages/Gigs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useEventsForListing } from '@/hooks/data/useEvents';
+import { useSessionCalendar } from '@/hooks/useSessionCalendar';
 import { useBrowseLogic } from '@/hooks/useBrowseLogic';
 import { useAvailabilitySelection } from '@/hooks/useAvailabilitySelection';
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseProfile = useProfile as jest.MockedFunction<typeof useProfile>;
 const mockUseTheme = useTheme as jest.MockedFunction<typeof useTheme>;
-const mockUseEventsForListing = useEventsForListing as jest.MockedFunction<typeof useEventsForListing>;
+const mockUseSessionCalendar = useSessionCalendar as jest.MockedFunction<typeof useSessionCalendar>;
 const mockUseBrowseLogic = useBrowseLogic as jest.MockedFunction<typeof useBrowseLogic>;
 const mockUseAvailabilitySelection = useAvailabilitySelection as jest.MockedFunction<typeof useAvailabilitySelection>;
 
@@ -165,8 +166,17 @@ describe('Gigs Page - Availability Integration', () => {
       setShowApplicationForm: jest.fn(),
     });
 
+    // Default mock: availability selection (for comedian users)
+    mockUseAvailabilitySelection.mockReturnValue({
+      selectedEvents: new Set(),
+      toggleEvent: jest.fn(),
+      selectWeekday: jest.fn(),
+      isSaving: false,
+      lastSaved: null,
+    });
+
     // Default mock: events loading successful
-    mockUseEventsForListing.mockReturnValue({
+    mockUseSessionCalendar.mockReturnValue({
       events: mockEvents,
       isLoading: false,
       error: null,
@@ -203,7 +213,7 @@ describe('Gigs Page - Availability Integration', () => {
       expect(screen.queryByTestId('event-availability-card')).not.toBeInTheDocument();
     });
 
-    it('should not call useAvailabilitySelection hook when user is not authenticated', () => {
+    it('should call useAvailabilitySelection hook with null when user is not authenticated', () => {
       // Arrange: Anonymous user
       mockUseAuth.mockReturnValue({
         user: null,
@@ -213,8 +223,8 @@ describe('Gigs Page - Availability Integration', () => {
       // Act
       renderWithProviders(<Gigs />);
 
-      // Assert: Hook should not be called for anonymous users
-      expect(mockUseAvailabilitySelection).not.toHaveBeenCalled();
+      // Assert: Hook should be called with null (to avoid conditional hook call)
+      expect(mockUseAvailabilitySelection).toHaveBeenCalledWith(null);
     });
   });
 

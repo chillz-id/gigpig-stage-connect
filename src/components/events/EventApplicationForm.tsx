@@ -227,7 +227,7 @@ export const EventApplicationForm: React.FC<EventApplicationFormProps> = ({
           {onCancel && (
             <Button
               type="button"
-              variant="outline"
+              className="professional-button"
               onClick={onCancel}
               disabled={isApplying}
             >

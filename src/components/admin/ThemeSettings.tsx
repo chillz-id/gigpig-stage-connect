@@ -86,7 +86,7 @@ const ThemeSettings = () => {
           <CardTitle className="text-white flex items-center gap-2">
             <Palette className="w-5 h-5" />
             Theme Settings
-            <Badge variant="outline" className="ml-2">
+            <Badge className="professional-button ml-2">
               {autoTheme ? 'Auto' : theme === 'business' ? 'Business' : 'Pleasure'}
             </Badge>
           </CardTitle>
@@ -144,7 +144,7 @@ const ThemeSettings = () => {
           <div className="flex flex-wrap gap-3">
             <Button
               onClick={() => setTheme('business')}
-              variant={theme === 'business' && !autoTheme ? 'default' : 'outline'}
+              variant={theme === 'business' && !autoTheme ? 'default' : 'secondary'}
               className="bg-gradient-to-r from-gray-700 to-red-700 hover:from-gray-600 hover:to-red-600 text-white border-none"
             >
               <User className="w-4 h-4 mr-2" />
@@ -153,7 +153,7 @@ const ThemeSettings = () => {
             
             <Button
               onClick={() => setTheme('pleasure')}
-              variant={theme === 'pleasure' && !autoTheme ? 'default' : 'outline'}
+              variant={theme === 'pleasure' && !autoTheme ? 'default' : 'secondary'}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-none"
             >
               <Zap className="w-4 h-4 mr-2" />
@@ -162,7 +162,7 @@ const ThemeSettings = () => {
             
             <Button
               onClick={() => setAutoTheme(!autoTheme)}
-              variant={autoTheme ? 'default' : 'outline'}
+              variant={autoTheme ? 'default' : 'secondary'}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white border-none"
             >
               <Clock className="w-4 h-4 mr-2" />
@@ -182,7 +182,7 @@ const ThemeSettings = () => {
               <div className="flex gap-3">
                 <Button
                   onClick={() => previewThemeChange('business')}
-                  variant="outline"
+                  className="professional-button"
                   disabled={previewMode}
                   className="text-white border-white/20"
                 >
@@ -192,7 +192,7 @@ const ThemeSettings = () => {
                 
                 <Button
                   onClick={() => previewThemeChange('pleasure')}
-                  variant="outline"
+                  className="professional-button"
                   disabled={previewMode}
                   className="text-white border-white/20"
                 >
@@ -314,8 +314,7 @@ const ThemeSettings = () => {
           <div className="flex justify-between">
             <Button
               onClick={resetToDefaults}
-              variant="outline"
-              className="text-red-400 border-red-400/50 hover:bg-red-400/10"
+              className="professional-button text-red-400 border-red-400/50 hover:bg-red-400/10"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset to Defaults
@@ -323,7 +322,7 @@ const ThemeSettings = () => {
             
             <div className="flex gap-2">
               {isScheduleChanged && (
-                <Badge variant="outline" className="self-center text-yellow-400 border-yellow-400/50">
+                <Badge className="professional-button self-center text-yellow-400 border-yellow-400/50">
                   Unsaved changes
                 </Badge>
               )}

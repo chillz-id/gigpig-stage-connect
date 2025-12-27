@@ -2,6 +2,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { xeroService } from '@/services/xeroService';
+
+interface XeroSettings {
+  invoiceStatus: 'AUTHORISED' | 'DRAFT';
+  bookingInvoiceType: 'ACCREC' | 'ACCPAY';
+  pdfAttachment: boolean;
+  bookingInvoiceAccount: string;
+  commissionInvoiceAccount: string;
+  overrideCommissionInvoice: 'auto' | 'sales' | 'bill';
+  rosterInvoiceAccount: string;
+  lineItemInvoiceAccount: string;
+  depositInvoiceAccount: string;
+}
 
 interface UserXeroIntegration {
   id: string;
@@ -9,6 +22,8 @@ interface UserXeroIntegration {
   created_at: string;
   last_sync_at: string | null;
   tenant_id: string;
+  tenant_name?: string;
+  settings?: Partial<XeroSettings>;
 }
 
 export const useUserXeroIntegration = () => {
@@ -19,7 +34,7 @@ export const useUserXeroIntegration = () => {
     queryKey: ['user-xero-integration', user?.id],
     queryFn: async (): Promise<UserXeroIntegration | null> => {
       if (!user?.id) return null;
-      
+
       const { data, error } = await supabase
         .from('xero_integrations')
         .select('*')
@@ -36,22 +51,12 @@ export const useUserXeroIntegration = () => {
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      // This would typically redirect to XERO OAuth flow
-      // For now, we'll simulate a successful connection
-      const { data, error } = await supabase
-        .from('xero_integrations')
-        .upsert({
-          user_id: user.id,
-          tenant_id: 'user-tenant-' + Date.now(),
-          connection_status: 'active',
-          access_token: 'user-demo-token',
-          refresh_token: 'user-demo-refresh-token'
-        })
-        .select()
-        .single();
+      // Redirect to Xero OAuth authorization page
+      const authUrl = xeroService.getAuthorizationUrl();
+      window.location.href = authUrl;
 
-      if (error) throw error;
-      return data;
+      // This won't actually return since we're redirecting
+      return null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-xero-integration', user?.id] });
@@ -82,6 +87,9 @@ export const useUserXeroIntegration = () => {
     mutationFn: async () => {
       if (!integration?.id) throw new Error('No integration found');
 
+      // Sync invoices from Xero
+      await xeroService.syncInvoicesFromXero();
+
       // Update last sync time
       const { error } = await supabase
         .from('xero_integrations')
@@ -93,6 +101,7 @@ export const useUserXeroIntegration = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-xero-integration', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });
 

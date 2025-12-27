@@ -79,7 +79,7 @@ export const ColumnCustomizer = ({
     <>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button className="professional-button" size="sm">
             <Settings2 className="mr-2 h-4 w-4" />
             Customize Columns
           </Button>

@@ -89,7 +89,7 @@ export function TourStopsBoard({
                             </div>
                             <div className="flex gap-2">
                               <Button
-                                variant="outline"
+                                className="professional-button"
                                 size="sm"
                                 className="border-slate-600 text-slate-300"
                                 onClick={() => onSelectStop(stop)}
@@ -100,7 +100,7 @@ export function TourStopsBoard({
                               {isEditable && (
                                 <>
                                   <Button
-                                    variant="outline"
+                                    className="professional-button"
                                     size="sm"
                                     className="border-slate-600 text-slate-300"
                                     onClick={() => onSelectStop(stop)}
@@ -109,7 +109,7 @@ export function TourStopsBoard({
                                     Edit
                                   </Button>
                                   <Button
-                                    variant="outline"
+                                    className="professional-button"
                                     size="sm"
                                     className="border-red-500/40 text-red-200 hover:bg-red-500/10"
                                     onClick={() => onDeleteStop(stop.id)}

@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 
 export interface ManagerProfileFormData {
@@ -35,6 +42,8 @@ export function ManagerProfileForm({
   submitLabel = 'Save Profile'
 }: ManagerProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [countryCode, setCountryCode] = useState('+61'); // Default to Australia
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [formData, setFormData] = useState<ManagerProfileFormData>({
     agency_name: initialData?.agency_name || '',
     bio: initialData?.bio || '',
@@ -44,6 +53,21 @@ export function ManagerProfileForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Parse existing phone number to extract country code
+  useEffect(() => {
+    if (initialData?.phone) {
+      const phone = initialData.phone;
+      // Try to extract country code (format: +XX or +XXX)
+      const match = phone.match(/^(\+\d{1,3})(.*)$/);
+      if (match) {
+        setCountryCode(match[1]);
+        setPhoneNumber(match[2].trim());
+      } else {
+        setPhoneNumber(phone);
+      }
+    }
+  }, [initialData?.phone]);
 
   const handleInputChange = (field: keyof ManagerProfileFormData, value: string | number) => {
     setFormData(prev => ({
@@ -86,7 +110,14 @@ export function ManagerProfileForm({
 
     try {
       setIsLoading(true);
-      await onSubmit(formData);
+      // Combine country code with phone number
+      const combinedPhone = phoneNumber.trim()
+        ? `${countryCode}${phoneNumber.trim().replace(/^0+/, '')}`
+        : '';
+      await onSubmit({
+        ...formData,
+        phone: combinedPhone || undefined
+      });
     } finally {
       setIsLoading(false);
     }
@@ -162,13 +193,33 @@ export function ManagerProfileForm({
 
             <div>
               <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="+61 4XX XXX XXX"
-              />
+              <div className="flex gap-2">
+                <Select value={countryCode} onValueChange={setCountryCode}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                    <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                    <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                    <SelectItem value="+64">🇳🇿 +64</SelectItem>
+                    <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                    <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                    <SelectItem value="+81">🇯🇵 +81</SelectItem>
+                    <SelectItem value="+86">🇨🇳 +86</SelectItem>
+                    <SelectItem value="+91">🇮🇳 +91</SelectItem>
+                    <SelectItem value="+65">🇸🇬 +65</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="4XX XXX XXX"
+                  className="flex-1"
+                />
+              </div>
             </div>
 
             <div>
@@ -186,7 +237,7 @@ export function ManagerProfileForm({
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" className="professional-button" onClick={onCancel}>
                 Cancel
               </Button>
             )}

@@ -1,2 +1,0 @@
-#!/bin/bash
-node /root/agents/duplicate-detection-system.cjs detect "$1" "$2" "${3:-medium}"

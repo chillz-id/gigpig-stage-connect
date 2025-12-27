@@ -42,7 +42,7 @@ export function ExportMenu({
   userId,
   isOwner,
   exportType,
-  variant = 'outline',
+  variant = 'secondary',
   size = 'sm',
 }: ExportMenuProps) {
   const { toast } = useToast();

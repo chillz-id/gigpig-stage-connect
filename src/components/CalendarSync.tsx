@@ -300,7 +300,7 @@ export const CalendarSync: React.FC = () => {
                         >
                           Resolve Conflict
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" className="professional-button">
                           View Calendar
                           <ExternalLink className="w-3 h-3 ml-1" />
                         </Button>

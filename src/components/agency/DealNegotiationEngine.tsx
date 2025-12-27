@@ -210,7 +210,7 @@ const DealNegotiationEngine: React.FC<DealNegotiationEngineProps> = ({ dealId, o
                   AI Strategy
                 </CardTitle>
                 <Button
-                  variant="outline"
+                  className="professional-button"
                   size="sm"
                   onClick={handleCalculateStrategy}
                   disabled={calculateStrategyMutation.isPending}
@@ -324,7 +324,7 @@ const DealNegotiationEngine: React.FC<DealNegotiationEngineProps> = ({ dealId, o
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={() => handleStatusUpdate('accepted')}
                     disabled={deal.status === 'accepted'}
@@ -333,7 +333,7 @@ const DealNegotiationEngine: React.FC<DealNegotiationEngineProps> = ({ dealId, o
                     Accept
                   </Button>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={() => handleStatusUpdate('declined')}
                     disabled={deal.status === 'declined'}
@@ -398,14 +398,14 @@ const DealNegotiationEngine: React.FC<DealNegotiationEngineProps> = ({ dealId, o
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <Button
-                    variant={messageType === 'text' ? 'default' : 'outline'}
+                    variant={messageType === 'text' ? 'default' : 'secondary'}
                     size="sm"
                     onClick={() => setMessageType('text')}
                   >
                     Message
                   </Button>
                   <Button
-                    variant={messageType === 'offer' ? 'default' : 'outline'}
+                    variant={messageType === 'offer' ? 'default' : 'secondary'}
                     size="sm"
                     onClick={() => setMessageType('offer')}
                   >
@@ -413,7 +413,7 @@ const DealNegotiationEngine: React.FC<DealNegotiationEngineProps> = ({ dealId, o
                     Offer
                   </Button>
                   <Button
-                    variant={messageType === 'counter_offer' ? 'default' : 'outline'}
+                    variant={messageType === 'counter_offer' ? 'default' : 'secondary'}
                     size="sm"
                     onClick={() => setMessageType('counter_offer')}
                   >

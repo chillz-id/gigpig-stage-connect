@@ -69,10 +69,15 @@ export interface CustomerSortOptions {
   ascending: boolean;
 }
 
+export type SegmentType = 'auto' | 'manual' | 'smart';
+
 export interface SegmentCount {
   slug: string;
   name: string;
   color: string | null;
+  description: string | null;
+  segment_type: SegmentType;
+  is_system: boolean;
   count: number;
 }
 
@@ -99,6 +104,9 @@ export interface SegmentDefinition {
   slug: string;
   name: string;
   color: string | null;
+  description?: string | null;
+  segment_type?: SegmentType;
+  is_system?: boolean;
 }
 
 export interface CustomerStats {

@@ -91,7 +91,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
     }
     
     return currentVouchCount > 0 ? (
-      <Badge variant="outline" className={`text-xs ${className}`}>
+      <Badge className={`professional-button text-xs ${className}`}>
         <Crown className="w-3 h-3 mr-1 text-yellow-400 fill-current" />
         {currentVouchCount} vouch{currentVouchCount !== 1 ? 'es' : ''}
       </Badge>
@@ -127,7 +127,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
     <div className="flex items-center gap-2">
       <Button
         size="sm"
-        variant={userHasVouched ? "default" : "outline"}
+        variant={userHasVouched ? "default" : "secondary"}
         onClick={handleVouch}
         disabled={isVouching}
         className={`text-xs ${className}`}
@@ -140,7 +140,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
         {userHasVouched ? 'Vouched' : 'Vouch'}
       </Button>
       {currentVouchCount > 0 && (
-        <Badge variant="outline" className="text-xs">
+        <Badge className="professional-button text-xs">
           {currentVouchCount}
         </Badge>
       )}

@@ -1,4 +1,0 @@
-#!/bin/bash
-echo "📊 COMPREHENSIVE TRACKING SYSTEM STATUS"
-echo "======================================"
-node /root/agents/comprehensive-tracking-system.cjs status

@@ -1,450 +1,465 @@
-import React, { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarIcon, MapPin, Clock, Users, Edit, Trash2, Plus, Download, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, isSameDay, parseISO, addDays, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks } from 'date-fns';
+import {
+  Calendar as CalendarIcon,
+  Plus,
+  Ban,
+  RefreshCw,
+  Download,
+  Upload,
+  Calendar
+} from 'lucide-react';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isToday,
+  isSameDay,
+  parseISO
+} from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+
+// New components and hooks
+import { GigPill, GigPillEvent, GigType } from './calendar/GigPill';
+import { WeeklyViewWithTimeSlots } from './calendar/WeeklyViewWithTimeSlots';
+import { GigListView } from './calendar/GigListView';
+import { BlockDatesModal, BlockDatesFormData } from './calendar/BlockDatesModal';
+import { EventTypeFilter } from './calendar/EventTypeFilter';
+import { MonthPicker } from './calendar/MonthPicker';
+import { YearPicker } from './calendar/YearPicker';
+import { usePersonalGigs } from '@/hooks/usePersonalGigs';
+import { useMyGigs } from '@/hooks/useMyGigs';
+import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import { useToast } from '@/hooks/use-toast';
-import { useCalendarIntegration } from '@/hooks/useCalendarIntegration';
-import ComedianAvailabilityCalendar from '@/components/comedian-profile/ComedianAvailabilityCalendar';
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  venue: string;
-  event_date: string;
-  status: string;
-  calendar_sync_status?: string;
-}
+type ViewMode = 'monthly' | 'weekly' | 'list';
 
+/**
+ * ProfileCalendarView Component (REDESIGNED)
+ *
+ * Unified calendar view with 3 modes:
+ * - Monthly: Grid view with event pills (like /gigs calendar)
+ * - Weekly: Time slot view with hourly breakdown
+ * - List: Chronological event list
+ *
+ * Features:
+ * - Shows confirmed/pending gigs from applications table
+ * - Shows personal gigs from personal_gigs table
+ * - Shows blocked dates/times
+ * - Add personal gigs (manual or Google import)
+ * - Block dates/times
+ * - Google Calendar two-way sync
+ * - Export to .ics for Apple Calendar
+ */
 export const ProfileCalendarView: React.FC = () => {
+  const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewType, setViewType] = useState<'monthly' | 'weekly'>('monthly');
-  const [showPendingGigs, setShowPendingGigs] = useState(false);
-  const [currentWeek, setCurrentWeek] = useState(new Date());
-  const { 
-    initiateGoogleCalendarAuth, 
-    downloadICSFile, 
-    isGoogleConnected,
-    isConnecting 
-  } = useCalendarIntegration();
+  const [viewMode, setViewMode] = useState<ViewMode>('monthly');
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [isBlockDatesModalOpen, setIsBlockDatesModalOpen] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<GigType[]>(['confirmed', 'personal']);
 
-  // Determine if user is a consumer (not an industry user)
-  const isConsumer = !user || (!hasRole('comedian') && !hasRole('promoter') && !hasRole('admin'));
-  const isComedian = hasRole('comedian');
+  const isComedian = hasRole('comedian') || hasRole('comedian_lite');
 
-  // Fetch calendar events based on user type
-  const { data: calendarEvents = [], isLoading } = useQuery<CalendarEvent[]>({
-    queryKey: ['calendar-events', user?.id, isConsumer],
+  // Hooks for data management
+  const { personalGigs, deletePersonalGig, createPersonalGig } = usePersonalGigs();
+  const { manualGigs } = useMyGigs();
+  const { blockedDates, createBlockedDates, deleteBlockedDates } = useBlockedDates();
+  const {
+    syncStatus,
+    connectGoogleCalendar,
+    importFromGoogle,
+    exportToGoogle,
+    disconnect
+  } = useGoogleCalendarSync();
+
+  // Fetch applications (accepted = confirmed gigs, pending = awaiting response)
+  const { data: confirmedBookings = [] } = useQuery({
+    queryKey: ['comedian-applications', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id || !isComedian) return [];
 
-      if (isConsumer) {
-        // For consumers, fetch events they're interested in
-        const { data, error } = await supabase
-          .from('user_interests')
-          .select('id, event_title, venue, event_date')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+      // Fetch applications (accepted and pending)
+      const { data: applications, error: applicationsError } = await supabase
+        .from('applications')
+        .select('id, status, event_id')
+        .eq('comedian_id', user.id)
+        .in('status', ['accepted', 'pending']);
 
-        if (error) throw error;
-        return (data || []).map(interest => ({
-          id: interest.id,
-          title: interest.event_title || 'Event',
-          venue: interest.venue || 'Venue TBA',
-          event_date: interest.event_date || new Date().toISOString(),
-          status: 'interested',
-          calendar_sync_status: 'manual'
-        }));
-      } else if (isComedian) {
-        // For comedians, fetch their bookings from comedian_bookings table
-        const { data, error } = await supabase
-          .from('comedian_bookings')
-          .select(`
-            id,
-            status,
-            fee,
-            events!inner(
-              id,
-              title,
-              venue,
-              event_date,
-              created_at
-            )
-          `)
-          .eq('comedian_id', user.id);
+      if (applicationsError) throw applicationsError;
+      if (!applications || applications.length === 0) return [];
 
-        if (error) throw error;
+      // Then batch-fetch related events
+      const eventIds = [...new Set(applications.map(a => a.event_id).filter(Boolean))];
+      if (eventIds.length === 0) return [];
 
-        const bookings = (data || []).map(booking => ({
-          id: booking.id,
-          title: booking.events?.title || 'Gig',
-          venue: booking.events?.venue || 'Venue TBA',
-          event_date: booking.events?.event_date || new Date().toISOString(),
-          status: booking.status,
-          calendar_sync_status: 'confirmed'
-        }));
+      const { data: events, error: eventsError } = await supabase
+        .from('events')
+        .select('id, title, venue, event_date, start_time')
+        .in('id', eventIds);
 
-        // Sort client-side since PostgREST doesn't support ordering by joined table columns
-        return bookings.sort((a, b) => a.event_date.localeCompare(b.event_date));
-      } else {
-        // For promoters, fetch events they created
-        const { data, error } = await supabase
-          .from('events')
-          .select('id, title, venue, event_date, status')
-          .eq('promoter_id', user.id)
-          .order('event_date', { ascending: true });
+      if (eventsError) throw eventsError;
 
-        if (error) throw error;
-        return (data || []).map(event => ({
-          id: event.id,
-          title: event.title,
-          venue: event.venue,
-          event_date: event.event_date,
-          status: event.status || 'published',
-          calendar_sync_status: 'published'
-        }));
-      }
+      // Map events to applications
+      const eventMap = new Map(events?.map(e => [e.id, e]) || []);
+      return applications.map(application => ({
+        id: application.id,
+        status: application.status === 'accepted' ? 'confirmed' : application.status,
+        events: eventMap.get(application.event_id!)
+      })).filter(b => b.events); // Only include applications with valid events
     },
-    enabled: !!user?.id
+    enabled: !!user?.id && isComedian
   });
 
-  // Filter events for the selected date and based on toggle
-  const selectedDateEvents = calendarEvents.filter(event => 
-    event.event_date && isSameDay(parseISO(event.event_date), selectedDate) &&
-    (showPendingGigs || event.status === 'confirmed')
-  );
-  
-  // Filter events for calendar display
-  const filteredEvents = calendarEvents.filter(event => 
-    showPendingGigs || event.status === 'confirmed'
-  );
-  
-  const datesWithEvents = filteredEvents
-    .filter(event => event.event_date)
-    .map(event => parseISO(event.event_date));
+  // Combine all events into unified format
+  const allEvents: GigPillEvent[] = useMemo(() => {
+    const events: GigPillEvent[] = [];
 
+    // Add confirmed and pending bookings
+    confirmedBookings.forEach(booking => {
+      if (booking.events) {
+        events.push({
+          id: booking.id,
+          title: booking.events.title,
+          venue: booking.events.venue,
+          date: booking.events.start_time || booking.events.event_date,
+          end_time: null,
+          type: booking.status === 'confirmed' ? 'confirmed' : 'pending' as GigType,
+          notes: null
+        });
+      }
+    });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-green-500';
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'cancelled':
-        return 'bg-red-500';
-      case 'interested':
-        return 'bg-blue-500';
-      default:
-        return 'bg-gray-500';
+    // Add personal gigs
+    personalGigs.forEach(gig => {
+      events.push({
+        id: gig.id,
+        title: gig.title,
+        venue: gig.venue,
+        date: gig.date,
+        end_time: gig.end_time,
+        type: 'personal' as GigType,
+        notes: gig.notes
+      });
+    });
+
+    // Add manual gigs
+    manualGigs.forEach(gig => {
+      events.push({
+        id: gig.id,
+        title: gig.title,
+        venue: gig.venue_name,
+        date: gig.start_datetime,
+        end_time: gig.end_datetime,
+        type: 'personal' as GigType,
+        notes: gig.notes,
+        is_recurring: gig.is_recurring,
+        parent_gig_id: gig.parent_gig_id
+      });
+    });
+
+    console.log('📅 [ProfileCalendarView] Events compiled:', {
+      confirmedBookings: confirmedBookings.length,
+      personalGigs: personalGigs.length,
+      manualGigs: manualGigs.length,
+      totalEvents: events.length,
+      manualGigsData: manualGigs
+    });
+
+    return events;
+  }, [confirmedBookings, personalGigs, manualGigs]);
+
+  // Filter events based on selected types
+  const filteredEvents = useMemo(() => {
+    return allEvents.filter(event => selectedTypes.includes(event.type));
+  }, [allEvents, selectedTypes]);
+
+  // Transform blocked dates for WeeklyView
+  const blockedTimes = useMemo(() => {
+    return blockedDates.map(block => ({
+      id: block.id,
+      dateStart: new Date(block.start_date),
+      dateEnd: new Date(block.end_date),
+      reason: block.reason || undefined
+    }));
+  }, [blockedDates]);
+
+  // Group filtered events by date for monthly view
+  const eventsByDate = useMemo(() => {
+    const grouped: Record<string, GigPillEvent[]> = {};
+
+    filteredEvents.forEach(event => {
+      const dateKey = event.date.split('T')[0];
+      if (!dateKey) return;
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.push(event);
+    });
+
+    return grouped;
+  }, [filteredEvents]);
+
+  // Calendar grid days for monthly view
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  }, [selectedMonth]);
+
+  // Handlers
+  const handleBlockDates = async (data: BlockDatesFormData) => {
+    await createBlockedDates(data);
+  };
+
+  const handleDeleteGig = async (eventId: string, type: GigType) => {
+    if (type === 'personal') {
+      await deletePersonalGig(eventId);
     }
   };
 
-  const handleEditEvent = (eventId: string) => {
-    toast({
-      title: "Edit Event",
-      description: "Event editing functionality will be implemented soon"
+  const handleImportFromGoogle = async () => {
+    const count = await importFromGoogle({
+      timeMin: new Date().toISOString(),
+      maxResults: 50
     });
+
+    if (count > 0) {
+      setIsAddGigModalOpen(false);
+    }
   };
 
-  const handleCancelEvent = (eventId: string) => {
-    toast({
-      title: "Cancel Event",
-      description: "Event cancellation functionality will be implemented soon"
-    });
+  const handlePreviousMonth = () => {
+    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
   };
 
-  const handleAddEvent = () => {
-    toast({
-      title: "Add Event",
-      description: "Event creation functionality will be implemented soon"
-    });
+  const handleNextMonth = () => {
+    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1));
   };
 
-  if (isLoading) {
+  const handleToday = () => {
+    setSelectedMonth(new Date());
+  };
+
+  if (!isComedian) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-card/50 backdrop-blur-sm border-border">
-          <CardContent className="p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-muted rounded w-1/3"></div>
-              <div className="h-64 bg-muted rounded"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">Calendar View</h3>
+          <p className="text-muted-foreground">
+            Calendar view is only available for comedians
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Availability Management for Comedians */}
-      {isComedian && (
-        <ComedianAvailabilityCalendar comedianId={user.id} />
-      )}
-      
-      {/* Events Calendar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-card/50 backdrop-blur-sm border-border">
-          <CardHeader>
-          <div className="flex justify-between items-center">
+      {/* Header with Action Buttons */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              {isConsumer ? 'Event Calendar' : isComedian ? 'Gig Calendar' : 'My Events'}
+              <Calendar className="w-5 h-5" />
+              My Calendar
             </CardTitle>
-            {/* Only show Add Event button for promoters */}
-            {!isConsumer && !isComedian && (
-              <Button size="sm" onClick={handleAddEvent}>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => navigate('/dashboard/gigs/add')}
+                size="sm"
+              >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Event
+                Add Gig
               </Button>
-            )}
+
+              <Button
+                onClick={() => setIsBlockDatesModalOpen(true)}
+                className="professional-button"
+                size="sm"
+              >
+                <Ban className="w-4 h-4 mr-2" />
+                Block Dates
+              </Button>
+
+              {syncStatus.isConnected ? (
+                <>
+                  <Button
+                    onClick={() => importFromGoogle()}
+                    className="professional-button"
+                    size="sm"
+                    disabled={syncStatus.isSyncing}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Import from Google
+                  </Button>
+                  <Button
+                    onClick={() => disconnect()}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Connected
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={connectGoogleCalendar}
+                  className="professional-button"
+                  size="sm"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Connect Google Calendar
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
+
         <CardContent>
-          {/* Calendar Integration Buttons */}
-          {isComedian && (
-            <div className="flex gap-2 mb-4">
-              <Button 
-                onClick={initiateGoogleCalendarAuth}
-                disabled={isConnecting}
-                className="flex items-center gap-2"
-                variant={isGoogleConnected ? "default" : "outline"}
-              >
-                <RefreshCw className="w-4 h-4" />
-                {isGoogleConnected ? 'Google Calendar (Connected)' : 'Connect Google Calendar'}
-              </Button>
-              <Button 
-                onClick={() => {
-                  const events = calendarEvents
-                    .filter(event => showPendingGigs || event.status === 'confirmed')
-                    .map(event => ({
-                      id: event.id,
-                      title: event.title,
-                      description: `Comedy gig at ${event.venue}`,
-                      start_time: event.event_date,
-                      end_time: new Date(new Date(event.event_date).getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours duration
-                      location: event.venue
-                    }));
-                  downloadICSFile(events, 'comedy-gigs.ics');
-                }}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Export to Apple Calendar
-              </Button>
-            </div>
-          )}
-          
-          {/* View Toggle and Pending Gigs Filter */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <Tabs value={viewType} onValueChange={(value) => setViewType(value as 'monthly' | 'weekly')} className="w-full">
-              <TabsList className="grid grid-cols-2 w-full max-w-md">
-                <TabsTrigger value="monthly">Monthly View</TabsTrigger>
-                <TabsTrigger value="weekly">Weekly View</TabsTrigger>
+          {/* View Tabs and Filter */}
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="list">List</TabsTrigger>
               </TabsList>
-            </Tabs>
-            
-            {isComedian && (
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="show-pending"
-                  checked={showPendingGigs}
-                  onCheckedChange={setShowPendingGigs}
-                />
-                <label htmlFor="show-pending" className="text-sm font-medium">
-                  Show Pending Gigs
-                </label>
-              </div>
-            )}
-          </div>
-
-          {/* Monthly View */}
-          {viewType === 'monthly' && (
-            <div className="max-w-md mx-auto">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                modifiers={{
-                  hasEvents: datesWithEvents
-                }}
-                modifiersStyles={{
-                  hasEvents: { 
-                    backgroundColor: 'hsl(var(--primary))', 
-                    color: 'hsl(var(--primary-foreground))',
-                    borderRadius: '6px'
-                  }
-                }}
-                className="rounded-md border bg-background/50"
-              />
+              <EventTypeFilter selectedTypes={selectedTypes} onChange={setSelectedTypes} />
             </div>
-          )}
 
-          {/* Weekly View */}
-          {viewType === 'weekly' && (
-            <div className="w-full">
+            {/* Monthly View */}
+            <TabsContent value="monthly" className="mt-0">
+              {/* Month Navigation */}
               <div className="flex items-center justify-between mb-4">
-                <Button 
-                  onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ChevronLeft className="w-4 h-4" />
+                <Button className="professional-button" size="sm" onClick={handlePreviousMonth}>
+                  Previous
                 </Button>
-                <h3 className="text-lg font-semibold">
-                  {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), 'MMM d')} - {format(endOfWeek(currentWeek, { weekStartsOn: 1 }), 'MMM d, yyyy')}
-                </h3>
-                <Button 
-                  onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-7 gap-2">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="text-center font-medium text-sm p-2 bg-muted rounded">
-                    {day}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <MonthPicker selectedMonth={selectedMonth} onChange={setSelectedMonth}>
+                      <Button variant="ghost" className="text-lg font-semibold hover:bg-white/10">
+                        {format(selectedMonth, 'MMMM')}
+                      </Button>
+                    </MonthPicker>
+                    <YearPicker selectedMonth={selectedMonth} onChange={setSelectedMonth}>
+                      <Button variant="ghost" className="text-lg font-semibold hover:bg-white/10">
+                        {format(selectedMonth, 'yyyy')}
+                      </Button>
+                    </YearPicker>
                   </div>
-                ))}
-                
-                {eachDayOfInterval({
-                  start: startOfWeek(currentWeek, { weekStartsOn: 1 }),
-                  end: endOfWeek(currentWeek, { weekStartsOn: 1 })
-                }).map(day => {
-                  const dayEvents = calendarEvents.filter(event => 
-                    event.event_date && isSameDay(parseISO(event.event_date), day) &&
-                    (showPendingGigs || event.status === 'confirmed')
-                  );
-                  
-                  return (
-                    <div 
-                      key={day.toISOString()}
-                      className={`min-h-24 p-2 border rounded cursor-pointer transition-colors ${
-                        isSameDay(day, selectedDate) ? 'bg-primary/20 border-primary' : 'bg-card/30 hover:bg-card/50'
-                      }`}
-                      onClick={() => setSelectedDate(day)}
-                    >
-                      <div className="text-sm font-medium mb-1">{format(day, 'd')}</div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map(event => (
-                          <div
-                            key={event.id}
-                            className={`text-xs p-1 rounded truncate ${
-                              event.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                            }`}
-                          >
-                            {event.title}
-                          </div>
-                        ))}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-muted-foreground">+{dayEvents.length - 2} more</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                  <Button variant="ghost" size="sm" onClick={handleToday}>
+                    Today
+                  </Button>
+                </div>
+                <Button className="professional-button" size="sm" onClick={handleNextMonth}>
+                  Next
+                </Button>
               </div>
-            </div>
-          )}
-          <div className="mt-4 text-sm text-muted-foreground text-center">
-            {isConsumer 
-              ? 'Dates with events you\'re interested in are highlighted'
-              : isComedian
-                ? 'Dates with your confirmed and pending gigs are highlighted'
-                : 'Dates with your events are highlighted'
-            }
-          </div>
+
+              {/* Calendar Grid */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4">
+                {/* Day Headers */}
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div
+                      key={day}
+                      className="text-center text-sm font-semibold text-muted-foreground p-2"
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7 gap-2">
+                  {calendarDays.map((day, index) => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    const dayEvents = eventsByDate[dateKey] || [];
+                    const isCurrentMonth = isSameMonth(day, selectedMonth);
+                    const isCurrentDay = isToday(day);
+
+                    return (
+                      <div
+                        key={index}
+                        className={cn(
+                          "min-h-24 p-2 border rounded-lg",
+                          isCurrentDay && "bg-primary/10 border-primary",
+                          !isCurrentMonth && "bg-muted/20 text-muted-foreground",
+                          isCurrentMonth && !isCurrentDay && "bg-card border-border"
+                        )}
+                      >
+                        <div className="text-sm font-medium mb-1">
+                          {format(day, 'd')}
+                        </div>
+                        <div className="space-y-1">
+                          {dayEvents.slice(0, 3).map(event => (
+                            <GigPill
+                              key={event.id}
+                              event={event}
+                              onDelete={handleDeleteGig}
+                              showDelete={true}
+                            />
+                          ))}
+                          {dayEvents.length > 3 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{dayEvents.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Weekly View */}
+            <TabsContent value="weekly" className="mt-0">
+              <WeeklyViewWithTimeSlots
+                events={filteredEvents}
+                blockedTimes={blockedTimes}
+                onEventDelete={handleDeleteGig}
+                showDelete={true}
+              />
+            </TabsContent>
+
+            {/* List View */}
+            <TabsContent value="list" className="mt-0">
+              <GigListView
+                events={filteredEvents}
+                onEventDelete={handleDeleteGig}
+                showDelete={true}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold">
-          Events on {format(selectedDate, 'MMMM d, yyyy')}
-        </h3>
-        
-        {selectedDateEvents.length === 0 ? (
-          <Card className="bg-card/50 backdrop-blur-sm border-border">
-            <CardContent className="p-8 text-center">
-              <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h4 className="text-lg font-semibold mb-2">No events scheduled</h4>
-              <p className="text-muted-foreground">
-                {isConsumer 
-                  ? "You don't have any events of interest for this day"
-                  : "You don't have any events scheduled for this day"
-                }
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          selectedDateEvents.map((event) => (
-            <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-colors">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{event.title}</CardTitle>
-                    <p className="text-muted-foreground">{event.venue}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge className={getStatusColor(event.status)}>
-                      {event.status}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{event.event_date ? format(parseISO(event.event_date), 'h:mm a') : 'Time TBA'}</span>
-                  </div>
-                  {!isConsumer && event.calendar_sync_status && (
-                    <div className="flex items-center space-x-1">
-                      <Users className="w-4 h-4" />
-                      <span>Sync: {event.calendar_sync_status}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {!isConsumer && (
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => handleEditEvent(event.id)}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Details
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleCancelEvent(event.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
+      {/* Modals */}
+      <BlockDatesModal
+        isOpen={isBlockDatesModalOpen}
+        onClose={() => setIsBlockDatesModalOpen(false)}
+        onSave={handleBlockDates}
+      />
     </div>
   );
 };

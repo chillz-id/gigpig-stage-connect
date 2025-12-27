@@ -1,0 +1,108 @@
+{
+    "general": {
+        "name": null,
+        "port": null,
+        "host": "http://localhost:8090",
+        "secret_key": "3lheCFRnUzzpIACV",
+        "force_ssl": null,
+        "editor": null,
+        "fork_button": null,
+        "logout": null,
+        "display_hidden": null,
+        "refresh_after_upload": null,
+        "upload_button": null,
+        "upload_pool_size": null,
+        "upload_chunk_size": null,
+        "buffer_size": null,
+        "filepage_default_view": null,
+        "filepage_default_sort": null,
+        "cookie_timeout": null,
+        "custom_css": null,
+        "license": null
+    },
+    "features": {
+        "api": {
+            "enable": null,
+            "api_key": null
+        },
+        "share": {
+            "enable": null,
+            "default_access": null,
+            "redirect": null
+        },
+        "protection": {
+            "iframe": null,
+            "enable_chromecast": null,
+            "signature": null,
+            "enable": null,
+            "disable_svg": null,
+            "zip_timeout": null,
+            "disable_csp": null
+        },
+        "workflow": {
+            "enable": null,
+            "workers": null
+        },
+        "server": {
+            "console_enable": null
+        },
+        "mcp": {
+            "enable": false,
+            "can_edit": true
+        },
+        "site": {
+            "enable": null,
+            "autoindex": null,
+            "cors_allow_origins": null
+        },
+        "search": {
+            "explore_timeout": null
+        },
+        "office": {
+            "office_server": null,
+            "filestash_server": null,
+            "rewrite_discovery_url": null,
+            "enable": null
+        },
+        "video": {
+            "blacklist_format": null,
+            "enable_transcoder": null
+        }
+    },
+    "log": {
+        "enable": null,
+        "level": null,
+        "telemetry": true
+    },
+    "email": {
+        "server": null,
+        "port": null,
+        "username": null,
+        "password": null,
+        "from": null
+    },
+    "auth": {
+        "admin": "$2a$10$eJofQTxme.oCFysVo5OiQO67rBZyYdJFyA05URNBVTsmeCXIxRcYG"
+    },
+    "middleware": {
+        "identity_provider": {
+            "type": "passthrough",
+            "params": "3WlPVzlWyJpNkoQ98Njdo96GHnhjq4oyDXGTgx5wUZytqD0LxVG9pZGtaGEQDH4xbAXAl2dkQ-GerU8y9xDEDz1MBU4="
+        },
+        "attribute_mapping": {
+            "related_backend": "S3",
+            "params": "3WlPVzlWyJpNkoQ-a6_72x0aggIVZ3UCmLtDrRo0v-3gpe8GrrI-CLfvQ0nSjygmpgZ_WH1KsMncBySc-Hbygr1Nzbx6e75nQd8KAAL9VS_GHdXzKb4L_DrrQM2t4zXsysJSxOtsTNXl3gKMutBp3qFHKutQws20CqFLK2kG6yxLwYBR9DJltC8nyHBeZueoYuk0p4MezjO_p3Itg9j8bj6r9r1ze9TPXoELKALL"
+        }
+    },
+    "constant": {
+        "user": "filestash",
+        "license": "agpl"
+    },
+    "connections": [
+        {
+            "label": "S3",
+            "type": "s3"
+        }
+    ]
+}
+

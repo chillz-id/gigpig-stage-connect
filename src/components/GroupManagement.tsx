@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -186,8 +186,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                     </Button>
                     <Button 
                       onClick={() => setIsCreateDialogOpen(false)}
-                      variant="outline"
-                      className="text-white border-white/30 hover:bg-white/10"
+                      className="professional-button text-white border-white/30 hover:bg-white/10"
                     >
                       Cancel
                     </Button>
@@ -213,7 +212,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                     <CardTitle className="flex items-center space-x-2">
                       <span>{group.name}</span>
                       {group.isDefault && (
-                        <Badge variant="outline" className="text-xs text-blue-300 border-blue-300">
+                        <Badge className="professional-button text-xs text-blue-300 border-blue-300">
                           Default
                         </Badge>
                       )}
@@ -247,8 +246,7 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                   {group.permissions.map((permission) => (
                     <Badge 
                       key={permission} 
-                      variant="outline" 
-                      className="text-xs text-purple-200 border-purple-300"
+                      className="professional-button text-xs text-purple-200 border-purple-300"
                     >
                       {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </Badge>
@@ -267,12 +265,12 @@ const GroupManagement: React.FC<GroupManagementProps> = ({
                   {group.members.map((member) => (
                     <div key={member.id} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback className="text-xs">
-                            {member.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={member.avatar}
+                          name={member.name}
+                          className="w-6 h-6"
+                          fallbackClassName="text-xs"
+                        />
                         <span className="text-sm">{member.name}</span>
                       </div>
                       {!group.isDefault && (

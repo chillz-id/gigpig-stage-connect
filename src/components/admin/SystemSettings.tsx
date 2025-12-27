@@ -217,9 +217,8 @@ const SystemSettings = () => {
             )}
             
             {facebookAdsStatus.connected && (
-              <Button 
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+              <Button
+                className="professional-button border-white/30 text-white hover:bg-white/10"
                 onClick={() => {
                   setFacebookAdsStatus({
                     connected: false,
@@ -390,25 +389,22 @@ const SystemSettings = () => {
               Create Database Backup
             </Button>
 
-            <Button 
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Globe className="w-4 h-4 mr-2" />
               Clear Site Cache
             </Button>
 
-            <Button 
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Mail className="w-4 h-4 mr-2" />
               Test Email System
             </Button>
 
-            <Button 
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Shield className="w-4 h-4 mr-2" />
               Security Audit

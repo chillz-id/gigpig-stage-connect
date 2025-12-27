@@ -102,18 +102,18 @@ const mapComedianApplication = (row: any): ComedianApplicationRecord => {
       id: row.events.id,
       title: row.events.title ?? '',
       venue: row.events.venue ?? '',
-      address: row.events.address ?? row.events.venue_address ?? null,
+      address: row.events.address ?? null,
       event_date: row.events.event_date ?? '',
       start_time: row.events.start_time ?? null,
       city: row.events.city ?? '',
       state: row.events.state ?? '',
       status: row.events.status ?? null,
       banner_url: row.events.banner_url ?? null,
-      promoter: row.events.promoter
+      promoter: row.events.organization
         ? {
-            id: row.events.promoter.id,
-            name: row.events.promoter.name ?? null,
-            avatar_url: row.events.promoter.avatar_url ?? null,
+            id: row.events.organization.id,
+            name: row.events.organization.organization_name ?? null,
+            avatar_url: row.events.organization.logo_url ?? null,
           }
         : null,
     },
@@ -121,6 +121,9 @@ const mapComedianApplication = (row: any): ComedianApplicationRecord => {
 };
 
 export const eventApplicationService = {
+  /**
+   * List applications by internal event UUID
+   */
   async listByEvent(eventId: string): Promise<EventApplication[]> {
     const { data, error } = await supabaseClient
       .from('applications')
@@ -132,30 +135,49 @@ export const eventApplicationService = {
     return (data as EventApplication[] | null) ?? [];
   },
 
+  /**
+   * List applications by session source ID (Humanitix session ID)
+   * Used for calendar-based applications from the Find Gigs page
+   */
+  async listBySessionSourceId(sessionSourceId: string): Promise<EventApplication[]> {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .select(`
+        *,
+        comedian:profiles!applications_comedian_id_fkey (
+          id,
+          name,
+          avatar_url,
+          bio,
+          years_experience
+        )
+      `)
+      .eq('session_source_id', sessionSourceId)
+      .order('applied_at', { ascending: false });
+
+    if (error) throw error;
+    return (data as EventApplication[] | null) ?? [];
+  },
+
   async listForComedian(comedianId: string): Promise<ComedianApplicationRecord[]> {
+    // Fetch all applications (both event-based and session-based)
     const { data, error } = await supabaseClient
       .from('applications')
       .select(
         `
         *,
-        events!inner (
+        events (
           id,
           title,
           venue,
           address,
-          venue_address,
           event_date,
           start_time,
           city,
           state,
           status,
           banner_url,
-          promoter_id,
-          promoter:profiles!events_promoter_id_fkey (
-            id,
-            name,
-            avatar_url
-          )
+          organization_id
         )
       `
       )
@@ -163,7 +185,88 @@ export const eventApplicationService = {
       .order('applied_at', { ascending: false });
 
     if (error) throw error;
-    return ((data ?? []) as any[]).map(mapComedianApplication);
+
+    const applications = (data ?? []) as any[];
+
+    // Get session_source_ids for applications without event_id
+    const sessionSourceIds = applications
+      .filter((app) => !app.event_id && app.session_source_id)
+      .map((app) => app.session_source_id);
+
+    // Fetch session data from sessions_htx for session-based applications
+    let sessionMap: Record<string, any> = {};
+    if (sessionSourceIds.length > 0) {
+      const { data: sessionsData, error: sessionsError } = await supabaseClient
+        .from('sessions_htx')
+        .select('source_id, name, venue_name, start_date_local')
+        .in('source_id', sessionSourceIds);
+
+      if (sessionsError) {
+        console.error('Error fetching session data:', sessionsError);
+      }
+
+      if (sessionsData) {
+        sessionMap = sessionsData.reduce((acc: Record<string, any>, session: any) => {
+          acc[session.source_id] = session;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Map applications, enriching session-based ones with session data
+    return applications.map((row) => {
+      // If has event_id, use the standard mapper
+      if (row.event_id && row.events) {
+        return mapComedianApplication(row);
+      }
+
+      // For session-based applications, build event data from sessions_htx
+      const session = sessionMap[row.session_source_id];
+      const base: EventApplication = {
+        id: row.id,
+        event_id: row.event_id,
+        comedian_id: row.comedian_id,
+        status: row.status,
+        message: row.message,
+        spot_type: row.spot_type,
+        availability_confirmed: row.availability_confirmed,
+        requirements_acknowledged: row.requirements_acknowledged,
+        applied_at: row.applied_at,
+        responded_at: row.responded_at,
+      };
+
+      if (!session) {
+        return base;
+      }
+
+      // Parse start_date_local - format is "YYYY-MM-DD HH:MM:SS" (space-separated)
+      let eventDate = '';
+      let startTime: string | null = null;
+      if (session.start_date_local) {
+        // Handle both "YYYY-MM-DD HH:MM:SS" and "YYYY-MM-DDTHH:MM:SS" formats
+        const dateStr = session.start_date_local.replace('T', ' ');
+        const parts = dateStr.split(' ');
+        eventDate = parts[0] || '';
+        startTime = parts[1]?.substring(0, 5) || null;
+      }
+
+      return {
+        ...base,
+        event: {
+          id: row.session_source_id, // Use session_source_id as identifier
+          title: session.name ?? '',
+          venue: session.venue_name ?? '',
+          address: null,
+          event_date: eventDate,
+          start_time: startTime,
+          city: '',
+          state: '',
+          status: null,
+          banner_url: null,
+          promoter: null,
+        },
+      };
+    });
   },
 
   async hasExistingApplication(eventId: string, comedianId: string): Promise<boolean> {
@@ -275,15 +378,13 @@ export const eventApplicationService = {
           id,
           title,
           venue,
-          venue_address,
+          address,
           event_date,
-          event_time,
+          start_time,
           city,
           state,
           description,
-          requirements,
-          total_spots,
-          available_spots
+          requirements
         ),
         profiles!inner (
           id,

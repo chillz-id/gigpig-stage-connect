@@ -95,7 +95,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
             <span>Template Customization</span>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={handleImportClick}
                 disabled={!onImport}
@@ -104,7 +104,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                 Import
               </Button>
               <Button
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 onClick={onExport}
                 disabled={!onExport}

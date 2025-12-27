@@ -87,7 +87,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                 <div className="flex items-center gap-2">
                   {/* Email action */}
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={onSendEmails}
                     disabled={selectedCount === 0}
@@ -99,7 +99,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                   {/* Status actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button className="professional-button" size="sm">
                         Update Status
                         <ChevronDown className="w-4 h-4 ml-2" />
                       </Button>
@@ -131,7 +131,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                   {/* Export actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button className="professional-button" size="sm">
                         <FileDown className="w-4 h-4 mr-2" />
                         Export
                         <ChevronDown className="w-4 h-4 ml-2" />
@@ -151,10 +151,9 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
 
                   {/* Delete action */}
                   <Button
-                    variant="outline"
+                    className="professional-button text-red-600 hover:text-red-700"
                     size="sm"
                     onClick={onDeleteDrafts}
-                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Drafts

@@ -148,7 +148,7 @@ export function TemplateVariablesPanel({
               )}
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => onDialogChange(false)}>
+                <Button className="professional-button" onClick={() => onDialogChange(false)}>
                   Cancel
                 </Button>
                 <Button onClick={onSaveVariable}>
@@ -176,7 +176,7 @@ export function TemplateVariablesPanel({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{variable.type}</Badge>
+                  <Badge className="professional-button">{variable.type}</Badge>
                   {variable.required && <Badge variant="default">Required</Badge>}
                   <Button variant="ghost" size="sm" onClick={() => onEditVariable(key)}>
                     <Settings className="w-4 h-4" />

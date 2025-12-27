@@ -1,0 +1,304 @@
+{
+  "name": "Meta Customer Sync (Custom Audiences + Conversions API)",
+  "active": true,
+  "meta": {
+    "description": "Syncs new orders from Supabase to Meta/Facebook Custom Audiences and sends purchase events to Conversions API",
+    "instanceId": "meta-customer-sync-v2"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "event": "INSERT",
+        "channel": "orders_htx"
+      },
+      "id": "supabase-trigger-htx",
+      "name": "New Humanitix Order",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [280, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "event": "INSERT",
+        "channel": "orders_eventbrite"
+      },
+      "id": "supabase-trigger-eventbrite",
+      "name": "New Eventbrite Order",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [280, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract customer and order data from Supabase trigger payload\n// Handles both orders_htx and orders_eventbrite tables\nconst record = $input.all()[0].json.record || $input.all()[0].json;\n\nif (!record.purchaser_email) {\n  throw new Error('No email found in order data');\n}\n\n// Determine source from the table or record\nconst isHumanitix = record.source === 'humanitix' || !record.source;\n\nconst customer = {\n  email: (record.purchaser_email || '').toLowerCase().trim(),\n  phone: record.mobile || '',\n  firstName: record.first_name || '',\n  lastName: record.last_name || '',\n  city: record.address_city || '',\n  state: record.address_state || '',\n  postcode: record.address_postal_code || '',\n  country: record.address_country || 'AU'\n};\n\nconst orderData = {\n  orderId: record.source_id || `order_${Date.now()}`,\n  value: (record.total_cents || 0) / 100, // Convert cents to dollars\n  currency: record.currency || 'AUD',\n  eventId: record.event_source_id || '',\n  eventName: 'Event Purchase',\n  platform: isHumanitix ? 'humanitix' : 'eventbrite',\n  orderDate: record.ordered_at || record.created_at || new Date().toISOString()\n};\n\nconsole.log('Processing order for Meta sync:', orderData.orderId, 'from', orderData.platform);\n\nreturn [{\n  customer,\n  orderData,\n  rawOrder: record\n}];"
+      },
+      "id": "extract-customer-data",
+      "name": "Extract Customer Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// SHA256 hash function for Meta API\nasync function sha256(message) {\n  const msgBuffer = new TextEncoder().encode(message.toLowerCase().trim());\n  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);\n  const hashArray = Array.from(new Uint8Array(hashBuffer));\n  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');\n}\n\n// Normalize phone to E.164 format\nfunction normalizePhone(phone) {\n  if (!phone) return '';\n  let normalized = phone.replace(/[^\\d+]/g, '');\n  if (!normalized.startsWith('+')) {\n    if (normalized.startsWith('0')) {\n      normalized = '+61' + normalized.slice(1);\n    } else if (normalized.startsWith('61')) {\n      normalized = '+' + normalized;\n    } else {\n      normalized = '+61' + normalized;\n    }\n  }\n  return normalized;\n}\n\nconst data = $input.all()[0].json;\nconst customer = data.customer;\nconst orderData = data.orderData;\n\n// Hash all PII fields for Meta\nconst hashedData = {\n  em: customer.email ? await sha256(customer.email) : '',\n  ph: customer.phone ? await sha256(normalizePhone(customer.phone)) : '',\n  fn: customer.firstName ? await sha256(customer.firstName.toLowerCase().replace(/[^a-z]/g, '')) : '',\n  ln: customer.lastName ? await sha256(customer.lastName.toLowerCase().replace(/[^a-z]/g, '')) : '',\n  ct: customer.city ? await sha256(customer.city.toLowerCase().replace(/\\s/g, '')) : '',\n  st: customer.state ? await sha256(customer.state.toLowerCase().replace(/\\s/g, '')) : '',\n  zp: customer.postcode ? await sha256(customer.postcode.replace(/\\s/g, '')) : '',\n  country: customer.country ? await sha256(customer.country.toLowerCase()) : ''\n};\n\n// Build Custom Audiences payload (array format)\nconst audiencePayload = [\n  hashedData.em,\n  hashedData.ph,\n  hashedData.fn,\n  hashedData.ln,\n  hashedData.ct,\n  hashedData.st,\n  hashedData.zp,\n  hashedData.country\n];\n\n// Build Conversions API payload\nconst conversionPayload = {\n  event_name: 'Purchase',\n  event_time: Math.floor(Date.now() / 1000),\n  event_id: orderData.orderId,\n  action_source: 'system_generated',\n  user_data: {\n    em: hashedData.em ? [hashedData.em] : undefined,\n    ph: hashedData.ph ? [hashedData.ph] : undefined,\n    fn: hashedData.fn ? [hashedData.fn] : undefined,\n    ln: hashedData.ln ? [hashedData.ln] : undefined\n  },\n  custom_data: {\n    currency: orderData.currency,\n    value: orderData.value,\n    content_ids: orderData.eventId ? [orderData.eventId] : undefined,\n    content_type: 'product',\n    content_name: orderData.eventName\n  }\n};\n\n// Remove undefined values from user_data\nObject.keys(conversionPayload.user_data).forEach(key => {\n  if (!conversionPayload.user_data[key] || !conversionPayload.user_data[key][0]) {\n    delete conversionPayload.user_data[key];\n  }\n});\n\nconsole.log('Hashed customer data for Meta APIs');\n\nreturn [{\n  customer: data.customer,\n  orderData: data.orderData,\n  audiencePayload,\n  conversionPayload\n}];"
+      },
+      "id": "hash-pii-data",
+      "name": "Hash PII Data (SHA256)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_CUSTOM_AUDIENCE_ID }}/users",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  payload: {\n    schema: ['EMAIL', 'PHONE', 'FN', 'LN', 'CT', 'ST', 'ZIP', 'COUNTRY'],\n    data: [$json.audiencePayload]\n  },\n  access_token: $env.META_ACCESS_TOKEN\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "add-to-custom-audience",
+      "name": "Add to Custom Audience",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [940, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PIXEL_ID }}/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  data: [$json.conversionPayload],\n  access_token: $env.META_ACCESS_TOKEN\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "send-conversion-event",
+      "name": "Send Conversion Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [940, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge results from both API calls\nconst hashData = $('Hash PII Data (SHA256)').item.json;\nconst audienceResult = $('Add to Custom Audience').item.json;\nconst conversionResult = $('Send Conversion Event').item.json;\n\nconst audienceSuccess = !audienceResult.error && (audienceResult.num_received > 0 || audienceResult.audience_id);\nconst conversionSuccess = !conversionResult.error && conversionResult.events_received > 0;\n\nconst result = {\n  timestamp: new Date().toISOString(),\n  orderId: hashData.orderData.orderId,\n  email: hashData.customer.email,\n  platform: hashData.orderData.platform,\n  \n  audienceSync: {\n    success: audienceSuccess,\n    numReceived: audienceResult.num_received || 0,\n    numInvalid: audienceResult.num_invalid_entries || 0,\n    error: audienceResult.error?.message || null\n  },\n  \n  conversionSync: {\n    success: conversionSuccess,\n    eventsReceived: conversionResult.events_received || 0,\n    fbtrace_id: conversionResult.fbtrace_id || null,\n    error: conversionResult.error?.message || null\n  },\n  \n  overallStatus: audienceSuccess && conversionSuccess ? 'success' : \n                  audienceSuccess || conversionSuccess ? 'partial' : 'failed'\n};\n\nconsole.log('Meta Sync Result:', JSON.stringify(result, null, 2));\n\nreturn [result];"
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1160, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": {
+          "__rl": true,
+          "value": "meta_sync_log",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sync_type": "={{ 'audience' }}",
+            "status": "={{ $json.audienceSync.success ? 'success' : 'failed' }}",
+            "event_name": "={{ 'AudienceUpload' }}",
+            "meta_response": "={{ $json.audienceSync }}",
+            "error_message": "={{ $json.audienceSync.error || null }}"
+          }
+        }
+      },
+      "id": "log-audience-sync",
+      "name": "Log Audience Sync",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1380, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": {
+          "__rl": true,
+          "value": "meta_sync_log",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sync_type": "={{ 'conversion' }}",
+            "status": "={{ $json.conversionSync.success ? 'success' : 'failed' }}",
+            "event_name": "={{ 'Purchase' }}",
+            "event_value": "={{ $('Hash PII Data (SHA256)').item.json.orderData.value }}",
+            "meta_response": "={{ $json.conversionSync }}",
+            "error_message": "={{ $json.conversionSync.error || null }}"
+          }
+        }
+      },
+      "id": "log-conversion-sync",
+      "name": "Log Conversion Sync",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1380, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "New Humanitix Order": {
+      "main": [
+        [
+          {
+            "node": "Extract Customer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Eventbrite Order": {
+      "main": [
+        [
+          {
+            "node": "Extract Customer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Customer Data": {
+      "main": [
+        [
+          {
+            "node": "Hash PII Data (SHA256)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash PII Data (SHA256)": {
+      "main": [
+        [
+          {
+            "node": "Add to Custom Audience",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Conversion Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Custom Audience": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Conversion Event": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Log Audience Sync",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Conversion Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["meta", "facebook", "custom-audiences", "conversions-api", "supabase-trigger"],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-09T00:00:00.000Z",
+  "versionId": "2",
+  "notes": {
+    "setup": [
+      "1. Set environment variables in N8N:",
+      "   - META_ACCESS_TOKEN: Your Facebook System User access token",
+      "   - META_PIXEL_ID: Your Facebook Pixel ID",
+      "   - META_CUSTOM_AUDIENCE_ID: Your Custom Audience ID",
+      "",
+      "2. Configure Supabase credentials in N8N",
+      "",
+      "3. Enable Supabase Realtime for orders_htx and orders_eventbrite tables:",
+      "   ALTER PUBLICATION supabase_realtime ADD TABLE orders_htx;",
+      "   ALTER PUBLICATION supabase_realtime ADD TABLE orders_eventbrite;",
+      "",
+      "4. This workflow triggers automatically on new INSERT to orders_htx or orders_eventbrite",
+      "",
+      "5. Data flow:",
+      "   - Humanitix/Eventbrite API -> N8N sync -> Supabase tables (existing)",
+      "   - Supabase INSERT -> This workflow -> Meta APIs"
+    ]
+  }
+}

@@ -137,7 +137,7 @@ export const MultiPlatformTicketTracker: React.FC<MultiPlatformTicketTrackerProp
                       <h4 className="font-semibold capitalize flex items-center gap-2">
                         {platform.platform}
                         {platform.is_primary && (
-                          <Badge variant="outline" className="text-xs">Primary</Badge>
+                          <Badge className="professional-button text-xs">Primary</Badge>
                         )}
                       </h4>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -147,7 +147,7 @@ export const MultiPlatformTicketTracker: React.FC<MultiPlatformTicketTrackerProp
                     </div>
                   </div>
                   <Button
-                    variant="outline"
+                    className="professional-button"
                     size="sm"
                     onClick={() => window.open(platform.url, '_blank')}
                   >
@@ -191,7 +191,7 @@ export const MultiPlatformTicketTracker: React.FC<MultiPlatformTicketTrackerProp
 
           {/* Add New Platform Button */}
           <div className="mt-6 text-center">
-            <Button variant="outline" className="w-full">
+            <Button className="professional-button w-full">
               + Add Another Ticketing Platform
             </Button>
           </div>

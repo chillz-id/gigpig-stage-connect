@@ -1,6 +1,7 @@
 // Task Management Dashboard - Main page for task management
 import React, { useState, useMemo } from 'react';
 import { Plus, Filter, Calendar, BarChart3, FileText, Search, SortAsc } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -149,7 +150,7 @@ export default function TaskDashboard() {
         <div className="flex items-center gap-2">
           <Dialog open={templateLibraryOpen} onOpenChange={setTemplateLibraryOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="professional-button flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Templates
               </Button>
@@ -204,26 +205,29 @@ export default function TaskDashboard() {
       {/* Quick Filters */}
       <div className="flex flex-wrap gap-2">
         <Button
-          variant="outline"
+          className={cn(
+            "professional-button",
+            !Object.keys(filters).length && 'bg-primary text-primary-foreground'
+          )}
           size="sm"
           onClick={() => handleQuickFilter('all')}
-          className={!Object.keys(filters).length ? 'bg-primary text-primary-foreground' : ''}
         >
           All Tasks
         </Button>
         <Button
-          variant="outline"
+          className={cn(
+            "professional-button",
+            filters.assignee_id?.includes(user?.id || '') && 'bg-primary text-primary-foreground'
+          )}
           size="sm"
           onClick={() => handleQuickFilter('my-tasks')}
-          className={filters.assignee_id?.includes(user?.id || '') ? 'bg-primary text-primary-foreground' : ''}
         >
           My Tasks
         </Button>
         <Button
-          variant="outline"
+          className={cn("professional-button", filters.due_date_range?.start === new Date().toISOString().split('T')[0] && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('due-today')}
-          className={filters.due_date_range?.start === new Date().toISOString().split('T')[0] ? 'bg-primary text-primary-foreground' : ''}
         >
           Due Today
           {dashboard.tasksDueToday.length > 0 && (
@@ -233,7 +237,7 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => handleQuickFilter('due-this-week')}
         >
@@ -245,10 +249,9 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className={cn("professional-button", filters.is_overdue && 'bg-destructive text-destructive-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('overdue')}
-          className={filters.is_overdue ? 'bg-destructive text-destructive-foreground' : ''}
         >
           Overdue
           {dashboard.overdueTasks.length > 0 && (
@@ -258,18 +261,16 @@ export default function TaskDashboard() {
           )}
         </Button>
         <Button
-          variant="outline"
+          className={cn("professional-button", (filters.priority?.includes('urgent') || filters.priority?.includes('high')) && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('high-priority')}
-          className={filters.priority?.includes('urgent') || filters.priority?.includes('high') ? 'bg-primary text-primary-foreground' : ''}
         >
           High Priority
         </Button>
         <Button
-          variant="outline"
+          className={cn("professional-button", filters.status?.includes('in_progress') && 'bg-primary text-primary-foreground')}
           size="sm"
           onClick={() => handleQuickFilter('in-progress')}
-          className={filters.status?.includes('in_progress') ? 'bg-primary text-primary-foreground' : ''}
         >
           In Progress
         </Button>
@@ -304,13 +305,12 @@ export default function TaskDashboard() {
         </Select>
 
         <Button
-          variant="outline"
+          className="professional-button flex items-center gap-2"
           size="sm"
-          onClick={() => setSort(prev => ({ 
-            ...prev, 
-            direction: prev.direction === 'asc' ? 'desc' : 'asc' 
+          onClick={() => setSort(prev => ({
+            ...prev,
+            direction: prev.direction === 'asc' ? 'desc' : 'asc'
           }))}
-          className="flex items-center gap-2"
         >
           <SortAsc className="w-4 h-4" />
           {sort.direction === 'asc' ? 'Asc' : 'Desc'}
@@ -318,7 +318,7 @@ export default function TaskDashboard() {
 
         <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button className="professional-button flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filters
               {Object.keys(filters).length > 0 && (

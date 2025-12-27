@@ -1,0 +1,2567 @@
+Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+:8080/comedian/anthony-skinner:1 Access to fetch at 'https://pdikjpfulhhpqpxzpgtu.supabase.co/functions/v1/visitor-info' from origin 'http://localhost:8080' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: It does not have HTTP ok status.
+pdikjpfulhhpqpxzpgtu.supabase.co/functions/v1/visitor-info:1  Failed to load resource: net::ERR_FAILED
+hook.js:608 Failed to initialize visitor info: TypeError: Cannot read properties of null (reading 'ip')
+    at AnalyticsService.initializeVisitorInfo (analyticsService.ts:48:26)
+overrideMethod @ hook.js:608
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+hook.js:608 Warning: AssemblyPoint: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: AppProvider: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Spinner3: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Spinner3 (index.js:1:182)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Topbar: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ConfirmationModal: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ConfirmationModal (ConfirmationModal.js:1:346)
+    at BackButton (BackButton.js:1:314)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Received `false` for a non-boolean attribute `active`.
+
+If you want to write it to the DOM, pass a string instead: active="false" or active={value.toString()}.
+
+If you used to conditionally omit it with active={condition && value}, pass active={condition ? value : undefined} instead. Error Component Stack
+    at button (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at button.component.js:16:23
+    at ConfirmationModal (ConfirmationModal.js:1:346)
+    at BackButton (BackButton.js:1:314)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ImageDimensionsAndDisplayToggle: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ImageDimensionsAndDisplayToggle (ImageDimensionsAndDisplayToggle.js:1:489)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `showBackButton` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `showbackbutton` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ResetButton: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ResetButton (ResetButton.js:1:238)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: UndoButton: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at UndoButton (UndoButton.js:1:229)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: RedoButton: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at RedoButton (RedoButton.js:1:229)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ButtonWithMenu: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ButtonWithMenu (index.js:1:365)
+    at SaveButton (SaveButton.js:1:1850)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `noMargin` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `nomargin` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ButtonWithMenu (index.js:1:365)
+    at SaveButton (SaveButton.js:1:1850)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `isPhoneScreen` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `isphonescreen` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: FeedbackPopup: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at FeedbackPopup (index.js:1:491)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `showTabsDrawer` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `showtabsdrawer` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Separator: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Separator (index.js:1:108)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ImageDimensionsAndDisplayToggle (ImageDimensionsAndDisplayToggle.js:1:489)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: CanvasZooming: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at CanvasZooming (CanvasZooming.js:1:728)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ImageDimensionsAndDisplayToggle (ImageDimensionsAndDisplayToggle.js:1:489)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Topbar (index.js:1:616)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Tabs3: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Tabs3 (index.js:1:274)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: TabItem: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at TabItem (TabItem.js:1:136)
+    at Tabs3 (index.js:1:274)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ToolsBar: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ToolsBarItemOptionsWrapper: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ToolsBarItemOptionsWrapper (ToolsBarItemOptionsWrapper.js:1:141)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `hasChildren` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `haschildren` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemOptionsWrapper (ToolsBarItemOptionsWrapper.js:1:141)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Carousel: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Crop2: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: ToolsBarItemButton: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: CropPresetsOption: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at CropPresetsOption (CropPresetsOption.js:1:885)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: Encountered two children with the same key, `1`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at popper.component.js:16:23
+    at menu.component.js:11:23
+    at CropPresetsOption (CropPresetsOption.js:1:885)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: CropPresetItem: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at CropPresetItem (CropPresetItem.js:1:169)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at popper.component.js:16:23
+    at menu.component.js:11:23
+    at CropPresetsOption (CropPresetsOption.js:1:885)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: React does not recognize the `isAccordion` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `isaccordion` instead. If you accidentally passed it from a parent component, remove it from the DOM element. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at menu-item.component.js:12:20
+    at O2 (StyledComponent.ts:199:1)
+    at CropPresetItem (CropPresetItem.js:1:169)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at popper.component.js:16:23
+    at menu.component.js:11:23
+    at CropPresetsOption (CropPresetsOption.js:1:885)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: RotateButton: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at RotateButton (RotateButton.js:1:248)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: FlipX2: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at FlipX2 (FlipX.js:1:404)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+hook.js:608 Warning: FlipY2: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead. Error Component Stack
+    at FlipY2 (FlipY.js:1:404)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+4hook.js:608 Warning: Encountered two children with the same key, `1`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Error Component Stack
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at popper.component.js:16:23
+    at menu.component.js:11:23
+    at CropPresetsOption (CropPresetsOption.js:1:885)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBarItemButton (ToolsBarItemButton.js:1:201)
+    at Crop2 (Crop.js:1:458)
+    at li (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ul (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at Carousel (index.js:1:510)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at ToolsBar (index.js:1:483)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at div (<anonymous>)
+    at O2 (StyledComponent.ts:199:1)
+    at App (index.js:1:1998)
+    at AppProvider (AppProvider.js:1:1124)
+    at ot (ThemeProvider.tsx:92:28)
+    at ThemeProvider2 (theme-provider.context.js:18:23)
+    at AssemblyPoint (index.js:1:430)
+    at div (<anonymous>)
+    at ImageEditor (ImageEditor.tsx:111:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at primitive.tsx:40:13
+    at dismissable-layer.tsx:64:7
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at focus-scope.tsx:50:5
+    at dialog.tsx:386:13
+    at dialog.tsx:261:58
+    at Presence (presence.tsx:12:11)
+    at dialog.tsx:236:64
+    at slot.tsx:68:13
+    at slot.tsx:15:13
+    at primitive.tsx:40:13
+    at portal.tsx:22:22
+    at Presence (presence.tsx:12:11)
+    at Provider (create-context.tsx:59:15)
+    at DialogPortal (dialog.tsx:146:11)
+    at dialog.tsx:50:6
+    at Provider (create-context.tsx:59:15)
+    at Dialog (dialog.tsx:52:5)
+    at ImageEditorModal (ImageEditorModal.tsx:34:3)
+    at ImageCropModal (ImageEditorModal.tsx:165:3)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Profile (Profile.tsx:21:62)
+    at ProtectedRoute (ProtectedRoute.tsx:12:58)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Outlet (components.tsx:341:26)
+    at ComedianProfileLayout (ComedianProfileLayout.tsx:53:20)
+    at RenderedRoute (hooks.tsx:658:26)
+    at Routes (components.tsx:512:3)
+    at RoutesWrapper (App.tsx:127:26)
+    at Suspense (<anonymous>)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Provider (create-context.tsx:59:15)
+    at TooltipProvider (tooltip.tsx:68:5)
+    at sidebar.tsx:58:7
+    at PlatformLayout (PlatformLayout.tsx:30:34)
+    at Router (components.tsx:421:13)
+    at BrowserRouter (index.tsx:789:3)
+    at DesignSystemInitializer (App.tsx:115:36)
+    at ProfileProvider (ProfileContext.tsx:119:35)
+    at UserProvider (UserContext.tsx:42:73)
+    at AuthProvider (AuthContext.tsx:36:73)
+    at ThemeProvider (ThemeContext.tsx:32:74)
+    at QueryClientProvider (QueryClientProvider.tsx:30:3)
+    at _a (index.esm.js:447:5)
+    at ErrorBoundary (ErrorBoundary.tsx:18:5)
+    at App (App.tsx:185:3)
+overrideMethod @ hook.js:608
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()
+pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/applications?select=*%2Cevents%21inner%28id%2Ctitle%2Cvenue%2Caddress%2Cvenue_address%2Cevent_date%2Cstart_time%2Ccity%2Cstate%2Cstatus%2Cbanner_url%2Corganization_id%2Corganization%3Aorganization_profiles%21events_organization_id_fkey%28id%2Corganization_name%2Clogo_url%29%29&comedian_id=eq.c0d3b50f-ecfc-4292-a775-0d4c963ac49d&order=applied_at.desc:1  Failed to load resource: the server responded with a status of 400 ()

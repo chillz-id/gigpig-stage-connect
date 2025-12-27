@@ -19,6 +19,9 @@ export const CUSTOMER_EXPORT_HEADERS = [
   'Created At',
 ] as const;
 
+// Auto segments use computed customer_segment column
+const AUTO_SEGMENT_SLUGS = ['inactive', 'new', 'vip', 'regular', 'prospect'];
+
 const buildCustomerQuery = (filters: CustomerFilters = {}) => {
   let query = supabaseClient.from('customers_crm_v').select('*', { count: 'exact' });
 
@@ -30,7 +33,24 @@ const buildCustomerQuery = (filters: CustomerFilters = {}) => {
   }
 
   if (filters.segments?.length) {
-    query = query.overlaps('customer_segments', filters.segments);
+    // Separate auto segments from manual segments
+    const autoSegments = filters.segments.filter(s => AUTO_SEGMENT_SLUGS.includes(s));
+    const manualSegments = filters.segments.filter(s => !AUTO_SEGMENT_SLUGS.includes(s));
+
+    if (autoSegments.length && manualSegments.length) {
+      // Both types: need OR condition
+      const autoFilter = autoSegments.map(s => `customer_segment.eq.${s}`).join(',');
+      query = query.or(`${autoFilter},customer_segments.ov.{${manualSegments.join(',')}}`);
+    } else if (autoSegments.length === 1) {
+      // Single auto segment: use computed column
+      query = query.eq('customer_segment', autoSegments[0]);
+    } else if (autoSegments.length > 1) {
+      // Multiple auto segments: use IN
+      query = query.in('customer_segment', autoSegments);
+    } else if (manualSegments.length) {
+      // Manual segments only: use array overlap
+      query = query.overlaps('customer_segments', manualSegments);
+    }
   }
 
   if (filters.source) {
@@ -125,10 +145,21 @@ export const customerService = {
     return data as Customer;
   },
 
+  async getCustomerByEmail(email: string): Promise<Customer | null> {
+    const { data, error } = await supabaseClient
+      .from('customers_crm_v')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (error) throw error;
+    return data as Customer | null;
+  },
+
   async listSegmentCounts(): Promise<SegmentCount[]> {
     const { data, error } = await supabaseClient
       .from('customer_segment_counts_v')
-      .select('slug,name,color,count');
+      .select('slug,name,color,description,segment_type,is_system,count');
 
     if (error) throw error;
 
@@ -136,7 +167,10 @@ export const customerService = {
       slug: row.slug as string,
       name: row.name as string,
       color: (row.color as string) ?? null,
-      count: Number((row as Record<string, unknown>).count) || 0,
+      description: (row.description as string) ?? null,
+      segment_type: (row.segment_type as 'auto' | 'manual' | 'smart') ?? 'manual',
+      is_system: (row.is_system as boolean) ?? false,
+      count: Number(row.count) || 0,
     })) as SegmentCount[];
   },
 
@@ -207,10 +241,28 @@ export const customerService = {
   },
 
   async fetchAllForExport(filters: CustomerFilters = {}): Promise<Customer[]> {
-    const query = applySort(buildCustomerQuery(filters), undefined);
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data || []) as Customer[];
+    const PAGE_SIZE = 1000;
+    let allCustomers: Customer[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    // Paginate through all records to avoid Supabase's 1000-row limit
+    while (hasMore) {
+      const query = applySort(buildCustomerQuery(filters), undefined)
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const customers = (data || []) as Customer[];
+      allCustomers = [...allCustomers, ...customers];
+
+      // If we got fewer than PAGE_SIZE, we've reached the end
+      hasMore = customers.length === PAGE_SIZE;
+      offset += PAGE_SIZE;
+    }
+
+    return allCustomers;
   },
 
   buildExportCsv(customers: Customer[]): string {

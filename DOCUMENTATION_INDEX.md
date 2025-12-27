@@ -1,35 +1,73 @@
 # Documentation Index
 
-This guide highlights where to find working reference material after the repository cleanup.
+This guide highlights where to find working reference material. Updated 2025-11-26.
 
-## Active References
-- `README.md` – high-level orientation.
-- `AGENTS.md` (root of repo) – contributor workflow overview.
-- `docs/` – curated implementation guides that are still relevant to day-to-day development. Start with `docs/DOCUMENTATION_INDEX.md` inside that folder for domain deep dives.
+## Canonical Documentation
+
+### Core References
+| File | Purpose |
+|------|---------|
+| `README.md` | Project overview and quick start |
+| `CLAUDE.md` | Developer guide for Claude Code sessions |
+| `AGENTS.md` | Git workflow and contributor guidelines |
+| `QUICK_REFERENCE.md` | Development quick reference |
+
+### Architecture Documentation (NEW)
+| File | Purpose |
+|------|---------|
+| `Architecture/00-QUICK-START.md` | **Start here** - Agent onboarding guide |
+| `Architecture/01-SYSTEM-MAP.md` | High-level architecture with diagrams |
+| `Architecture/02-DIRECTORY-GUIDE.md` | Annotated directory tree |
+| `Architecture/03-FEATURE-CONNECTIONS.md` | How features interact |
+| `Architecture/04-DATABASE-OVERVIEW.md` | Schema and relationships |
+| `Architecture/05-COMMON-PATTERNS.md` | Code patterns with examples |
+| `Architecture/diagrams/` | Mermaid diagram source files |
+
+### Feature Documentation
+| Location | Contents |
+|----------|----------|
+| `docs/features/PLATFORM_FEATURES.md` | **Master feature inventory** (canonical) |
+| `docs/features/PROFILE_URLS.md` | Profile URL system documentation |
+| `Plans/` | Active implementation plans (dated) |
+| `docs/plans/` | Event Management System plans |
+
+### Integration Guides
+| Location | Contents |
+|----------|----------|
+| `docs/eventbrite/` | Eventbrite integration |
+| `docs/crm/` | CRM system documentation |
+| `docs/migrations/` | Database migration guides |
 
 ## Archived Material
-Legacy status reports, incident logs, and historical MCP walkthroughs now live under `docs/archive/`. Nothing in that directory is required for feature work, but it is preserved for context. Key examples:
-- `docs/archive/CRITICAL_SYSTEM_STATE.md`
-- `docs/archive/COMPLETE_MCP_STATUS_REPORT.md`
-- `docs/archive/PRODUCTION_READINESS_MASTER_PLAN.md`
 
-## Legacy Automation & Data
-The following directories were consolidated under `legacy/` to keep the active workspace lean. They can be referenced if you need to retrace past fixes, but linting and builds ignore them.
-- `legacy/analysis-results`
-- `legacy/comprehensive-tracking`
-- `legacy/debugging-sessions`
-- `legacy/knowledge-graph-*`
-- `legacy/test-results`
-- `legacy/webhook-logs`
+`docs/archive/` contains historical documents preserved for reference:
+- Completion reports (`PHASE_*_COMPLETE.md`, `*_COMPLETE.md`)
+- Component architecture snapshots
+- Implementation status reports
+- CRM phase completion docs
+
+**Note:** Nothing in `docs/archive/` is required for feature work.
 
 ## Scripts
-- `scripts/` – runnable utilities that remain part of the workflow (e.g., `kg-check.js`, sitemap helpers).
-- `scripts/legacy/` – ad-hoc remediation scripts that caused lint noise. Keep for forensic use only.
+
+| Directory | Contents |
+|-----------|----------|
+| `scripts/` | Active utilities (see `scripts/README.md`) |
+| `scripts/archive/` | One-off setup/migration scripts |
 
 ## Tests
-- `tests/` – maintained Jest suites (unit, smoke, invoice checks).
-- `tests/legacy/` – exploratory/unused suites parked until they are either revived or deleted.
 
-## Next Steps
-1. Update any onboarding material that referenced the old root-level Markdown files to point at `docs/archive/`.
-2. When reviving a legacy script or test, migrate it back into the active directory and bring it up to current standards before reenabling lint.
+| Directory | Contents |
+|-----------|----------|
+| `tests/` | Active Jest test suites |
+| `tests/e2e/` | Playwright E2E tests |
+
+## Data (gitignored)
+
+| Directory | Contents |
+|-----------|----------|
+| `data/` | Local data exports (Eventbrite CSVs, reports) |
+
+## Cleanup History
+
+**2025-11-25**: Archived completion reports, one-off scripts, and legacy directories. See `Plans/Cleanup-Execution-Plan-20251124.md` for details.

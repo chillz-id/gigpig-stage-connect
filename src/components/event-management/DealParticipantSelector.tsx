@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
@@ -143,10 +143,10 @@ export function DealParticipantSelector({
           <AlertDescription>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={foundProfile.avatar_url} />
-                  <AvatarFallback>{foundProfile.name[0]}</AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={foundProfile.avatar_url}
+                  name={foundProfile.name}
+                />
                 <div>
                   <p className="font-medium">{foundProfile.name}</p>
                   <p className="text-sm text-muted-foreground">{foundProfile.email}</p>
@@ -183,7 +183,7 @@ export function DealParticipantSelector({
               </div>
               <Button
                 onClick={handleInvitePartner}
-                variant="outline"
+                className="professional-button"
                 size="sm"
                 className="ml-4"
               >

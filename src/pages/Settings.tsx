@@ -15,7 +15,9 @@ import {
   Palette,
   Smartphone,
   ExternalLink,
+  Plug,
 } from 'lucide-react';
+import { XeroSettingsSection } from '@/components/settings/XeroSettingsSection';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -29,6 +31,8 @@ import { toast } from 'sonner';
  * - Privacy: Data sharing and privacy settings
  * - Sidebar: Customize sidebar menu items
  * - PWA: Progressive Web App settings (link)
+ *
+ * Note: Custom Links and Social Media are managed in the Profile page accordion
  */
 export default function Settings() {
   const { user, profile } = useAuth();
@@ -65,7 +69,7 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           <TabsTrigger value="account" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Account</span>
@@ -77,6 +81,10 @@ export default function Settings() {
           <TabsTrigger value="privacy" className="gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Privacy</span>
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Plug className="h-4 w-4" />
+            <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
           <TabsTrigger value="sidebar" className="gap-2">
             <Palette className="h-4 w-4" />
@@ -246,10 +254,10 @@ export default function Settings() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     Download My Data
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button className="professional-button" size="sm">
                     View Privacy Policy
                   </Button>
                 </div>
@@ -262,6 +270,11 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-4">
+          <XeroSettingsSection />
         </TabsContent>
 
         {/* Sidebar Customization Tab */}

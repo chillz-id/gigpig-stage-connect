@@ -56,7 +56,7 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
               eventId={show.id}
               eventTitle={show.title}
               trigger={
-                <Button variant="outline" className="flex-1">
+                <Button className="professional-button flex-1">
                   <Users className="w-4 h-4 mr-2" />
                   Join Waitlist
                 </Button>
@@ -76,8 +76,7 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
       )}
       
       <Button 
-        variant="outline" 
-        className="text-foreground border-border hover:bg-accent"
+        className="professional-button text-foreground border-border hover:bg-accent"
         onClick={() => onShowDetails(show)}
       >
         Details
@@ -85,7 +84,7 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
       
       {show.address && (
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={() => onGetDirections(show)}
           className="flex items-center gap-2"

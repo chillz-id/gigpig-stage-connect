@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
  * Organization Context
  *
  * Provides organization-scoped data and operations for organization routes.
- * - Extracts orgId from URL params (/org/:orgId/*)
+ * - Extracts slug from URL params (/organization/:slug/*)
  * - Provides current organization data
  * - Provides permission helpers (isOwner, isAdmin, isMember)
  * - Used by all organization pages and components
@@ -55,14 +55,34 @@ interface OrganizationProviderProps {
 }
 
 export const OrganizationProvider = ({ children }: OrganizationProviderProps) => {
-  const { orgId } = useParams<{ orgId: string }>();
+  const { slug, orgId: orgIdParam } = useParams<{ slug?: string; orgId?: string }>();
   const { user } = useAuth();
   const { data: organizations, isLoading, error } = useOrganizationProfiles();
 
-  // Get organization data for current orgId - memoize to prevent re-renders
+  // Get organization data - support both slug-based (/organization/:slug) and ID-based (/org/:orgId) routes
+  // Find by slug first (new profile URL system), fall back to ID (legacy org routes)
   const organization = useMemo(() => {
-    return orgId && organizations ? organizations[orgId] : undefined;
-  }, [orgId, organizations]);
+    if (!organizations) return undefined;
+
+    // Try slug-based lookup first (new profile URL system)
+    if (slug) {
+      return Object.values(organizations).find(org => org.url_slug === slug);
+    }
+
+    // Fall back to ID-based lookup (legacy org routes)
+    if (orgIdParam) {
+      return organizations[orgIdParam];
+    }
+
+    return undefined;
+  }, [slug, orgIdParam, organizations]);
+
+  // Extract orgId from the found organization for backward compatibility
+  const orgId = useMemo(() => {
+    const id = organization?.id || orgIdParam;
+    console.log('[OrganizationContext] slug:', slug, 'orgIdParam:', orgIdParam, 'organization:', organization?.organization_name, 'orgId:', id);
+    return id;
+  }, [organization, orgIdParam, slug]);
 
   // Permission checks - memoize to prevent re-renders
   const { isOwner, isAdmin, isMember } = useMemo(() => {
@@ -133,16 +153,22 @@ export const useRequiredOrganization = (): Omit<OrganizationContextValue, 'organ
 } => {
   const context = useOrganization();
 
-  if (!context.organization && !context.isLoading) {
-    throw new Error('Organization not found');
+  // Still loading - return context with null organization
+  // Components should check isLoading and show loading state
+  if (context.isLoading) {
+    return {
+      ...context,
+      organization: null as unknown as OrganizationProfile, // Temporarily null while loading
+    };
   }
 
-  if (context.isLoading) {
-    throw new Promise(() => {}); // Suspend until loaded
+  // Done loading but no organization found - throw error
+  if (!context.organization) {
+    throw new Error('Organization not found');
   }
 
   return {
     ...context,
-    organization: context.organization!,
+    organization: context.organization,
   };
 };

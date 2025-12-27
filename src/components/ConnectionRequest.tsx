@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { MessageCircle, Send, UserCheck, UserX, Shield, AlertTriangle } from 'lucide-react';
 
 interface ConnectionRequestProps {
@@ -35,16 +35,16 @@ const ConnectionRequest: React.FC<ConnectionRequestProps> = ({
     <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
       <CardHeader>
         <div className="flex items-center space-x-3">
-          <Avatar className="w-12 h-12">
-            <AvatarImage src={recipientAvatar} alt={recipientName} />
-            <AvatarFallback>{recipientName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-          </Avatar>
+          <OptimizedAvatar
+            src={recipientAvatar}
+            name={recipientName}
+            className="w-12 h-12"
+          />
           <div>
             <CardTitle className="flex items-center space-x-2">
               <span>Connect with {recipientName}</span>
-              <Badge 
-                variant="outline" 
-                className={recipientRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}
+              <Badge
+                className={`professional-button ${recipientRole === 'comedian' ? 'text-blue-300 border-blue-300' : 'text-orange-300 border-orange-300'}`}
               >
                 {recipientRole}
               </Badge>
@@ -77,8 +77,7 @@ const ConnectionRequest: React.FC<ConnectionRequestProps> = ({
           </Button>
           <Button 
             onClick={onCancel}
-            variant="outline" 
-            className="text-white border-white/30 hover:bg-white/10"
+            className="professional-button text-white border-white/30 hover:bg-white/10"
           >
             Cancel
           </Button>

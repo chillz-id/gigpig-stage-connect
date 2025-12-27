@@ -13,13 +13,16 @@ interface SpotListProps {
   renderCard: (spot: SpotData) => React.ReactNode;
   emptyMessage?: string;
   onReorder?: (sourceId: string, destinationId: string) => void;
+  /** Footer content rendered after all spots (e.g., drop zone) */
+  footer?: React.ReactNode;
 }
 
 export function SpotList({
   spots,
   renderCard,
   emptyMessage = 'No spots scheduled yet',
-  onReorder
+  onReorder,
+  footer
 }: SpotListProps) {
   if (spots.length === 0) {
     return (
@@ -43,48 +46,25 @@ export function SpotList({
           {emptyMessage}
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Add spots to build your show lineup
+          Drag a comedian from the shortlist to create a spot
         </p>
+        {/* Show footer (drop zone) even when empty */}
+        {footer && <div className="mt-6 w-full max-w-md">{footer}</div>}
       </div>
     );
   }
 
   return (
     <ScrollArea className="h-full w-full">
-      <div className="relative space-y-4 p-4">
-        {/* Timeline connector line */}
-        <div
-          className="absolute left-10 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-500 via-purple-600 to-purple-800 opacity-30"
-          aria-hidden="true"
-        />
-
-        {/* Spots */}
-        {spots.map((spot, index) => (
-          <div key={spot.id} className="relative flex gap-4">
-            {/* Timeline dot */}
-            <div className="relative flex-shrink-0">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-full border-4 border-white dark:border-gray-900 bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg"
-                aria-hidden="true"
-              >
-                <div className="h-2 w-2 rounded-full bg-white" />
-              </div>
-              {/* Time marker */}
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400">
-                {new Date(spot.time).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                })}
-              </div>
-            </div>
-
-            {/* Card content */}
-            <div className="flex-1 pb-8">
-              {renderCard(spot)}
-            </div>
+      <div className="space-y-4 p-4">
+        {/* Spots - Simple list without timeline decorations */}
+        {spots.map((spot) => (
+          <div key={spot.id}>
+            {renderCard(spot)}
           </div>
         ))}
+        {/* Footer content (e.g., drop zone for creating new spots) */}
+        {footer}
       </div>
     </ScrollArea>
   );

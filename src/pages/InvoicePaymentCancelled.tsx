@@ -100,9 +100,8 @@ export const InvoicePaymentCancelled: React.FC = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full"
+            <Button
+              className="professional-button w-full"
               onClick={() => navigate('/invoices')}
             >
               <Home className="w-4 h-4 mr-2" />

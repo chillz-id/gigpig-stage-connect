@@ -174,6 +174,24 @@ export interface Event {
   humanitix_event_id?: string | null;
   eventbrite_event_id?: string | null;
   xero_invoice_id?: string | null;
+
+  // Sync-related fields (from session_complete)
+  source?: 'humanitix' | 'eventbrite' | 'platform' | string | null;
+  source_id?: string | null;
+  canonical_session_source_id?: string | null;
+  synced_at?: string | null;
+  is_synced?: boolean | null;
+  ticket_count?: number | null;
+  gross_dollars?: number | null;
+  net_dollars?: number | null;
+  fees_dollars?: number | null;
+  tax_dollars?: number | null;
+  order_count?: number | null;
+  last_order_at?: string | null;
+  ticket_url?: string | null;
+  ticket_popup_url?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
   
   // Analytics fields
   tickets_sold?: number | null;
@@ -320,6 +338,7 @@ export interface EventFormData {
   ageRestriction: string;
   dresscode: string;
   imageUrl: string;
+  bannerPosition?: { x: number; y: number; scale: number };
   showLevel: string;
   showType: string;
   customShowType: string;

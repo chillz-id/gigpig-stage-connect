@@ -314,21 +314,21 @@ const EventSettlementsTab: React.FC<EventSettlementsTabProps> = ({ eventId }) =>
           <div className="flex gap-2 mb-4">
             <Button
               onClick={() => updateSettlementStatus('pending')}
-              variant={eventStatus === 'pending' ? 'default' : 'outline'}
+              variant={eventStatus === 'pending' ? 'default' : 'secondary'}
               size="sm"
             >
               Pending
             </Button>
             <Button
               onClick={() => updateSettlementStatus('processing')}
-              variant={eventStatus === 'processing' ? 'default' : 'outline'}
+              variant={eventStatus === 'processing' ? 'default' : 'secondary'}
               size="sm"
             >
               Processing
             </Button>
             <Button
               onClick={() => updateSettlementStatus('completed')}
-              variant={eventStatus === 'completed' ? 'default' : 'outline'}
+              variant={eventStatus === 'completed' ? 'default' : 'secondary'}
               size="sm"
             >
               Completed

@@ -145,7 +145,7 @@ export const BrevoSyncMonitor: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            className="professional-button"
             size="sm"
             onClick={() => refreshMutation.mutate()}
             disabled={refreshMutation.isPending}
@@ -228,7 +228,7 @@ export const BrevoSyncMonitor: React.FC = () => {
               {(['1h', '24h', '7d'] as const).map((timeframe) => (
                 <Button
                   key={timeframe}
-                  variant={selectedTimeframe === timeframe ? 'default' : 'outline'}
+                  variant={selectedTimeframe === timeframe ? 'default' : 'secondary'}
                   size="sm"
                   onClick={() => setSelectedTimeframe(timeframe)}
                 >

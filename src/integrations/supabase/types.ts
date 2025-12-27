@@ -3975,9 +3975,25 @@ export type Database = {
           updated_at: string | null
           venue: string
           xero_invoice_id: string | null
+          // Sync-related fields (from session_complete)
+          banner_position: Json | null
+          canonical_session_source_id: string | null
+          synced_at: string | null
+          is_synced: boolean | null
+          ticket_count: number | null
+          gross_dollars: number | null
+          net_dollars: number | null
+          fees_dollars: number | null
+          tax_dollars: number | null
+          order_count: number | null
+          last_order_at: string | null
+          ticket_url: string | null
+          ticket_popup_url: string | null
+          latitude: string | null
+          longitude: string | null
         }
         Insert: {
-          address: string
+          address?: string
           age_restriction?: string | null
           allow_recording?: boolean | null
           applied_spots?: number | null
@@ -4036,8 +4052,24 @@ export type Database = {
           total_tickets_sold?: number | null
           type?: string | null
           updated_at?: string | null
-          venue: string
+          venue?: string
           xero_invoice_id?: string | null
+          // Sync-related fields (from session_complete)
+          banner_position?: Json | null
+          canonical_session_source_id?: string | null
+          synced_at?: string | null
+          is_synced?: boolean | null
+          ticket_count?: number | null
+          gross_dollars?: number | null
+          net_dollars?: number | null
+          fees_dollars?: number | null
+          tax_dollars?: number | null
+          order_count?: number | null
+          last_order_at?: string | null
+          ticket_url?: string | null
+          ticket_popup_url?: string | null
+          latitude?: string | null
+          longitude?: string | null
         }
         Update: {
           address?: string
@@ -4101,6 +4133,22 @@ export type Database = {
           updated_at?: string | null
           venue?: string
           xero_invoice_id?: string | null
+          // Sync-related fields (from session_complete)
+          banner_position?: Json | null
+          canonical_session_source_id?: string | null
+          synced_at?: string | null
+          is_synced?: boolean | null
+          ticket_count?: number | null
+          gross_dollars?: number | null
+          net_dollars?: number | null
+          fees_dollars?: number | null
+          tax_dollars?: number | null
+          order_count?: number | null
+          last_order_at?: string | null
+          ticket_url?: string | null
+          ticket_popup_url?: string | null
+          latitude?: string | null
+          longitude?: string | null
         }
         Relationships: [
           {

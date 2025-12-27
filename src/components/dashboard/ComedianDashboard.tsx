@@ -13,6 +13,7 @@ import { ApplicationsListSection } from '@/components/comedian/ApplicationsListS
 import { PendingConfirmationsSection } from '@/components/comedian/PendingConfirmationsSection';
 import BookingRequestsSection from '@/components/comedian/BookingRequestsSection';
 import { useEventApplications } from '@/hooks/useEventApplications';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 
 /**
  * ComedianDashboard Component
@@ -27,13 +28,22 @@ export function ComedianDashboard() {
   const { user, profile } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const { confirmedGigCount, nextGig, isLoading: gigsLoading } = useUpcomingGigs();
+  const { isMobile } = useMobileLayout();
+  const { confirmedGigCount, nextGig, totalConfirmedGigs, thisMonthGigCount, totalMinutesPerformed, thisMonthMinutes, isLoading: gigsLoading } = useUpcomingGigs();
   const { userApplications, isLoadingUserApplications } = useEventApplications();
 
-  // Count pending confirmations
-  const pendingConfirmations = userApplications?.filter(app =>
-    app.status === 'accepted' && !app.availability_confirmed
-  ) || [];
+  // Count upcoming applications only (not past events)
+  const today = new Date().toISOString().split('T')[0];
+
+  // Count pending confirmations (upcoming events only)
+  const pendingConfirmations = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return app.status === 'accepted' && !app.availability_confirmed && eventDate && eventDate >= today;
+  }) || [];
+  const upcomingApplications = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return eventDate && eventDate >= today;
+  }) || [];
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -69,19 +79,22 @@ export function ComedianDashboard() {
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              <h1 className={cn(
+                "font-bold text-white mb-1 md:mb-2",
+                isMobile ? "text-xl" : "text-2xl md:text-3xl"
+              )}>
                 {getGreeting()}, {profile?.name || user?.email?.split('@')[0]}!
               </h1>
               <p className={cn(
                 "text-sm md:text-base",
                 theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
               )}>
-                Your comedian dashboard - manage your performances and bookings
+                {isMobile ? 'Manage your performances' : 'Your comedian dashboard - manage your performances and bookings'}
               </p>
             </div>
             <Badge className="bg-red-500 hover:bg-red-600 text-white w-fit">
@@ -90,22 +103,25 @@ export function ComedianDashboard() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Stats Grid - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        )}>
           <EarningsCard />
 
           <Card className={cn(getStatCardStyles(true))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Upcoming Gigs
               </CardTitle>
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <CalendarDays className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>
                 {gigsLoading ? '...' : confirmedGigCount}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 {nextGig
                   ? `Next: ${new Date(nextGig.event_date).toLocaleDateString()}`
                   : 'No upcoming gigs'
@@ -116,7 +132,7 @@ export function ComedianDashboard() {
 
           <Card className={cn(getStatCardStyles(pendingConfirmations.length > 0))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className={cn("font-medium flex items-center gap-2", isMobile ? "text-sm" : "text-sm")}>
                 Applications
                 {pendingConfirmations.length > 0 && (
                   <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">
@@ -124,53 +140,63 @@ export function ComedianDashboard() {
                   </Badge>
                 )}
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoadingUserApplications ? '...' : (userApplications?.length || 0)}
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>
+                {isLoadingUserApplications ? '...' : upcomingApplications.length}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 {isLoadingUserApplications
                   ? 'Loading...'
                   : pendingConfirmations.length > 0
                     ? `${pendingConfirmations.length} need confirmation`
-                    : `${userApplications?.filter(app => app.status === 'pending').length || 0} pending responses`
+                    : `${upcomingApplications.filter(app => app.status === 'pending').length} pending responses`
                 }
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Actions - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}>
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Calendar className={cn(isMobile ? "w-5 h-5" : "w-5 h-5")} />
                 Quick Actions
               </CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Manage your comedy performances
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CardContent className={cn(isMobile ? "space-y-2" : "space-y-4")}>
+              <div className={cn(
+                "grid gap-3",
+                isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+              )}>
                 <Button
-                  onClick={() => navigate('/shows')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  onClick={() => navigate('/gigs')}
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Browse Shows
+                  <Eye className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
+                  Browse Gigs
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=calendar')}
-                  className="w-full justify-between bg-blue-600 hover:bg-blue-700 text-white border-0"
+                  className="w-full justify-between bg-blue-600 hover:bg-blue-700 text-white border-0 touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
                   <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
+                    <Calendar className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                     My Calendar
                   </div>
                   {!gigsLoading && confirmedGigCount > 0 && (
@@ -182,19 +208,19 @@ export function ComedianDashboard() {
 
                 <Button
                   onClick={() => navigate('/profile')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   My Profile
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=invoices')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Invoices
                 </Button>
               </div>
@@ -203,30 +229,31 @@ export function ComedianDashboard() {
 
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardTitle className="text-base md:text-lg">Performance Metrics</CardTitle>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Your comedy career at a glance
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className={cn(isMobile ? "space-y-3" : "space-y-4")}>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total Performances</span>
-                  <span className="text-lg font-bold">{gigsLoading ? '...' : confirmedGigCount + 12}</span>
+                  <span className="text-sm text-muted-foreground">Total Confirmed Gigs</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>{gigsLoading ? '...' : totalConfirmedGigs}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Acceptance Rate</span>
-                  <span className="text-lg font-bold">
-                    {isLoadingUserApplications ? '...' :
-                      userApplications && userApplications.length > 0
-                        ? `${Math.round((userApplications.filter(a => a.status === 'accepted').length / userApplications.length) * 100)}%`
-                        : 'N/A'
-                    }
+                  <span className="text-sm text-muted-foreground">Total Minutes Performed</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>
+                    {gigsLoading ? '...' : `${totalMinutesPerformed}mins`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">This Month</span>
-                  <span className="text-lg font-bold">{gigsLoading ? '...' : Math.min(confirmedGigCount, 4)}</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>
+                    {gigsLoading ? '...' : `${thisMonthGigCount} | ${thisMonthMinutes}mins`}
+                  </span>
                 </div>
               </div>
             </CardContent>

@@ -31,7 +31,7 @@ export default function MyGigs() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            className="professional-button"
             onClick={() => setSubscriptionDialogOpen(true)}
           >
             <Calendar className="mr-2 h-4 w-4" />

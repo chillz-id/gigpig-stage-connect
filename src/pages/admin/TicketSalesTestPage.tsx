@@ -298,11 +298,10 @@ export function TicketSalesTestPage() {
                     )}
                   </Button>
 
-                  <Button 
-                    onClick={handleSyncEvent} 
+                  <Button
+                    onClick={handleSyncEvent}
                     disabled={isProcessing || !eventId || !externalEventId}
-                    variant="outline"
-                    className="flex-1"
+                    className="professional-button flex-1"
                   >
                     {isProcessing ? (
                       <>

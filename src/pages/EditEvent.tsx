@@ -7,8 +7,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useEvent } from '@/hooks/data/useEvents';
 import { EditEventForm } from '@/components/EditEventForm';
 import { Loader2 } from 'lucide-react';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 import { cn } from '@/lib/utils';
 // hasRole is available from useAuth hook
+
+// Helper function to check roles
+const hasRole = (user: any, role: string): boolean => {
+  return user?.user_metadata?.role === role || user?.app_metadata?.role === role;
+};
 
 const EditEvent = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +22,7 @@ const EditEvent = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { event, isLoading } = useEvent(id);
+  const { isMobile } = useMobileLayout();
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
@@ -111,11 +118,19 @@ const EditEvent = () => {
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-        <Card className={cn("mx-auto", getCardStyles())}>
-          <CardContent className="p-4 sm:p-6 lg:p-8">
+      <div className={cn(
+        "container mx-auto px-4",
+        isMobile ? "py-4" : "py-4 sm:py-8 sm:px-6 lg:px-8"
+      )}>
+        <Card className={cn(
+          "mx-auto",
+          getCardStyles(),
+          isMobile && "border-x-0 rounded-none"
+        )}>
+          <CardContent className={cn(isMobile ? "p-4" : "p-4 sm:p-6 lg:p-8")}>
             <h1 className={cn(
-              "text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8",
+              "font-bold mb-6 sm:mb-8",
+              isMobile ? "text-xl" : "text-2xl sm:text-3xl lg:text-4xl",
               theme === 'pleasure' ? 'text-white' : 'text-gray-100'
             )}>
               Edit Event

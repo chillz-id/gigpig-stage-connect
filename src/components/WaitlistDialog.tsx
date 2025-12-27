@@ -36,7 +36,7 @@ export const WaitlistDialog: React.FC<WaitlistDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" className="w-full">
+          <Button className="professional-button w-full">
             <Users className="w-4 h-4 mr-2" />
             Join Waitlist
           </Button>

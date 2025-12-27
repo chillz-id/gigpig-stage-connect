@@ -69,10 +69,9 @@ export const TaskViewSwitcher = ({
           </SelectContent>
         </Select>
         <Button
-          variant="outline"
+          className="professional-button gap-2"
           onClick={onOpenTemplateDialog}
           disabled={!selectedTemplateId}
-          className="gap-2"
         >
           <Layers className="h-4 w-4" />
           Apply template

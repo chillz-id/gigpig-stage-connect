@@ -59,6 +59,20 @@ const createSegmentRecord = async (name: string, color?: string) => {
   throw new Error('Segment name already exists. Please choose another name.');
 };
 
+export interface SegmentWithId extends SegmentDefinition {
+  id: string;
+  description?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface UpdateSegmentInput {
+  id: string;
+  name?: string;
+  color?: string | null;
+  description?: string | null;
+}
+
 export const segmentService = {
   async list(): Promise<SegmentDefinition[]> {
     const { data, error } = await supabase
@@ -75,12 +89,124 @@ export const segmentService = {
     }));
   },
 
+  async listWithDetails(): Promise<SegmentWithId[]> {
+    const { data, error } = await supabase
+      .from('segments')
+      .select('id,slug,name,color,description,created_at,updated_at')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((row) => ({
+      id: row.id as string,
+      slug: row.slug as string,
+      name: row.name as string,
+      color: (row.color as string) ?? null,
+      description: row.description as string | null,
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string | undefined,
+    }));
+  },
+
   async create({ name, color }: CreateSegmentInput): Promise<SegmentDefinition> {
     if (!name.trim()) {
       throw new Error('Segment name is required');
     }
 
     return createSegmentRecord(name, color);
+  },
+
+  async update({ id, name, color, description }: UpdateSegmentInput): Promise<SegmentWithId> {
+    const updates: Record<string, unknown> = {};
+
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        throw new Error('Segment name cannot be empty');
+      }
+      updates.name = trimmedName;
+      updates.slug = ensureSlug(trimmedName);
+    }
+
+    if (color !== undefined) {
+      updates.color = color ? normalizeHexColor(color) : null;
+    }
+
+    if (description !== undefined) {
+      updates.description = description;
+    }
+
+    const { data, error } = await supabase
+      .from('segments')
+      .update(updates)
+      .eq('id', id)
+      .select('id,slug,name,color,description,created_at,updated_at')
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id as string,
+      slug: data.slug as string,
+      name: data.name as string,
+      color: (data.color as string) ?? null,
+      description: data.description as string | null,
+      created_at: data.created_at as string,
+      updated_at: data.updated_at as string | undefined,
+    };
+  },
+
+  async delete(id: string): Promise<void> {
+    // First remove all members from this segment
+    const { data: segment } = await supabase
+      .from('segments')
+      .select('slug')
+      .eq('id', id)
+      .single();
+
+    if (segment) {
+      await supabase
+        .from('customer_segments')
+        .delete()
+        .eq('segment', segment.slug);
+    }
+
+    const { error } = await supabase
+      .from('segments')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async getCustomerCount(segmentSlug: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('customer_segments')
+      .select('*', { count: 'exact', head: true })
+      .eq('segment', segmentSlug);
+
+    if (error) throw error;
+    return count ?? 0;
+  },
+
+  async getBySlug(slug: string): Promise<SegmentWithId | null> {
+    const { data, error } = await supabase
+      .from('segments')
+      .select('id,slug,name,color,description,created_at,updated_at')
+      .eq('slug', slug)
+      .single();
+
+    if (error) return null;
+
+    return {
+      id: data.id as string,
+      slug: data.slug as string,
+      name: data.name as string,
+      color: (data.color as string) ?? null,
+      description: data.description as string | null,
+      created_at: data.created_at as string,
+      updated_at: data.updated_at as string | undefined,
+    };
   },
 };
 

@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Crown, Plus, Search, Edit2, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
+import { Award, Crown, Plus, Search, Edit2, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react';
 import { VouchCard } from './VouchCard';
 import { useToast } from '@/hooks/use-toast';
 import { useVouches } from '@/hooks/useVouches';
@@ -26,7 +26,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const VouchSystemEnhanced: React.FC = () => {
   const { user } = useAuth();
@@ -57,6 +67,10 @@ export const VouchSystemEnhanced: React.FC = () => {
   const [editingVouch, setEditingVouch] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Delete confirmation state
+  const [deleteVouchId, setDeleteVouchId] = useState<string | null>(null);
+  const [deleteVouchType, setDeleteVouchType] = useState<'given' | 'received' | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Get formatted vouch lists
   const receivedVouches = useMemo(() => getReceivedVouches(), [getReceivedVouches]);
@@ -192,15 +206,33 @@ export const VouchSystemEnhanced: React.FC = () => {
     }
   };
 
-  const handleDeleteVouch = async (vouchId: string) => {
+  const openDeleteDialog = (vouchId: string, type: 'given' | 'received') => {
+    setDeleteVouchId(vouchId);
+    setDeleteVouchType(type);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteVouchId) return;
+
     try {
-      await deleteVouch(vouchId);
+      await deleteVouch(deleteVouchId);
+      toast({
+        title: deleteVouchType === 'given' ? "Vouch Deleted" : "Vouch Removed",
+        description: deleteVouchType === 'given'
+          ? "Your vouch has been deleted."
+          : "The vouch has been removed from your profile.",
+      });
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to delete vouch",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setDeleteVouchId(null);
+      setDeleteVouchType(null);
     }
   };
 
@@ -330,15 +362,16 @@ export const VouchSystemEnhanced: React.FC = () => {
                           onSelect={() => handleUserSelect(user)}
                           className="flex items-center gap-3 cursor-pointer"
                         >
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
+                          <OptimizedAvatar
+                          src={user.avatar_url}
+                          name={user.name}
+                          className="w-8 h-8"
+                        />
                           <div className="flex-1">
                             <p className="font-medium">{user.stage_name || user.name}</p>
                             <div className="flex gap-1 mt-1">
                               {user.roles.map(role => (
-                                <Badge key={role} variant="outline" className="text-xs">
+                                <Badge key={role} className="professional-button text-xs">
                                   {role}
                                 </Badge>
                               ))}
@@ -355,15 +388,16 @@ export const VouchSystemEnhanced: React.FC = () => {
             {selectedUser && (
               <div className="mt-2 p-3 bg-muted rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={selectedUser.avatar_url} />
-                    <AvatarFallback>{selectedUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <OptimizedAvatar
+                    src={selectedUser.avatar_url}
+                    name={selectedUser.name}
+                    className="w-8 h-8"
+                  />
                   <div>
                     <p className="font-medium">{selectedUser.stage_name || selectedUser.name}</p>
                     <div className="flex gap-1">
                       {selectedUser.roles.map(role => (
-                        <Badge key={role} variant="outline" className="text-xs">
+                        <Badge key={role} className="professional-button text-xs">
                           {role}
                         </Badge>
                       ))}
@@ -455,21 +489,33 @@ export const VouchSystemEnhanced: React.FC = () => {
                 </div>
               ) : (
                 receivedVouches.map((vouch) => (
-                  <VouchCard 
-                    key={vouch.id} 
-                    vouch={{
-                      id: vouch.id,
-                      fromUser: {
-                        name: vouch.voucher_profile?.stage_name || vouch.voucher_profile?.name || 'Unknown User',
-                        avatar: vouch.voucher_profile?.avatar_url || '',
-                        role: 'User' // We could enhance this with role info
-                      },
-                      rating: vouch.rating,
-                      comment: vouch.message,
-                      date: vouch.created_at,
-                      type: 'received' as const
-                    }} 
-                  />
+                  <div key={vouch.id} className="relative">
+                    <VouchCard
+                      vouch={{
+                        id: vouch.id,
+                        fromUser: {
+                          name: vouch.voucher_profile?.stage_name || vouch.voucher_profile?.name || 'Unknown User',
+                          avatar: vouch.voucher_profile?.avatar_url || '',
+                          role: vouch.voucher_profile?.roles?.[0] || 'User'
+                        },
+                        rating: vouch.rating,
+                        comment: vouch.message,
+                        date: vouch.created_at,
+                        type: 'received' as const
+                      }}
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => openDeleteDialog(vouch.id, 'received')}
+                        title="Remove this vouch from your profile"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))
               )}
             </TabsContent>
@@ -508,11 +554,21 @@ export const VouchSystemEnhanced: React.FC = () => {
                     />
                     <div className="absolute top-4 right-4 flex gap-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleEditVouch(vouch)}
+                        title="Edit your vouch"
                       >
                         <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => openDeleteDialog(vouch.id, 'given')}
+                        title="Delete your vouch"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -532,12 +588,11 @@ export const VouchSystemEnhanced: React.FC = () => {
           <div className="space-y-4">
             {editingVouch && (
               <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={editingVouch.vouchee_profile?.avatar_url} />
-                  <AvatarFallback>
-                    {(editingVouch.vouchee_profile?.name || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={editingVouch.vouchee_profile?.avatar_url}
+                  name={editingVouch.vouchee_profile?.name || 'Unknown'}
+                  className="w-8 h-8"
+                />
                 <div>
                   <p className="font-medium">
                     {editingVouch.vouchee_profile?.stage_name || editingVouch.vouchee_profile?.name || 'Unknown User'}
@@ -567,7 +622,7 @@ export const VouchSystemEnhanced: React.FC = () => {
             </div>
 
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button className="professional-button" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
               <Button 
@@ -580,6 +635,31 @@ export const VouchSystemEnhanced: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteVouchType === 'given' ? 'Delete Your Vouch?' : 'Remove This Vouch?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteVouchType === 'given'
+                ? 'This will permanently delete the vouch you gave. This action cannot be undone.'
+                : 'This will remove this vouch from your profile. The person who gave it will be notified.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteVouchType === 'given' ? 'Delete Vouch' : 'Remove Vouch'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

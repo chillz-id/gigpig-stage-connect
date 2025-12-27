@@ -1,0 +1,46 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366f1'}}}%%
+flowchart TB
+    subgraph Frontend["React Frontend"]
+        Pages["Pages (84)"]
+        Components["Components (605)"]
+        Contexts["Contexts (5)"]
+        Hooks["Hooks (70+)"]
+        Services["Services (60+)"]
+    end
+
+    subgraph State["State Management"]
+        RQ["TanStack Query"]
+        LocalState["React State"]
+        LS["localStorage"]
+    end
+
+    subgraph Backend["Supabase Backend"]
+        Auth["Auth Service"]
+        DB[("PostgreSQL<br/>(60+ tables)")]
+        Storage["Storage<br/>(Media)"]
+        Realtime["Realtime<br/>Subscriptions"]
+        Edge["Edge Functions"]
+    end
+
+    subgraph External["External Services"]
+        Humanitix
+        Eventbrite
+        Stripe
+        Xero
+        Google["Google APIs"]
+    end
+
+    Pages --> Components
+    Components --> Hooks
+    Hooks --> Services
+    Services --> RQ
+    RQ --> Backend
+
+    Contexts --> LocalState
+    LocalState --> LS
+
+    Edge --> Humanitix
+    Edge --> Eventbrite
+    Services --> Stripe
+    Services --> Xero
+    Services --> Google

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -174,7 +174,7 @@ const SpotConfirmationStatus: React.FC<SpotConfirmationStatusProps> = ({
           </CardTitle>
           <Button
             size="sm"
-            variant="outline"
+            className="professional-button"
             onClick={handleRefresh}
           >
             Refresh
@@ -218,12 +218,12 @@ const SpotConfirmationStatus: React.FC<SpotConfirmationStatusProps> = ({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={spot.comedian?.profile_picture || undefined} />
-                              <AvatarFallback>
-                                <User className="w-5 h-5" />
-                              </AvatarFallback>
-                            </Avatar>
+                            <OptimizedAvatar
+                              src={spot.comedian?.profile_picture || undefined}
+                              name={getComedianName(spot.comedian)}
+                              className="w-10 h-10"
+                              fallbackIcon={<User className="w-5 h-5" />}
+                            />
                             <div>
                               <p className="font-medium">{getComedianName(spot.comedian)}</p>
                               <p className="text-sm text-gray-600">{spot.spot_name}</p>

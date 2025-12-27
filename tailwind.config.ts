@@ -98,8 +98,39 @@ export default {
 			},
 			backdropBlur: {
 				'xs': '2px',
-			}
+			},
+			// Mobile-specific utilities
+			spacing: {
+				'safe': 'env(safe-area-inset-bottom)', // iOS safe area
+			},
+			minHeight: {
+				'touch-target': '44px', // iOS minimum touch target
+			},
+			minWidth: {
+				'touch-target': '44px',
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		// Custom plugin for mobile utilities
+		function({ addUtilities }: { addUtilities: Function }) {
+			addUtilities({
+				'.pb-safe': {
+					'padding-bottom': 'env(safe-area-inset-bottom)',
+				},
+				'.pt-safe': {
+					'padding-top': 'env(safe-area-inset-top)',
+				},
+				'.touch-target-44': {
+					'min-height': '44px',
+					'min-width': '44px',
+				},
+				'.touch-target-48': {
+					'min-height': '48px',
+					'min-width': '48px',
+				},
+			});
+		},
+	],
 } satisfies Config;

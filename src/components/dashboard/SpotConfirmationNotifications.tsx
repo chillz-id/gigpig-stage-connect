@@ -95,7 +95,7 @@ export const SpotConfirmationNotifications: React.FC = () => {
           </CardTitle>
           {pendingCount > 0 && (
             <Button 
-              variant="outline" 
+              className="professional-button" 
               size="sm"
               onClick={() => navigate('/dashboard?tab=confirmations')}
             >
@@ -139,7 +139,7 @@ export const SpotConfirmationNotifications: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium text-sm">{confirmation.spot.event.title}</h4>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge className="professional-button text-xs">
                       {confirmation.spot.spot_name}
                     </Badge>
                   </div>

@@ -142,7 +142,7 @@ export const RecurringApplicationDateSelector: React.FC<RecurringApplicationDate
           )}
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={handleCancel} className="flex-1">
+            <Button className="professional-button flex-1">
               Cancel
             </Button>
             <Button onClick={handleApply} className="flex-1">

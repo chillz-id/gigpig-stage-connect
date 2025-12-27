@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExportMenu } from '@/components/event-management/ExportMenu';
 import DealListContainer from '@/components/deals/DealListContainer';
-import DealBuilderContainer from '@/components/deals/DealBuilderContainer';
+import { DealCreator } from '@/components/deals/DealCreator';
 import { useDealStats } from '@/hooks/useDealStats';
 import { formatCurrency } from '@/lib/utils';
 import type { DealStatus, DealType } from '@/types/deal';
@@ -91,9 +91,9 @@ export default function DealsTab({ eventId, userId, isOwner }: DealsTabProps) {
         </Alert>
       )}
 
-      {/* Deal Builder Dialog */}
+      {/* Deal Creator Dialog */}
       {showDealBuilder && (
-        <DealBuilderContainer
+        <DealCreator
           eventId={eventId}
           userId={userId}
           onComplete={() => setShowDealBuilder(false)}

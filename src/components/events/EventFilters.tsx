@@ -114,21 +114,6 @@ export const EventFilters: React.FC<EventFiltersProps> = ({
             className="pl-10"
           />
         </div>
-        
-        {/* Quick filters toggle */}
-        <Button
-          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          className={cn("gap-2", getButtonStyles())}
-          variant="outline"
-        >
-          <Filter className="w-4 h-4" />
-          Filters
-          {activeFiltersCount > 0 && (
-            <Badge className={cn("ml-1", getBadgeStyles())}>
-              {activeFiltersCount}
-            </Badge>
-          )}
-        </Button>
       </div>
 
       {/* Advanced Filters Panel */}

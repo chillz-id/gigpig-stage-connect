@@ -1,45 +1,42 @@
 /**
  * ApplicationCardContainer Component (Container)
  *
- * Handles data fetching and mutation logic for ApplicationCard
+ * Handles mutation logic for ApplicationCard
+ * Note: Favourited/hidden status is passed from parent to avoid N+1 queries
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ApplicationCard } from './ApplicationCard';
+import { ComedianEPKModal } from './ComedianEPKModal';
 import { useApproveApplication, useAddToShortlist } from '@/hooks/useApplicationApproval';
 import {
   useFavouriteComedian,
   useUnfavouriteComedian,
-  useHideComedian,
-  useIsFavourited,
-  useIsHidden
+  useHideComedian
 } from '@/hooks/useUserPreferences';
 import type { ApplicationData } from '@/types/application';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface ApplicationCardContainerProps {
   application: ApplicationData;
   userId: string;
   eventId: string;
+  /** Pre-fetched from parent to avoid N+1 queries */
+  isFavourited?: boolean;
+  /** Pre-fetched from parent to avoid N+1 queries */
+  isHidden?: boolean;
 }
 
 export function ApplicationCardContainer({
   application,
   userId,
-  eventId
+  eventId,
+  isFavourited = false,
+  isHidden = false
 }: ApplicationCardContainerProps) {
-  // Fetch favourite and hidden status
-  const { data: isFavourited = false, isLoading: isFavouritedLoading } = useIsFavourited(
-    userId,
-    application.comedian_id
-  );
-  const { data: isHidden = false, isLoading: isHiddenLoading } = useIsHidden(
-    userId,
-    application.comedian_id,
-    eventId
-  );
+  // EPK Modal state
+  const [showEPKModal, setShowEPKModal] = useState(false);
 
-  // Mutations
+  // Mutations only - no queries per card
   const approveMutation = useApproveApplication();
   const shortlistMutation = useAddToShortlist();
   const favouriteMutation = useFavouriteComedian();
@@ -48,8 +45,6 @@ export function ApplicationCardContainer({
 
   // Check if any mutation is in progress
   const isLoading =
-    isFavouritedLoading ||
-    isHiddenLoading ||
     approveMutation.isPending ||
     shortlistMutation.isPending ||
     favouriteMutation.isPending ||
@@ -94,23 +89,35 @@ export function ApplicationCardContainer({
     });
   };
 
-  // Show skeleton while initial data loads
-  if (isFavouritedLoading || isHiddenLoading) {
-    return <Skeleton className="h-72 w-full" />;
-  }
+  // Check if application is shortlisted
+  const isShortlisted = application.is_shortlisted === true;
 
   return (
-    <ApplicationCard
-      application={application}
-      isFavourited={isFavourited}
-      isHidden={isHidden}
-      onApprove={handleApprove}
-      onAddToShortlist={handleAddToShortlist}
-      onFavourite={handleFavourite}
-      onUnfavourite={handleUnfavourite}
-      onHide={handleHide}
-      isLoading={isLoading}
-    />
+    <>
+      <ApplicationCard
+        application={application}
+        isFavourited={isFavourited}
+        isHidden={isHidden}
+        onApprove={handleApprove}
+        onAddToShortlist={handleAddToShortlist}
+        onFavourite={handleFavourite}
+        onUnfavourite={handleUnfavourite}
+        onHide={handleHide}
+        onViewProfile={() => setShowEPKModal(true)}
+        isLoading={isLoading}
+      />
+
+      <ComedianEPKModal
+        isOpen={showEPKModal}
+        onClose={() => setShowEPKModal(false)}
+        comedianId={application.comedian_id}
+        comedianName={application.comedian_name}
+        isShortlisted={isShortlisted}
+        onShortlist={handleAddToShortlist}
+        onConfirm={handleApprove}
+        isLoading={isLoading}
+      />
+    </>
   );
 }
 

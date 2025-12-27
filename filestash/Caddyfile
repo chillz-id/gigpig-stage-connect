@@ -1,0 +1,52 @@
+# Filestash Reverse Proxy Configuration
+#
+# Routes:
+#   /*    -> Filestash file manager (default)
+#   /s3/* -> S3 auth proxy (validates tokens, forwards to Supabase Storage)
+#
+# This enables same-origin embedding in iframes (CSP compliance)
+
+:80 {
+    # Auto-login page for iframe embedding (serves static HTML file)
+    @autologin path /auto-login*
+    handle @autologin {
+        header Content-Security-Policy "frame-ancestors 'self' http://localhost:* https://gigpigs.app https://*.gigpigs.app"
+        root * /etc/caddy
+        rewrite * /auto-login.html
+        file_server
+    }
+
+    # S3 auth proxy for Supabase Storage (must be before catch-all)
+    handle /s3/* {
+        uri strip_prefix /s3
+        # Forward the filestash_token cookie as X-Auth-Token header
+        # S3 proxy will read token from this header if x-amz-security-token fails
+        reverse_proxy s3-proxy:9000 {
+            header_up X-Auth-Token {http.request.cookie.filestash_token}
+        }
+    }
+
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Filestash file manager (catch-all)
+    handle {
+        reverse_proxy filestash:8334 {
+            # Remove X-Frame-Options set by Filestash to allow iframe embedding
+            header_down -X-Frame-Options
+            # Forward the filestash_token cookie as X-Forwarded-Token header
+            # Passthrough middleware can read from {{ .Request.Header.X-Forwarded-Token }}
+            header_up X-Forwarded-Token {http.request.cookie.filestash_token}
+        }
+        # Allow embedding from localhost and production domain
+        header Content-Security-Policy "frame-ancestors 'self' http://localhost:* https://gigpigs.app https://*.gigpigs.app"
+    }
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

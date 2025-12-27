@@ -1,165 +1,184 @@
-
-import React from 'react';
-import { toast } from '@/hooks/use-toast';
-import { Calendar } from 'lucide-react';
+import { createContext, useContext, useEffect } from 'react';
+import { Outlet, useParams, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useActiveProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
-import { useProfileAnalytics } from '@/hooks/useProfileAnalytics';
-import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
-import ComedianHeader from './ComedianHeader';
-import ComedianBio from './ComedianBio';
-import ComedianMedia from './ComedianMedia';
-import ComedianUpcomingShows from './ComedianUpcomingShows';
-import ComedianAccomplishments from './ComedianAccomplishments';
-import ComedianContact from './ComedianContact';
-import ComedianAvailabilityCalendar from './ComedianAvailabilityCalendar';
-import PublicAvailabilityCalendar from './PublicAvailabilityCalendar';
-import ComedianCalendarSync from './ComedianCalendarSync';
-import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ComedianProfileError from '@/components/comedian-profile/ComedianProfileError';
 
-interface ComedianProfileLayoutProps {
-  comedian: any;
+// Context to share comedian data with nested routes
+interface ComedianData {
+  id: string;
+  name: string;
+  stage_name: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  banner_position: string | null;
+  is_verified: boolean;
+  email: string;
+  created_at: string;
+  phone: string | null;
+  website_url: string | null;
+  instagram_url: string | null;
+  twitter_url: string | null;
+  youtube_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  show_contact_in_epk: boolean;
+  custom_show_types: string[] | null;
+  profile_slug: string | null;
 }
 
-const ComedianProfileLayout: React.FC<ComedianProfileLayoutProps> = ({ comedian }) => {
-  const { user, hasRole } = useAuth();
-  const { theme } = useTheme();
-  
-  // Check if this is the user's own profile
-  const isOwnProfile = user?.id === comedian.id;
+const ComedianProfileContext = createContext<ComedianData | null>(null);
 
-  // Track analytics for profile views
-  const { trackInteraction } = useAnalyticsTracking({
-    profileId: comedian.id,
-    trackView: !isOwnProfile, // Don't track own profile views
-    trackEngagement: !isOwnProfile,
-  });
-
-  const handleShare = async () => {
-    trackInteraction('share');
-    const url = window.location.href;
-    const title = `${comedian.name} - Comedian Profile`;
-    const text = `Check out ${comedian.name}'s comedy profile on Stand Up Sydney`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text, url });
-      } catch (error) {
-        // Fallback to copying URL
-        navigator.clipboard.writeText(url);
-        toast({
-          title: "Link Copied",
-          description: "Profile link has been copied to clipboard",
-        });
-      }
-    } else {
-      navigator.clipboard.writeText(url);
-      toast({
-        title: "Link Copied",
-        description: "Profile link has been copied to clipboard",
-      });
-    }
-  };
-
-  const handleContact = () => {
-    trackInteraction('contact_view');
-    if (comedian.email) {
-      trackInteraction('booking_request', { method: 'email' });
-      const subject = `Booking Inquiry for ${comedian.name}`;
-      const body = `Hi ${comedian.name},\n\nI'm interested in booking you for an upcoming show. Let's discuss the details.\n\nBest regards,`;
-      window.location.href = `mailto:${comedian.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    }
-  };
-
-  const getBackgroundStyles = () => {
-    if (theme === 'pleasure') {
-      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
-    }
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
-  };
-
-  return (
-    <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8 relative">
-          {/* Action Buttons positioned absolutely */}
-          {hasRole('admin') && (
-            <div className="absolute top-0 left-0 z-10 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-          )}
-
-          {/* Header Section */}
-          <ComedianHeader comedian={comedian} onShare={handleShare} onContact={handleContact} />
-          
-          {/* Show tabs for own profile to include analytics */}
-          {isOwnProfile ? (
-            <Tabs defaultValue="profile" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="profile" className="space-y-8">
-                {/* Bio Section */}
-                <ComedianBio comedian={comedian} />
-                
-                {/* Contact Information */}
-                <ComedianContact comedian={comedian} />
-                
-                {/* Media Showcase */}
-                <ComedianMedia comedianId={comedian.id} isOwnProfile={isOwnProfile} trackInteraction={trackInteraction} />
-                
-                {/* Upcoming Shows */}
-                <ComedianUpcomingShows comedianId={comedian.id} />
-                
-                {/* Public Availability Calendar */}
-                <PublicAvailabilityCalendar 
-                  comedianId={comedian.id} 
-                  comedianName={comedian.stage_name || comedian.name}
-                />
-                
-                {/* Calendar Sync */}
-                <ComedianCalendarSync comedianId={comedian.id} />
-                
-                {/* Accomplishments & Reviews */}
-                <ComedianAccomplishments comedianId={comedian.id} />
-              </TabsContent>
-              
-              <TabsContent value="analytics">
-                <AnalyticsDashboard profileId={comedian.id} />
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <>
-              {/* Bio Section */}
-              <ComedianBio comedian={comedian} />
-              
-              {/* Contact Information */}
-              <ComedianContact comedian={comedian} trackInteraction={trackInteraction} />
-              
-              {/* Media Showcase */}
-              <ComedianMedia comedianId={comedian.id} isOwnProfile={isOwnProfile} trackInteraction={trackInteraction} />
-              
-              {/* Upcoming Shows */}
-              <ComedianUpcomingShows comedianId={comedian.id} />
-              
-              {/* Public Availability Calendar */}
-              <PublicAvailabilityCalendar 
-                comedianId={comedian.id} 
-                comedianName={comedian.stage_name || comedian.name}
-              />
-              
-              {/* Accomplishments & Reviews */}
-              <ComedianAccomplishments comedianId={comedian.id} />
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+export const useComedianProfile = () => {
+  const context = useContext(ComedianProfileContext);
+  if (!context) {
+    throw new Error('useComedianProfile must be used within ComedianProfileLayout');
+  }
+  return context;
 };
 
-export default ComedianProfileLayout;
+/**
+ * ComedianProfileLayout
+ *
+ * Parent layout component for all comedian profile routes.
+ * Fetches comedian data once and provides it to nested routes via context.
+ *
+ * Nested routes render via <Outlet />
+ */
+export const ComedianProfileLayout = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const { setActiveProfile } = useActiveProfile();
+  const { user } = useAuth();
+
+  const { data: comedian, isLoading, error } = useQuery({
+    queryKey: ['comedian-profile-by-slug', slug],
+    queryFn: async () => {
+      if (!slug) throw new Error('No comedian slug provided');
+
+      // Check if slug is a UUID (fallback when profile_slug is not set)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+      if (isUUID) {
+        // Query directly by ID
+        const { data: uuidData, error: uuidError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            name,
+            stage_name,
+            bio,
+            location,
+            avatar_url,
+            banner_url,
+            banner_position,
+            is_verified,
+            email,
+            created_at,
+            phone,
+            website_url,
+            instagram_url,
+            twitter_url,
+            youtube_url,
+            facebook_url,
+            tiktok_url,
+            show_contact_in_epk,
+            custom_show_types,
+            profile_slug
+          `)
+          .eq('id', slug)
+          .single();
+
+        if (uuidData) {
+          return uuidData;
+        }
+
+        if (uuidError && uuidError.code !== 'PGRST116') {
+          throw uuidError;
+        }
+      }
+
+      // Query by profile_slug first
+      const { data: dbData, error: dbError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          stage_name,
+          bio,
+          location,
+          avatar_url,
+          banner_url,
+          banner_position,
+          is_verified,
+          email,
+          created_at,
+          phone,
+          website_url,
+          instagram_url,
+          twitter_url,
+          youtube_url,
+          facebook_url,
+          tiktok_url,
+          show_contact_in_epk,
+          custom_show_types,
+          profile_slug
+        `)
+        .eq('profile_slug', slug)
+        .single();
+
+      if (dbData) {
+        return dbData;
+      }
+
+      if (dbError && dbError.code !== 'PGRST116') {
+        throw dbError;
+      }
+
+      // No fallback - if profile_slug doesn't match, profile doesn't exist
+      throw new Error('Comedian not found');
+    },
+    enabled: !!slug,
+  });
+
+  // Only set active profile when viewing OWN profile (not other comedians' profiles)
+  // The comedian.id matches the user's auth ID when it's their own profile
+  const isOwnProfile = user?.id === comedian?.id;
+
+  useEffect(() => {
+    if (comedian && isOwnProfile) {
+      setActiveProfile({
+        id: comedian.id,
+        type: 'comedian',
+        slug: comedian.profile_slug || comedian.id,
+        name: comedian.stage_name || comedian.name,
+        avatarUrl: comedian.avatar_url || undefined,
+      });
+    }
+  }, [comedian, isOwnProfile, setActiveProfile]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error || !comedian) {
+    return <ComedianProfileError error={error} />;
+  }
+
+  // Provide comedian data to nested routes
+  // Key on pathname forces Outlet re-render when navigating between nested routes
+  return (
+    <ComedianProfileContext.Provider value={comedian}>
+      <Outlet key={location.pathname} />
+    </ComedianProfileContext.Provider>
+  );
+};

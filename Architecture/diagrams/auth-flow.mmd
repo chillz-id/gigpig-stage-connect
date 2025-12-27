@@ -1,0 +1,24 @@
+%%{init: {'theme': 'base'}}%%
+sequenceDiagram
+    participant U as User
+    participant Auth as AuthContext
+    participant User as UserContext
+    participant Profile as ProfileContext
+    participant DB as Supabase
+
+    U->>Auth: Login
+    Auth->>DB: supabase.auth.signIn()
+    DB-->>Auth: Session + User
+    Auth->>Auth: Set user, session
+
+    Auth->>User: Trigger profile fetch
+    User->>DB: Query profiles table
+    DB-->>User: Profile data
+
+    User->>Profile: Trigger available profiles
+    Profile->>DB: Query user_roles + comedian + manager + orgs
+    DB-->>Profile: Available profiles
+    Profile->>Profile: Set availableProfiles
+    Profile->>Profile: Restore activeProfile from localStorage
+
+    Profile-->>U: Redirect to dashboard

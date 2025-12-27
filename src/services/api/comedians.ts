@@ -36,7 +36,8 @@ export class ComediansApi extends BaseApi<Comedian> {
             )
           )
         `)
-        .eq('role', 'comedian');
+        .eq('role', 'comedian')
+        .eq('profile_visible', true); // Only show visible profiles in browse/search
       
       // Apply search filter
       if (filters?.search) {
@@ -138,8 +139,9 @@ export class ComediansApi extends BaseApi<Comedian> {
   // Get comedian's upcoming gigs
   async getUpcomingGigs(comedianId: string) {
     try {
-      const currentDate = new Date().toISOString();
-      
+      const currentDate = new Date();
+
+      // Note: We filter by date client-side because PostgREST doesn't support .gte()/.eq() on embedded fields
       const { data, error } = await supabase
         .from('event_spots')
         .select(`
@@ -147,17 +149,27 @@ export class ComediansApi extends BaseApi<Comedian> {
           event:events(
             *,
             venue:venues(*),
-            promoter:profiles!events_promoter_id_fkey(*)
+            organization:organization_profiles!events_organization_id_fkey(*)
           )
         `)
-        .eq('performer_id', comedianId)
-        .gte('event.date', currentDate)
-        .eq('event.status', 'published')
-        .order('event.date', { ascending: true });
-      
+        .eq('performer_id', comedianId);
+
       if (error) throw error;
-      
-      return { data: data || [], error: null };
+
+      // Filter to upcoming published events and sort by date
+      const filteredData = (data || [])
+        .filter((spot: any) => {
+          const eventDate = spot.event?.date;
+          const eventStatus = spot.event?.status;
+          return eventDate && new Date(eventDate) >= currentDate && eventStatus === 'published';
+        })
+        .sort((a: any, b: any) => {
+          const dateA = a.event?.date ? new Date(a.event.date).getTime() : 0;
+          const dateB = b.event?.date ? new Date(b.event.date).getTime() : 0;
+          return dateA - dateB;
+        });
+
+      return { data: filteredData, error: null };
     } catch (error) {
       return { data: null, error };
     }
@@ -166,8 +178,9 @@ export class ComediansApi extends BaseApi<Comedian> {
   // Get comedian's past performances
   async getPastPerformances(comedianId: string, limit = 10) {
     try {
-      const currentDate = new Date().toISOString();
-      
+      const currentDate = new Date();
+
+      // Note: We filter by date client-side because PostgREST doesn't support .lt() on embedded fields
       const { data, error } = await supabase
         .from('event_spots')
         .select(`
@@ -177,14 +190,24 @@ export class ComediansApi extends BaseApi<Comedian> {
             venue:venues(*)
           )
         `)
-        .eq('performer_id', comedianId)
-        .lt('event.date', currentDate)
-        .order('event.date', { ascending: false })
-        .limit(limit);
-      
+        .eq('performer_id', comedianId);
+
       if (error) throw error;
-      
-      return { data: data || [], error: null };
+
+      // Filter to past events, sort by date descending, and apply limit
+      const filteredData = (data || [])
+        .filter((spot: any) => {
+          const eventDate = spot.event?.date;
+          return eventDate && new Date(eventDate) < currentDate;
+        })
+        .sort((a: any, b: any) => {
+          const dateA = a.event?.date ? new Date(a.event.date).getTime() : 0;
+          const dateB = b.event?.date ? new Date(b.event.date).getTime() : 0;
+          return dateB - dateA; // Descending
+        })
+        .slice(0, limit);
+
+      return { data: filteredData, error: null };
     } catch (error) {
       return { data: null, error };
     }

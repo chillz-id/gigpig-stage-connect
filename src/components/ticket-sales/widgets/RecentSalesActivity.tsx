@@ -77,7 +77,7 @@ const RecentSalesActivity: React.FC<RecentSalesActivityProps> = ({ sales }) => {
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium">{sale.customer_name}</span>
                         <Badge 
-                          variant="outline" 
+                          className="professional-button" 
                           className={`text-xs ${getPlatformColor(sale.platform)}`}
                         >
                           {sale.platform}

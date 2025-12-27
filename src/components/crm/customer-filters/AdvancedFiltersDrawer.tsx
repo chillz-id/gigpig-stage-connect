@@ -103,7 +103,7 @@ export const AdvancedFiltersDrawer = ({
           <Label>Last Order From</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left font-normal">
+              <Button className="professional-button w-full justify-start text-left font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {filters.dateFrom ? format(new Date(filters.dateFrom), 'PP') : 'Pick a date'}
               </Button>
@@ -123,7 +123,7 @@ export const AdvancedFiltersDrawer = ({
           <Label>Last Order To</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left font-normal">
+              <Button className="professional-button w-full justify-start text-left font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {filters.dateTo ? format(new Date(filters.dateTo), 'PP') : 'Pick a date'}
               </Button>

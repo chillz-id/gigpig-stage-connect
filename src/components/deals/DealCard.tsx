@@ -157,8 +157,7 @@ export function DealCard({
               onClick={onReject}
               disabled={isLoading}
               size="sm"
-              variant="outline"
-              className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
+              className="professional-button gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
               aria-label="Reject deal"
             >
               <XCircle className="h-4 w-4" />
@@ -181,8 +180,7 @@ export function DealCard({
             onClick={onEdit}
             disabled={isLoading}
             size="sm"
-            variant="outline"
-            className="gap-1 ml-auto"
+            className="professional-button gap-1 ml-auto"
             aria-label="Edit deal"
           >
             <Pencil className="h-4 w-4" />

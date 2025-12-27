@@ -35,7 +35,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Progress } from '@/components/ui/progress';
 import {
   ChevronLeft,
@@ -47,6 +47,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { cn } from '@/lib/utils';
 
 // ============================================================================
 // TYPES & VALIDATION
@@ -96,6 +98,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
   const [currentStep, setCurrentStep] = useState(1);
   const [dealBasics, setDealBasics] = useState<DealBasicsValues | null>(null);
   const [participants, setParticipants] = useState<DealParticipant[]>([]);
+  const { isMobile, isSmallMobile } = useMobileLayout();
 
   const form = useForm<DealBasicsValues>({
     resolver: zodResolver(dealBasicsSchema),
@@ -176,15 +179,6 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
     onComplete(dealInput);
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const formatCurrency = (amount?: number) => {
     if (!amount) return 'Not set';
     return new Intl.NumberFormat('en-AU', {
@@ -199,23 +193,29 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] overflow-y-auto",
+          isMobile ? "max-w-full" : "max-w-2xl"
+        )}
+        mobileVariant="fullscreen"
+      >
         <DialogHeader>
-          <DialogTitle>Create New Deal</DialogTitle>
+          <DialogTitle className={cn(isMobile && "text-lg")}>Create New Deal</DialogTitle>
           <DialogDescription>
             Step {currentStep} of {totalSteps}
           </DialogDescription>
           <Progress value={progress} className="mt-2" />
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className={cn("space-y-6", isMobile ? "py-2" : "py-4")}>
           {/* STEP 1: Deal Basics */}
           {currentStep === 1 && (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleBasicsSubmit)} className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  <h3 className="font-semibold text-lg">Deal Basics</h3>
+                  <FileText className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-blue-500")} />
+                  <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>Deal Basics</h3>
                 </div>
 
                 <FormField
@@ -225,7 +225,11 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                     <FormItem>
                       <FormLabel>Deal Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Sydney Comedy Night Split" {...field} />
+                        <Input
+                          placeholder="e.g., Sydney Comedy Night Split"
+                          className={cn(isMobile && "h-11 touch-target-44")}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -240,7 +244,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       <FormLabel>Deal Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className={cn(isMobile && "h-11 touch-target-44")}>
                             <SelectValue placeholder="Select deal type" />
                           </SelectTrigger>
                         </FormControl>
@@ -264,12 +268,16 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       <FormLabel>Total Amount (Optional)</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                          <DollarSign className={cn(
+                            "absolute left-3 top-1/2 -translate-y-1/2 text-gray-500",
+                            isMobile ? "h-5 w-5" : "h-4 w-4"
+                          )} />
                           <Input
                             type="number"
+                            inputMode="decimal"
                             step="0.01"
                             placeholder="0.00"
-                            className="pl-9"
+                            className={cn("pl-9", isMobile && "h-11 touch-target-44")}
                             {...field}
                           />
                         </div>
@@ -291,7 +299,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                       <FormControl>
                         <Textarea
                           placeholder="Add details about this deal..."
-                          className="resize-none"
+                          className={cn("resize-none", isMobile && "min-h-[100px]")}
                           {...field}
                         />
                       </FormControl>
@@ -300,13 +308,30 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                   )}
                 />
 
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={onCancel}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    Next <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
+                {/* Mobile: Stack buttons, Desktop: Side by side */}
+                <div className={cn(
+                  "pt-4",
+                  isMobile ? "flex flex-col gap-2" : "flex justify-end gap-2"
+                )}>
+                  {isMobile ? (
+                    <>
+                      <Button type="submit" className="w-full touch-target-44">
+                        Next <ChevronRight className="ml-2 h-5 w-5" />
+                      </Button>
+                      <Button type="button" variant="secondary" className="w-full touch-target-44" onClick={onCancel}>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button type="button" className="professional-button" onClick={onCancel}>
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        Next <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </Form>
@@ -316,18 +341,21 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
           {currentStep === 2 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Users className="h-5 w-5 text-blue-500" />
-                <h3 className="font-semibold text-lg">Add Participants</h3>
+                <Users className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-blue-500")} />
+                <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>Add Participants</h3>
               </div>
 
               <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertCircle className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+                <AlertDescription className={cn(isMobile && "text-sm")}>
                   This is a simplified demo. In the real implementation, you would search and select participants.
                 </AlertDescription>
               </Alert>
 
-              <Button onClick={handleAddParticipant} variant="outline" className="w-full">
+              <Button
+                onClick={handleAddParticipant}
+                className={cn("professional-button w-full", isMobile && "h-11 touch-target-44")}
+              >
                 Add Participant
               </Button>
 
@@ -336,22 +364,27 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                   {participants.map((participant) => (
                     <div
                       key={participant.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className={cn(
+                        "flex items-center justify-between rounded-lg border",
+                        isMobile ? "p-4 flex-col gap-3" : "p-3"
+                      )}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={participant.avatar} />
-                          <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={participant.avatar}
+                          name={participant.name}
+                          className={cn(isMobile ? "h-12 w-12" : "h-10 w-10")}
+                        />
                         <div>
                           <p className="font-medium">{participant.name}</p>
-                          <p className="text-sm text-gray-500">{participant.role}</p>
+                          <p className={cn("text-gray-500", isMobile ? "text-sm" : "text-sm")}>{participant.role}</p>
                         </div>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="sm"
+                        variant={isMobile ? "secondary" : "ghost"}
+                        size={isMobile ? "default" : "sm"}
                         onClick={() => handleRemoveParticipant(participant.id)}
+                        className={cn(isMobile && "w-full touch-target-44")}
                       >
                         Remove
                       </Button>
@@ -360,16 +393,37 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                 </div>
               )}
 
-              <div className="flex justify-between gap-2 pt-4">
-                <Button variant="outline" onClick={() => setCurrentStep(1)}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button
-                  onClick={() => setCurrentStep(3)}
-                  disabled={participants.length === 0}
-                >
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
+              {/* Mobile: Stack buttons, Desktop: Side by side */}
+              <div className={cn(
+                "pt-4",
+                isMobile ? "flex flex-col gap-2" : "flex justify-between gap-2"
+              )}>
+                {isMobile ? (
+                  <>
+                    <Button
+                      onClick={() => setCurrentStep(3)}
+                      disabled={participants.length === 0}
+                      className="w-full touch-target-44"
+                    >
+                      Next <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                    <Button variant="secondary" className="w-full touch-target-44" onClick={() => setCurrentStep(1)}>
+                      <ChevronLeft className="mr-2 h-5 w-5" /> Back
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button className="professional-button" onClick={() => setCurrentStep(1)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button
+                      onClick={() => setCurrentStep(3)}
+                      disabled={participants.length === 0}
+                    >
+                      Next <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -378,24 +432,32 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
           {currentStep === 3 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="h-5 w-5 text-blue-500" />
-                <h3 className="font-semibold text-lg">Configure Splits</h3>
+                <DollarSign className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-blue-500")} />
+                <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>Configure Splits</h3>
               </div>
 
               <div className="space-y-3">
                 {participants.map((participant) => (
-                  <div key={participant.id} className="rounded-lg border p-4 space-y-3">
+                  <div key={participant.id} className={cn(
+                    "rounded-lg border space-y-3",
+                    isMobile ? "p-3" : "p-4"
+                  )}>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={participant.avatar} />
-                        <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={participant.avatar}
+                        name={participant.name}
+                        className={cn(isMobile ? "h-10 w-10" : "h-8 w-8")}
+                      />
                       <div>
                         <p className="font-medium text-sm">{participant.name}</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Mobile: Stack fields, Desktop: Grid */}
+                    <div className={cn(
+                      "gap-3",
+                      isMobile ? "flex flex-col" : "grid grid-cols-2"
+                    )}>
                       <div>
                         <label className="text-sm font-medium">Split Type</label>
                         <Select
@@ -404,7 +466,7 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                             handleSplitChange(participant.id, 'split_type', value)
                           }
                         >
-                          <SelectTrigger className="mt-1">
+                          <SelectTrigger className={cn("mt-1", isMobile && "h-11 touch-target-44")}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -420,8 +482,9 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                         </label>
                         <Input
                           type="number"
+                          inputMode="decimal"
                           step={participant.split_type === 'percentage' ? '0.1' : '0.01'}
-                          className="mt-1"
+                          className={cn("mt-1", isMobile && "h-11 touch-target-44")}
                           value={
                             participant.split_type === 'percentage'
                               ? participant.split_percentage || 0
@@ -444,17 +507,24 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
               </div>
 
               {/* Total Validation */}
-              <div className="rounded-lg border p-4 bg-gray-50 dark:bg-gray-800">
+              <div className={cn(
+                "rounded-lg border bg-gray-50 dark:bg-gray-800",
+                isMobile ? "p-3" : "p-4"
+              )}>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Total Percentage:</span>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold ${isValidSplits ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className={cn(
+                      "font-bold",
+                      isValidSplits ? 'text-green-600' : 'text-red-600',
+                      isMobile && "text-lg"
+                    )}>
                       {totalPercentage.toFixed(1)}%
                     </span>
                     {isValidSplits ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-green-600")} />
                     ) : (
-                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <AlertCircle className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-red-600")} />
                     )}
                   </div>
                 </div>
@@ -465,13 +535,34 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                 )}
               </div>
 
-              <div className="flex justify-between gap-2 pt-4">
-                <Button variant="outline" onClick={() => setCurrentStep(2)}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setCurrentStep(4)} disabled={!isValidSplits}>
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
+              {/* Mobile: Stack buttons, Desktop: Side by side */}
+              <div className={cn(
+                "pt-4",
+                isMobile ? "flex flex-col gap-2" : "flex justify-between gap-2"
+              )}>
+                {isMobile ? (
+                  <>
+                    <Button
+                      onClick={() => setCurrentStep(4)}
+                      disabled={!isValidSplits}
+                      className="w-full touch-target-44"
+                    >
+                      Next <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                    <Button variant="secondary" className="w-full touch-target-44" onClick={() => setCurrentStep(2)}>
+                      <ChevronLeft className="mr-2 h-5 w-5" /> Back
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button className="professional-button" onClick={() => setCurrentStep(2)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button onClick={() => setCurrentStep(4)} disabled={!isValidSplits}>
+                      Next <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -479,25 +570,25 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
           {/* STEP 4: Review */}
           {currentStep === 4 && dealBasics && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <CheckCircle className="h-5 w-5 text-blue-500" />
-                <h3 className="font-semibold text-lg">Review & Create</h3>
+              <div className={cn("flex items-center gap-2", isMobile ? "mb-3" : "mb-4")}>
+                <CheckCircle className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-blue-500")} />
+                <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>Review & Create</h3>
               </div>
 
-              <div className="space-y-4">
+              <div className={cn(isMobile ? "space-y-3" : "space-y-4")}>
                 {/* Deal Details */}
-                <div className="rounded-lg border p-4 space-y-2">
-                  <h4 className="font-medium">Deal Details</h4>
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
+                <div className={cn("rounded-lg border space-y-2", isMobile ? "p-3" : "p-4")}>
+                  <h4 className={cn("font-medium", isMobile && "text-sm")}>Deal Details</h4>
+                  <div className={cn("space-y-1", isMobile ? "text-sm" : "text-sm")}>
+                    <div className={cn("flex justify-between", isMobile && "py-1")}>
                       <span className="text-gray-600">Name:</span>
-                      <span className="font-medium">{dealBasics.deal_name}</span>
+                      <span className="font-medium truncate ml-2 max-w-[60%] text-right">{dealBasics.deal_name}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className={cn("flex justify-between items-center", isMobile && "py-1")}>
                       <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline">{dealBasics.deal_type}</Badge>
+                      <Badge className="professional-button">{dealBasics.deal_type}</Badge>
                     </div>
-                    <div className="flex justify-between">
+                    <div className={cn("flex justify-between", isMobile && "py-1")}>
                       <span className="text-gray-600">Total Amount:</span>
                       <span className="font-medium">{formatCurrency(dealBasics.total_amount)}</span>
                     </div>
@@ -505,19 +596,27 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                 </div>
 
                 {/* Participants */}
-                <div className="rounded-lg border p-4 space-y-3">
-                  <h4 className="font-medium">Participants ({participants.length})</h4>
-                  <div className="space-y-2">
+                <div className={cn("rounded-lg border", isMobile ? "p-3 space-y-2" : "p-4 space-y-3")}>
+                  <h4 className={cn("font-medium", isMobile && "text-sm")}>Participants ({participants.length})</h4>
+                  <div className={cn(isMobile ? "space-y-3" : "space-y-2")}>
                     {participants.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={p.avatar} />
-                            <AvatarFallback className="text-xs">{getInitials(p.name)}</AvatarFallback>
-                          </Avatar>
-                          <span>{p.name}</span>
+                      <div
+                        key={p.id}
+                        className={cn(
+                          "flex items-center justify-between",
+                          isMobile ? "py-2 border-b last:border-b-0" : "text-sm"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <OptimizedAvatar
+                            src={p.avatar}
+                            name={p.name}
+                            className={cn(isMobile ? "h-8 w-8" : "h-6 w-6")}
+                            fallbackClassName={cn(isMobile ? "text-sm" : "text-xs")}
+                          />
+                          <span className={cn("truncate", isMobile && "text-sm")}>{p.name}</span>
                         </div>
-                        <span className="font-medium">
+                        <span className={cn("font-medium flex-shrink-0 ml-2", isMobile ? "text-base" : "text-sm")}>
                           {p.split_type === 'percentage'
                             ? `${p.split_percentage}%`
                             : formatCurrency(p.split_amount)}
@@ -528,13 +627,34 @@ export function DealBuilder({ onComplete, onCancel, isLoading = false }: DealBui
                 </div>
               </div>
 
-              <div className="flex justify-between gap-2 pt-4">
-                <Button variant="outline" onClick={() => setCurrentStep(3)}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={handleCreate} disabled={isLoading}>
-                  {isLoading ? 'Creating...' : 'Create Deal'}
-                </Button>
+              <div className={cn("pt-4", isMobile ? "flex flex-col gap-2" : "flex justify-between gap-2")}>
+                {isMobile ? (
+                  <>
+                    <Button
+                      onClick={handleCreate}
+                      disabled={isLoading}
+                      className="w-full touch-target-44"
+                    >
+                      {isLoading ? 'Creating...' : 'Create Deal'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="w-full touch-target-44"
+                      onClick={() => setCurrentStep(3)}
+                    >
+                      <ChevronLeft className="mr-2 h-5 w-5" /> Back
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button className="professional-button" onClick={() => setCurrentStep(3)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button onClick={handleCreate} disabled={isLoading}>
+                      {isLoading ? 'Creating...' : 'Create Deal'}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

@@ -45,7 +45,9 @@ export type CRMRouteComponentKey =
   | 'task-manager'
   | 'task-detail'
   | 'relationships'
-  | 'analytics';
+  | 'analytics'
+  | 'import-export'
+  | 'segments';
 
 export interface CRMRouteConfig {
   path: string;
@@ -218,9 +220,8 @@ export const CRM_ROUTE_CONFIG: CRMRouteConfig[] = [
   },
   {
     path: 'segments',
-    component: 'customer-list',
+    component: 'segments',
     navItemId: 'crm.customers.segments',
-    note: 'Placeholder: segments share the customer list implementation pending dedicated UI.',
   },
   {
     path: 'customer-analytics',
@@ -230,9 +231,8 @@ export const CRM_ROUTE_CONFIG: CRMRouteConfig[] = [
   },
   {
     path: 'import-export',
-    component: 'customer-list',
+    component: 'import-export',
     navItemId: 'crm.customers.import',
-    note: 'Placeholder: import/export routes pending dedicated UI.',
   },
   {
     path: 'deals',

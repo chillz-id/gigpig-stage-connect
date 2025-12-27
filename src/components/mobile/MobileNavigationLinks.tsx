@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings, Building2 } from 'lucide-react';
+import { Home, Calendar, Users, MessageCircle, Bell, Plus, Crown, User, BarChart3, Search, Settings, Building2, Lightbulb, Bug } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileNavigationLinksProps {
@@ -15,8 +15,8 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
 
   // Admin should have access to everything
   const isAdmin = hasRole('admin');
-  const isPromoter = hasRole('promoter') || isAdmin;
-  const isComedian = hasRole('comedian') || isAdmin;
+  const isPromoter = false;
+  const isComedian = hasRole('comedian') || hasRole('comedian_lite') || isAdmin;
 
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
@@ -95,6 +95,24 @@ const MobileNavigationLinks: React.FC<MobileNavigationLinksProps> = ({
           >
             <Bell className="w-5 h-5" />
             <span className="font-medium">Notifications</span>
+          </Link>
+
+          <Link
+            to="/roadmap"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <Lightbulb className="w-5 h-5" />
+            <span className="font-medium">Feature Roadmap</span>
+          </Link>
+
+          <Link
+            to="/bugs"
+            className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-accent/50 transition-colors"
+            onClick={handleLinkClick}
+          >
+            <Bug className="w-5 h-5" />
+            <span className="font-medium">Bug Tracker</span>
           </Link>
 
           {/* Admin Dashboard - Always visible for admins */}

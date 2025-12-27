@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, CalendarDays, FileText, DollarSign, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
 
 /**
  * ManagerDashboard Component
@@ -21,6 +22,7 @@ export function ManagerDashboard() {
   const { user, profile } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { isMobile } = useMobileLayout();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -56,19 +58,22 @@ export function ManagerDashboard() {
 
   return (
     <div className={cn("min-h-screen", getBackgroundStyles())}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              <h1 className={cn(
+                "font-bold text-white mb-1 md:mb-2",
+                isMobile ? "text-xl" : "text-2xl md:text-3xl"
+              )}>
                 {getGreeting()}, {profile?.name || user?.email?.split('@')[0]}!
               </h1>
               <p className={cn(
                 "text-sm md:text-base",
                 theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'
               )}>
-                Your manager dashboard - oversee your client roster and bookings
+                {isMobile ? 'Oversee clients & bookings' : 'Your manager dashboard - oversee your client roster and bookings'}
               </p>
             </div>
             <Badge className="bg-blue-500 hover:bg-blue-600 text-white w-fit">
@@ -77,18 +82,21 @@ export function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+        )}>
           <Card className={cn(getStatCardStyles(true))}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Active Clients
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>12</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 +2 this month
               </p>
             </CardContent>
@@ -96,14 +104,14 @@ export function ManagerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Active Bookings
               </CardTitle>
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <CalendarDays className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">34</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>34</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 8 pending confirmation
               </p>
             </CardContent>
@@ -111,14 +119,14 @@ export function ManagerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Commission (MTD)
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$4,850</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>$4,850</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 +12% from last month
               </p>
             </CardContent>
@@ -126,66 +134,76 @@ export function ManagerDashboard() {
 
           <Card className={cn(getStatCardStyles())}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className={cn("font-medium", isMobile ? "text-sm" : "text-sm")}>
                 Contracts
               </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className={cn(isMobile ? "h-5 w-5" : "h-4 w-4", "text-muted-foreground")} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">18</div>
-              <p className="text-xs text-muted-foreground">
+              <div className={cn("font-bold", isMobile ? "text-3xl" : "text-2xl")}>18</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 3 awaiting signature
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Actions - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}>
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Briefcase className={cn(isMobile ? "w-5 h-5" : "w-5 h-5")} />
                 Quick Actions
               </CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Manage your agency and clients
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CardContent className={cn(isMobile ? "space-y-2" : "space-y-4")}>
+              <div className={cn(
+                "grid gap-3",
+                isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+              )}>
                 <Button
                   onClick={() => navigate('/crm')}
-                  className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white border-0"
+                  className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white border-0 touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Client Roster
                 </Button>
 
                 <Button
                   onClick={() => navigate('/shows')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <CalendarDays className="w-4 h-4 mr-2" />
+                  <CalendarDays className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Bookings
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=invoices')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Contracts
                 </Button>
 
                 <Button
                   onClick={() => navigate('/profile?tab=invoices')}
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="professional-button w-full justify-start touch-target-44"
+                  size={isMobile ? "mobile" : "default"}
                 >
-                  <DollarSign className="w-4 h-4 mr-2" />
+                  <DollarSign className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", "mr-2")} />
                   Financials
                 </Button>
               </div>
@@ -194,32 +212,38 @@ export function ManagerDashboard() {
 
           <Card className={cn(getCardStyles())}>
             <CardHeader>
-              <CardTitle>Agency Performance</CardTitle>
-              <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+              <CardTitle className="text-base md:text-lg">Agency Performance</CardTitle>
+              <CardDescription className={cn(
+                theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+                "text-sm"
+              )}>
                 Your management business metrics
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className={cn(isMobile ? "space-y-3" : "space-y-4")}>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Total Revenue (MTD)</span>
-                  <span className="text-lg font-bold">$32,400</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>$32,400</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Avg Commission Rate</span>
-                  <span className="text-lg font-bold">15%</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>15%</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Client Satisfaction</span>
-                  <span className="text-lg font-bold">4.8/5.0</span>
+                  <span className={cn("font-bold", isMobile ? "text-xl" : "text-lg")}>4.8/5.0</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Client Roster Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Client Roster Overview - Single column on mobile */}
+        <div className={cn(
+          "grid gap-4 mb-6 md:gap-6 md:mb-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}>
           <Card className={cn(getCardStyles())}>
             <CardHeader>
               <CardTitle>Top Performing Clients</CardTitle>
@@ -310,8 +334,11 @@ export function ManagerDashboard() {
         {/* Placeholder for Future Manager Features */}
         <Card className={cn(getCardStyles())}>
           <CardHeader>
-            <CardTitle>Manager Features</CardTitle>
-            <CardDescription className={theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300'}>
+            <CardTitle className="text-base md:text-lg">Manager Features</CardTitle>
+            <CardDescription className={cn(
+              theme === 'pleasure' ? 'text-purple-100' : 'text-gray-300',
+              "text-sm"
+            )}>
               Additional management tools coming soon
             </CardDescription>
           </CardHeader>

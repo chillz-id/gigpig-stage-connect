@@ -102,7 +102,7 @@ const NotificationList = ({ notifications, hasActiveFilters, onMarkAsRead, onDel
                 {notification.actionUrl && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     className="text-purple-400 border-purple-400/50 hover:bg-purple-400/10"
                     onClick={() => window.open(notification.actionUrl, '_blank')}
                   >
@@ -112,7 +112,7 @@ const NotificationList = ({ notifications, hasActiveFilters, onMarkAsRead, onDel
                 {!notification.is_read && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    className="professional-button"
                     onClick={() => onMarkAsRead(notification.id)}
                     className="text-green-400 border-green-400/50 hover:bg-green-400/10"
                   >
@@ -121,7 +121,7 @@ const NotificationList = ({ notifications, hasActiveFilters, onMarkAsRead, onDel
                 )}
                 <Button
                   size="sm"
-                  variant="outline"
+                  className="professional-button"
                   onClick={() => onDelete(notification.id)}
                   className="text-red-400 border-red-400/50 hover:bg-red-400/10"
                 >

@@ -8,7 +8,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { AlertCircle, DollarSign, Percent } from 'lucide-react';
 import type { SplitParticipant } from '@/types/deal';
 
@@ -23,15 +23,6 @@ export function SplitCalculator({
   participants,
   onSplitChange
 }: SplitCalculatorProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
@@ -93,10 +84,11 @@ export function SplitCalculator({
           >
             {/* Participant Header */}
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={participant.user_avatar} alt={participant.user_name} />
-                <AvatarFallback>{getInitials(participant.user_name)}</AvatarFallback>
-              </Avatar>
+              <OptimizedAvatar
+                src={participant.user_avatar}
+                name={participant.user_name}
+                className="h-10 w-10"
+              />
               <div className="flex-1">
                 <p className="font-medium text-gray-900 dark:text-gray-100">
                   {participant.user_name}

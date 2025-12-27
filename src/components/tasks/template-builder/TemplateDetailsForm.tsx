@@ -117,7 +117,7 @@ export function TemplateDetailsForm({
                 }
               }}
             />
-            <Button type="button" onClick={onAddTag} variant="outline">
+            <Button type="button" onClick={onAddTag} className="professional-button">
               Add
             </Button>
           </div>

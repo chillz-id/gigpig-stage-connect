@@ -110,8 +110,7 @@ export function ApplicationBulkActions({
               <Button
                 disabled={isLoading}
                 size="sm"
-                variant="outline"
-                className="gap-1"
+                className="professional-button gap-1"
                 aria-label="Hide all selected comedians"
               >
                 <EyeOff className="h-4 w-4" />

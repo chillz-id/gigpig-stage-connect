@@ -9,6 +9,7 @@ export interface EventOption {
 
 // Real database functions
 export async function getApplicationsByPromoter(promoterId: string): Promise<ApplicationData[]> {
+  // Note: We filter by promoter_id client-side because PostgREST doesn't support .eq() on embedded fields
   const { data, error } = await supabase
     .from('applications')
     .select(`
@@ -22,7 +23,7 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
       requirements_acknowledged,
       applied_at,
       responded_at,
-      events!inner (
+      events!applications_event_id_fkey (
         id,
         title,
         venue,
@@ -37,7 +38,6 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
         years_experience
       )
     `)
-    .eq('events.promoter_id', promoterId)
     .order('applied_at', { ascending: false });
 
   if (error) {
@@ -45,7 +45,10 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
     throw error;
   }
 
-  return (data || []).map(app => ({
+  // Filter to only applications for this promoter's events
+  return (data || [])
+    .filter(app => app.events?.promoter_id === promoterId)
+    .map(app => ({
     id: app.id,
     comedian_id: app.comedian_id,
     comedian_name: app.profiles?.name || 'Unknown',
@@ -359,14 +362,34 @@ export async function bulkRemoveFromShortlist(applicationIds: string[]): Promise
 
 /**
  * Get shortlisted applications for an event
+ * Now also matches applications via session_source_id for availability-based applications
  */
 export async function getShortlistedApplications(eventId: string): Promise<ApplicationData[]> {
+  // First, get the event details including humanitix_event_id
+  const { data: eventData, error: eventError } = await supabase
+    .from('events')
+    .select('id, title, venue, event_date, humanitix_event_id')
+    .eq('id', eventId)
+    .single();
+
+  if (eventError) {
+    console.error('Error fetching event:', eventError);
+    throw eventError;
+  }
+
+  // Build OR filter: match by event_id OR by session_source_id (for availability-based applications)
+  let orFilter = `event_id.eq.${eventId}`;
+  if (eventData?.humanitix_event_id) {
+    orFilter += `,session_source_id.eq.${eventData.humanitix_event_id}`;
+  }
+
   const { data, error } = await supabase
     .from('applications')
     .select(`
       id,
       comedian_id,
       event_id,
+      session_source_id,
       status,
       message,
       spot_type,
@@ -376,12 +399,6 @@ export async function getShortlistedApplications(eventId: string): Promise<Appli
       responded_at,
       is_shortlisted,
       shortlisted_at,
-      events!inner (
-        id,
-        title,
-        venue,
-        event_date
-      ),
       profiles!comedian_id (
         id,
         name,
@@ -390,7 +407,7 @@ export async function getShortlistedApplications(eventId: string): Promise<Appli
         years_experience
       )
     `)
-    .eq('event_id', eventId)
+    .or(orFilter)
     .eq('is_shortlisted', true)
     .order('shortlisted_at', { ascending: false });
 
@@ -406,32 +423,58 @@ export async function getShortlistedApplications(eventId: string): Promise<Appli
     comedian_avatar: app.profiles?.avatar_url,
     comedian_experience: app.profiles?.years_experience ? `${app.profiles.years_experience} years` : undefined,
     comedian_rating: undefined,
-    event_id: app.event_id,
-    event_title: app.events?.title || 'Unknown Event',
-    event_venue: app.events?.venue || 'Unknown Venue',
-    event_date: app.events?.event_date || '',
+    event_id: app.event_id || eventId,
+    event_title: eventData?.title || 'Unknown Event',
+    event_venue: eventData?.venue || 'Unknown Venue',
+    event_date: eventData?.event_date || '',
     applied_at: app.applied_at || '',
     status: app.status || 'pending',
     message: app.message,
     spot_type: app.spot_type,
     availability_confirmed: app.availability_confirmed,
     requirements_acknowledged: app.requirements_acknowledged,
+    is_shortlisted: app.is_shortlisted || false,
+    shortlisted_at: app.shortlisted_at,
   }));
 }
 
 /**
  * Get applications by event (all or filtered by status)
+ * Now also matches applications via session_source_id for availability-based applications
  */
 export async function getApplicationsByEvent(
   eventId: string,
-  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'all'
+  statusFilter?: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'all'
 ): Promise<ApplicationData[]> {
+  // First, get the event details including humanitix_event_id
+  const { data: eventData, error: eventError } = await supabase
+    .from('events')
+    .select('id, title, venue, event_date, humanitix_event_id')
+    .eq('id', eventId)
+    .single();
+
+  if (eventError) {
+    console.error('Error fetching event:', eventError);
+    throw eventError;
+  }
+
+  // Build OR filter: match by event_id OR by session_source_id (for availability-based applications)
+  let orFilter = `event_id.eq.${eventId}`;
+  if (eventData?.humanitix_event_id) {
+    orFilter += `,session_source_id.eq.${eventData.humanitix_event_id}`;
+  }
+
+  console.log('[getApplicationsByEvent] eventId:', eventId);
+  console.log('[getApplicationsByEvent] humanitix_event_id:', eventData?.humanitix_event_id);
+  console.log('[getApplicationsByEvent] orFilter:', orFilter);
+
   let query = supabase
     .from('applications')
     .select(`
       id,
       comedian_id,
       event_id,
+      session_source_id,
       status,
       message,
       spot_type,
@@ -441,12 +484,6 @@ export async function getApplicationsByEvent(
       responded_at,
       is_shortlisted,
       shortlisted_at,
-      events!inner (
-        id,
-        title,
-        venue,
-        event_date
-      ),
       profiles!comedian_id (
         id,
         name,
@@ -455,7 +492,7 @@ export async function getApplicationsByEvent(
         years_experience
       )
     `)
-    .eq('event_id', eventId);
+    .or(orFilter);
 
   // Apply status filter if provided
   if (statusFilter && statusFilter !== 'all') {
@@ -463,6 +500,8 @@ export async function getApplicationsByEvent(
   }
 
   const { data, error } = await query.order('applied_at', { ascending: false });
+
+  console.log('[getApplicationsByEvent] query result:', data?.length, 'applications', data);
 
   if (error) {
     console.error('Error fetching applications by event:', error);
@@ -476,16 +515,18 @@ export async function getApplicationsByEvent(
     comedian_avatar: app.profiles?.avatar_url,
     comedian_experience: app.profiles?.years_experience ? `${app.profiles.years_experience} years` : undefined,
     comedian_rating: undefined,
-    event_id: app.event_id,
-    event_title: app.events?.title || 'Unknown Event',
-    event_venue: app.events?.venue || 'Unknown Venue',
-    event_date: app.events?.event_date || '',
+    event_id: app.event_id || eventId, // Use passed eventId if application has null event_id
+    event_title: eventData?.title || 'Unknown Event',
+    event_venue: eventData?.venue || 'Unknown Venue',
+    event_date: eventData?.event_date || '',
     applied_at: app.applied_at || '',
     status: app.status || 'pending',
     message: app.message,
     spot_type: app.spot_type,
     availability_confirmed: app.availability_confirmed,
     requirements_acknowledged: app.requirements_acknowledged,
+    is_shortlisted: app.is_shortlisted || false,
+    shortlisted_at: app.shortlisted_at,
   }));
 }
 

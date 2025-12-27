@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { 
   Calendar, 
   Clock, 
@@ -160,9 +160,8 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
               You've been invited to perform at this event
             </p>
           </div>
-          <Badge 
-            variant="outline" 
-            className={`${getStatusColor(confirmation.status)} flex items-center gap-1`}
+          <Badge
+            className={`professional-button ${getStatusColor(confirmation.status)} flex items-center gap-1`}
           >
             {getStatusIcon(confirmation.status)}
             {confirmation.status.charAt(0).toUpperCase() + confirmation.status.slice(1)}
@@ -285,13 +284,11 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-lg mb-3">Promoter Contact</h3>
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={confirmation.spot.event.promoter.avatar_url} />
-                <AvatarFallback>
-                  {confirmation.spot.event.promoter.first_name[0]}
-                  {confirmation.spot.event.promoter.last_name[0]}
-                </AvatarFallback>
-              </Avatar>
+              <OptimizedAvatar
+                src={confirmation.spot.event.promoter.avatar_url}
+                name={`${confirmation.spot.event.promoter.first_name} ${confirmation.spot.event.promoter.last_name}`}
+                className="w-10 h-10"
+              />
               <div>
                 <p className="font-medium">
                   {confirmation.spot.event.promoter.first_name} {confirmation.spot.event.promoter.last_name}
@@ -342,10 +339,9 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
               <CalendarPlus className="w-5 h-5" />
               Add to Calendar
             </h3>
-            <Button 
+            <Button
               onClick={handleCalendarSync}
-              variant="outline"
-              className="w-full"
+              className="professional-button w-full"
             >
               {isGoogleConnected ? 'Sync to Google Calendar' : 'Download Calendar File'}
             </Button>
@@ -368,8 +364,7 @@ export const SpotConfirmationCard: React.FC<SpotConfirmationCardProps> = ({
             <Button
               onClick={() => handleConfirmation('declined')}
               disabled={isLoading}
-              variant="outline"
-              className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+              className="professional-button flex-1 border-red-300 text-red-600 hover:bg-red-50"
             >
               <XCircle className="w-4 h-4 mr-2" />
               Decline

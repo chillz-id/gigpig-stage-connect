@@ -1,0 +1,34 @@
+%%{init: {'theme': 'base'}}%%
+flowchart TB
+    subgraph Create["Invoice Creation"]
+        IF[InvoiceForm.tsx]
+        IS[invoiceService.ts]
+    end
+
+    subgraph DB["Database"]
+        Invoices[(invoices)]
+        Items[(invoice_items)]
+    end
+
+    subgraph Stripe["Stripe"]
+        SC[Stripe Connect]
+        PI[Payment Intent]
+    end
+
+    subgraph Xero["Xero"]
+        XI[Xero Integration]
+        XInv[Xero Invoice]
+    end
+
+    IF --> IS
+    IS --> Invoices
+    IS --> Items
+
+    IS --> |Create Payment Link| SC
+    SC --> PI
+    PI --> |Webhook| IS
+    IS --> |Update Status| Invoices
+
+    IS --> |Optional Sync| XI
+    XI --> XInv
+    XInv --> |Sync Status| Invoices

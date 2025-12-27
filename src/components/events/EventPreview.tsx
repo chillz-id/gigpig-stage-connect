@@ -22,6 +22,7 @@ import { format, parseISO } from 'date-fns';
 import { EventFormData, EventSpot, RecurringSettings } from '@/types/eventTypes';
 import { ValidationSummary } from './ValidationFeedback';
 import { validateEventFormEnhanced } from '@/utils/eventValidation.enhanced';
+import { EventBannerDisplay } from './EventBannerDisplay';
 
 interface EventPreviewProps {
   open: boolean;
@@ -108,11 +109,12 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
     <div className={activeView === 'mobile' ? 'max-w-sm mx-auto' : 'w-full'}>
       {/* Header Image */}
       {formData.imageUrl && (
-        <div className="relative w-full h-48 md:h-64 bg-gray-200 rounded-lg overflow-hidden mb-6">
-          <img 
-            src={formData.imageUrl} 
-            alt={formData.title}
-            className="w-full h-full object-cover"
+        <div className="mb-6">
+          <EventBannerDisplay
+            bannerUrl={formData.imageUrl}
+            bannerPosition={formData.bannerPosition}
+            eventName={formData.title}
+            className="rounded-lg"
           />
         </div>
       )}
@@ -185,7 +187,7 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
                   )}
                 </div>
                 {spot.is_paid && spot.payment_amount && (
-                  <Badge variant="outline">
+                  <Badge className="professional-button">
                     <DollarSign className="h-3 w-3 mr-1" />
                     {spot.payment_amount} {spot.currency}
                   </Badge>
@@ -254,7 +256,7 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
             {/* View Toggle */}
             <div className="flex justify-center gap-2 mb-6">
               <Button
-                variant={activeView === 'desktop' ? 'default' : 'outline'}
+                variant={activeView === 'desktop' ? 'default' : 'secondary'}
                 size="sm"
                 onClick={() => setActiveView('desktop')}
               >
@@ -262,7 +264,7 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
                 Desktop
               </Button>
               <Button
-                variant={activeView === 'mobile' ? 'default' : 'outline'}
+                variant={activeView === 'mobile' ? 'default' : 'secondary'}
                 size="sm"
                 onClick={() => setActiveView('mobile')}
               >
@@ -320,7 +322,7 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
 
               {/* Publish Button */}
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={onClose}>
+                <Button className="professional-button" onClick={onClose}>
                   Back to Edit
                 </Button>
                 <Button

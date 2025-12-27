@@ -224,7 +224,7 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{requesterName}</span>
-                            <Badge variant="outline" className="capitalize">
+                            <Badge className="professional-button capitalize">
                               {request.requested_role}
                             </Badge>
                           </div>
@@ -246,7 +246,7 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
+                            className="professional-button"
                             onClick={() => handleRejectOrgRequest(request.id)}
                             disabled={processingId === request.id}
                           >
@@ -293,7 +293,7 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{managerName}</span>
                             {request.manager_types && request.manager_types.length > 0 && (
-                              <Badge variant="outline">
+                              <Badge className="professional-button">
                                 {request.manager_types.join(', ').replace(/_/g, ' ')}
                               </Badge>
                             )}
@@ -316,7 +316,7 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
+                            className="professional-button"
                             onClick={() => handleRejectManagerRequest(request.id)}
                             disabled={processingId === request.id}
                           >

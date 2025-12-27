@@ -110,7 +110,7 @@ export const useInvoices = () => {
   }, [user]);
 
   useEffect(() => {
-    if (user && (hasRole('promoter') || hasRole('comedian') || hasRole('admin'))) {
+    if (user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'))) {
       console.log('=== FETCHING INVOICES ===', user.id);
       fetchInvoices();
     } else {

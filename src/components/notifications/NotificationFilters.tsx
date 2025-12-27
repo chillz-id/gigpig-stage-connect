@@ -70,7 +70,7 @@ const NotificationFilters = ({
           </SelectContent>
         </Select>
         <Button
-          variant="outline"
+          className="professional-button"
           size="sm"
           onClick={onToggleUnreadOnly}
           className={`text-white border-white/20 ${showUnreadOnly ? 'bg-purple-600' : ''}`}

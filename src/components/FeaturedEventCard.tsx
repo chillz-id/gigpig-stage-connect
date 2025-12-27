@@ -20,7 +20,7 @@ export const FeaturedEventCard: React.FC<FeaturedEventCardProps> = ({ event }) =
   const [isHovered, setIsHovered] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<'pending' | 'accepted' | 'rejected' | null>(null);
   const { userApplications } = useEventApplications();
-  const isIndustryUser = user && (hasRole('comedian') || hasRole('promoter') || hasRole('admin'));
+  const isIndustryUser = user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'));
   
   useEffect(() => {
     if (user && userApplications) {

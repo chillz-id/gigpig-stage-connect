@@ -9,28 +9,31 @@ interface UseAvailabilitySelectionReturn {
   selectWeekday: (dayOfWeek: number, eventIds: string[]) => void;
   isSaving: boolean;
   lastSaved: Date | null;
+  hasPendingChanges: boolean;
 }
 
 /**
  * Hook for managing availability selection with optimistic updates and debounced saving
- * @param userId - The user ID to manage availability for
+ * @param userId - The user ID to manage availability for (null if not authenticated/not comedian)
  * @returns Selection state and mutation functions
  */
-export function useAvailabilitySelection(userId: string): UseAvailabilitySelectionReturn {
+export function useAvailabilitySelection(userId: string | null): UseAvailabilitySelectionReturn {
   const { toast } = useToast();
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const previousStateRef = useRef<Set<string>>(new Set());
   const initialStateRef = useRef<Set<string>>(new Set());
   const currentStateRef = useRef<Set<string>>(new Set());
   const hasInitializedRef = useRef<boolean>(false);
 
-  // Load initial availability
+  // Load initial availability (only when userId is available)
   const { data: initialAvailability } = useQuery({
     queryKey: ['availability', userId],
-    queryFn: () => availabilityService.getUserAvailability(userId),
+    queryFn: () => availabilityService.getUserAvailability(userId!),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: Boolean(userId), // Only run query when userId is not null
   });
 
   // Keep currentStateRef in sync with selectedEvents
@@ -59,6 +62,15 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      console.log('[useAvailabilitySelection] Mutation started');
+      const mutationStart = performance.now();
+
+      // Skip if no userId
+      if (!userId) {
+        console.warn('[useAvailabilitySelection] No userId, skipping save');
+        return;
+      }
+
       const toRemove = new Set<string>();
       const toAdd = new Set<string>();
 
@@ -78,18 +90,34 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
         }
       });
 
+      console.log('[useAvailabilitySelection] Diff calculated:', {
+        toRemove: toRemove.size,
+        toAdd: toAdd.size,
+        initialSize: initialStateRef.current.size,
+        currentSize: currentState.size
+      });
+
       await availabilityService.batchUpdateAvailability(userId, toRemove, toAdd);
+
+      const mutationDuration = performance.now() - mutationStart;
+      console.log('[useAvailabilitySelection] Mutation complete:', {
+        duration: `${mutationDuration.toFixed(0)}ms`
+      });
     },
     onSuccess: () => {
+      console.log('[useAvailabilitySelection] onSuccess called');
       setLastSaved(new Date());
+      setHasPendingChanges(false);
       // Update initial state to current after successful save
       const currentState = currentStateRef.current;
       initialStateRef.current = new Set(currentState);
       previousStateRef.current = new Set(currentState);
     },
     onError: (error) => {
+      console.error('[useAvailabilitySelection] Save FAILED:', error);
       // Revert to previous state on error
       setSelectedEvents(new Set(previousStateRef.current));
+      setHasPendingChanges(false); // Clear pending state to stop "Autosaving..." indicator
       toast({
         title: 'Failed to save availability',
         description: error instanceof Error ? error.message : 'An unknown error occurred',
@@ -118,17 +146,24 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
         return next;
       });
 
-      // Trigger debounced save inline
+      // Show pending changes immediately
+      setHasPendingChanges(true);
+
+      // Clear existing timer
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
 
-      debounceTimerRef.current = setTimeout(() => {
-        saveMutation.mutate();
-      }, 2000);
+      // CRITICAL FIX: Only start new mutation if not already saving
+      // This prevents infinite request stacking when clicks happen during slow mutations
+      if (!saveMutation.isPending) {
+        debounceTimerRef.current = setTimeout(() => {
+          saveMutation.mutate();
+        }, 1000);
+      }
     },
-    []
-  ); // Empty deps - mutation is stable, refs are mutable
+    [saveMutation]
+  ); // Include saveMutation to access isPending
 
   // Select/deselect all events for a weekday
   const selectWeekday = useCallback(
@@ -156,17 +191,24 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
         return next;
       });
 
-      // Trigger debounced save inline
+      // Show pending changes immediately
+      setHasPendingChanges(true);
+
+      // Clear existing timer
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
 
-      debounceTimerRef.current = setTimeout(() => {
-        saveMutation.mutate();
-      }, 2000);
+      // CRITICAL FIX: Only start new mutation if not already saving
+      // This prevents infinite request stacking when clicks happen during slow mutations
+      if (!saveMutation.isPending) {
+        debounceTimerRef.current = setTimeout(() => {
+          saveMutation.mutate();
+        }, 1000);
+      }
     },
-    []
-  ); // Empty deps - mutation is stable, refs are mutable
+    [saveMutation]
+  ); // Include saveMutation to access isPending
 
   // Cleanup on unmount
   useEffect(() => {
@@ -183,5 +225,6 @@ export function useAvailabilitySelection(userId: string): UseAvailabilitySelecti
     selectWeekday,
     isSaving: saveMutation.isPending,
     lastSaved,
+    hasPendingChanges,
   };
 }

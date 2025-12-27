@@ -112,7 +112,7 @@ const AddSaleDialog = ({
           </div>
           
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button className="professional-button" onClick={onClose}>
               Cancel
             </Button>
             <Button onClick={onAddSale} disabled={isLoading}>

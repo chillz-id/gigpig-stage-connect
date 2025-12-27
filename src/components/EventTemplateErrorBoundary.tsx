@@ -46,11 +46,10 @@ export class EventTemplateErrorBoundary extends Component<Props, State> {
               Something went wrong with the template system. This is usually a temporary issue.
             </p>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                size="sm"
                 onClick={this.handleRetry}
-                className="border-red-300 hover:bg-red-100"
+                className="professional-button border-red-300 hover:bg-red-100"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try Again

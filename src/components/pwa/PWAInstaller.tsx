@@ -2,15 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Download, Smartphone, Wifi, Bell, Share } from 'lucide-react';
+import { X, Download, Smartphone, Wifi, Bell, Share, Zap, CloudOff, Home } from 'lucide-react';
 import { pwaService } from '@/services/pwaService';
+import { useMobileLayout } from '@/hooks/useMobileLayout';
+import { cn } from '@/lib/utils';
 
 interface PWAInstallerProps {
   onClose?: () => void;
   className?: string;
+  /** Variant for different contexts */
+  variant?: 'card' | 'inline' | 'compact';
+  /** Show after specific trigger */
+  trigger?: 'manual' | 'booking' | 'events' | 'returning';
 }
 
-export const PWAInstaller: React.FC<PWAInstallerProps> = ({ onClose, className }) => {
+export const PWAInstaller: React.FC<PWAInstallerProps> = ({
+  onClose,
+  className,
+  variant = 'card',
+  trigger = 'manual',
+}) => {
+  const { isMobile, isSmallMobile } = useMobileLayout();
   const [capabilities, setCapabilities] = useState(pwaService.getCapabilities());
   const [isInstalling, setIsInstalling] = useState(false);
   const [offlineActionsCount, setOfflineActionsCount] = useState(0);
@@ -53,59 +65,71 @@ export const PWAInstaller: React.FC<PWAInstallerProps> = ({ onClose, className }
 
   if (capabilities.isInstalled) {
     return (
-      <Card className={className}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <CardTitle className="text-lg font-semibold">App Status</CardTitle>
+      <Card className={cn(className, isMobile && "border-x-0 rounded-none")}>
+        <CardHeader className={cn(
+          "flex flex-row items-center justify-between space-y-0",
+          isMobile ? "pb-2 px-4" : "pb-3"
+        )}>
+          <CardTitle className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>
+            App Status
+          </CardTitle>
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className={cn(isMobile && "touch-target-44")}
+            >
+              <X className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
             </Button>
           )}
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Smartphone className="h-5 w-5 text-green-500" />
-            <span className="text-sm">App is installed and ready to use</span>
-            <Badge variant="secondary">Installed</Badge>
+        <CardContent className={cn("space-y-4", isMobile && "px-4")}>
+          <div className="flex items-center gap-2">
+            <Smartphone className={cn("text-green-500", isMobile ? "h-6 w-6" : "h-5 w-5")} />
+            <span className={cn(isMobile ? "text-base" : "text-sm")}>App is installed and ready</span>
+            <Badge variant="secondary" className={cn(isMobile && "text-xs")}>Installed</Badge>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Wifi className="h-4 w-4" />
+          <div className={cn(
+            "gap-4 text-sm",
+            isMobile ? "flex flex-col" : "grid grid-cols-2"
+          )}>
+            <div className={cn("space-y-2", isMobile && "space-y-3")}>
+              <div className="flex items-center gap-2">
+                <CloudOff className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
                 <span>Offline Actions: {offlineActionsCount}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Download className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <Download className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
                 <span>Cache Size: {formatBytes(cacheSize)}</span>
               </div>
             </div>
-            
-            <div className="space-y-2">
+
+            <div className={cn("space-y-2", isMobile && "space-y-3")}>
               {capabilities.supportsPushNotifications && (
                 <Button
-                  variant="outline"
-                  size="sm"
+                  className={cn("w-full", isMobile && "touch-target-44")}
+                  size={isMobile ? "default" : "sm"}
                   onClick={handleSubscribeNotifications}
-                  className="w-full"
                 >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Enable Notifications
+                  <Bell className={cn("mr-2", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+                  {isMobile ? "Notifications" : "Enable Notifications"}
                 </Button>
               )}
-              
+
               {capabilities.supportsShare && (
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="secondary"
+                  className={cn("w-full", isMobile && "touch-target-44")}
+                  size={isMobile ? "default" : "sm"}
                   onClick={() => pwaService.shareContent({
                     title: 'Stand Up Sydney',
                     text: 'Check out this amazing comedy platform!',
                     url: window.location.href
                   })}
-                  className="w-full"
                 >
-                  <Share className="h-4 w-4 mr-2" />
+                  <Share className={cn("mr-2", isMobile ? "h-5 w-5" : "h-4 w-4")} />
                   Share App
                 </Button>
               )}
@@ -113,23 +137,42 @@ export const PWAInstaller: React.FC<PWAInstallerProps> = ({ onClose, className }
           </div>
 
           <div className="pt-2 border-t">
-            <h4 className="font-medium mb-2">Available Features</h4>
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${capabilities.isOfflineCapable ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <span>Offline Mode</span>
+            <h4 className={cn("font-medium mb-2", isMobile ? "text-sm" : "text-xs")}>Available Features</h4>
+            <div className={cn(
+              "grid gap-2",
+              isMobile ? "grid-cols-1" : "grid-cols-2 gap-1 text-xs"
+            )}>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "rounded-full",
+                  isMobile ? "w-3 h-3" : "w-2 h-2",
+                  capabilities.isOfflineCapable ? 'bg-green-500' : 'bg-gray-300'
+                )} />
+                <span className={cn(isMobile && "text-sm")}>Offline Mode</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${capabilities.supportsPushNotifications ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <span>Push Notifications</span>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "rounded-full",
+                  isMobile ? "w-3 h-3" : "w-2 h-2",
+                  capabilities.supportsPushNotifications ? 'bg-green-500' : 'bg-gray-300'
+                )} />
+                <span className={cn(isMobile && "text-sm")}>Push Notifications</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${capabilities.supportsBackgroundSync ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <span>Background Sync</span>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "rounded-full",
+                  isMobile ? "w-3 h-3" : "w-2 h-2",
+                  capabilities.supportsBackgroundSync ? 'bg-green-500' : 'bg-gray-300'
+                )} />
+                <span className={cn(isMobile && "text-sm")}>Background Sync</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${capabilities.supportsShare ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <span>Native Sharing</span>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "rounded-full",
+                  isMobile ? "w-3 h-3" : "w-2 h-2",
+                  capabilities.supportsShare ? 'bg-green-500' : 'bg-gray-300'
+                )} />
+                <span className={cn(isMobile && "text-sm")}>Native Sharing</span>
               </div>
             </div>
           </div>
@@ -142,80 +185,175 @@ export const PWAInstaller: React.FC<PWAInstallerProps> = ({ onClose, className }
     return null;
   }
 
+  // Compact variant for inline prompts
+  if (variant === 'compact') {
+    return (
+      <div className={cn(
+        "flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20",
+        isMobile && "flex-col text-center",
+        className
+      )}>
+        <div className={cn(
+          "flex items-center justify-center rounded-full bg-primary/20",
+          isMobile ? "w-12 h-12" : "w-10 h-10"
+        )}>
+          <Download className={cn("text-primary", isMobile ? "h-6 w-6" : "h-5 w-5")} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={cn("font-medium", isMobile && "text-sm")}>Install the app</p>
+          <p className="text-xs text-muted-foreground">
+            {isSmallMobile ? "Fast & offline access" : "Faster loading & offline access"}
+          </p>
+        </div>
+        <Button
+          onClick={handleInstall}
+          disabled={isInstalling}
+          size={isMobile ? "default" : "sm"}
+          className={cn(isMobile && "w-full touch-target-44")}
+        >
+          {isInstalling ? 'Installing...' : 'Install'}
+        </Button>
+      </div>
+    );
+  }
+
+  // Inline variant for embedded use
+  if (variant === 'inline') {
+    return (
+      <div className={cn(
+        "flex items-center justify-between gap-4 p-4 rounded-lg border bg-card",
+        isMobile && "flex-col",
+        className
+      )}>
+        <div className={cn("flex items-center gap-3", isMobile && "w-full")}>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
+            <span className="text-xl font-bold text-white">S</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold">Stand Up Sydney</h4>
+            <p className={cn("text-muted-foreground", isMobile ? "text-sm" : "text-xs")}>
+              Install for offline access
+            </p>
+          </div>
+        </div>
+        <div className={cn("flex gap-2", isMobile && "w-full")}>
+          <Button
+            onClick={handleInstall}
+            disabled={isInstalling}
+            className={cn("flex-1", isMobile && "touch-target-44")}
+          >
+            <Download className={cn("mr-2", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+            {isInstalling ? 'Installing...' : 'Install'}
+          </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className={cn(isMobile && "touch-target-44")}
+            >
+              Later
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default card variant
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-lg font-semibold">Install Stand Up Sydney</CardTitle>
+    <Card className={cn(className, isMobile && "border-x-0 rounded-none")}>
+      <CardHeader className={cn(
+        "flex flex-row items-center justify-between space-y-0",
+        isMobile ? "pb-2 px-4" : "pb-3"
+      )}>
+        <CardTitle className={cn("font-semibold", isMobile ? "text-base" : "text-lg")}>
+          Install Stand Up Sydney
+        </CardTitle>
         {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className={cn(isMobile && "touch-target-44")}
+          >
+            <X className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
           </Button>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Get the best experience with our Progressive Web App! Install it for:
+      <CardContent className={cn("space-y-4", isMobile && "px-4")}>
+        <div className={cn("space-y-3", isMobile && "space-y-4")}>
+          <p className={cn("text-muted-foreground", isMobile ? "text-base" : "text-sm")}>
+            {isMobile
+              ? "Get the full experience with our app:"
+              : "Get the best experience with our Progressive Web App! Install it for:"}
           </p>
-          
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>Faster loading and better performance</span>
+
+          <ul className={cn("text-sm", isMobile ? "space-y-3" : "space-y-2")}>
+            <li className={cn("flex items-center gap-2", isMobile && "gap-3")}>
+              <Zap className={cn("text-yellow-500 shrink-0", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+              <span>{isMobile ? "Faster loading" : "Faster loading and better performance"}</span>
             </li>
-            <li className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>Offline access to your events and data</span>
+            <li className={cn("flex items-center gap-2", isMobile && "gap-3")}>
+              <CloudOff className={cn("text-blue-500 shrink-0", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+              <span>{isMobile ? "Works offline" : "Offline access to your events and data"}</span>
             </li>
-            <li className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>Push notifications for important updates</span>
+            <li className={cn("flex items-center gap-2", isMobile && "gap-3")}>
+              <Bell className={cn("text-purple-500 shrink-0", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+              <span>{isMobile ? "Push notifications" : "Push notifications for important updates"}</span>
             </li>
-            <li className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>Home screen access like a native app</span>
+            <li className={cn("flex items-center gap-2", isMobile && "gap-3")}>
+              <Home className={cn("text-green-500 shrink-0", isMobile ? "h-5 w-5" : "h-4 w-4")} />
+              <span>{isMobile ? "Home screen access" : "Home screen access like a native app"}</span>
             </li>
           </ul>
         </div>
 
-        <div className="flex space-x-2">
-          <Button 
-            onClick={handleInstall} 
+        <div className={cn(
+          isMobile ? "flex flex-col gap-2" : "flex gap-2"
+        )}>
+          <Button
+            onClick={handleInstall}
             disabled={isInstalling}
-            className="flex-1"
+            className={cn("flex-1", isMobile && "touch-target-44")}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className={cn("mr-2", isMobile ? "h-5 w-5" : "h-4 w-4")} />
             {isInstalling ? 'Installing...' : 'Install App'}
           </Button>
-          
+
           {onClose && (
-            <Button variant="outline" onClick={onClose}>
+            <Button
+              variant="secondary"
+              onClick={onClose}
+              className={cn(isMobile && "touch-target-44")}
+            >
               Later
             </Button>
           )}
         </div>
 
-        <div className="pt-2 border-t">
-          <h4 className="font-medium mb-2 text-sm">Your Browser Supports</h4>
-          <div className="grid grid-cols-2 gap-1 text-xs">
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${capabilities.isOfflineCapable ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Offline Mode</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${capabilities.supportsPushNotifications ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Push Notifications</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${capabilities.supportsBackgroundSync ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Background Sync</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${capabilities.supportsShare ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Native Sharing</span>
+        {!isMobile && (
+          <div className="pt-2 border-t">
+            <h4 className="font-medium mb-2 text-sm">Your Browser Supports</h4>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${capabilities.isOfflineCapable ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <span>Offline Mode</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${capabilities.supportsPushNotifications ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <span>Push Notifications</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${capabilities.supportsBackgroundSync ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <span>Background Sync</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${capabilities.supportsShare ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <span>Native Sharing</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

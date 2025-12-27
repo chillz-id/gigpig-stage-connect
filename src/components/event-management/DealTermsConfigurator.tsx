@@ -126,7 +126,7 @@ export function DealTermsConfigurator({
           </div>
           <Button
             type="button"
-            variant="outline"
+            className="professional-button"
             size="icon"
             onClick={toggleAmountType}
             title={`Switch to ${amountType === 'dollar' ? 'percentage' : 'dollar'}`}

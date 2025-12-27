@@ -126,7 +126,7 @@ export class EventErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Try Again
                 </Button>
-                <Button onClick={this.handleReload} variant="outline">
+                <Button onClick={this.handleReload} className="professional-button">
                   Reload Page
                 </Button>
                 <Button onClick={this.handleGoHome} variant="ghost">

@@ -8,12 +8,19 @@ import {
 } from '@/services/event';
 import type { ApplicationInsert, ApplicationUpdate } from '@/types/application';
 
+// Helper to detect if a string is a valid UUID
+const isUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 export const useEventApplications = (eventId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   // Fetch applications for a specific event
+  // Supports both internal event UUIDs and external session source IDs (Humanitix)
   const {
     data: applications = [],
     isLoading
@@ -22,7 +29,12 @@ export const useEventApplications = (eventId?: string) => {
     queryFn: async () => {
       if (!eventId) return [];
 
-      return eventApplicationService.listByEvent(eventId);
+      // If it's a UUID, query by event_id; otherwise by session_source_id
+      if (isUUID(eventId)) {
+        return eventApplicationService.listByEvent(eventId);
+      } else {
+        return eventApplicationService.listBySessionSourceId(eventId);
+      }
     },
     enabled: !!eventId
   });

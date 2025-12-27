@@ -111,7 +111,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
             {offlineActionsCount > 0 && (
               <Button
                 size="sm"
-                variant="outline"
+                className="professional-button"
                 onClick={handleSync}
                 disabled={!isOnline || isSyncing}
               >
@@ -170,7 +170,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
       )}
       
       {offlineActionsCount > 0 && (
-        <Badge variant="outline">
+        <Badge className="professional-button">
           {offlineActionsCount} pending
         </Badge>
       )}
