@@ -196,10 +196,14 @@ export const eventApplicationService = {
     // Fetch session data from sessions_htx for session-based applications
     let sessionMap: Record<string, any> = {};
     if (sessionSourceIds.length > 0) {
-      const { data: sessionsData } = await supabaseClient
+      const { data: sessionsData, error: sessionsError } = await supabaseClient
         .from('sessions_htx')
         .select('source_id, name, venue_name, start_date_local')
         .in('source_id', sessionSourceIds);
+
+      if (sessionsError) {
+        console.error('Error fetching session data:', sessionsError);
+      }
 
       if (sessionsData) {
         sessionMap = sessionsData.reduce((acc: Record<string, any>, session: any) => {
@@ -235,6 +239,17 @@ export const eventApplicationService = {
         return base;
       }
 
+      // Parse start_date_local - format is "YYYY-MM-DD HH:MM:SS" (space-separated)
+      let eventDate = '';
+      let startTime: string | null = null;
+      if (session.start_date_local) {
+        // Handle both "YYYY-MM-DD HH:MM:SS" and "YYYY-MM-DDTHH:MM:SS" formats
+        const dateStr = session.start_date_local.replace('T', ' ');
+        const parts = dateStr.split(' ');
+        eventDate = parts[0] || '';
+        startTime = parts[1]?.substring(0, 5) || null;
+      }
+
       return {
         ...base,
         event: {
@@ -242,12 +257,8 @@ export const eventApplicationService = {
           title: session.name ?? '',
           venue: session.venue_name ?? '',
           address: null,
-          event_date: session.start_date_local
-            ? session.start_date_local.split('T')[0]
-            : '',
-          start_time: session.start_date_local
-            ? session.start_date_local.split('T')[1]?.substring(0, 5)
-            : null,
+          event_date: eventDate,
+          start_time: startTime,
           city: '',
           state: '',
           status: null,
