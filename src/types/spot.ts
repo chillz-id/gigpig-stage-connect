@@ -15,6 +15,12 @@ export type ExtraType = 'photographer' | 'videographer' | 'door_staff' | 'audio_
 /** Payment rate type for extras */
 export type RateType = 'hourly' | 'flat';
 
+/** GST handling type for line items */
+export type GstType = 'excluded' | 'included' | 'addition';
+
+/** GST rate (10% in Australia) */
+export const GST_RATE = 0.10;
+
 /** Start time mode for breaks - whether the break counts toward show runtime */
 export type StartTimeMode = 'included' | 'before';
 
@@ -42,6 +48,7 @@ export interface SpotData {
   comedian_name?: string;
   comedian_avatar?: string;
   payment_amount?: number;
+  payment_gst_type?: GstType;
   status: SpotStatus;
   duration_minutes?: number;
   notes?: string;
@@ -77,6 +84,7 @@ export interface SpotInsert {
   label?: string;
   comedian_id?: string;
   payment_amount?: number;
+  payment_gst_type?: GstType;
   status?: SpotStatus;
   duration_minutes?: number;
   notes?: string;
@@ -101,6 +109,7 @@ export interface SpotUpdate {
   label?: string;
   comedian_id?: string;
   payment_amount?: number;
+  payment_gst_type?: GstType;
   status?: SpotStatus;
   duration_minutes?: number;
   notes?: string;
@@ -128,6 +137,7 @@ export interface LineupTemplateSpot {
   label?: string; // For breaks: "Doors Open", "Intermission"
   duration_minutes: number;
   payment_amount?: number;
+  payment_gst_type?: GstType; // GST handling for payment
   rate_type?: RateType; // For extras
   hours?: number; // For hourly extras
   start_time_mode?: StartTimeMode; // For breaks
@@ -162,3 +172,42 @@ export interface ProductionStaffProfile {
   created_at: string;
   updated_at: string;
 }
+
+/** Line item for payment breakdown per spot (Fee, Travel, Merch, etc.) */
+export interface SpotLineItem {
+  id: string;
+  event_spot_id: string;
+  label: string;        // "Fee", "Travel Allowance", "Merch"
+  amount: number;       // Positive = income, negative = deduction
+  gst_type: GstType;    // How GST is handled: excluded, included, or addition
+  display_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SpotLineItemInsert {
+  event_spot_id: string;
+  label: string;
+  amount: number;
+  gst_type?: GstType;
+  display_order?: number;
+}
+
+export interface SpotLineItemUpdate {
+  label?: string;
+  amount?: number;
+  gst_type?: GstType;
+  display_order?: number;
+}
+
+/** Common presets for quick entry of line items */
+export const LINE_ITEM_PRESETS = [
+  { label: 'Fee', gst_type: 'addition' as GstType, description: 'Performance or service fee' },
+  { label: 'Travel Allowance', gst_type: 'excluded' as GstType, description: 'Travel reimbursement' },
+  { label: 'Parking', gst_type: 'excluded' as GstType, description: 'Parking reimbursement' },
+  { label: 'Accommodation', gst_type: 'excluded' as GstType, description: 'Hotel or lodging' },
+  { label: 'Merch', gst_type: 'excluded' as GstType, description: 'Merchandise deduction (use negative)' },
+  { label: 'Commission', gst_type: 'addition' as GstType, description: 'Agency commission (use negative)' },
+] as const;
+
+export type LineItemPreset = (typeof LINE_ITEM_PRESETS)[number];

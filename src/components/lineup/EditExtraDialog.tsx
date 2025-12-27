@@ -26,9 +26,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import type { SpotData, ExtraType, RateType } from '@/types/spot';
-import { EXTRA_TYPE_LABELS } from '@/types/spot';
+import type { SpotData, ExtraType, RateType, GstType } from '@/types/spot';
+import { EXTRA_TYPE_LABELS, GST_RATE } from '@/types/spot';
+
+/**
+ * Calculate GST breakdown for display
+ */
+function calculateGstBreakdown(amount: number, gstType: GstType) {
+  if (gstType === 'excluded') {
+    return { base: amount, gst: 0, total: amount };
+  } else if (gstType === 'included') {
+    const base = amount / (1 + GST_RATE);
+    const gst = amount - base;
+    return { base, gst, total: amount };
+  } else {
+    const gst = amount * GST_RATE;
+    return { base: amount, gst, total: amount + gst };
+  }
+}
 
 interface EditExtraDialogProps {
   open: boolean;
@@ -59,6 +76,7 @@ export function EditExtraDialog({
   const [rateType, setRateType] = useState<RateType>(spot.rate_type || 'hourly');
   const [hourlyRate, setHourlyRate] = useState<string>('50');
   const [flatRate, setFlatRate] = useState<string>(spot.payment_amount?.toString() || '100');
+  const [gstType, setGstType] = useState<GstType>((spot.payment_gst_type as GstType) || 'addition');
   const [notes, setNotes] = useState(spot.notes || '');
   const [startTime, setStartTime] = useState(spot.scheduled_start_time || '');
 
@@ -83,6 +101,7 @@ export function EditExtraDialog({
       setExtraHours(hrs);
       setExtraMinutes(mins);
       setRateType(spot.rate_type || 'hourly');
+      setGstType((spot.payment_gst_type as GstType) || 'addition');
       setNotes(spot.notes || '');
       setStartTime(spot.scheduled_start_time || '');
 
@@ -95,6 +114,10 @@ export function EditExtraDialog({
     }
   }, [open, spot]);
 
+  // Calculate payment with GST for preview
+  const basePaymentAmount = rateType === 'hourly' ? calculatedHourlyTotal : parseFloat(flatRate || '0');
+  const gstBreakdown = calculateGstBreakdown(basePaymentAmount, gstType);
+
   // Update spot mutation
   const updateSpotMutation = useMutation({
     mutationFn: async () => {
@@ -103,15 +126,39 @@ export function EditExtraDialog({
         ? calculatedHourlyTotal
         : parseFloat(flatRate || '0');
 
+      // Calculate payment_gross, payment_tax, payment_net based on GST type
+      let paymentGross = paymentAmt;
+      let paymentTax = 0;
+      let paymentNet = paymentAmt;
+
+      if (paymentAmt > 0) {
+        if (gstType === 'excluded') {
+          paymentGross = paymentAmt;
+          paymentTax = 0;
+          paymentNet = paymentAmt;
+        } else if (gstType === 'included') {
+          const base = paymentAmt / (1 + GST_RATE);
+          paymentTax = paymentAmt - base;
+          paymentGross = paymentAmt;
+          paymentNet = base;
+        } else {
+          paymentTax = paymentAmt * GST_RATE;
+          paymentGross = paymentAmt + paymentTax;
+          paymentNet = paymentAmt;
+        }
+      }
+
       const updateData = {
         spot_name: EXTRA_TYPE_LABELS[extraType],
         extra_type: extraType,
         hours: totalHours,
         rate_type: rateType,
         payment_amount: paymentAmt,
-        payment_gross: paymentAmt,
-        payment_tax: 0,
-        payment_net: paymentAmt,
+        payment_gst_type: gstType,
+        payment_gross: paymentGross,
+        payment_tax: paymentTax,
+        payment_net: paymentNet,
+        tax_rate: gstType === 'excluded' ? 0 : GST_RATE,
         payment_notes: notes || null,
         scheduled_start_time: startTime || null,
       };
@@ -131,8 +178,13 @@ export function EditExtraDialog({
         title: 'Extra Updated',
         description: `${EXTRA_TYPE_LABELS[extraType]} has been updated.`,
       });
+      // Invalidate all related queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ['lineup-stats', eventId] });
       queryClient.invalidateQueries({ queryKey: ['event-spots', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['spot-line-items', spot.id] });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'spot-line-items-batch',
+      });
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -253,7 +305,7 @@ export function EditExtraDialog({
                   onChange={(e) => setHourlyRate(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Total: ${calculatedHourlyTotal.toFixed(2)} ({extraHours}h {extraMinutes}m @ ${hourlyRate}/hr)
+                  Base: ${calculatedHourlyTotal.toFixed(2)} ({extraHours}h {extraMinutes}m @ ${hourlyRate}/hr)
                 </p>
               </div>
             ) : (
@@ -268,6 +320,72 @@ export function EditExtraDialog({
                   value={flatRate}
                   onChange={(e) => setFlatRate(e.target.value)}
                 />
+              </div>
+            )}
+
+            {/* GST Options */}
+            <div className="grid gap-2">
+              <Label>GST</Label>
+              <RadioGroup
+                value={gstType}
+                onValueChange={(value) => setGstType(value as GstType)}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="excluded" id="gst-excluded" />
+                  <Label htmlFor="gst-excluded" className="cursor-pointer font-normal">
+                    Excluded
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="included" id="gst-included" />
+                  <Label htmlFor="gst-included" className="cursor-pointer font-normal">
+                    Included
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="addition" id="gst-addition" />
+                  <Label htmlFor="gst-addition" className="cursor-pointer font-normal">
+                    + GST
+                  </Label>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                {gstType === 'excluded' && 'No GST applies to this payment'}
+                {gstType === 'included' && 'GST is already included in the amount'}
+                {gstType === 'addition' && 'GST will be added on top (10%)'}
+              </p>
+            </div>
+
+            {/* Payment Preview */}
+            {basePaymentAmount > 0 && (
+              <div className="rounded-md border bg-muted/30 p-3">
+                <p className="text-sm text-muted-foreground mb-2">Payment Preview:</p>
+                <div className="space-y-1 text-sm">
+                  {gstType === 'excluded' ? (
+                    <p className="text-green-600 dark:text-green-400 font-medium">
+                      ${basePaymentAmount.toFixed(2)} (No GST)
+                    </p>
+                  ) : gstType === 'included' ? (
+                    <>
+                      <p className="text-green-600 dark:text-green-400 font-medium">
+                        ${basePaymentAmount.toFixed(2)} total
+                      </p>
+                      <p className="text-muted-foreground">
+                        (${gstBreakdown.base.toFixed(2)} + GST ${gstBreakdown.gst.toFixed(2)})
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-green-600 dark:text-green-400 font-medium">
+                        ${gstBreakdown.total.toFixed(2)} total
+                      </p>
+                      <p className="text-muted-foreground">
+                        (${basePaymentAmount.toFixed(2)} + GST ${gstBreakdown.gst.toFixed(2)})
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 

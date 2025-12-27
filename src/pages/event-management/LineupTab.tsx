@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   ChevronDown,
@@ -96,6 +96,22 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   const [activeDrag, setActiveDrag] = useState<DragData | null>(null);
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
   const [showLoadTemplateDialog, setShowLoadTemplateDialog] = useState(false);
+  const [addSpotAtPosition, setAddSpotAtPosition] = useState<number | null>(null);
+
+  // Listen for addSpotAtPosition custom event from TimelineRunsheet
+  useEffect(() => {
+    const handleAddSpotAtPosition = (e: CustomEvent<{ position: number; eventId: string }>) => {
+      if (e.detail.eventId === eventId) {
+        setAddSpotAtPosition(e.detail.position);
+        setShowAddSpotDialog(true);
+      }
+    };
+
+    window.addEventListener('addSpotAtPosition', handleAddSpotAtPosition as EventListener);
+    return () => {
+      window.removeEventListener('addSpotAtPosition', handleAddSpotAtPosition as EventListener);
+    };
+  }, [eventId]);
 
   // Get spots for reordering
   const { spots } = useEventSpots(eventId);
@@ -124,7 +140,12 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
     // First check pointerWithin for droppable spots (spot-xxx IDs)
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) {
-      // Prioritize spot droppables and new-spot-zone
+      // Prioritize add-zone droppables first (for inline spot creation)
+      const addZoneCollision = pointerCollisions.find(
+        c => c.id.toString().startsWith('add-zone-')
+      );
+      if (addZoneCollision) return [addZoneCollision];
+      // Then prioritize spot droppables and new-spot-zone
       const spotCollision = pointerCollisions.find(
         c => c.id.toString().startsWith('spot-') || c.id === 'new-spot-zone'
       );
@@ -184,6 +205,18 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       createAndAssign.mutate({
         eventId,
         comedianId: dragData.comedianId
+      });
+      return;
+    }
+
+    // Dropped on an add-zone - create new spot at specific position and assign comedian
+    if (overId.startsWith('add-zone-') && overData?.type === 'add-zone') {
+      const position = overData.position as number;
+      console.log('🎯 Creating spot at position and assigning:', { position, comedianId: dragData.comedianId });
+      createAndAssign.mutate({
+        eventId,
+        comedianId: dragData.comedianId,
+        position // Pass the position to create at specific location
       });
       return;
     }
@@ -549,10 +582,15 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       {/* Add Spot Dialog */}
       <AddSpotDialog
         open={showAddSpotDialog}
-        onOpenChange={setShowAddSpotDialog}
+        onOpenChange={(open) => {
+          setShowAddSpotDialog(open);
+          if (!open) setAddSpotAtPosition(null);
+        }}
         eventId={eventId}
+        position={addSpotAtPosition ?? undefined}
         onSpotCreated={() => {
           setShowAddSpotDialog(false);
+          setAddSpotAtPosition(null);
         }}
       />
 

@@ -181,6 +181,7 @@ export const useEventSpots = (eventId?: string) => {
 
 /**
  * Assign a comedian to an existing spot via drag-and-drop
+ * If the comedian is GST registered, auto-default spot GST to 'addition'
  */
 export const useAssignComedianToSpot = () => {
   const { toast } = useToast();
@@ -196,14 +197,28 @@ export const useAssignComedianToSpot = () => {
       comedianId: string;
       eventId: string;
     }) => {
+      // Check if comedian is GST registered
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('gst_registered')
+        .eq('id', comedianId)
+        .single();
+
+      const updateData: Record<string, unknown> = {
+        comedian_id: comedianId,
+        is_filled: true,
+        confirmation_status: 'confirmed',
+        confirmed_at: new Date().toISOString()
+      };
+
+      // If comedian is GST registered, auto-default GST to 'addition'
+      if (profile?.gst_registered) {
+        updateData.payment_gst_type = 'addition';
+      }
+
       const { data, error } = await supabase
         .from('event_spots')
-        .update({
-          comedian_id: comedianId,
-          is_filled: true,
-          confirmation_status: 'confirmed',
-          confirmed_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', spotId)
         .select()
         .single();
@@ -231,6 +246,8 @@ export const useAssignComedianToSpot = () => {
 
 /**
  * Create a new spot and assign a comedian in one operation (drag to empty area)
+ * Optionally accepts a position to insert at specific location in the lineup
+ * If the comedian is GST registered, auto-default spot GST to 'addition'
  */
 export const useCreateAndAssignSpot = () => {
   const { toast } = useToast();
@@ -241,40 +258,63 @@ export const useCreateAndAssignSpot = () => {
       eventId,
       comedianId,
       spotType = 'Spot',
-      duration = 5
+      duration = 5,
+      position
     }: {
       eventId: string;
       comedianId: string;
       spotType?: string;
       duration?: number;
+      position?: number; // Optional position to insert at
     }) => {
-      // Get the next spot order
-      const { data: existingSpots, error: fetchError } = await supabase
-        .from('event_spots')
-        .select('spot_order')
-        .eq('event_id', eventId)
-        .order('spot_order', { ascending: false })
-        .limit(1);
+      // Check if comedian is GST registered
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('gst_registered')
+        .eq('id', comedianId)
+        .single();
 
-      if (fetchError) throw fetchError;
+      let spotOrder: number;
 
-      const nextOrder = existingSpots && existingSpots.length > 0
-        ? (existingSpots[0].spot_order || 0) + 1
-        : 1;
+      if (position !== undefined) {
+        // Use the provided position
+        spotOrder = position;
+      } else {
+        // Get the next spot order (append to end)
+        const { data: existingSpots, error: fetchError } = await supabase
+          .from('event_spots')
+          .select('spot_order')
+          .eq('event_id', eventId)
+          .order('spot_order', { ascending: false })
+          .limit(1);
+
+        if (fetchError) throw fetchError;
+
+        spotOrder = existingSpots && existingSpots.length > 0
+          ? (existingSpots[0].spot_order || 0) + 1
+          : 1;
+      }
 
       // Create the spot with comedian assigned
+      const insertData: Record<string, unknown> = {
+        event_id: eventId,
+        spot_name: spotType,
+        spot_order: spotOrder,
+        comedian_id: comedianId,
+        duration_minutes: duration,
+        is_filled: true,
+        confirmation_status: 'confirmed',
+        confirmed_at: new Date().toISOString()
+      };
+
+      // If comedian is GST registered, auto-default GST to 'addition'
+      if (profile?.gst_registered) {
+        insertData.payment_gst_type = 'addition';
+      }
+
       const { data, error } = await supabase
         .from('event_spots')
-        .insert({
-          event_id: eventId,
-          spot_name: spotType,
-          spot_order: nextOrder,
-          comedian_id: comedianId,
-          duration_minutes: duration,
-          is_filled: true,
-          confirmation_status: 'confirmed',
-          confirmed_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -425,6 +465,7 @@ export const useReorderSpots = () => {
 
 /**
  * Assign extra staff (production/visual artist) to a spot
+ * If the staff member is GST registered, auto-default spot GST to 'addition'
  */
 export const useAssignExtraToSpot = () => {
   const { toast } = useToast();
@@ -444,16 +485,30 @@ export const useAssignExtraToSpot = () => {
       staffAvatar?: string;
       eventId: string;
     }) => {
+      // Check if staff member is GST registered
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('gst_registered')
+        .eq('id', staffId)
+        .single();
+
+      const updateData: Record<string, unknown> = {
+        staff_id: staffId,
+        staff_name: staffName,
+        staff_avatar: staffAvatar || null,
+        is_filled: true,
+        confirmation_status: 'confirmed',
+        confirmed_at: new Date().toISOString()
+      };
+
+      // If staff is GST registered, auto-default GST to 'addition'
+      if (profile?.gst_registered) {
+        updateData.payment_gst_type = 'addition';
+      }
+
       const { data, error } = await supabase
         .from('event_spots')
-        .update({
-          staff_id: staffId,
-          staff_name: staffName,
-          staff_avatar: staffAvatar || null,
-          is_filled: true,
-          confirmation_status: 'confirmed',
-          confirmed_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', spotId)
         .select()
         .single();

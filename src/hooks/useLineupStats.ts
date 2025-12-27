@@ -7,10 +7,13 @@
  * - Total duration (minutes) - performers only, excludes extras
  * - Payment breakdown (gross, tax, net) - separated by performer vs production
  * - Total paid amount
+ * - Line items breakdown per spot
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { GstType } from '@/types/spot';
+import { GST_RATE } from '@/types/spot';
 
 interface SpotData {
   id: string;
@@ -21,10 +24,19 @@ interface SpotData {
   payment_gross: number | null;
   payment_tax: number | null;
   payment_net: number | null;
+  payment_gst_type: GstType | null;
   payment_status: 'unpaid' | 'pending' | 'paid' | null;
   spot_type: 'act' | 'extra' | null;
   spot_category: 'act' | 'doors' | 'intermission' | 'custom' | null;
   start_time_mode: 'included' | 'before' | null;
+}
+
+interface LineItemData {
+  id: string;
+  event_spot_id: string;
+  label: string;
+  amount: number;
+  gst_type: GstType;
 }
 
 interface LineupStats {
@@ -35,17 +47,23 @@ interface LineupStats {
   showDuration: number; // in minutes - total show runtime (performers + included breaks)
   breakDuration: number; // in minutes - breaks with start_time_mode='included'
 
-  // Performer payment breakdown
+  // Performer payment breakdown (base payment + line items)
   performerGross: number;
   performerTax: number;
   performerNet: number;
   performerPaid: number;
 
-  // Production/Extra staff payment breakdown
+  // Production/Extra staff payment breakdown (base payment + line items)
   productionGross: number;
   productionTax: number;
   productionNet: number;
   productionPaid: number;
+
+  // Line items breakdown (included in performer/production totals)
+  lineItemsGross: number;
+  lineItemsTax: number;
+  lineItemsNet: number;
+  lineItemsCount: number;
 
   // Combined totals (for backwards compatibility)
   totalGross: number;
@@ -58,21 +76,67 @@ interface LineupStats {
   extraCount: number;
 }
 
+/**
+ * Calculate GST breakdown for a single amount based on GST type
+ */
+function calculateGstBreakdown(amount: number, gstType: GstType | null): { gross: number; tax: number; net: number } {
+  if (!gstType || gstType === 'excluded') {
+    // No GST - amount is the net/gross
+    return { gross: amount, tax: 0, net: amount };
+  } else if (gstType === 'included') {
+    // GST is included in the amount
+    const net = amount / (1 + GST_RATE);
+    const tax = amount - net;
+    return { gross: amount, tax, net };
+  } else {
+    // GST is added on top (addition)
+    const tax = amount * GST_RATE;
+    return { gross: amount + tax, tax, net: amount };
+  }
+}
+
 export function useLineupStats(eventId: string) {
   return useQuery<LineupStats>({
     queryKey: ['lineup-stats', eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First fetch spots
+      const { data: spotsData, error: spotsError } = await supabase
         .from('event_spots')
-        .select('id, is_filled, is_paid, duration_minutes, payment_amount, payment_gross, payment_tax, payment_net, payment_status, spot_type, spot_category, start_time_mode')
+        .select('id, is_filled, is_paid, duration_minutes, payment_amount, payment_gross, payment_tax, payment_net, payment_gst_type, payment_status, spot_type, spot_category, start_time_mode')
         .eq('event_id', eventId);
 
-      if (error) {
-        console.error('Failed to fetch lineup stats:', error);
-        throw new Error(`Failed to fetch lineup stats: ${error.message}`);
+      if (spotsError) {
+        console.error('Failed to fetch lineup stats:', spotsError);
+        throw new Error(`Failed to fetch lineup stats: ${spotsError.message}`);
       }
 
-      const spots = (data || []) as SpotData[];
+      const spots = (spotsData || []) as SpotData[];
+      const spotIds = spots.map(s => s.id);
+
+      // Fetch line items for all spots (if there are spots)
+      let lineItems: LineItemData[] = [];
+      if (spotIds.length > 0) {
+        const { data: lineItemsData, error: lineItemsError } = await supabase
+          .from('event_spot_line_items')
+          .select('id, event_spot_id, label, amount, gst_type')
+          .in('event_spot_id', spotIds);
+
+        if (lineItemsError) {
+          console.error('Failed to fetch line items:', lineItemsError);
+          // Don't throw - line items are optional, continue with empty
+        } else {
+          lineItems = (lineItemsData || []) as LineItemData[];
+        }
+      }
+
+      // Group line items by spot ID
+      const lineItemsBySpot: Record<string, LineItemData[]> = {};
+      for (const item of lineItems) {
+        if (!lineItemsBySpot[item.event_spot_id]) {
+          lineItemsBySpot[item.event_spot_id] = [];
+        }
+        lineItemsBySpot[item.event_spot_id].push(item);
+      }
 
       // Separate performers from extras
       // Performers: spot_type is 'act' or null (legacy), and category is 'act' or null
@@ -112,33 +176,82 @@ export function useLineupStats(eventId: string) {
       // Total show duration (performers + included breaks)
       const showDuration = totalDuration + breakDuration;
 
-      // Helper function to calculate payment totals
+      // Helper function to calculate line items totals for a spot
+      const calculateLineItemsTotals = (spotId: string) => {
+        const items = lineItemsBySpot[spotId] || [];
+        let gross = 0;
+        let tax = 0;
+        let net = 0;
+
+        for (const item of items) {
+          const breakdown = calculateGstBreakdown(item.amount, item.gst_type);
+          gross += breakdown.gross;
+          tax += breakdown.tax;
+          net += breakdown.net;
+        }
+
+        return { gross, tax, net, count: items.length };
+      };
+
+      // Helper function to calculate payment totals (base payment + line items)
       const calculatePaymentTotals = (spotList: SpotData[]) => {
-        const gross = spotList.reduce(
-          (sum, spot) => sum + (spot.payment_gross ?? spot.payment_amount ?? 0),
-          0
-        );
-        const tax = spotList.reduce(
-          (sum, spot) => sum + (spot.payment_tax ?? 0),
-          0
-        );
-        const net = spotList.reduce(
-          (sum, spot) => sum + (spot.payment_net ?? spot.payment_amount ?? 0),
-          0
-        );
-        const paid = spotList.reduce((sum, spot) => {
-          if (spot.payment_status === 'paid' || (spot.is_paid && !spot.payment_status)) {
-            return sum + (spot.payment_gross ?? spot.payment_amount ?? 0);
+        let gross = 0;
+        let tax = 0;
+        let net = 0;
+        let paid = 0;
+
+        for (const spot of spotList) {
+          // Base payment (recalculate using GST type if available)
+          const baseAmount = spot.payment_amount ?? 0;
+          if (baseAmount > 0) {
+            // If we have pre-calculated values, use them; otherwise calculate from GST type
+            if (spot.payment_gross !== null && spot.payment_gross !== undefined) {
+              gross += spot.payment_gross;
+              tax += spot.payment_tax ?? 0;
+              net += spot.payment_net ?? baseAmount;
+            } else {
+              // Calculate from GST type
+              const breakdown = calculateGstBreakdown(baseAmount, spot.payment_gst_type);
+              gross += breakdown.gross;
+              tax += breakdown.tax;
+              net += breakdown.net;
+            }
           }
-          return sum;
-        }, 0);
+
+          // Add line items for this spot
+          const lineItemTotals = calculateLineItemsTotals(spot.id);
+          gross += lineItemTotals.gross;
+          tax += lineItemTotals.tax;
+          net += lineItemTotals.net;
+
+          // Track paid amounts (base + line items if marked as paid)
+          if (spot.payment_status === 'paid' || (spot.is_paid && !spot.payment_status)) {
+            const spotGross = spot.payment_gross ?? baseAmount;
+            paid += spotGross + lineItemTotals.gross;
+          }
+        }
+
         return { gross, tax, net, paid };
       };
 
-      // Calculate performer payments
+      // Calculate total line items stats (for display)
+      let totalLineItemsGross = 0;
+      let totalLineItemsTax = 0;
+      let totalLineItemsNet = 0;
+      let totalLineItemsCount = 0;
+
+      for (const spotId of Object.keys(lineItemsBySpot)) {
+        const totals = calculateLineItemsTotals(spotId);
+        totalLineItemsGross += totals.gross;
+        totalLineItemsTax += totals.tax;
+        totalLineItemsNet += totals.net;
+        totalLineItemsCount += totals.count;
+      }
+
+      // Calculate performer payments (includes line items)
       const performerPayments = calculatePaymentTotals(performers);
 
-      // Calculate production/extra payments
+      // Calculate production/extra payments (includes line items)
       const productionPayments = calculatePaymentTotals(extras);
 
       return {
@@ -153,19 +266,25 @@ export function useLineupStats(eventId: string) {
         showDuration, // performers + included breaks
         breakDuration, // included breaks only
 
-        // Performer breakdown
+        // Performer breakdown (includes line items)
         performerGross: performerPayments.gross,
         performerTax: performerPayments.tax,
         performerNet: performerPayments.net,
         performerPaid: performerPayments.paid,
 
-        // Production breakdown
+        // Production breakdown (includes line items)
         productionGross: productionPayments.gross,
         productionTax: productionPayments.tax,
         productionNet: productionPayments.net,
         productionPaid: productionPayments.paid,
 
-        // Combined totals (for backwards compatibility)
+        // Line items breakdown (already included in performer/production totals)
+        lineItemsGross: totalLineItemsGross,
+        lineItemsTax: totalLineItemsTax,
+        lineItemsNet: totalLineItemsNet,
+        lineItemsCount: totalLineItemsCount,
+
+        // Combined totals
         totalGross: performerPayments.gross + productionPayments.gross,
         totalTax: performerPayments.tax + productionPayments.tax,
         totalNet: performerPayments.net + productionPayments.net,

@@ -33,16 +33,22 @@ const XeroCallback: React.FC = () => {
       }
 
       try {
-        await xeroService.handleCallback(code, state);
+        const result = await xeroService.handleCallback(code, state);
         setSuccess(true);
         toast({
           title: "Xero Connected",
-          description: "Your Xero account has been connected successfully.",
+          description: result.organizationId
+            ? "Your organization's Xero account has been connected successfully."
+            : "Your Xero account has been connected successfully.",
         });
-        
-        // Redirect after a short delay
+
+        // Redirect after a short delay - org settings or user settings
         setTimeout(() => {
-          navigate('/profile?tab=invoices');
+          if (result.organizationId) {
+            navigate(`/organization/${result.organizationId}/settings`);
+          } else {
+            navigate('/settings?tab=integrations');
+          }
         }, 2000);
       } catch (err) {
         console.error('Xero callback error:', err);
@@ -95,13 +101,13 @@ const XeroCallback: React.FC = () => {
               <p className="text-red-300 mb-4">{error}</p>
               <div className="space-y-2">
                 <Button
-                  onClick={() => navigate('/profile?tab=invoices')}
+                  onClick={() => navigate('/settings?tab=integrations')}
                   className="professional-button w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
-                  Return to Invoices
+                  Return to Settings
                 </Button>
                 <Button
-                  onClick={() => window.location.href = '/profile?tab=invoices'}
+                  onClick={() => navigate('/settings?tab=integrations')}
                   className="w-full"
                 >
                   Try Again

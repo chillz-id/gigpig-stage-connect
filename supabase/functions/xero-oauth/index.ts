@@ -32,9 +32,12 @@ serve(async (req) => {
       throw new Error('Not authenticated')
     }
 
-    const { action, code, state } = await req.json()
+    const body = await req.json()
+    const { action } = body
 
     if (action === 'exchange') {
+      const { code, organization_id } = body
+
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
@@ -44,13 +47,15 @@ serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: `${Deno.env.get('PUBLIC_URL')}/auth/xero-callback`,
+          redirect_uri: `${Deno.env.get('PUBLIC_URL') || 'https://gigpigs.app'}/auth/xero-callback`,
           client_id: Deno.env.get('XERO_CLIENT_ID')!,
           client_secret: Deno.env.get('XERO_CLIENT_SECRET')!,
         }),
       })
 
       if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text()
+        console.error('Token exchange failed:', errorText)
         throw new Error('Token exchange failed')
       }
 
@@ -64,26 +69,107 @@ serve(async (req) => {
       })
 
       const connections = await connectionsResponse.json()
+
+      if (!connections || connections.length === 0) {
+        throw new Error('No Xero organizations found')
+      }
+
       const tenant = connections[0]
 
-      // Store in database
+      // Store in database - either for user or organization
+      const integrationData: Record<string, any> = {
+        tenant_id: tenant.tenantId,
+        tenant_name: tenant.tenantName,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        connection_status: 'active',
+      }
+
+      if (organization_id) {
+        // Organization-level connection
+        integrationData.organization_id = organization_id
+      } else {
+        // User-level connection
+        integrationData.user_id = user.id
+      }
+
       const { error: dbError } = await supabaseClient
         .from('xero_integrations')
-        .upsert({
-          user_id: user.id,
-          tenant_id: tenant.tenantId,
-          tenant_name: tenant.tenantName,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-          scopes: tokens.scope?.split(' ') || [],
-          is_active: true,
+        .upsert(integrationData, {
+          onConflict: organization_id ? 'organization_id' : 'user_id',
         })
 
       if (dbError) throw dbError
 
       return new Response(
         JSON.stringify({ success: true, tenant: tenant.tenantName }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    if (action === 'refresh') {
+      // Refresh access token
+      const { data: integration, error: fetchError } = await supabaseClient
+        .from('xero_integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('connection_status', 'active')
+        .single()
+
+      if (fetchError || !integration) {
+        throw new Error('No active Xero integration found')
+      }
+
+      const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: integration.refresh_token,
+          client_id: Deno.env.get('XERO_CLIENT_ID')!,
+          client_secret: Deno.env.get('XERO_CLIENT_SECRET')!,
+        }),
+      })
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text()
+        console.error('Token refresh failed:', errorText)
+
+        // Mark integration as disconnected if refresh fails
+        await supabaseClient
+          .from('xero_integrations')
+          .update({ connection_status: 'disconnected' })
+          .eq('id', integration.id)
+
+        throw new Error('Token refresh failed - please reconnect to Xero')
+      }
+
+      const tokens = await tokenResponse.json()
+
+      // Update stored tokens
+      const { error: updateError } = await supabaseClient
+        .from('xero_integrations')
+        .update({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        })
+        .eq('id', integration.id)
+
+      if (updateError) throw updateError
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          access_token: tokens.access_token,
+          expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+        }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,

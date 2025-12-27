@@ -63,10 +63,12 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
   // Initial form data for change detection
   // For organizations: use display_name/legal_name, for individuals: use first_name/last_name
+  // For orgs, stageName field is used for "Legal Name" display
+  const isOrganization = profileType === 'organization';
   const initialFormData: ProfileData = {
     firstName: user?.first_name || user?.display_name || user?.organization_name || user?.name?.split(' ')?.[0] || '',
     lastName: user?.last_name || user?.legal_name || user?.name?.split(' ')?.slice(1)?.join(' ') || '',
-    stageName: user?.stage_name || '',
+    stageName: isOrganization ? (user?.legal_name || '') : (user?.stage_name || ''),
     nameDisplayPreference: user?.name_display_preference || user?.display_name_preference || 'real',
     email: user?.email || user?.contact_email || '',
     phone: user?.phone || user?.contact_phone || '',

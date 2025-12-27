@@ -11,8 +11,8 @@ import { UniversalProfileTabs } from '@/components/profile/UniversalProfileTabs'
 import { ProfileCalendarView } from '@/components/ProfileCalendarView';
 import { GiveVouchForm } from '@/components/GiveVouchForm';
 import { VouchHistory } from '@/components/VouchHistory';
-import { AccountSettings } from '@/components/AccountSettings';
 import OrganizationHeader from './OrganizationHeader';
+import OrganizationSettings from './OrganizationSettings';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -142,9 +142,41 @@ export const OrganizationProfileEditorLayout: React.FC = () => {
       throw new Error('Organization not found');
     }
 
+    // Map form fields to database columns
+    const mappedData: Record<string, any> = {};
+
+    // Personal Information mappings
+    if (data.firstName !== undefined) mappedData.organization_name = data.firstName;
+    // For organizations, "Legal Name" field uses stageName in the form
+    // Use stageName if provided, otherwise fall back to lastName (for backwards compat)
+    const legalNameValue = data.stageName !== undefined && data.stageName !== ''
+      ? data.stageName
+      : data.lastName;
+    if (legalNameValue !== undefined) mappedData.legal_name = legalNameValue;
+    if (data.nameDisplayPreference !== undefined) mappedData.display_name_preference = data.nameDisplayPreference;
+    if (data.email !== undefined) mappedData.contact_email = data.email;
+    if (data.phone !== undefined) mappedData.contact_phone = data.phone;
+    if (data.bio !== undefined) mappedData.bio = data.bio;
+    if (data.location !== undefined) mappedData.state = data.location; // Map location to state
+    if (data.country !== undefined) mappedData.country = data.country;
+
+    // Social media mappings
+    if (data.instagramUrl !== undefined) mappedData.instagram_url = data.instagramUrl;
+    if (data.twitterUrl !== undefined) mappedData.twitter_url = data.twitterUrl;
+    if (data.websiteUrl !== undefined) mappedData.website_url = data.websiteUrl;
+    if (data.youtubeUrl !== undefined) mappedData.youtube_url = data.youtubeUrl;
+    if (data.facebookUrl !== undefined) mappedData.facebook_url = data.facebookUrl;
+    if (data.tiktokUrl !== undefined) mappedData.tiktok_url = data.tiktokUrl;
+    if (data.linkedinUrl !== undefined) mappedData.linkedin_url = data.linkedinUrl;
+
+    // Also update display_name when organization_name changes
+    if (mappedData.organization_name) {
+      mappedData.display_name = mappedData.organization_name;
+    }
+
     const { error } = await supabase
       .from('organization_profiles')
-      .update(data)
+      .update(mappedData)
       .eq('id', organization.id);
 
     if (error) throw error;
@@ -410,7 +442,7 @@ export const OrganizationProfileEditorLayout: React.FC = () => {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <AccountSettings />
+            <OrganizationSettings />
           </TabsContent>
         </Tabs>
       </div>
