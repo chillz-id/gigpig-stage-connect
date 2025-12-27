@@ -19,13 +19,15 @@ import { useQuery } from '@tanstack/react-query';
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,6 +118,22 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       activationConstraint: { delay: 250, tolerance: 5 }
     })
   );
+
+  // Custom collision detection: prioritize spot droppables for shortlist items
+  const customCollisionDetection: CollisionDetection = (args) => {
+    // First check pointerWithin for droppable spots (spot-xxx IDs)
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      // Prioritize spot droppables and new-spot-zone
+      const spotCollision = pointerCollisions.find(
+        c => c.id.toString().startsWith('spot-') || c.id === 'new-spot-zone'
+      );
+      if (spotCollision) return [spotCollision];
+      return pointerCollisions;
+    }
+    // Fall back to rectIntersection for sortable reordering
+    return rectIntersection(args);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     console.log('🎯 Drag started:', event.active.id, event.active.data.current);
@@ -228,7 +246,7 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >

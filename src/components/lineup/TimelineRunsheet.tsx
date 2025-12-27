@@ -310,12 +310,12 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
               {isUnassigned ? (
                 <button
                   onClick={onAssign}
-                  className="truncate text-muted-foreground italic hover:text-primary hover:underline cursor-pointer"
+                  className="truncate text-muted-foreground italic hover:text-primary hover:underline cursor-pointer py-0.5"
                 >
                   {assignment}
                 </button>
               ) : (
-                <span className="truncate">
+                <span className="truncate py-0.5">
                   {assignment}
                 </span>
               )}
@@ -333,8 +333,8 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
           </>
         )}
 
-        {/* Payment */}
-        {spot.payment_amount && spot.payment_amount > 0 && (
+        {/* Payment - only for acts and extras, not breaks */}
+        {!isBreak && spot.payment_amount && spot.payment_amount > 0 && (
           <>
             <span className="text-muted-foreground/50">|</span>
             <span className="text-green-600 dark:text-green-400 text-sm font-medium">
