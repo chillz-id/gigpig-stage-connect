@@ -43,8 +43,52 @@ import { AssignExtraDialog } from './AssignExtraDialog';
 import { EditSpotDialog } from './EditSpotDialog';
 import { EditBreakDialog } from './EditBreakDialog';
 import { EditExtraDialog } from './EditExtraDialog';
-import type { SpotData, ExtraType } from '@/types/spot';
+import type { SpotData, ExtraType, SpotCategory } from '@/types/spot';
 import { EXTRA_TYPE_LABELS } from '@/types/spot';
+
+ 
+type RawSpot = SpotData & Record<string, any>;
+
+/**
+ * Helper to get category from raw DB or mapped SpotData
+ * DB uses spot_category, SpotData uses category
+ */
+function getSpotCategory(spot: RawSpot): SpotCategory {
+  return (spot.spot_category || spot.category || 'act') as SpotCategory;
+}
+
+/**
+ * Helper to get spot kind (act vs extra) from raw DB or mapped SpotData
+ */
+function getSpotKind(spot: RawSpot): 'act' | 'extra' {
+  return (spot.spot_type || 'act') as 'act' | 'extra';
+}
+
+/**
+ * Helper to get spot name/label from raw DB or mapped SpotData
+ * DB uses spot_name for everything
+ */
+function getSpotName(spot: RawSpot): string {
+  return spot.spot_name || spot.label || spot.type || 'Spot';
+}
+
+/**
+ * Helper to get comedian name - handles both raw DB (comedian object) and mapped SpotData
+ */
+function getComedianName(spot: RawSpot): string | undefined {
+  if (spot.comedian_name) return spot.comedian_name;
+  if (spot.comedian?.stage_name) return spot.comedian.stage_name;
+  return undefined;
+}
+
+/**
+ * Helper to get comedian avatar
+ */
+function getComedianAvatar(spot: RawSpot): string | undefined {
+  if (spot.comedian_avatar) return spot.comedian_avatar;
+  if (spot.comedian?.avatar_url) return spot.comedian.avatar_url;
+  return undefined;
+}
 
 interface TimelineRunsheetProps {
   eventId: string;
@@ -107,7 +151,7 @@ function formatCurrency(amount: number): string {
  * Single timeline row for a spot
  */
 interface TimelineRowProps {
-  spot: SpotData;
+  spot: RawSpot;
   time: string;
   onAssign: () => void;
   onEdit: () => void;
@@ -116,8 +160,10 @@ interface TimelineRowProps {
 }
 
 function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: TimelineRowProps) {
-  const isBreak = spot.category !== 'act';
-  const isDoors = spot.category === 'doors';
+  const category = getSpotCategory(spot);
+  const isBreak = category !== 'act';
+  const isDoors = category === 'doors';
+  const isIntermission = category === 'intermission';
 
   // Sortable hook for drag-and-drop reordering
   const {
@@ -152,15 +198,13 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
     transition,
   };
 
-  // Build spot label
-  const getSpotLabel = () => {
+  // Build spot label using helper function
+  const getLabel = () => {
     if (isExtra && spot.extra_type) {
       return EXTRA_TYPE_LABELS[spot.extra_type] || 'Extra';
     }
-    if (isBreak) {
-      return spot.label || spot.category;
-    }
-    return spot.type || 'Spot';
+    // Use spot_name from DB which stores MC, Feature, Headliner, Doors Open, etc.
+    return getSpotName(spot);
   };
 
   // Build assignment display
@@ -171,20 +215,31 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
     if (isBreak) {
       return null; // No assignment for breaks
     }
-    return spot.comedian_name || 'Unassigned';
+    return getComedianName(spot) || 'Unassigned';
   };
 
-  // Build duration display
+  // Build duration display - don't show "0mins" for breaks
   const getDuration = () => {
     if (isExtra && spot.hours) {
       return formatHours(spot.hours);
     }
-    return `${spot.duration_minutes || 0}mins`;
+    const duration = spot.duration_minutes;
+    if (!duration || duration === 0) {
+      return null; // Don't show duration if not set
+    }
+    return `${duration}mins`;
   };
 
   const assignment = getAssignment();
-  const BreakIcon = isDoors ? DoorOpen : Coffee;
+  const duration = getDuration();
+  const isUnassigned = assignment === 'Unassigned';
+
+  // Icons: Door for doors, Coffee for intermission, none for acts
+  const BreakIcon = isDoors ? DoorOpen : isIntermission ? Coffee : null;
   const ExtraIcon = isExtra && spot.extra_type ? EXTRA_ICONS[spot.extra_type] || Users : Users;
+
+  // Get avatar for assigned person
+  const avatarUrl = isExtra ? spot.staff_avatar : getComedianAvatar(spot);
 
   return (
     <div
@@ -225,8 +280,9 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
 
       {/* Spot Content */}
       <div className="flex-1 flex items-center gap-2 min-w-0">
-        {/* Icon for breaks/extras */}
-        {isBreak && <BreakIcon className="h-4 w-4 text-amber-500 shrink-0" />}
+        {/* Icon for breaks only - Door for doors, Coffee for intermission */}
+        {isBreak && BreakIcon && <BreakIcon className="h-4 w-4 text-amber-500 shrink-0" />}
+        {/* Icon for extras */}
         {isExtra && <ExtraIcon className="h-4 w-4 text-indigo-500 shrink-0" />}
 
         {/* Spot Type/Label */}
@@ -235,7 +291,7 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
           isBreak && 'text-amber-600 dark:text-amber-400',
           isExtra && 'text-indigo-600 dark:text-indigo-400'
         )}>
-          {getSpotLabel()}
+          {getLabel()}
         </span>
 
         {/* Assignment (comedian/staff name or Unassigned) */}
@@ -243,30 +299,39 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, isExtra }: Timeli
           <>
             <span className="text-muted-foreground">:</span>
             <div className="flex items-center gap-1.5 min-w-0">
-              {(spot.comedian_avatar || spot.staff_avatar) && (
+              {avatarUrl && (
                 <OptimizedAvatar
-                  src={spot.comedian_avatar || spot.staff_avatar}
+                  src={avatarUrl}
                   name={assignment}
                   className="h-5 w-5"
                 />
               )}
-              <span className={cn(
-                'truncate',
-                assignment === 'Unassigned' && 'text-muted-foreground italic'
-              )}>
-                {assignment}
-              </span>
+              {/* Make Unassigned clickable to trigger assign */}
+              {isUnassigned ? (
+                <button
+                  onClick={onAssign}
+                  className="truncate text-muted-foreground italic hover:text-primary hover:underline cursor-pointer"
+                >
+                  {assignment}
+                </button>
+              ) : (
+                <span className="truncate">
+                  {assignment}
+                </span>
+              )}
             </div>
           </>
         )}
 
-        {/* Separator */}
-        <span className="text-muted-foreground/50">|</span>
-
-        {/* Duration */}
-        <span className="text-muted-foreground text-sm">
-          {getDuration()}
-        </span>
+        {/* Separator & Duration - only show if duration exists */}
+        {duration && (
+          <>
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-muted-foreground text-sm">
+              {duration}
+            </span>
+          </>
+        )}
 
         {/* Payment */}
         {spot.payment_amount && spot.payment_amount > 0 && (
@@ -361,8 +426,8 @@ export function TimelineRunsheet({ eventId, eventStartTime }: TimelineRunsheetPr
     // Sort by spot_order
     const sorted = [...spots].sort((a, b) => (a.spot_order ?? 0) - (b.spot_order ?? 0));
 
-    const performers: SpotData[] = [];
-    const extras: SpotData[] = [];
+    const performers: RawSpot[] = [];
+    const extras: RawSpot[] = [];
     const times = new Map<string, string>();
 
     // Calculate times based on event start
@@ -370,24 +435,27 @@ export function TimelineRunsheet({ eventId, eventStartTime }: TimelineRunsheetPr
     let lastEndTime = currentTime;
 
     for (const spot of sorted) {
-      if (spot.spot_type === 'extra') {
-        extras.push(spot);
+      const kind = getSpotKind(spot);
+      const category = getSpotCategory(spot);
+
+      if (kind === 'extra') {
+        extras.push(spot as RawSpot);
         // Extras use scheduled_start_time if set
         if (spot.scheduled_start_time) {
           times.set(spot.id, formatScheduledTime(spot.scheduled_start_time));
         }
       } else {
-        performers.push(spot);
+        performers.push(spot as RawSpot);
 
         // Handle doors with "before" start time mode
-        if (spot.category === 'doors' && spot.start_time_mode === 'before') {
+        if (category === 'doors' && spot.start_time_mode === 'before') {
           const doorsTime = new Date(currentTime);
           doorsTime.setMinutes(doorsTime.getMinutes() - (spot.duration_minutes || 0));
           times.set(spot.id, formatTime(doorsTime));
         } else {
           times.set(spot.id, formatTime(currentTime));
           // Only advance time for included items (not "before" doors)
-          if (!(spot.category === 'doors' && spot.start_time_mode === 'before')) {
+          if (!(category === 'doors' && spot.start_time_mode === 'before')) {
             currentTime = new Date(currentTime);
             currentTime.setMinutes(currentTime.getMinutes() + (spot.duration_minutes || 0));
             lastEndTime = currentTime;
@@ -404,18 +472,21 @@ export function TimelineRunsheet({ eventId, eventStartTime }: TimelineRunsheetPr
     };
   }, [spots, eventStartTime]);
 
-  const handleAssign = (spot: SpotData) => {
-    if (spot.spot_type === 'extra') {
+  const handleAssign = (spot: RawSpot) => {
+    const kind = getSpotKind(spot);
+    if (kind === 'extra') {
       setAssignExtraSpotId(spot.id);
     } else {
       setAssignSpotId(spot.id);
     }
   };
 
-  const handleEdit = (spot: SpotData) => {
-    if (spot.spot_type === 'extra') {
+  const handleEdit = (spot: RawSpot) => {
+    const kind = getSpotKind(spot);
+    const category = getSpotCategory(spot);
+    if (kind === 'extra') {
       setEditExtraId(spot.id);
-    } else if (spot.category !== 'act') {
+    } else if (category !== 'act') {
       setEditBreakId(spot.id);
     } else {
       setEditSpotId(spot.id);
@@ -465,6 +536,7 @@ export function TimelineRunsheet({ eventId, eventStartTime }: TimelineRunsheetPr
                 onAssign={() => handleAssign(spot)}
                 onEdit={() => handleEdit(spot)}
                 onDelete={() => handleDelete(spot.id)}
+                isExtra={false}
               />
             ))}
           </div>
