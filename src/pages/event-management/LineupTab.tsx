@@ -11,6 +11,9 @@ import {
   FileStack,
   Check,
   AlertCircle,
+  Download,
+  List,
+  Clock,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -41,7 +44,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +52,7 @@ import { SaveTemplateDialog } from '@/components/lineup/SaveTemplateDialog';
 import { LoadTemplateDialog } from '@/components/lineup/LoadTemplateDialog';
 import { useLineupPublishStatus, usePublishLineup } from '@/hooks/usePublishLineup';
 import SpotListContainer from '@/components/lineup/SpotListContainer';
-import LineupTimeline from '@/components/lineup/LineupTimeline';
+import TimelineRunsheet from '@/components/lineup/TimelineRunsheet';
 import { AddSpotDialog } from '@/components/lineup/AddSpotDialog';
 import { AddBreakDialog } from '@/components/lineup/AddBreakDialog';
 import { ShortlistPanelContainer } from '@/components/applications/ShortlistPanelContainer';
@@ -64,7 +66,7 @@ interface LineupTabProps {
   userId: string;
 }
 
-type ViewMode = 'list' | 'timeline';
+type ViewMode = 'timeline' | 'cards';
 
 // Type for active drag data
 interface ShortlistDragData {
@@ -85,7 +87,7 @@ interface SpotDragData {
 type DragData = ShortlistDragData | SpotDragData;
 
 export default function LineupTab({ eventId, userId }: LineupTabProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('timeline');
   const [showAddSpotDialog, setShowAddSpotDialog] = useState(false);
   const [showAddBreakDialog, setShowAddBreakDialog] = useState(false);
   const [breakType, setBreakType] = useState<SpotCategory>('intermission');
@@ -301,11 +303,13 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
             exportType="lineup"
           />
           <Button
-            className="professional-button"
+            variant="secondary"
             size="sm"
-            onClick={() => setViewMode(viewMode === 'list' ? 'timeline' : 'list')}
+            onClick={() => setViewMode(viewMode === 'timeline' ? 'cards' : 'timeline')}
+            className="gap-1"
           >
-            {viewMode === 'list' ? 'Timeline View' : 'List View'}
+            {viewMode === 'timeline' ? <List className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+            {viewMode === 'timeline' ? 'Card View' : 'Timeline View'}
           </Button>
 
           {/* Add Break Dropdown */}
@@ -359,10 +363,10 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       />
 
       {/* Lineup Display */}
-      {viewMode === 'list' ? (
-        <SpotListContainer eventId={eventId} />
+      {viewMode === 'timeline' ? (
+        <TimelineRunsheet eventId={eventId} eventStartTime={eventStartDateTime} />
       ) : (
-        <LineupTimeline eventId={eventId} userId={userId} />
+        <SpotListContainer eventId={eventId} />
       )}
 
       {/* Lineup Statistics - Moved below lineup */}
@@ -521,34 +525,6 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
               </AccordionItem>
             </Accordion>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Help Text */}
-      <Card className="border-dashed">
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p><strong>Pro Tips:</strong></p>
-            <ul className="list-inside list-disc space-y-1 pl-4">
-              <li>
-                <strong>Drag & Drop:</strong> Reorder spots by dragging in list view
-              </li>
-              <li>
-                <strong>Quick Assignment:</strong> Click "Assign" to select from confirmed
-                applications
-              </li>
-              <li>
-                <strong>Payment Config:</strong> Set payment amounts and tax for each spot
-              </li>
-              <li>
-                <strong>Timeline View:</strong> See the show flow with time gaps and
-                overlaps
-              </li>
-              <li>
-                <strong>Batch Operations:</strong> Select multiple spots for bulk updates
-              </li>
-            </ul>
-          </div>
         </CardContent>
       </Card>
 
