@@ -120,7 +120,7 @@ export default function BusinessInformation() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Organization Name</label>
+            <label className="text-sm font-medium mb-2 block">Organization Name</label>
             <Input
               value={formData.organization_name}
               onChange={(e) => setFormData({ ...formData, organization_name: e.target.value })}
@@ -172,7 +172,7 @@ export default function BusinessInformation() {
           )}
 
           <div>
-            <label className="text-sm font-medium">Bio / Description</label>
+            <label className="text-sm font-medium mb-2 block">Bio / Description</label>
             <Textarea
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
@@ -192,7 +192,7 @@ export default function BusinessInformation() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium mb-2 block">Email</label>
               <Input
                 type="email"
                 value={formData.contact_email}
@@ -202,7 +202,7 @@ export default function BusinessInformation() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Phone</label>
+              <label className="text-sm font-medium mb-2 block">Phone</label>
               <Input
                 type="tel"
                 value={formData.phone}
@@ -213,7 +213,7 @@ export default function BusinessInformation() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Website</label>
+            <label className="text-sm font-medium mb-2 block">Website</label>
             <Input
               type="url"
               value={formData.website}
@@ -224,7 +224,7 @@ export default function BusinessInformation() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Address</label>
+            <label className="text-sm font-medium mb-2 block">Address</label>
             <Input
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -234,7 +234,7 @@ export default function BusinessInformation() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium">Suburb</label>
+              <label className="text-sm font-medium mb-2 block">Suburb</label>
               <Input
                 value={formData.suburb}
                 onChange={(e) => setFormData({ ...formData, suburb: e.target.value })}
@@ -242,7 +242,7 @@ export default function BusinessInformation() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">State</label>
+              <label className="text-sm font-medium mb-2 block">State</label>
               <Input
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
@@ -250,7 +250,7 @@ export default function BusinessInformation() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Postcode</label>
+              <label className="text-sm font-medium mb-2 block">Postcode</label>
               <Input
                 value={formData.postcode}
                 onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
@@ -269,7 +269,7 @@ export default function BusinessInformation() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Instagram</label>
+              <label className="text-sm font-medium mb-2 block">Instagram</label>
               <Input
                 value={formData.instagram}
                 onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
@@ -279,7 +279,7 @@ export default function BusinessInformation() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Facebook</label>
+              <label className="text-sm font-medium mb-2 block">Facebook</label>
               <Input
                 value={formData.facebook}
                 onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
@@ -289,7 +289,7 @@ export default function BusinessInformation() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Twitter/X</label>
+              <label className="text-sm font-medium mb-2 block">Twitter/X</label>
               <Input
                 value={formData.twitter}
                 onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
@@ -299,7 +299,7 @@ export default function BusinessInformation() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">TikTok</label>
+              <label className="text-sm font-medium mb-2 block">TikTok</label>
               <Input
                 value={formData.tiktok}
                 onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })}

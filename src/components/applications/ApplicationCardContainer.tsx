@@ -5,8 +5,9 @@
  * Note: Favourited/hidden status is passed from parent to avoid N+1 queries
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ApplicationCard } from './ApplicationCard';
+import { ComedianEPKModal } from './ComedianEPKModal';
 import { useApproveApplication, useAddToShortlist } from '@/hooks/useApplicationApproval';
 import {
   useFavouriteComedian,
@@ -32,6 +33,9 @@ export function ApplicationCardContainer({
   isFavourited = false,
   isHidden = false
 }: ApplicationCardContainerProps) {
+  // EPK Modal state
+  const [showEPKModal, setShowEPKModal] = useState(false);
+
   // Mutations only - no queries per card
   const approveMutation = useApproveApplication();
   const shortlistMutation = useAddToShortlist();
@@ -85,18 +89,35 @@ export function ApplicationCardContainer({
     });
   };
 
+  // Check if application is shortlisted
+  const isShortlisted = application.is_shortlisted === true;
+
   return (
-    <ApplicationCard
-      application={application}
-      isFavourited={isFavourited}
-      isHidden={isHidden}
-      onApprove={handleApprove}
-      onAddToShortlist={handleAddToShortlist}
-      onFavourite={handleFavourite}
-      onUnfavourite={handleUnfavourite}
-      onHide={handleHide}
-      isLoading={isLoading}
-    />
+    <>
+      <ApplicationCard
+        application={application}
+        isFavourited={isFavourited}
+        isHidden={isHidden}
+        onApprove={handleApprove}
+        onAddToShortlist={handleAddToShortlist}
+        onFavourite={handleFavourite}
+        onUnfavourite={handleUnfavourite}
+        onHide={handleHide}
+        onViewProfile={() => setShowEPKModal(true)}
+        isLoading={isLoading}
+      />
+
+      <ComedianEPKModal
+        isOpen={showEPKModal}
+        onClose={() => setShowEPKModal(false)}
+        comedianId={application.comedian_id}
+        comedianName={application.comedian_name}
+        isShortlisted={isShortlisted}
+        onShortlist={handleAddToShortlist}
+        onConfirm={handleApprove}
+        isLoading={isLoading}
+      />
+    </>
   );
 }
 

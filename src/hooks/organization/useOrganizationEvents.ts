@@ -311,3 +311,60 @@ export const useOrganizationPastEvents = () => {
     enabled: !!orgId,
   });
 };
+
+/**
+ * Hook to fetch draft events for the current organization
+ *
+ * Returns native events with status='draft' for the organization.
+ * Does not include synced sessions as they cannot be drafts.
+ *
+ * @example
+ * ```tsx
+ * function DraftEvents() {
+ *   const { data: drafts } = useOrganizationDraftEvents();
+ *   return <EventsList events={drafts} />;
+ * }
+ * ```
+ */
+export const useOrganizationDraftEvents = () => {
+  const { orgId } = useOrganization();
+
+  return useQuery({
+    queryKey: ['organization-draft-events', orgId],
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error('Organization ID is required');
+      }
+
+      // Fetch draft events (only native events can be drafts, exclude linked events)
+      const { data: draftEvents, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('organization_id', orgId)
+        .eq('status', 'draft')
+        .is('humanitix_event_id', null)
+        .is('eventbrite_event_id', null)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching draft events:', error);
+        throw error;
+      }
+
+      // Transform to OrganizationEvent format
+      return (draftEvents || []).map((event): OrganizationEvent => ({
+        id: event.id,
+        event_date: event.event_date,
+        event_name: event.title || event.name || 'Untitled Draft',
+        event_description: event.description || event.details,
+        event_image: event.banner_url || event.hero_image_url,
+        is_published: false,
+        venue: event.venue ? { name: event.venue } : null,
+        ticket_price: event.ticket_price,
+        ticket_link: event.ticket_url,
+        source: 'native',
+      }));
+    },
+    enabled: !!orgId,
+  });
+};

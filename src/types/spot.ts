@@ -6,6 +6,27 @@ export type SpotType = 'MC' | 'Feature' | 'Headliner' | 'Guest';
 export type SpotStatus = 'available' | 'assigned' | 'confirmed' | 'cancelled';
 export type SpotCategory = 'act' | 'doors' | 'intermission' | 'custom';
 
+/** Distinguishes comedian/performer spots from production staff spots */
+export type SpotKind = 'act' | 'extra';
+
+/** Types of production/extra staff */
+export type ExtraType = 'photographer' | 'videographer' | 'door_staff' | 'audio_tech' | 'lighting_tech';
+
+/** Payment rate type for extras */
+export type RateType = 'hourly' | 'flat';
+
+/** Start time mode for breaks - whether the break counts toward show runtime */
+export type StartTimeMode = 'included' | 'before';
+
+/** Display labels for extra types */
+export const EXTRA_TYPE_LABELS: Record<ExtraType, string> = {
+  photographer: 'Photographer',
+  videographer: 'Videographer',
+  door_staff: 'Door Staff',
+  audio_tech: 'Audio Tech',
+  lighting_tech: 'Lighting Tech',
+};
+
 export interface SpotData {
   id: string;
   event_id: string;
@@ -26,6 +47,26 @@ export interface SpotData {
   notes?: string;
   created_at: string;
   updated_at: string;
+
+  // Extra staff fields
+  /** 'act' for comedians, 'extra' for production staff */
+  spot_type?: SpotKind;
+  /** ID of the production staff or visual artist */
+  staff_id?: string;
+  /** Type of extra staff */
+  extra_type?: ExtraType;
+  /** Payment rate type: hourly or flat */
+  rate_type?: RateType;
+  /** Duration in hours for hourly rate calculation */
+  hours?: number;
+  /** Denormalized staff name for display */
+  staff_name?: string;
+  /** Denormalized staff avatar URL */
+  staff_avatar?: string;
+  /** For breaks: 'included' = counts toward runtime, 'before' = happens before show starts */
+  start_time_mode?: StartTimeMode;
+  /** Scheduled start time for extras (e.g., "20:00" for 8pm) - independent of show start */
+  scheduled_start_time?: string;
 }
 
 export interface SpotInsert {
@@ -39,6 +80,18 @@ export interface SpotInsert {
   status?: SpotStatus;
   duration_minutes?: number;
   notes?: string;
+  // Extra staff fields
+  spot_type?: SpotKind;
+  staff_id?: string;
+  extra_type?: ExtraType;
+  rate_type?: RateType;
+  hours?: number;
+  staff_name?: string;
+  staff_avatar?: string;
+  // Break timing
+  start_time_mode?: StartTimeMode;
+  // Extra scheduled start time
+  scheduled_start_time?: string;
 }
 
 export interface SpotUpdate {
@@ -51,4 +104,61 @@ export interface SpotUpdate {
   status?: SpotStatus;
   duration_minutes?: number;
   notes?: string;
+  // Extra staff fields
+  spot_type?: SpotKind;
+  staff_id?: string;
+  extra_type?: ExtraType;
+  rate_type?: RateType;
+  hours?: number;
+  staff_name?: string;
+  staff_avatar?: string;
+  // Break timing
+  start_time_mode?: StartTimeMode;
+  // Extra scheduled start time
+  scheduled_start_time?: string;
+}
+
+/** Template spot definition (without comedian/staff assignments) */
+export interface LineupTemplateSpot {
+  position: number;
+  spot_type?: SpotKind;
+  category: SpotCategory;
+  type?: SpotType; // For acts: MC, Feature, Headliner, Spot, Guest
+  extra_type?: ExtraType; // For extras
+  label?: string; // For breaks: "Doors Open", "Intermission"
+  duration_minutes: number;
+  payment_amount?: number;
+  rate_type?: RateType; // For extras
+  hours?: number; // For hourly extras
+  start_time_mode?: StartTimeMode; // For breaks
+  scheduled_start_time?: string; // For extras with specific start time
+  notes?: string;
+}
+
+/** Lineup template metadata */
+export interface LineupTemplate {
+  id: string;
+  organization_id: string;
+  name: string;
+  description?: string;
+  spots: LineupTemplateSpot[];
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Production staff profile data */
+export interface ProductionStaffProfile {
+  id: string;
+  user_id: string;
+  specialty: 'door_staff' | 'audio_tech' | 'lighting_tech' | 'stage_manager' | 'other';
+  specialty_other?: string;
+  hourly_rate?: number;
+  flat_rate?: number;
+  experience_years?: number;
+  bio?: string;
+  availability_notes?: string;
+  is_available?: boolean;
+  created_at: string;
+  updated_at: string;
 }

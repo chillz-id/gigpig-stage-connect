@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { useOrganizationEvents, useOrganizationUpcomingEvents, useOrganizationPastEvents, type OrganizationEvent } from '@/hooks/organization/useOrganizationEvents';
+import { useOrganizationEvents, useOrganizationUpcomingEvents, useOrganizationPastEvents, useOrganizationDraftEvents, type OrganizationEvent } from '@/hooks/organization/useOrganizationEvents';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,7 +21,7 @@ function stripHtml(html: string): string {
   return doc.body.textContent || '';
 }
 
-type EventFilter = 'all' | 'upcoming' | 'past';
+type EventFilter = 'all' | 'upcoming' | 'past' | 'drafts';
 type ViewMode = 'cards' | 'list' | 'calendar';
 
 export default function OrganizationEvents() {
@@ -58,9 +58,15 @@ export default function OrganizationEvents() {
   const { data: allEvents, isLoading: allLoading } = useOrganizationEvents();
   const { data: upcomingEvents, isLoading: upcomingLoading } = useOrganizationUpcomingEvents();
   const { data: pastEvents, isLoading: pastLoading } = useOrganizationPastEvents();
+  const { data: draftEvents, isLoading: draftsLoading } = useOrganizationDraftEvents();
 
-  const isLoading = filter === 'all' ? allLoading : filter === 'upcoming' ? upcomingLoading : pastLoading;
-  const baseEvents = filter === 'all' ? allEvents : filter === 'upcoming' ? upcomingEvents : pastEvents;
+  // Filter out drafts from allEvents for the "All" tab (drafts have their own tab)
+  const allPublishedEvents = useMemo(() => {
+    return allEvents?.filter(e => e.is_published) || [];
+  }, [allEvents]);
+
+  const isLoading = filter === 'all' ? allLoading : filter === 'upcoming' ? upcomingLoading : filter === 'past' ? pastLoading : draftsLoading;
+  const baseEvents = filter === 'all' ? allPublishedEvents : filter === 'upcoming' ? upcomingEvents : filter === 'past' ? pastEvents : draftEvents;
 
   // Filter events by selected date
   const events = useMemo(() => {
@@ -266,7 +272,11 @@ export default function OrganizationEvents() {
     const eventDate = new Date(event.event_date);
 
     return (
-      <Card key={event.id} className="overflow-hidden hover:shadow-md transition-shadow">
+      <Card
+        key={event.id}
+        className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => handleOpenEventDetails(event)}
+      >
         <div className="flex items-center gap-4 p-4">
           {/* Date Badge */}
           <div className="flex flex-col items-center justify-center w-14 h-14 rounded-lg flex-shrink-0 bg-purple-100 dark:bg-purple-900">
@@ -306,17 +316,8 @@ export default function OrganizationEvents() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => handleOpenEventDetails(event)}
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              Details
-            </Button>
-          </div>
+          {/* Chevron indicator */}
+          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
         </div>
       </Card>
     );
@@ -331,10 +332,10 @@ export default function OrganizationEvents() {
           <p className="mt-1 text-gray-600">Manage {organization.organization_name}'s events</p>
         </div>
         <div className="flex gap-2">
-          <Link to={`/org/${orgSlug}/events/series`}>
+          <Link to={`/org/${orgSlug}/events/tours`}>
             <Button variant="secondary">
               <Layers className="mr-2 h-4 w-4" />
-              Series
+              Tours
             </Button>
           </Link>
           <Link to={`/org/${orgSlug}/events/create`}>
@@ -357,8 +358,11 @@ export default function OrganizationEvents() {
             <TabsTrigger value="past">
               Past ({pastEvents?.length || 0})
             </TabsTrigger>
+            <TabsTrigger value="drafts">
+              Drafts ({draftEvents?.length || 0})
+            </TabsTrigger>
             <TabsTrigger value="all">
-              All ({allEvents?.length || 0})
+              All ({allPublishedEvents?.length || 0})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -442,6 +446,8 @@ export default function OrganizationEvents() {
                 ? "You don't have any upcoming events"
                 : filter === 'past'
                 ? "You don't have any past events"
+                : filter === 'drafts'
+                ? "You don't have any draft events"
                 : "You haven't created any events yet"}
             </p>
             {filter === 'upcoming' && !selectedDate && (

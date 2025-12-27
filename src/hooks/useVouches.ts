@@ -165,6 +165,8 @@ export const useVouches = (profileId?: string) => {
     if (!activeProfileId) throw new Error('Profile not found');
 
     try {
+      // Use auth user's ID for the voucher check (RLS requires auth.uid() = voucher_id)
+      // This works whether viewing personal profile or org profile
       const { data, error } = await supabase
         .from('vouches')
         .update({
@@ -173,7 +175,7 @@ export const useVouches = (profileId?: string) => {
           organization_id: formData.organization_id ?? undefined // Only update if provided
         })
         .eq('id', vouchId)
-        .eq('voucher_id', activeProfileId) // Ensure profile owns this vouch
+        .eq('voucher_id', user.id) // Use auth user ID (RLS will verify this)
         .select()
         .single();
 
@@ -198,12 +200,12 @@ export const useVouches = (profileId?: string) => {
     if (!activeProfileId) throw new Error('Profile not found');
 
     try {
-      // First try to delete as voucher (vouch you gave)
+      // First try to delete as voucher (vouch you gave) - uses auth user ID for RLS
       const { error: voucherError, count: voucherCount } = await supabase
         .from('vouches')
         .delete()
         .eq('id', vouchId)
-        .eq('voucher_id', activeProfileId)
+        .eq('voucher_id', user.id) // Use auth user ID (works for both personal and org view)
         .select('*', { count: 'exact', head: true });
 
       if (voucherError) throw voucherError;
@@ -231,9 +233,12 @@ export const useVouches = (profileId?: string) => {
     return vouches.filter(vouch => vouch.vouchee_id === activeProfileId);
   };
 
-  // Get vouches given by current profile
+  // Get vouches given by current profile (includes vouches given on behalf of this org)
   const getGivenVouches = () => {
-    return vouches.filter(vouch => vouch.voucher_id === activeProfileId);
+    return vouches.filter(vouch =>
+      vouch.voucher_id === activeProfileId ||
+      vouch.organization_id === activeProfileId
+    );
   };
 
   useEffect(() => {

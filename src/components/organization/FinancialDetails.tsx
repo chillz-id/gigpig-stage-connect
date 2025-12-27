@@ -92,7 +92,7 @@ export default function FinancialDetails() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium">ABN (Australian Business Number) *</label>
+            <label className="text-sm font-medium mb-2 block">ABN (Australian Business Number) *</label>
             <Input
               value={formData.abn}
               onChange={(e) => setFormData({ ...formData, abn: e.target.value })}
@@ -104,7 +104,7 @@ export default function FinancialDetails() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">ACN (Australian Company Number)</label>
+            <label className="text-sm font-medium mb-2 block">ACN (Australian Company Number)</label>
             <Input
               value={formData.acn}
               onChange={(e) => setFormData({ ...formData, acn: e.target.value })}

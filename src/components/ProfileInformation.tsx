@@ -135,8 +135,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   return (
     <div className="space-y-4 px-2">
         <div className={`grid grid-cols-1 ${isLastNameRequired ? 'md:grid-cols-2' : ''} gap-4`}>
-          <div className="space-y-1.5">
-            <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="first-name" className="mb-2 block">{config.labels.primaryName || 'First Name'} *</Label>
             <Input
               id="first-name"
               value={formData.firstName}
@@ -146,8 +146,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
           {/* Hide Last Name for organizations */}
           {isLastNameRequired && (
-            <div className="space-y-1.5">
-              <Label htmlFor="last-name">Last Name *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="last-name" className="mb-2 block">Last Name *</Label>
               <Input
                 id="last-name"
                 value={formData.lastName}
@@ -161,8 +161,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         {/* Conditionally show secondary name field (Stage Name for comedians, Legal Name for organizations) */}
         {config.fields.hasSecondaryName && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="stage-name">
+            <div className="space-y-2">
+              <Label htmlFor="stage-name" className="mb-2 block">
                 {config.labels.secondaryName || 'Stage Name'}
               </Label>
               <Input
@@ -181,8 +181,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                 </p>
               )}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="name-display">Name Display Preference</Label>
+            <div className="space-y-2">
+              <Label htmlFor="name-display" className="mb-2 block">Name Display Preference</Label>
               <Select
                 value={formData.nameDisplayPreference}
                 onValueChange={(value) => handleInputChange('nameDisplayPreference', value)}
@@ -210,8 +210,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email" className="mb-2 block">Email *</Label>
             <Input
               id="email"
               type="email"
@@ -225,8 +225,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               Contact support to change your email address
             </p>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone</Label>
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="mb-2 block">Phone</Label>
             <PhoneInput
               value={formData.phone}
               onChange={(value) => handleInputChange('phone', value)}
@@ -236,8 +236,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
         {/* Location - dropdown for organizations, text input for others */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="location">{profileType === 'organization' ? 'State' : 'Location'}</Label>
+          <div className="space-y-2">
+            <Label htmlFor="location" className="mb-2 block">{profileType === 'organization' ? 'State' : 'Location'}</Label>
             {config.fields.hasStateDropdown ? (
               <Select
                 value={formData.location}
@@ -263,8 +263,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               />
             )}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="country">Country</Label>
+          <div className="space-y-2">
+            <Label htmlFor="country" className="mb-2 block">Country</Label>
             <Input
               id="country"
               value={formData.country}
@@ -274,8 +274,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="bio">{config.labels.bio || 'Bio'}</Label>
+        <div className="space-y-2">
+          <Label htmlFor="bio" className="mb-2 block">{config.labels.bio || 'Bio'}</Label>
           <Textarea
             id="bio"
             value={formData.bio}
@@ -293,7 +293,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
         {/* Social Media Links */}
         <div className="space-y-4">
-          <Label className="text-base font-semibold">Social Media</Label>
+          <Label className="text-base font-semibold mb-2 block">Social Media</Label>
 
           {/* Always visible: Instagram, YouTube, TikTok, Website */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

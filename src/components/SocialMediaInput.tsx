@@ -70,7 +70,7 @@ export const SocialMediaInput: React.FC<SocialMediaInputProps> = ({
 
   return (
     <div className={className}>
-      <Label htmlFor={id}>{displayLabel}</Label>
+      <Label htmlFor={id} className="mb-2 block">{displayLabel}</Label>
       <div className="relative">
         <Input
           id={id}

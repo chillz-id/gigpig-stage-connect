@@ -212,7 +212,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="vouchUser">Search for Comedian or Org</Label>
+        <Label htmlFor="vouchUser" className="mb-2 block">Search for Comedian or Org</Label>
         <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
           <PopoverTrigger asChild>
             <div className="relative">
@@ -301,7 +301,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
       {/* Organization selector - only show if user has organizations */}
       {orgList.length > 0 && (
         <div>
-          <Label htmlFor="vouchAs">Vouch as</Label>
+          <Label htmlFor="vouchAs" className="mb-2 block">Vouch as</Label>
           <Select value={vouchAs} onValueChange={setVouchAs}>
             <SelectTrigger id="vouchAs" className="mt-1">
               <SelectValue placeholder="Select who is vouching" />
@@ -332,7 +332,7 @@ export function GiveVouchForm({ userId, onSuccess }: GiveVouchFormProps) {
       )}
 
       <div>
-        <Label htmlFor="vouchMessage">Message</Label>
+        <Label htmlFor="vouchMessage" className="mb-2 block">Message</Label>
         <Textarea
           id="vouchMessage"
           placeholder="Share your experience working with this person..."

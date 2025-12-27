@@ -1,14 +1,14 @@
 /**
- * OrganizationEventSeries Page
+ * OrganizationEventTours Page
  *
- * Manage events grouped by series with bulk editing capabilities.
+ * Manage events grouped by tours with bulk editing capabilities.
  * Features:
- * - View all event series
- * - Create new series from existing events
- * - Add events to existing series
- * - Bulk edit series properties (title, description, tags, show type)
+ * - View all event tours
+ * - Create new tours from existing events
+ * - Add events to existing tours
+ * - Bulk edit tour properties (title, description, tags, show type)
  *
- * Route: /organization/:slug/events/series
+ * Route: /organization/:slug/events/tours
  */
 
 import { useState } from 'react';
@@ -63,28 +63,28 @@ import {
   type EventSeriesEvent,
 } from '@/hooks/organization/useEventSeries';
 
-export default function OrganizationEventSeries() {
+export default function OrganizationEventTours() {
   const navigate = useNavigate();
 
   // Data hooks
-  const { data: series, isLoading: seriesLoading, error: seriesError } = useEventSeries();
+  const { data: tours, isLoading: toursLoading, error: toursError } = useEventSeries();
   const { data: ungroupedEvents, isLoading: ungroupedLoading } = useUngroupedEvents();
 
   // Mutations
-  const createSeries = useCreateSeries();
-  const addToSeries = useAddToSeries();
-  const removeFromSeries = useRemoveFromSeries();
+  const createTour = useCreateSeries();
+  const addToTour = useAddToSeries();
+  const removeFromTour = useRemoveFromSeries();
   const bulkUpdate = useBulkUpdateSeries();
-  const deleteSeries = useDeleteSeries();
+  const deleteTour = useDeleteSeries();
 
   // UI state
-  const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set());
+  const [expandedTours, setExpandedTours] = useState<Set<string>>(new Set());
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [addToDialogOpen, setAddToDialogOpen] = useState(false);
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
-  const [targetSeriesId, setTargetSeriesId] = useState<string | null>(null);
-  const [newSeriesName, setNewSeriesName] = useState('');
+  const [targetTourId, setTargetTourId] = useState<string | null>(null);
+  const [newTourName, setNewTourName] = useState('');
 
   // Bulk edit form state
   const [bulkEditTitle, setBulkEditTitle] = useState('');
@@ -92,14 +92,14 @@ export default function OrganizationEventSeries() {
   const [bulkEditTags, setBulkEditTags] = useState('');
   const [bulkEditShowType, setBulkEditShowType] = useState('');
 
-  // Toggle series expansion
-  const toggleSeries = (seriesId: string) => {
-    setExpandedSeries((prev) => {
+  // Toggle tour expansion
+  const toggleTour = (tourId: string) => {
+    setExpandedTours((prev) => {
       const next = new Set(prev);
-      if (next.has(seriesId)) {
-        next.delete(seriesId);
+      if (next.has(tourId)) {
+        next.delete(tourId);
       } else {
-        next.add(seriesId);
+        next.add(tourId);
       }
       return next;
     });
@@ -121,15 +121,15 @@ export default function OrganizationEventSeries() {
   // Clear selection
   const clearSelection = () => {
     setSelectedEvents(new Set());
-    setNewSeriesName('');
+    setNewTourName('');
   };
 
-  // Handle create series
-  const handleCreateSeries = async () => {
-    if (!newSeriesName.trim() || selectedEvents.size === 0) return;
+  // Handle create tour
+  const handleCreateTour = async () => {
+    if (!newTourName.trim() || selectedEvents.size === 0) return;
 
-    await createSeries.mutateAsync({
-      name: newSeriesName,
+    await createTour.mutateAsync({
+      name: newTourName,
       eventIds: Array.from(selectedEvents),
     });
 
@@ -137,32 +137,32 @@ export default function OrganizationEventSeries() {
     setCreateDialogOpen(false);
   };
 
-  // Handle add to series
-  const handleAddToSeries = async () => {
-    if (!targetSeriesId || selectedEvents.size === 0) return;
+  // Handle add to tour
+  const handleAddToTour = async () => {
+    if (!targetTourId || selectedEvents.size === 0) return;
 
-    await addToSeries.mutateAsync({
-      seriesId: targetSeriesId,
+    await addToTour.mutateAsync({
+      seriesId: targetTourId,
       eventIds: Array.from(selectedEvents),
     });
 
     clearSelection();
     setAddToDialogOpen(false);
-    setTargetSeriesId(null);
+    setTargetTourId(null);
   };
 
   // Handle bulk edit
-  const openBulkEditDialog = (seriesId: string, currentSeries: EventSeries) => {
-    setTargetSeriesId(seriesId);
+  const openBulkEditDialog = (tourId: string, currentTour: EventSeries) => {
+    setTargetTourId(tourId);
     setBulkEditTitle('');
     setBulkEditDescription('');
-    setBulkEditTags(currentSeries.events[0]?.tags?.join(', ') || '');
-    setBulkEditShowType(currentSeries.events[0]?.show_type || '');
+    setBulkEditTags(currentTour.events[0]?.tags?.join(', ') || '');
+    setBulkEditShowType(currentTour.events[0]?.show_type || '');
     setBulkEditDialogOpen(true);
   };
 
   const handleBulkUpdate = async () => {
-    if (!targetSeriesId) return;
+    if (!targetTourId) return;
 
     const updates: Record<string, unknown> = {};
     if (bulkEditTitle.trim()) updates.title = bulkEditTitle.trim();
@@ -175,28 +175,28 @@ export default function OrganizationEventSeries() {
     if (Object.keys(updates).length === 0) return;
 
     await bulkUpdate.mutateAsync({
-      seriesId: targetSeriesId,
+      seriesId: targetTourId,
       updates,
     });
 
     setBulkEditDialogOpen(false);
-    setTargetSeriesId(null);
+    setTargetTourId(null);
   };
 
-  // Handle delete series
-  const handleDeleteSeries = async (seriesId: string) => {
-    if (!confirm('This will remove all events from this series. The events will not be deleted. Continue?')) {
+  // Handle delete tour
+  const handleDeleteTour = async (tourId: string) => {
+    if (!confirm('This will remove all events from this tour. The events will not be deleted. Continue?')) {
       return;
     }
-    await deleteSeries.mutateAsync(seriesId);
+    await deleteTour.mutateAsync(tourId);
   };
 
-  // Handle remove from series
-  const handleRemoveFromSeries = async (eventId: string) => {
-    await removeFromSeries.mutateAsync(eventId);
+  // Handle remove from tour
+  const handleRemoveFromTour = async (eventId: string) => {
+    await removeFromTour.mutateAsync(eventId);
   };
 
-  if (seriesLoading || ungroupedLoading) {
+  if (toursLoading || ungroupedLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-10 w-64" />
@@ -209,19 +209,19 @@ export default function OrganizationEventSeries() {
     );
   }
 
-  if (seriesError) {
+  if (toursError) {
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            {seriesError instanceof Error ? seriesError.message : 'Failed to load event series'}
+            {toursError instanceof Error ? toursError.message : 'Failed to load event tours'}
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  const hasSeries = series && series.length > 0;
+  const hasTours = tours && tours.length > 0;
   const hasUngrouped = ungroupedEvents && ungroupedEvents.length > 0;
 
   return (
@@ -234,9 +234,9 @@ export default function OrganizationEventSeries() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Event Series</h1>
+            <h1 className="text-2xl font-bold">Event Tours</h1>
             <p className="text-muted-foreground">
-              Group events into series for bulk editing
+              Group events into tours for bulk editing
             </p>
           </div>
         </div>
@@ -250,29 +250,29 @@ export default function OrganizationEventSeries() {
               Clear
             </Button>
 
-            {/* Create Series Dialog */}
+            {/* Create Tour Dialog */}
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
                   <FolderPlus className="mr-2 h-4 w-4" />
-                  Create Series
+                  Create Tour
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Event Series</DialogTitle>
+                  <DialogTitle>Create Event Tour</DialogTitle>
                   <DialogDescription>
-                    Group {selectedEvents.size} selected event(s) into a new series.
+                    Group {selectedEvents.size} selected event(s) into a new tour.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="series-name">Series Name</Label>
+                    <Label htmlFor="tour-name">Tour Name</Label>
                     <Input
-                      id="series-name"
-                      value={newSeriesName}
-                      onChange={(e) => setNewSeriesName(e.target.value)}
-                      placeholder="e.g., Magic Mic Comedy Wednesdays"
+                      id="tour-name"
+                      value={newTourName}
+                      onChange={(e) => setNewTourName(e.target.value)}
+                      placeholder="e.g., Summer Comedy Tour 2025"
                     />
                   </div>
                 </div>
@@ -281,41 +281,41 @@ export default function OrganizationEventSeries() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleCreateSeries}
-                    disabled={!newSeriesName.trim() || createSeries.isPending}
+                    onClick={handleCreateTour}
+                    disabled={!newTourName.trim() || createTour.isPending}
                   >
-                    {createSeries.isPending ? 'Creating...' : 'Create Series'}
+                    {createTour.isPending ? 'Creating...' : 'Create Tour'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
 
-            {/* Add to Existing Series Dialog */}
-            {hasSeries && (
+            {/* Add to Existing Tour Dialog */}
+            {hasTours && (
               <Dialog open={addToDialogOpen} onOpenChange={setAddToDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="secondary">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add to Series
+                    Add to Tour
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add to Existing Series</DialogTitle>
+                    <DialogTitle>Add to Existing Tour</DialogTitle>
                     <DialogDescription>
-                      Add {selectedEvents.size} selected event(s) to an existing series.
+                      Add {selectedEvents.size} selected event(s) to an existing tour.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-2 py-4 max-h-[300px] overflow-auto">
-                    {series?.map((s) => (
+                    {tours?.map((t) => (
                       <Button
-                        key={s.series_id}
-                        variant={targetSeriesId === s.series_id ? 'default' : 'ghost'}
+                        key={t.series_id}
+                        variant={targetTourId === t.series_id ? 'default' : 'ghost'}
                         className="justify-start"
-                        onClick={() => setTargetSeriesId(s.series_id)}
+                        onClick={() => setTargetTourId(t.series_id)}
                       >
                         <Layers className="mr-2 h-4 w-4" />
-                        {s.series_name} ({s.event_count} events)
+                        {t.series_name} ({t.event_count} events)
                       </Button>
                     ))}
                   </div>
@@ -324,10 +324,10 @@ export default function OrganizationEventSeries() {
                       Cancel
                     </Button>
                     <Button
-                      onClick={handleAddToSeries}
-                      disabled={!targetSeriesId || addToSeries.isPending}
+                      onClick={handleAddToTour}
+                      disabled={!targetTourId || addToTour.isPending}
                     >
-                      {addToSeries.isPending ? 'Adding...' : 'Add to Series'}
+                      {addToTour.isPending ? 'Adding...' : 'Add to Tour'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -337,19 +337,19 @@ export default function OrganizationEventSeries() {
         )}
       </div>
 
-      {/* Series List */}
-      {hasSeries && (
+      {/* Tours List */}
+      {hasTours && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Your Series</h2>
-          {series?.map((s) => (
-            <SeriesCard
-              key={s.series_id}
-              series={s}
-              isExpanded={expandedSeries.has(s.series_id)}
-              onToggle={() => toggleSeries(s.series_id)}
-              onEdit={() => openBulkEditDialog(s.series_id, s)}
-              onDelete={() => handleDeleteSeries(s.series_id)}
-              onRemoveEvent={handleRemoveFromSeries}
+          <h2 className="text-lg font-semibold">Your Tours</h2>
+          {tours?.map((t) => (
+            <TourCard
+              key={t.series_id}
+              tour={t}
+              isExpanded={expandedTours.has(t.series_id)}
+              onToggle={() => toggleTour(t.series_id)}
+              onEdit={() => openBulkEditDialog(t.series_id, t)}
+              onDelete={() => handleDeleteTour(t.series_id)}
+              onRemoveEvent={handleRemoveFromTour}
               onNavigateToEvent={(eventId) => navigate(`/events/${eventId}/manage`)}
             />
           ))}
@@ -360,9 +360,9 @@ export default function OrganizationEventSeries() {
       <Dialog open={bulkEditDialogOpen} onOpenChange={setBulkEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Bulk Edit Series</DialogTitle>
+            <DialogTitle>Bulk Edit Tour</DialogTitle>
             <DialogDescription>
-              Update properties for all events in this series. Leave fields empty to keep current values.
+              Update properties for all events in this tour. Leave fields empty to keep current values.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -420,7 +420,7 @@ export default function OrganizationEventSeries() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Ungrouped Events</h2>
           <p className="text-sm text-muted-foreground">
-            Select events below to create a new series or add them to an existing one.
+            Select events below to create a new tour or add them to an existing one.
           </p>
           <Card>
             <CardContent className="p-4">
@@ -446,13 +446,13 @@ export default function OrganizationEventSeries() {
       )}
 
       {/* Empty State */}
-      {!hasSeries && !hasUngrouped && (
+      {!hasTours && !hasUngrouped && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Layers className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Events Found</h3>
             <p className="text-muted-foreground max-w-md">
-              Create some events first, then come back here to group them into series for
+              Create some events first, then come back here to group them into tours for
               easier bulk editing.
             </p>
           </CardContent>
@@ -462,9 +462,9 @@ export default function OrganizationEventSeries() {
   );
 }
 
-// Series Card Component
-interface SeriesCardProps {
-  series: EventSeries;
+// Tour Card Component
+interface TourCardProps {
+  tour: EventSeries;
   isExpanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -473,15 +473,15 @@ interface SeriesCardProps {
   onNavigateToEvent: (eventId: string) => void;
 }
 
-function SeriesCard({
-  series,
+function TourCard({
+  tour,
   isExpanded,
   onToggle,
   onEdit,
   onDelete,
   onRemoveEvent,
   onNavigateToEvent,
-}: SeriesCardProps) {
+}: TourCardProps) {
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
       <Card>
@@ -495,22 +495,22 @@ function SeriesCard({
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 )}
                 <div>
-                  <CardTitle className="text-lg">{series.series_name}</CardTitle>
+                  <CardTitle className="text-lg">{tour.series_name}</CardTitle>
                   <CardDescription className="flex items-center gap-4 mt-1">
                     <span className="flex items-center gap-1">
                       <Layers className="h-4 w-4" />
-                      {series.event_count} events
+                      {tour.event_count} events
                     </span>
-                    {series.venue_name && (
+                    {tour.venue_name && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        {series.venue_name}
+                        {tour.venue_name}
                       </span>
                     )}
-                    {series.next_event_date && (
+                    {tour.next_event_date && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        Next: {format(new Date(series.next_event_date), 'MMM d, yyyy')}
+                        Next: {format(new Date(tour.next_event_date), 'MMM d, yyyy')}
                       </span>
                     )}
                   </CardDescription>
@@ -530,7 +530,7 @@ function SeriesCard({
         <CollapsibleContent>
           <CardContent className="border-t">
             <div className="grid gap-2 pt-4">
-              {series.events.map((event) => (
+              {tour.events.map((event) => (
                 <div
                   key={event.id}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50"
@@ -551,7 +551,7 @@ function SeriesCard({
                       variant="ghost"
                       size="sm"
                       onClick={() => onRemoveEvent(event.id)}
-                      title="Remove from series"
+                      title="Remove from tour"
                     >
                       <Unlink className="h-4 w-4" />
                     </Button>

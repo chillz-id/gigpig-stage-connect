@@ -13,13 +13,16 @@ interface SpotListProps {
   renderCard: (spot: SpotData) => React.ReactNode;
   emptyMessage?: string;
   onReorder?: (sourceId: string, destinationId: string) => void;
+  /** Footer content rendered after all spots (e.g., drop zone) */
+  footer?: React.ReactNode;
 }
 
 export function SpotList({
   spots,
   renderCard,
   emptyMessage = 'No spots scheduled yet',
-  onReorder
+  onReorder,
+  footer
 }: SpotListProps) {
   if (spots.length === 0) {
     return (
@@ -43,8 +46,10 @@ export function SpotList({
           {emptyMessage}
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Add spots to build your show lineup
+          Drag a comedian from the shortlist to create a spot
         </p>
+        {/* Show footer (drop zone) even when empty */}
+        {footer && <div className="mt-6 w-full max-w-md">{footer}</div>}
       </div>
     );
   }
@@ -58,6 +63,8 @@ export function SpotList({
             {renderCard(spot)}
           </div>
         ))}
+        {/* Footer content (e.g., drop zone for creating new spots) */}
+        {footer}
       </div>
     </ScrollArea>
   );

@@ -102,21 +102,19 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
       <div>
         <p className="text-xs text-muted-foreground mb-4">Add contacts & toggle platform only or public</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4" />
-                  <Label htmlFor="email" className="text-sm">Email</Label>
-                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.email.show)}</Badge>
-                </div>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Mail className="w-4 h-4" />
+                <Label htmlFor="email" className="text-sm">Email</Label>
+                <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.email.show)}</Badge>
+              </div>
+              <div className="flex items-center gap-2">
                 <Input
                   id="email"
                   value={contactSettings.email.value}
                   onChange={(e) => updateContactSetting('email', 'value', e.target.value)}
-                  className="text-sm"
+                  className="text-sm flex-1"
                 />
-              </div>
-              <div className="pt-8">
                 <Switch
                   checked={contactSettings.email.show}
                   onCheckedChange={(checked) => updateContactSetting('email', 'show', checked)}
@@ -124,20 +122,18 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               </div>
             </div>
 
-            <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1 mr-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="w-4 h-4" />
-                  <Label htmlFor="phone" className="text-sm">Phone</Label>
-                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.phone.show)}</Badge>
-                </div>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Phone className="w-4 h-4" />
+                <Label htmlFor="phone" className="text-sm">Phone</Label>
+                <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.phone.show)}</Badge>
+              </div>
+              <div className="flex items-center gap-2">
                 <PhoneInput
                   value={contactSettings.phone.value}
                   onChange={(value) => updateContactSetting('phone', 'value', value)}
-                  className="text-sm"
+                  className="text-sm flex-1"
                 />
-              </div>
-              <div className="pt-8">
                 <Switch
                   checked={contactSettings.phone.show}
                   onCheckedChange={(checked) => updateContactSetting('phone', 'show', checked)}
@@ -155,21 +151,19 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
               <h3 className="font-semibold">Manager Contact</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex-1 mr-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Mail className="w-4 h-4" />
-                    <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
-                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerEmail.show)}</Badge>
-                  </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="w-4 h-4" />
+                  <Label htmlFor="managerEmail" className="text-sm">Manager Email</Label>
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerEmail.show)}</Badge>
+                </div>
+                <div className="flex items-center gap-2">
                   <Input
                     id="managerEmail"
                     value={contactSettings.managerEmail.value}
                     onChange={(e) => updateContactSetting('managerEmail', 'value', e.target.value)}
-                    className="text-sm"
+                    className="text-sm flex-1"
                   />
-                </div>
-                <div className="pt-8">
                   <Switch
                     checked={contactSettings.managerEmail.show}
                     onCheckedChange={(checked) => updateContactSetting('managerEmail', 'show', checked)}
@@ -177,20 +171,18 @@ export const ContactInformation: React.FC<ContactInformationProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex-1 mr-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4" />
-                    <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
-                    <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerPhone.show)}</Badge>
-                  </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Phone className="w-4 h-4" />
+                  <Label htmlFor="managerPhone" className="text-sm">Manager Phone</Label>
+                  <Badge variant="secondary" className="text-xs">{getVisibilityLabel(contactSettings.managerPhone.show)}</Badge>
+                </div>
+                <div className="flex items-center gap-2">
                   <PhoneInput
                     value={contactSettings.managerPhone.value}
                     onChange={(value) => updateContactSetting('managerPhone', 'value', value)}
-                    className="text-sm"
+                    className="text-sm flex-1"
                   />
-                </div>
-                <div className="pt-8">
                   <Switch
                     checked={contactSettings.managerPhone.show}
                     onCheckedChange={(checked) => updateContactSetting('managerPhone', 'show', checked)}

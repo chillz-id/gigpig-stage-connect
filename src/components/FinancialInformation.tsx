@@ -285,7 +285,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="accountName">Account Name</Label>
+            <Label htmlFor="accountName" className="mb-2 block">Account Name</Label>
             <Input
               id="accountName"
               value={financialInfo.accountName}
@@ -294,7 +294,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
             />
           </div>
           <div>
-            <Label htmlFor="bsb">BSB</Label>
+            <Label htmlFor="bsb" className="mb-2 block">BSB</Label>
             <Input
               id="bsb"
               value={financialInfo.bsb}
@@ -307,7 +307,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="accountNumber">Account Number</Label>
+            <Label htmlFor="accountNumber" className="mb-2 block">Account Number</Label>
             <Input
               id="accountNumber"
               value={financialInfo.accountNumber}
@@ -317,7 +317,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
           </div>
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <Label htmlFor="abn">ABN</Label>
+              <Label htmlFor="abn" className="mb-2 block">ABN</Label>
               <div className="relative">
                 <Input
                   id="abn"
@@ -396,7 +396,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
             <h3 className="text-base font-semibold mb-4">Rates & Availability</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="hourlyRate">Hourly Rate (Optional)</Label>
+                <Label htmlFor="hourlyRate" className="mb-2 block">Hourly Rate (Optional)</Label>
                 <Input
                   id="hourlyRate"
                   type="number"
@@ -406,7 +406,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">Your standard hourly rate in AUD</p>
               </div>
               <div>
-                <Label htmlFor="dayRate">Day Rate (Optional)</Label>
+                <Label htmlFor="dayRate" className="mb-2 block">Day Rate (Optional)</Label>
                 <Input
                   id="dayRate"
                   type="number"

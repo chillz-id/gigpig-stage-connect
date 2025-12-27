@@ -203,7 +203,7 @@ const OrganizationHeader: React.FC<OrganizationHeaderProps> = ({ organization, i
             {/* Logo with negative margin to overlap banner */}
             <div className="flex-shrink-0 -mt-8 lg:-mt-16 mx-auto lg:mx-0">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-white dark:border-slate-900 shadow-xl bg-white">
+                <div className="w-32 h-32 rounded-xl overflow-hidden shadow-xl">
                   {localLogoUrl || organization.logo_url ? (
                     <OptimizedImage
                       src={localLogoUrl || organization.logo_url || ''}

@@ -1,8 +1,9 @@
 /**
- * AddBreakDialog Component
+ * EditBreakDialog Component
  *
- * Dialog for creating a break item in the event lineup.
- * Supports Doors, Intermission, and Custom break types.
+ * Dialog for editing a break item in the event lineup.
+ * Supports editing label and duration for Doors, Intermission, and Custom break types.
+ * For "Doors" breaks, includes a toggle for whether the break is included in show start time.
  */
 
 import { useState, useEffect } from 'react';
@@ -21,103 +22,58 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { SpotCategory, StartTimeMode } from '@/types/spot';
+import type { SpotData, StartTimeMode } from '@/types/spot';
 
-interface AddBreakDialogProps {
+interface EditBreakDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eventId: string;
-  breakType: SpotCategory;
-  onBreakCreated?: () => void;
+  spot: SpotData;
 }
 
-const BREAK_LABELS: Record<SpotCategory, string> = {
-  doors: 'Doors Open',
-  intermission: 'Intermission',
-  custom: 'Break',
-  act: 'Act', // Not used but needed for type
-};
-
-const DEFAULT_DURATIONS: Record<SpotCategory, number> = {
-  doors: 30,
-  intermission: 15,
-  custom: 10,
-  act: 10,
-};
-
-export function AddBreakDialog({
+export function EditBreakDialog({
   open,
   onOpenChange,
   eventId,
-  breakType,
-  onBreakCreated,
-}: AddBreakDialogProps) {
+  spot,
+}: EditBreakDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Form state
-  const [label, setLabel] = useState(BREAK_LABELS[breakType]);
-  const [duration, setDuration] = useState(DEFAULT_DURATIONS[breakType]);
-  const [startTimeMode, setStartTimeMode] = useState<StartTimeMode>('included');
+  // Form state - pre-populated with current values
+  const [label, setLabel] = useState(spot.label || '');
+  const [duration, setDuration] = useState(spot.duration_minutes || 10);
+  const [startTimeMode, setStartTimeMode] = useState<StartTimeMode>(spot.start_time_mode || 'included');
 
   // Check if this is a doors break (for showing start time mode toggle)
-  const isDoors = breakType === 'doors';
+  const isDoors = spot.category === 'doors';
 
-  // Update defaults when breakType changes
+  // Update form when spot changes or dialog opens
   useEffect(() => {
     if (open) {
-      setLabel(BREAK_LABELS[breakType]);
-      setDuration(DEFAULT_DURATIONS[breakType]);
-      setStartTimeMode('included');
+      setLabel(spot.label || '');
+      setDuration(spot.duration_minutes || 10);
+      setStartTimeMode(spot.start_time_mode || 'included');
     }
-  }, [breakType, open]);
+  }, [spot, open]);
 
-  // Reset form when dialog closes
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      setLabel(BREAK_LABELS[breakType]);
-      setDuration(DEFAULT_DURATIONS[breakType]);
-      setStartTimeMode('included');
-    }
-    onOpenChange(isOpen);
-  };
-
-  // Create break mutation
-  const createBreakMutation = useMutation({
+  // Update break mutation
+  const updateBreakMutation = useMutation({
     mutationFn: async () => {
-      // Get the current max spot_order for this event
-      const { data: existingSpots, error: fetchError } = await supabase
-        .from('event_spots')
-        .select('spot_order')
-        .eq('event_id', eventId)
-        .order('spot_order', { ascending: false })
-        .limit(1);
-
-      if (fetchError) throw fetchError;
-
-      const nextOrder = existingSpots && existingSpots.length > 0
-        ? (existingSpots[0]?.spot_order ?? 0) + 1
-        : 1;
-
-      const breakData: Record<string, unknown> = {
-        event_id: eventId,
+      const updateData: Record<string, unknown> = {
         spot_name: label,
-        spot_category: breakType,
         duration_minutes: duration,
-        spot_order: nextOrder,
-        is_paid: false,
-        is_filled: false,
-        confirmation_status: null,
       };
 
       // Only include start_time_mode for doors breaks
       if (isDoors) {
-        breakData.start_time_mode = startTimeMode;
+        updateData.start_time_mode = startTimeMode;
       }
 
       const { data, error } = await supabase
         .from('event_spots')
-        .insert(breakData)
+        .update(updateData)
+        .eq('id', spot.id)
         .select()
         .single();
 
@@ -126,51 +82,47 @@ export function AddBreakDialog({
     },
     onSuccess: () => {
       toast({
-        title: 'Break Added',
-        description: `${label} (${duration} min) has been added to the lineup.`,
+        title: 'Break Updated',
+        description: `${label} has been updated.`,
       });
       queryClient.invalidateQueries({ queryKey: ['lineup-stats', eventId] });
       queryClient.invalidateQueries({ queryKey: ['event-spots', eventId] });
-      onBreakCreated?.();
-      handleOpenChange(false);
+      onOpenChange(false);
     },
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to add break',
+        description: error.message || 'Failed to update break',
       });
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createBreakMutation.mutate();
+    updateBreakMutation.mutate();
   };
 
-  const dialogTitle = breakType === 'custom' ? 'Add Custom Break' : `Add ${BREAK_LABELS[breakType]}`;
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{dialogTitle}</DialogTitle>
+            <DialogTitle>Edit Break</DialogTitle>
             <DialogDescription>
-              Add a {breakType === 'custom' ? 'custom' : breakType} break to the lineup.
-              This will be inserted at the end and can be reordered.
+              Update the label and duration for this break.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            {/* Label (editable for custom, pre-filled for others) */}
+            {/* Label */}
             <div className="grid gap-2">
               <Label htmlFor="breakLabel">Label</Label>
               <Input
                 id="breakLabel"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder={breakType === 'custom' ? 'e.g., Raffle Draw' : BREAK_LABELS[breakType]}
+                placeholder="e.g., Doors Open, Intermission"
               />
             </div>
 
@@ -230,12 +182,12 @@ export function AddBreakDialog({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => handleOpenChange(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createBreakMutation.isPending}>
-              {createBreakMutation.isPending ? 'Adding...' : 'Add Break'}
+            <Button type="submit" disabled={updateBreakMutation.isPending}>
+              {updateBreakMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </form>
@@ -244,4 +196,4 @@ export function AddBreakDialog({
   );
 }
 
-export default AddBreakDialog;
+export default EditBreakDialog;
