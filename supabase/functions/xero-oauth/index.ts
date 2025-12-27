@@ -36,7 +36,10 @@ serve(async (req) => {
     const { action } = body
 
     if (action === 'exchange') {
-      const { code, organization_id } = body
+      const { code, organization_id, redirect_uri } = body
+
+      // Use redirect_uri from request (must match what was used in auth URL), fallback to PUBLIC_URL
+      const redirectUri = redirect_uri || `${Deno.env.get('PUBLIC_URL') || 'https://gigpigs.app'}/auth/xero-callback`
 
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
@@ -47,7 +50,7 @@ serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: `${Deno.env.get('PUBLIC_URL') || 'https://gigpigs.app'}/auth/xero-callback`,
+          redirect_uri: redirectUri,
           client_id: Deno.env.get('XERO_CLIENT_ID')!,
           client_secret: Deno.env.get('XERO_CLIENT_SECRET')!,
         }),

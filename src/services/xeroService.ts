@@ -90,7 +90,9 @@ class XeroService {
     const requestBody: Record<string, string> = {
       action: 'exchange',
       code,
-      state
+      state,
+      // Pass the redirect_uri so edge function uses the same one (must match for OAuth)
+      redirect_uri: this.config.redirectUri
     };
 
     if (organizationId) {
