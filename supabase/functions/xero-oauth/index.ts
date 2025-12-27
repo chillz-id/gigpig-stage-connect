@@ -35,11 +35,19 @@ serve(async (req) => {
     const body = await req.json()
     const { action } = body
 
+    console.log('xero-oauth action:', action)
+
     if (action === 'exchange') {
       const { code, organization_id, redirect_uri } = body
 
       // Use redirect_uri from request (must match what was used in auth URL), fallback to PUBLIC_URL
       const redirectUri = redirect_uri || `${Deno.env.get('PUBLIC_URL') || 'https://gigpigs.app'}/auth/xero-callback`
+
+      console.log('Token exchange starting...')
+      console.log('redirect_uri:', redirectUri)
+      console.log('XERO_CLIENT_ID exists:', !!Deno.env.get('XERO_CLIENT_ID'))
+      console.log('XERO_CLIENT_SECRET exists:', !!Deno.env.get('XERO_CLIENT_SECRET'))
+      console.log('code length:', code?.length || 0)
 
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
@@ -58,11 +66,16 @@ serve(async (req) => {
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text()
-        console.error('Token exchange failed:', errorText)
-        throw new Error('Token exchange failed')
+        console.error('Token exchange failed with status:', tokenResponse.status)
+        console.error('Token exchange error response:', errorText)
+        console.error('redirect_uri used:', redirectUri)
+        console.error('XERO_CLIENT_ID exists:', !!Deno.env.get('XERO_CLIENT_ID'))
+        console.error('XERO_CLIENT_SECRET exists:', !!Deno.env.get('XERO_CLIENT_SECRET'))
+        throw new Error(`Token exchange failed: ${errorText}`)
       }
 
       const tokens = await tokenResponse.json()
+      console.log('Token exchange successful!')
 
       // Get tenant info
       const connectionsResponse = await fetch('https://api.xero.com/connections', {
@@ -78,6 +91,7 @@ serve(async (req) => {
       }
 
       const tenant = connections[0]
+      console.log('Connected to Xero tenant:', tenant.tenantName)
 
       // Store in database - either for user or organization
       const integrationData: Record<string, any> = {
@@ -92,9 +106,11 @@ serve(async (req) => {
       if (organization_id) {
         // Organization-level connection
         integrationData.organization_id = organization_id
+        console.log('Saving as organization-level connection for org:', organization_id)
       } else {
         // User-level connection
         integrationData.user_id = user.id
+        console.log('Saving as user-level connection for user:', user.id)
       }
 
       const { error: dbError } = await supabaseClient
@@ -103,7 +119,12 @@ serve(async (req) => {
           onConflict: organization_id ? 'organization_id' : 'user_id',
         })
 
-      if (dbError) throw dbError
+      if (dbError) {
+        console.error('Database error:', dbError)
+        throw dbError
+      }
+
+      console.log('Integration saved successfully!')
 
       return new Response(
         JSON.stringify({ success: true, tenant: tenant.tenantName }),
@@ -182,6 +203,7 @@ serve(async (req) => {
 
     throw new Error('Invalid action')
   } catch (error) {
+    console.error('xero-oauth error:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
