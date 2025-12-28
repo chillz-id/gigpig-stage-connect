@@ -85,50 +85,24 @@ class InvoiceService {
   // INVOICE GENERATION
   // =====================================
 
-  async generateInvoiceNumber(type: InvoiceType): Promise<string> {
-    // Prefix based on invoice type:
-    // - receivable: REC (money owed to you - you're billing someone)
-    // - payable: PAY (money you owe - you're being billed)
-    // - promoter: PRO (legacy - invoice to promoter)
-    // - comedian: COM (legacy - invoice from comedian)
-    // - other: OTH (other/miscellaneous)
-    const prefixMap: Record<InvoiceType, string> = {
-      receivable: 'REC',
-      payable: 'PAY',
-      promoter: 'PRO',
-      comedian: 'COM',
-      other: 'OTH',
-    };
-    const prefix = prefixMap[type] || 'INV';
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-
-    // Get the last invoice number for this prefix and month
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('invoice_number')
-      .like('invoice_number', `${prefix}-${year}${month}-%`)
-      .order('invoice_number', { ascending: false })
-      .limit(1);
-
+  /**
+   * Generate a unique invoice number using PostgreSQL SEQUENCE.
+   * Format: GIG-XXXXXXXX (8-digit zero-padded sequence)
+   * Uses atomic database sequence to prevent collision when multiple invoices
+   * are created simultaneously.
+   */
+  async generateInvoiceNumber(): Promise<string> {
+    const { data, error } = await supabase.rpc('get_next_invoice_number');
     if (error) throw error;
-
-    let sequence = 1;
-    if (data && data.length > 0) {
-      const lastNumber = data[0].invoice_number;
-      const lastSequence = parseInt(lastNumber.split('-')[2]);
-      sequence = lastSequence + 1;
-    }
-
-    return `${prefix}-${year}${month}-${String(sequence).padStart(4, '0')}`;
+    return data; // Returns "GIG-00000001"
   }
 
   async createInvoice(request: CreateInvoiceRequest): Promise<Invoice> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Generate invoice number if not provided
-    const invoiceNumber = request.invoice_number || await this.generateInvoiceNumber(request.invoice_type);
+    // Generate invoice number if not provided (uses atomic PostgreSQL sequence)
+    const invoiceNumber = request.invoice_number || await this.generateInvoiceNumber();
 
     // Calculate deposit due date if needed
     let depositDueDate = request.deposit_due_date;

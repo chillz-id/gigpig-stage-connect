@@ -53,6 +53,7 @@ export const profileConfig: ProfileConfigMap = {
       hasFinancial: true,          // Show financial section
       hasRates: false,             // No hourly rates
       hasMedia: true,              // Show media portfolio
+      hasStateDropdown: true,      // Use Australian states dropdown instead of text input
     },
   },
 

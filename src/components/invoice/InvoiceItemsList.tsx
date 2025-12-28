@@ -36,6 +36,15 @@ export const InvoiceItemsList: React.FC<InvoiceItemsListProps> = ({
         </Button>
       </div>
 
+      {/* Column Headers - visible on desktop */}
+      <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 pb-2 text-sm font-medium text-muted-foreground">
+        <div className="md:col-span-5">Description</div>
+        <div className="md:col-span-2">Qty</div>
+        <div className="md:col-span-2">Rate</div>
+        <div className="md:col-span-2">Total</div>
+        <div className="md:col-span-1"></div>
+      </div>
+
       <div className="space-y-3">
         {items.map((item, index) => (
           <div

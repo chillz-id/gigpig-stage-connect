@@ -24,6 +24,24 @@ const AUSTRALIAN_STATES = [
   { value: 'ACT', label: 'ACT' },
 ];
 
+// Countries list (Australia first as primary market)
+const COUNTRIES = [
+  { value: 'Australia', label: 'Australia' },
+  { value: 'New Zealand', label: 'New Zealand' },
+  { value: 'United States', label: 'United States' },
+  { value: 'United Kingdom', label: 'United Kingdom' },
+  { value: 'Canada', label: 'Canada' },
+  { value: 'Ireland', label: 'Ireland' },
+  { value: 'South Africa', label: 'South Africa' },
+  { value: 'Singapore', label: 'Singapore' },
+  { value: 'Hong Kong', label: 'Hong Kong' },
+  { value: 'Japan', label: 'Japan' },
+  { value: 'Germany', label: 'Germany' },
+  { value: 'France', label: 'France' },
+  { value: 'Netherlands', label: 'Netherlands' },
+  { value: 'Other', label: 'Other' },
+];
+
 interface ProfileData {
   firstName: string;
   lastName: string;
@@ -239,7 +257,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         {/* Location - dropdown for organizations, text input for others */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="location" className="mb-2 block">{profileType === 'organization' ? 'State' : 'Location'}</Label>
+            <Label htmlFor="location" className="mb-2 block">{config.fields.hasStateDropdown ? 'State' : 'Location'}</Label>
             {config.fields.hasStateDropdown ? (
               <Select
                 value={formData.location}
@@ -267,12 +285,30 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="country" className="mb-2 block">Country</Label>
-            <Input
-              id="country"
-              value={formData.country}
-              onChange={(e) => handleInputChange('country', e.target.value)}
-              placeholder="Australia"
-            />
+            {config.fields.hasStateDropdown ? (
+              <Select
+                value={formData.country}
+                onValueChange={(value) => handleInputChange('country', value)}
+              >
+                <SelectTrigger id="country">
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="country"
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                placeholder="Australia"
+              />
+            )}
           </div>
         </div>
 
