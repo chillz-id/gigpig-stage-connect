@@ -12,18 +12,6 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import type { ProfileAwareProps } from '@/types/universalProfile';
 import { getProfileConfig } from '@/utils/profileConfig';
 
-// Australian states for location dropdown
-const AUSTRALIAN_STATES = [
-  { value: 'NSW', label: 'NSW' },
-  { value: 'VIC', label: 'VIC' },
-  { value: 'QLD', label: 'QLD' },
-  { value: 'WA', label: 'WA' },
-  { value: 'SA', label: 'SA' },
-  { value: 'TAS', label: 'TAS' },
-  { value: 'NT', label: 'NT' },
-  { value: 'ACT', label: 'ACT' },
-];
-
 // Countries list (Australia first as primary market)
 const COUNTRIES = [
   { value: 'Australia', label: 'Australia' },
@@ -41,6 +29,154 @@ const COUNTRIES = [
   { value: 'Netherlands', label: 'Netherlands' },
   { value: 'Other', label: 'Other' },
 ];
+
+// Regions/States by country
+const REGIONS_BY_COUNTRY: Record<string, { value: string; label: string }[]> = {
+  Australia: [
+    { value: 'NSW', label: 'New South Wales' },
+    { value: 'VIC', label: 'Victoria' },
+    { value: 'QLD', label: 'Queensland' },
+    { value: 'WA', label: 'Western Australia' },
+    { value: 'SA', label: 'South Australia' },
+    { value: 'TAS', label: 'Tasmania' },
+    { value: 'NT', label: 'Northern Territory' },
+    { value: 'ACT', label: 'Australian Capital Territory' },
+  ],
+  'New Zealand': [
+    { value: 'Auckland', label: 'Auckland' },
+    { value: 'Wellington', label: 'Wellington' },
+    { value: 'Canterbury', label: 'Canterbury' },
+    { value: 'Waikato', label: 'Waikato' },
+    { value: 'Bay of Plenty', label: 'Bay of Plenty' },
+    { value: 'Otago', label: 'Otago' },
+    { value: 'Manawatu-Whanganui', label: 'Manawatu-Whanganui' },
+    { value: 'Hawkes Bay', label: "Hawke's Bay" },
+    { value: 'Taranaki', label: 'Taranaki' },
+    { value: 'Southland', label: 'Southland' },
+    { value: 'Northland', label: 'Northland' },
+    { value: 'Nelson', label: 'Nelson' },
+    { value: 'Marlborough', label: 'Marlborough' },
+    { value: 'Gisborne', label: 'Gisborne' },
+    { value: 'West Coast', label: 'West Coast' },
+    { value: 'Tasman', label: 'Tasman' },
+  ],
+  'United States': [
+    { value: 'AL', label: 'Alabama' },
+    { value: 'AK', label: 'Alaska' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'AR', label: 'Arkansas' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
+    { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
+    { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
+    { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
+    { value: 'WY', label: 'Wyoming' },
+    { value: 'DC', label: 'Washington D.C.' },
+  ],
+  'United Kingdom': [
+    { value: 'England', label: 'England' },
+    { value: 'Scotland', label: 'Scotland' },
+    { value: 'Wales', label: 'Wales' },
+    { value: 'Northern Ireland', label: 'Northern Ireland' },
+  ],
+  Canada: [
+    { value: 'AB', label: 'Alberta' },
+    { value: 'BC', label: 'British Columbia' },
+    { value: 'MB', label: 'Manitoba' },
+    { value: 'NB', label: 'New Brunswick' },
+    { value: 'NL', label: 'Newfoundland and Labrador' },
+    { value: 'NS', label: 'Nova Scotia' },
+    { value: 'NT', label: 'Northwest Territories' },
+    { value: 'NU', label: 'Nunavut' },
+    { value: 'ON', label: 'Ontario' },
+    { value: 'PE', label: 'Prince Edward Island' },
+    { value: 'QC', label: 'Quebec' },
+    { value: 'SK', label: 'Saskatchewan' },
+    { value: 'YT', label: 'Yukon' },
+  ],
+  Ireland: [
+    { value: 'Carlow', label: 'Carlow' },
+    { value: 'Cavan', label: 'Cavan' },
+    { value: 'Clare', label: 'Clare' },
+    { value: 'Cork', label: 'Cork' },
+    { value: 'Donegal', label: 'Donegal' },
+    { value: 'Dublin', label: 'Dublin' },
+    { value: 'Galway', label: 'Galway' },
+    { value: 'Kerry', label: 'Kerry' },
+    { value: 'Kildare', label: 'Kildare' },
+    { value: 'Kilkenny', label: 'Kilkenny' },
+    { value: 'Laois', label: 'Laois' },
+    { value: 'Leitrim', label: 'Leitrim' },
+    { value: 'Limerick', label: 'Limerick' },
+    { value: 'Longford', label: 'Longford' },
+    { value: 'Louth', label: 'Louth' },
+    { value: 'Mayo', label: 'Mayo' },
+    { value: 'Meath', label: 'Meath' },
+    { value: 'Monaghan', label: 'Monaghan' },
+    { value: 'Offaly', label: 'Offaly' },
+    { value: 'Roscommon', label: 'Roscommon' },
+    { value: 'Sligo', label: 'Sligo' },
+    { value: 'Tipperary', label: 'Tipperary' },
+    { value: 'Waterford', label: 'Waterford' },
+    { value: 'Westmeath', label: 'Westmeath' },
+    { value: 'Wexford', label: 'Wexford' },
+    { value: 'Wicklow', label: 'Wicklow' },
+  ],
+  'South Africa': [
+    { value: 'EC', label: 'Eastern Cape' },
+    { value: 'FS', label: 'Free State' },
+    { value: 'GP', label: 'Gauteng' },
+    { value: 'KZN', label: 'KwaZulu-Natal' },
+    { value: 'LP', label: 'Limpopo' },
+    { value: 'MP', label: 'Mpumalanga' },
+    { value: 'NC', label: 'Northern Cape' },
+    { value: 'NW', label: 'North West' },
+    { value: 'WC', label: 'Western Cape' },
+  ],
+};
+
+// Helper to get regions for a country
+const getRegionsForCountry = (country: string) => REGIONS_BY_COUNTRY[country] || null;
 
 interface ProfileData {
   firstName: string;
@@ -109,10 +245,20 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      // Clear location when country changes (regions are country-specific)
+      if (field === 'country' && value !== prev.country) {
+        return {
+          ...prev,
+          [field]: value,
+          location: '', // Reset state/region when country changes
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
 
@@ -254,35 +400,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        {/* Location - dropdown for organizations, text input for others */}
+        {/* Country first, then State/Region (adapts based on country) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="location" className="mb-2 block">{config.fields.hasStateDropdown ? 'State' : 'Location'}</Label>
-            {config.fields.hasStateDropdown ? (
-              <Select
-                value={formData.location}
-                onValueChange={(value) => handleInputChange('location', value)}
-              >
-                <SelectTrigger id="location">
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AUSTRALIAN_STATES.map((state) => (
-                    <SelectItem key={state.value} value={state.value}>
-                      {state.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Sydney, NSW"
-              />
-            )}
-          </div>
           <div className="space-y-2">
             <Label htmlFor="country" className="mb-2 block">Country</Label>
             {config.fields.hasStateDropdown ? (
@@ -307,6 +426,35 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                 value={formData.country}
                 onChange={(e) => handleInputChange('country', e.target.value)}
                 placeholder="Australia"
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location" className="mb-2 block">
+              {config.fields.hasStateDropdown ? (getRegionsForCountry(formData.country) ? 'State/Region' : 'Location') : 'Location'}
+            </Label>
+            {config.fields.hasStateDropdown && getRegionsForCountry(formData.country) ? (
+              <Select
+                value={formData.location}
+                onValueChange={(value) => handleInputChange('location', value)}
+              >
+                <SelectTrigger id="location">
+                  <SelectValue placeholder="Select state/region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getRegionsForCountry(formData.country)!.map((region) => (
+                    <SelectItem key={region.value} value={region.value}>
+                      {region.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder={config.fields.hasStateDropdown ? "City or region" : "Sydney, NSW"}
               />
             )}
           </div>
