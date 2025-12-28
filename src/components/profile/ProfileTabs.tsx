@@ -72,14 +72,10 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
         <TabsTrigger
           value={isIndustryUser ? "invoices" : "tickets"}
           className="flex items-center gap-2 relative"
-          disabled={isComedianLite && isIndustryUser}
         >
           {isIndustryUser ? <Receipt className="w-4 h-4" /> : <Ticket className="w-4 h-4" />}
           <span className="hidden sm:inline">
             {isIndustryUser ? "Invoices" : "Tickets"}
-            {isComedianLite && isIndustryUser && (
-              <span className="ml-1 text-xs text-gray-400">(Coming Soon)</span>
-            )}
           </span>
         </TabsTrigger>
         <TabsTrigger value="vouches" className="flex items-center gap-2">
@@ -213,36 +209,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
       {isIndustryUser ? (
         <TabsContent value="invoices">
-          {isComedianLite ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5" />
-                  Invoices - Coming Soon
-                </CardTitle>
-                <CardDescription>
-                  Invoice management will be available once the system is complete
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  We're currently building out the invoice system with full Xero integration.
-                  This feature will allow you to:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li>Generate professional invoices for your gigs</li>
-                  <li>Track payments and outstanding amounts</li>
-                  <li>Sync with Xero accounting software</li>
-                  <li>View detailed payment history</li>
-                </ul>
-                <p className="text-sm text-muted-foreground pt-4">
-                  Check back soon - we'll notify you when this feature goes live!
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <InvoiceManagement />
-          )}
+          <InvoiceManagement />
         </TabsContent>
       ) : (
         <TabsContent value="tickets">

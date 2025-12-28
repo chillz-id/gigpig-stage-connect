@@ -13,6 +13,7 @@ import { GiveVouchForm } from '@/components/GiveVouchForm';
 import { VouchHistory } from '@/components/VouchHistory';
 import OrganizationHeader from './OrganizationHeader';
 import OrganizationSettings from './OrganizationSettings';
+import OrganizationInvoicesContent from '@/pages/organization/OrganizationInvoices';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -319,10 +320,7 @@ export const OrganizationProfileEditorLayout: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="invoices" className="flex items-center gap-2 relative">
               <Receipt className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                Invoices
-                <span className="ml-1 text-xs text-gray-400">(Soon)</span>
-              </span>
+              <span className="hidden sm:inline">Invoices</span>
             </TabsTrigger>
             <TabsTrigger value="events" className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4" />
@@ -360,34 +358,9 @@ export const OrganizationProfileEditorLayout: React.FC = () => {
             <ProfileCalendarView />
           </TabsContent>
 
-          {/* Invoices Tab - Coming Soon */}
+          {/* Invoices Tab */}
           <TabsContent value="invoices">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5" />
-                  Invoices - Coming Soon
-                </CardTitle>
-                <CardDescription>
-                  Invoice management will be available once the system is complete
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  We're currently building out the invoice system with full Xero integration. This
-                  feature will allow you to:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li>Generate professional invoices for your events</li>
-                  <li>Track payments and outstanding amounts</li>
-                  <li>Sync with Xero accounting software</li>
-                  <li>View detailed payment history</li>
-                </ul>
-                <p className="text-sm text-muted-foreground pt-4">
-                  Check back soon - we'll notify you when this feature goes live!
-                </p>
-              </CardContent>
-            </Card>
+            <OrganizationInvoicesContent />
           </TabsContent>
 
           {/* Events Tab - External link, content won't render but needed for routing */}

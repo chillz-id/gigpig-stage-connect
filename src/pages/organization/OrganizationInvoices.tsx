@@ -135,12 +135,12 @@ export default function OrganizationInvoices() {
   }
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Invoices</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="text-2xl font-bold">Invoices</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage invoices for {organization.organization_name}
           </p>
         </div>

@@ -94,6 +94,7 @@ serve(async (req) => {
       console.log('Connected to Xero tenant:', tenant.tenantName)
 
       // Store in database - either for user or organization
+      // Use check-then-insert/update instead of upsert to avoid partial unique index issues
       const integrationData: Record<string, any> = {
         tenant_id: tenant.tenantId,
         tenant_name: tenant.tenantName,
@@ -103,21 +104,65 @@ serve(async (req) => {
         connection_status: 'active',
       }
 
-      if (organization_id) {
-        // Organization-level connection
-        integrationData.organization_id = organization_id
-        console.log('Saving as organization-level connection for org:', organization_id)
-      } else {
-        // User-level connection
-        integrationData.user_id = user.id
-        console.log('Saving as user-level connection for user:', user.id)
-      }
+      let dbError: any = null
 
-      const { error: dbError } = await supabaseClient
-        .from('xero_integrations')
-        .upsert(integrationData, {
-          onConflict: organization_id ? 'organization_id' : 'user_id',
-        })
+      if (organization_id) {
+        console.log('Saving as organization-level connection for org:', organization_id)
+
+        // Check if record exists
+        const { data: existing } = await supabaseClient
+          .from('xero_integrations')
+          .select('id')
+          .eq('organization_id', organization_id)
+          .single()
+
+        if (existing) {
+          // Update existing record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .update(integrationData)
+            .eq('id', existing.id)
+          dbError = error
+        } else {
+          // Insert new record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .insert({
+              ...integrationData,
+              organization_id,
+              created_at: new Date().toISOString(),
+            })
+          dbError = error
+        }
+      } else {
+        console.log('Saving as user-level connection for user:', user.id)
+
+        // Check if record exists
+        const { data: existing } = await supabaseClient
+          .from('xero_integrations')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (existing) {
+          // Update existing record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .update(integrationData)
+            .eq('id', existing.id)
+          dbError = error
+        } else {
+          // Insert new record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .insert({
+              ...integrationData,
+              user_id: user.id,
+              created_at: new Date().toISOString(),
+            })
+          dbError = error
+        }
+      }
 
       if (dbError) {
         console.error('Database error:', dbError)
