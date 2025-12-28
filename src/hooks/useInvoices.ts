@@ -70,7 +70,7 @@ export const useInvoices = () => {
           deposit_paid_date,
           deposit_paid_amount,
           event_date,
-          invoice_recipients (
+          invoice_recipients!invoice_recipients_invoice_id_fkey (
             recipient_name,
             recipient_email,
             recipient_mobile,
