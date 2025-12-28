@@ -11,6 +11,7 @@ export interface Profile {
   name_display_preference: 'real' | 'stage' | 'both';
   bio: string | null;
   location: string | null;
+  country: string | null;
   avatar_url: string | null;
   is_verified: boolean;
   created_at: string;

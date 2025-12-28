@@ -23,6 +23,7 @@ export const useProfileOperations = () => {
           name_display_preference,
           bio,
           location,
+          country,
           avatar_url,
           is_verified,
           created_at,
