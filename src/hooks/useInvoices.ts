@@ -7,11 +7,15 @@ import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, is
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user, hasRole, isLoading: authLoading } = useAuth();
+  const { user, hasRole, isLoading: authLoading, roles } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchAttempted = useRef(false);
+
+  // Roles are loaded when the array has items OR when auth is done and user has no roles
+  // For authenticated users, we need to wait for roles to be populated
+  const rolesLoaded = !user || roles.length > 0 || (!authLoading && roles.length === 0);
 
   const fetchInvoices = useCallback(async () => {
     if (!user) {
@@ -111,9 +115,14 @@ export const useInvoices = () => {
   }, [user]);
 
   useEffect(() => {
-    // Wait for auth to finish loading before making any decisions
-    if (authLoading) {
-      console.log('=== AUTH STILL LOADING, WAITING... ===');
+    // Wait for roles to be loaded before making any decisions
+    // This handles the race condition where auth loads but roles haven't been fetched yet
+    if (!rolesLoaded) {
+      console.log('=== ROLES NOT YET LOADED, WAITING... ===', {
+        hasUser: !!user,
+        rolesCount: roles.length,
+        authLoading
+      });
       return;
     }
 
@@ -123,22 +132,23 @@ export const useInvoices = () => {
       console.log('=== FETCHING INVOICES ===', user.id, {
         hasComedian: hasRole('comedian'),
         hasComedianLite: hasRole('comedian_lite'),
-        hasAdmin: hasRole('admin')
+        hasAdmin: hasRole('admin'),
+        rolesCount: roles.length
       });
       fetchAttempted.current = true;
       fetchInvoices();
-    } else if (!authLoading) {
-      // Only clear/reset after auth is done loading
+    } else if (rolesLoaded) {
+      // Only clear/reset after roles are loaded
       console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===', {
         hasUser: !!user,
         canAccessInvoices,
-        authLoading
+        rolesCount: roles.length
       });
       setInvoices([]);
       setLoading(false);
       setError(null);
     }
-  }, [fetchInvoices, hasRole, user, authLoading]);
+  }, [fetchInvoices, hasRole, user, rolesLoaded, roles.length, authLoading]);
 
   const deleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;
