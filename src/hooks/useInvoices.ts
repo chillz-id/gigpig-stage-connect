@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -7,10 +7,11 @@ import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, is
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, isLoading: authLoading } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchAttempted = useRef(false);
 
   const fetchInvoices = useCallback(async () => {
     if (!user) {
@@ -110,16 +111,34 @@ export const useInvoices = () => {
   }, [user]);
 
   useEffect(() => {
-    if (user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'))) {
-      console.log('=== FETCHING INVOICES ===', user.id);
+    // Wait for auth to finish loading before making any decisions
+    if (authLoading) {
+      console.log('=== AUTH STILL LOADING, WAITING... ===');
+      return;
+    }
+
+    const canAccessInvoices = hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin');
+
+    if (user && canAccessInvoices) {
+      console.log('=== FETCHING INVOICES ===', user.id, {
+        hasComedian: hasRole('comedian'),
+        hasComedianLite: hasRole('comedian_lite'),
+        hasAdmin: hasRole('admin')
+      });
+      fetchAttempted.current = true;
       fetchInvoices();
-    } else {
-      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===');
+    } else if (!authLoading) {
+      // Only clear/reset after auth is done loading
+      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===', {
+        hasUser: !!user,
+        canAccessInvoices,
+        authLoading
+      });
       setInvoices([]);
       setLoading(false);
       setError(null);
     }
-  }, [fetchInvoices, hasRole, user]);
+  }, [fetchInvoices, hasRole, user, authLoading]);
 
   const deleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;

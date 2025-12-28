@@ -33,7 +33,7 @@ const transformInvoiceForDetails = (invoice: Invoice) => {
 };
 
 export const InvoiceManagement: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, isLoading: authLoading } = useAuth();
   const { invoices, loading, error, deleteInvoice, filterInvoices, refetchInvoices } = useInvoices();
   const bulkOperations = useBulkInvoiceOperations();
   const {
@@ -128,7 +128,12 @@ export const InvoiceManagement: React.FC = () => {
     setIsSelectionMode(false);
   };
 
-  // Show authentication error if user doesn't have the right role
+  // Show loading while auth is still loading
+  if (authLoading || loading) {
+    return <InvoiceLoadingState />;
+  }
+
+  // Show authentication error if user doesn't have the right role (only after auth is done loading)
   if (!user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'))) {
     return (
       <Card className="border-amber-200 bg-amber-50">
@@ -141,10 +146,6 @@ export const InvoiceManagement: React.FC = () => {
         </CardContent>
       </Card>
     );
-  }
-
-  if (loading) {
-    return <InvoiceLoadingState />;
   }
 
   // Show error state
