@@ -7,15 +7,16 @@ import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, is
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user, hasRole, isLoading: authLoading, roles } = useAuth();
+  const { user, hasRole, isLoading: authLoading, roles, profile } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchAttempted = useRef(false);
 
-  // Roles are loaded when the array has items OR when auth is done and user has no roles
-  // For authenticated users, we need to wait for roles to be populated
-  const rolesLoaded = !user || roles.length > 0 || (!authLoading && roles.length === 0);
+  // Profile and roles are fetched together in the same setTimeout callback in AuthContext
+  // So we can use profile !== null as an indicator that roles have also been loaded
+  // This handles the race condition where authLoading becomes false BEFORE roles are fetched
+  const initialDataLoaded = !user || profile !== null;
 
   const fetchInvoices = useCallback(async () => {
     if (!user) {
@@ -115,13 +116,13 @@ export const useInvoices = () => {
   }, [user]);
 
   useEffect(() => {
-    // Wait for roles to be loaded before making any decisions
-    // This handles the race condition where auth loads but roles haven't been fetched yet
-    if (!rolesLoaded) {
-      console.log('=== ROLES NOT YET LOADED, WAITING... ===', {
+    // Wait for profile/roles to be loaded before making any decisions
+    // Profile and roles are fetched together, so profile !== null means roles are ready too
+    if (!initialDataLoaded) {
+      console.log('=== WAITING FOR PROFILE/ROLES TO LOAD ===', {
         hasUser: !!user,
-        rolesCount: roles.length,
-        authLoading
+        hasProfile: !!profile,
+        rolesCount: roles.length
       });
       return;
     }
@@ -137,8 +138,8 @@ export const useInvoices = () => {
       });
       fetchAttempted.current = true;
       fetchInvoices();
-    } else if (rolesLoaded) {
-      // Only clear/reset after roles are loaded
+    } else if (initialDataLoaded) {
+      // Only clear/reset after initial data is loaded
       console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===', {
         hasUser: !!user,
         canAccessInvoices,
@@ -148,7 +149,7 @@ export const useInvoices = () => {
       setLoading(false);
       setError(null);
     }
-  }, [fetchInvoices, hasRole, user, rolesLoaded, roles.length, authLoading]);
+  }, [fetchInvoices, hasRole, user, initialDataLoaded, profile, roles.length]);
 
   const deleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;

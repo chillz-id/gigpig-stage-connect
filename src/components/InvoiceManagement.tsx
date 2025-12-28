@@ -33,7 +33,7 @@ const transformInvoiceForDetails = (invoice: Invoice) => {
 };
 
 export const InvoiceManagement: React.FC = () => {
-  const { user, hasRole, isLoading: authLoading } = useAuth();
+  const { user, hasRole, isLoading: authLoading, profile } = useAuth();
   const { invoices, loading, error, deleteInvoice, filterInvoices, refetchInvoices } = useInvoices();
   const bulkOperations = useBulkInvoiceOperations();
   const {
@@ -128,12 +128,16 @@ export const InvoiceManagement: React.FC = () => {
     setIsSelectionMode(false);
   };
 
-  // Show loading while auth is still loading
-  if (authLoading || loading) {
+  // Wait for profile to load - profile and roles are fetched together
+  // This prevents showing "Access Required" error before roles are actually loaded
+  const initialDataLoaded = !user || profile !== null;
+
+  // Show loading while auth or initial data is still loading
+  if (authLoading || loading || (user && !initialDataLoaded)) {
     return <InvoiceLoadingState />;
   }
 
-  // Show authentication error if user doesn't have the right role (only after auth is done loading)
+  // Show authentication error if user doesn't have the right role (only after profile/roles are loaded)
   if (!user || (!hasRole('comedian') && !hasRole('comedian_lite') && !hasRole('admin'))) {
     return (
       <Card className="border-amber-200 bg-amber-50">
