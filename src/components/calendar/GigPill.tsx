@@ -34,15 +34,17 @@ interface GigPillProps {
  * - Orange: Pending gigs awaiting confirmation
  */
 function GigPillComponent({ event, onDelete, onClick, showDelete = false }: GigPillProps) {
-  // Format time from ISO string
+  // Format time from date string - handles both ISO (T separator) and timestamp (space separator)
   const time = React.useMemo(() => {
     if (!event.date) return 'TBA';
 
-    const timeMatch = event.date.match(/T(\d{2}):(\d{2})/);
-    if (!timeMatch) return 'TBA';
+    // Parse the date and convert to local time
+    // Handles: "2025-12-29T08:00:00" or "2025-12-29 08:00:00+00"
+    const date = new Date(event.date);
+    if (isNaN(date.getTime())) return 'TBA';
 
-    const hours = parseInt(timeMatch[1], 10);
-    const minutes = timeMatch[2];
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
 
     // Convert to 12-hour format
     if (hours === 0) {
