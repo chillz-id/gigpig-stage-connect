@@ -170,11 +170,13 @@ export const ProfileCalendarView: React.FC = () => {
     // Add confirmed and pending bookings
     confirmedBookings.forEach(booking => {
       if (booking.events) {
+        // Use event_date as base, start_time is just HH:MM:SS (not a full datetime)
+        const eventDate = booking.events.event_date;
         events.push({
           id: booking.id,
           title: booking.events.title,
           venue: booking.events.venue,
-          date: booking.events.start_time || booking.events.event_date,
+          date: eventDate,
           end_time: null,
           type: booking.status === 'confirmed' ? 'confirmed' : 'pending' as GigType,
           notes: null
@@ -241,7 +243,11 @@ export const ProfileCalendarView: React.FC = () => {
     const grouped: Record<string, GigPillEvent[]> = {};
 
     filteredEvents.forEach(event => {
-      const dateKey = event.date.split('T')[0];
+      if (!event.date) return;
+      // Handle both ISO format (2025-12-29T19:00:00) and timestamp format (2025-12-29 08:00:00+00)
+      const dateKey = event.date.includes('T')
+        ? event.date.split('T')[0]
+        : event.date.split(' ')[0];
       if (!dateKey) return;
 
       if (!grouped[dateKey]) {
