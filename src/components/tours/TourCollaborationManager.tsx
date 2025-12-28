@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { 
   Users, 
@@ -590,19 +592,17 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="decision_making"
               checked={formData.decision_making_power}
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                decision_making_power: e.target.checked 
+              onCheckedChange={(checked) => setFormData(prev => ({
+                ...prev,
+                decision_making_power: checked === true
               }))}
-              className="rounded border-slate-600 bg-slate-900"
             />
-            <label htmlFor="decision_making" className="text-sm">
+            <Label htmlFor="decision_making" className="text-sm cursor-pointer">
               Grant decision-making power for tour management
-            </label>
+            </Label>
           </div>
 
           <div className="flex gap-3 pt-6">

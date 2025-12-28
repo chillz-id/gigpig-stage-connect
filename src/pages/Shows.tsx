@@ -8,6 +8,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Calendar } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { ShowTypeFilter, type ShowType } from '@/components/shows/ShowTypeFilter';
 import { AgeRestrictionToggle, type AgeRestriction } from '@/components/shows/AgeRestrictionToggle';
 import { ComedianSearchFilter } from '@/components/shows/ComedianSearchFilter';
@@ -172,16 +174,14 @@ const Shows = () => {
               <ComedianSearchFilter value={comedianSearch} onChange={setComedianSearch} />
             </div>
             <div className="mt-4 flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="show-past-shows"
                 checked={showPastShows}
-                onChange={(e) => setShowPastShows(e.target.checked)}
-                className="rounded"
+                onCheckedChange={(checked) => setShowPastShows(checked === true)}
               />
-              <label htmlFor="show-past-shows" className="text-sm cursor-pointer">
+              <Label htmlFor="show-past-shows" className="text-sm cursor-pointer">
                 Show past shows
-              </label>
+              </Label>
             </div>
           </CardContent>
         </Card>

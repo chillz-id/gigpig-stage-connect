@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -67,14 +68,12 @@ export const DepositCalculator: React.FC<DepositCalculatorProps> = ({
         <CardContent className="space-y-4">
           {/* Require Deposit Toggle */}
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="requireDeposit"
               checked={invoiceData.requireDeposit}
-              onChange={(e) => onUpdateInvoiceData({ requireDeposit: e.target.checked })}
-              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              onCheckedChange={(checked) => onUpdateInvoiceData({ requireDeposit: checked === true })}
             />
-            <Label htmlFor="requireDeposit" className="text-sm font-medium">
+            <Label htmlFor="requireDeposit" className="text-sm font-medium cursor-pointer">
               Require deposit for this invoice
             </Label>
           </div>
@@ -200,8 +199,8 @@ export const DepositCalculator: React.FC<DepositCalculatorProps> = ({
               </div>
 
               {/* Deposit Summary */}
-              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-                <h4 className="font-medium text-blue-900">Deposit Summary</h4>
+              <div className="bg-primary/10 p-4 rounded-lg space-y-2">
+                <h4 className="font-medium text-foreground">Deposit Summary</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Total Invoice Amount:</span>
@@ -209,14 +208,14 @@ export const DepositCalculator: React.FC<DepositCalculatorProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span>Deposit Required:</span>
-                    <span className="font-medium text-blue-600">${depositAmount.toFixed(2)}</span>
+                    <span className="font-medium text-primary">${depositAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between border-t pt-1">
+                  <div className="flex justify-between border-t border-border pt-1">
                     <span>Remaining Balance:</span>
                     <span className="font-medium">${remainingAmount.toFixed(2)}</span>
                   </div>
                   {invoiceData.eventDate && (
-                    <div className="flex justify-between text-xs text-gray-600">
+                    <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Deposit Due:</span>
                       <span>
                         {format(
