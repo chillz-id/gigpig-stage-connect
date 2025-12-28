@@ -67,30 +67,30 @@ export function DayEventsModal({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
       <div className={cn(
         "fixed inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl overflow-hidden",
-        "bg-white animate-in slide-in-from-bottom duration-300"
+        "bg-card animate-in slide-in-from-bottom duration-300"
       )}>
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-foreground">
               {format(date, 'EEEE, MMMM d')}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {events.length} event{events.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-full hover:bg-muted transition-colors"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         {/* Select All (for comedians) */}
         {isComedian && events.length > 1 && onToggleAvailability && (
-          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+          <div className="px-4 py-2 bg-muted border-b border-border">
             <Button
               onClick={handleSelectAll}
               variant="secondary"
@@ -126,26 +126,26 @@ export function DayEventsModal({
                   "p-4 rounded-xl border transition-all",
                   isComedian && "cursor-pointer active:scale-[0.98]",
                   isSelected
-                    ? "bg-green-50 border-green-500"
-                    : "bg-white border-gray-200 hover:border-gray-300"
+                    ? "bg-green-50 border-green-500 dark:bg-green-950/50"
+                    : "bg-card border-border hover:border-muted-foreground"
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     {/* Time */}
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">
                       <Clock className="w-3.5 h-3.5" />
                       <span>{eventTime}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                    <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
                       {event.title}
                     </h3>
 
                     {/* Venue */}
                     {event.venue && (
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                         <span className="truncate">{event.venue}</span>
                       </div>
@@ -185,7 +185,7 @@ export function DayEventsModal({
         </div>
 
         {/* Bottom Safe Area */}
-        <div className="h-6 bg-white" />
+        <div className="h-6 bg-card" />
       </div>
     </div>
   );

@@ -12,7 +12,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
-import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { Suspense, useState, useEffect, lazy } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
@@ -162,11 +161,6 @@ const PWAIntegration = () => {
 
   return (
     <>
-      {/* Offline indicator in bottom right */}
-      <div className="fixed bottom-20 right-4 z-40 md:bottom-6">
-        <OfflineIndicator />
-      </div>
-
       {/* PWA installer modal */}
       {showInstaller && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

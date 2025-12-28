@@ -126,27 +126,27 @@ export function MobileCalendarView({
   const partialDotColor = theme === 'pleasure' ? 'bg-pink-300' : 'bg-red-300';
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-4">
+    <div className="bg-card rounded-2xl shadow-lg p-4">
       {/* Month Navigation Header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={handlePrevMonth}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-full hover:bg-muted transition-colors"
           aria-label="Previous month"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
         </button>
 
-        <h2 className="text-lg font-bold text-gray-800">
+        <h2 className="text-lg font-bold text-foreground">
           {format(selectedMonth, 'MMMM yyyy')}
         </h2>
 
         <button
           onClick={handleNextMonth}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-full hover:bg-muted transition-colors"
           aria-label="Next month"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
 
@@ -155,7 +155,7 @@ export function MobileCalendarView({
         {dayHeaders.map((day, idx) => (
           <div
             key={idx}
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="text-center text-xs font-medium text-muted-foreground py-2"
           >
             {day}
           </div>
@@ -201,7 +201,7 @@ export function MobileCalendarView({
 
               {/* Today subtle highlight */}
               {isCurrentDay && !hasEvents && (
-                <div className="absolute inset-1 rounded-full bg-gray-200" />
+                <div className="absolute inset-1 rounded-full bg-muted" />
               )}
 
               {/* Day number */}
@@ -209,8 +209,8 @@ export function MobileCalendarView({
                 className={cn(
                   "relative z-10",
                   hasEvents && isCurrentMonth && "text-white font-semibold",
-                  !hasEvents && isCurrentMonth && "text-gray-700",
-                  isCurrentDay && !hasEvents && "text-gray-900 font-semibold",
+                  !hasEvents && isCurrentMonth && "text-foreground",
+                  isCurrentDay && !hasEvents && "text-foreground font-semibold",
                 )}
               >
                 {format(day, 'd')}
@@ -218,7 +218,7 @@ export function MobileCalendarView({
 
               {/* Event count badge (if more than 1 event) */}
               {hasEvents && dayEvents.length > 1 && isCurrentMonth && (
-                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white rounded-full text-[10px] font-bold text-gray-700 flex items-center justify-center shadow-sm">
+                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-card rounded-full text-[10px] font-bold text-foreground flex items-center justify-center shadow-sm">
                   {dayEvents.length}
                 </span>
               )}
@@ -228,7 +228,7 @@ export function MobileCalendarView({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-500">
+      <div className="mt-4 pt-3 border-t border-border flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <div className={cn("w-3 h-3 rounded-full", eventDotColor)} />
           <span>Events</span>

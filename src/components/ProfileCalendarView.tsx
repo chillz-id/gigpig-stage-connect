@@ -170,13 +170,32 @@ export const ProfileCalendarView: React.FC = () => {
     // Add confirmed and pending bookings
     confirmedBookings.forEach(booking => {
       if (booking.events) {
-        // Use event_date as base, start_time is just HH:MM:SS (not a full datetime)
-        const eventDate = booking.events.event_date;
+        // event_date is stored in UTC (e.g., "2025-12-29 08:00:00+00")
+        // start_time is stored as local time (e.g., "19:00" or "19:00:00")
+        // We need to combine the DATE from event_date with the TIME from start_time
+        const eventDateRaw = booking.events.event_date;
+        const startTime = booking.events.start_time;
+
+        // Extract date portion (YYYY-MM-DD) from event_date
+        const datePortion = eventDateRaw?.includes('T')
+          ? eventDateRaw.split('T')[0]
+          : eventDateRaw?.split(' ')[0];
+
+        // Combine date with local start_time, falling back to event_date if no start_time
+        let combinedDateTime: string;
+        if (datePortion && startTime) {
+          // Create ISO-like string with local time: "2025-12-29T19:00:00"
+          combinedDateTime = `${datePortion}T${startTime}`;
+        } else {
+          // Fallback to original event_date if start_time is missing
+          combinedDateTime = eventDateRaw;
+        }
+
         events.push({
           id: booking.id,
           title: booking.events.title,
           venue: booking.events.venue,
-          date: eventDate,
+          date: combinedDateTime,
           end_time: null,
           type: booking.status === 'confirmed' ? 'confirmed' : 'pending' as GigType,
           notes: null
