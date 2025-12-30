@@ -290,7 +290,7 @@ function App() {
                               {/* Comedian routes now use nested routing via ComedianProfileLayout */}
                               {/* Keys force React to unmount/remount when switching between profile types */}
                               <Route path="/manager/:slug/*" element={<PublicProfile type="manager" key="manager-profile" />} />
-                              <Route path="/org/:slug/*" element={<PublicProfile type="organization" key="org-profile" />} />
+                              <Route path="/org/:slug/*" element={<PublicProfile type="organization" />} />
                               <Route path="/venue/:slug/*" element={<PublicProfile type="venue" key="venue-profile" />} />
                               <Route path="/photographer/:slug/*" element={<PublicProfile type="photographer" key="photographer-profile" />} />
 

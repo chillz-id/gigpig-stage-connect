@@ -493,6 +493,7 @@ export default function CreateOrganizationEvent() {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <Button
+                type="button"
                 onClick={() => navigate(`/org/${orgSlug}/events`)}
                 className="professional-button flex items-center gap-2"
                 size="sm"
