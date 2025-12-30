@@ -72,6 +72,7 @@ const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
 const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const BugTracker = lazy(() => import('@/pages/BugTracker'));
 const ABNChecker = lazy(() => import('@/pages/ABNChecker'));
+const ComedianEvents = lazy(() => import('@/pages/ComedianEvents'));
 const ComedianLinksPage = lazy(() => import('@/pages/ComedianLinksPage'));
 const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
 
@@ -207,6 +208,7 @@ function App() {
                               <Route path="/post-signup-setup" element={<PostSignupSetup />} />
                               <Route path="/dashboard" element={<Dashboard />} />
                               <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
+                              <Route path="/my-events" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><ComedianEvents /></ProtectedRoute>} />
                               <Route path="/gigs" element={<Gigs />} />
                               <Route path="/shows" element={<Shows />} />
                               <Route path="/browse" element={<Navigate to="/gigs" replace />} />
