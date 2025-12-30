@@ -144,9 +144,11 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   // Filter menu items based on role and permissions
   const availableItems = useMemo(() => {
     return MENU_ITEMS.filter((item) => {
-      // "My Events" only shows when an organization profile is active
+      // "My Events" shows for organizations OR comedians/comedian_lite
       if (item.id === 'my-events') {
-        if (activeProfileData?.type !== 'organization') {
+        const isOrg = activeProfileData?.type === 'organization';
+        const isComedian = primaryRole === 'comedian' || primaryRole === 'comedian_lite';
+        if (!isOrg && !isComedian) {
           return false;
         }
       }
