@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveProfile } from '@/contexts/ProfileContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext';
@@ -48,7 +48,6 @@ const TABLE_MAP = {
 export default function PublicProfile({ type }: PublicProfileProps) {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { setActiveProfile } = useActiveProfile();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -158,34 +157,39 @@ export default function PublicProfile({ type }: PublicProfileProps) {
     return <NotFoundHandler profileType={type} attemptedSlug={slug || ''} />;
   }
 
+  // Suspense wrapper for lazy-loaded components
+  const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+
   // For organization profiles, use the full organization pages with OrganizationProvider
   if (type === 'organization') {
     return (
       <OrganizationProvider>
         <ErrorBoundary>
-          <Suspense
-            fallback={
-              <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
-                <LoadingSpinner size="lg" />
-              </div>
-            }
-          >
-            <Routes key={location.pathname}>
+          <Routes>
             <Route index element={<OrganizationProfileWrapper />} />
-            <Route path="edit" element={<OrganizationProfileEditorLayout />} />
-            <Route path="dashboard" element={<OrganizationDashboard />} />
-            <Route path="events" element={<OrganizationEvents />} />
-            <Route path="events/create" element={<CreateOrganizationEvent />} />
-            <Route path="events/tours" element={<OrganizationEventTours />} />
-            <Route path="team" element={<OrganizationTeam />} />
-            <Route path="tasks" element={<OrganizationTasks />} />
-            <Route path="analytics" element={<OrganizationAnalytics />} />
-            <Route path="media" element={<OrganizationMediaLibrary />} />
-            <Route path="invoices" element={<OrganizationInvoices />} />
-            <Route path="book-comedian" element={<OrganizationBookComedian />} />
+            <Route path="edit" element={<SuspenseWrapper><OrganizationProfileEditorLayout /></SuspenseWrapper>} />
+            <Route path="dashboard" element={<SuspenseWrapper><OrganizationDashboard /></SuspenseWrapper>} />
+            <Route path="events" element={<SuspenseWrapper><OrganizationEvents /></SuspenseWrapper>} />
+            <Route path="events/create" element={<SuspenseWrapper><CreateOrganizationEvent /></SuspenseWrapper>} />
+            <Route path="events/tours" element={<SuspenseWrapper><OrganizationEventTours /></SuspenseWrapper>} />
+            <Route path="team" element={<SuspenseWrapper><OrganizationTeam /></SuspenseWrapper>} />
+            <Route path="tasks" element={<SuspenseWrapper><OrganizationTasks /></SuspenseWrapper>} />
+            <Route path="analytics" element={<SuspenseWrapper><OrganizationAnalytics /></SuspenseWrapper>} />
+            <Route path="media" element={<SuspenseWrapper><OrganizationMediaLibrary /></SuspenseWrapper>} />
+            <Route path="invoices" element={<SuspenseWrapper><OrganizationInvoices /></SuspenseWrapper>} />
+            <Route path="book-comedian" element={<SuspenseWrapper><OrganizationBookComedian /></SuspenseWrapper>} />
             <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          </Routes>
         </ErrorBoundary>
       </OrganizationProvider>
     );
