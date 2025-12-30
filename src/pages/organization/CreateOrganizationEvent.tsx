@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -492,15 +492,13 @@ export default function CreateOrganizationEvent() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                onClick={() => navigate(`/org/${orgSlug}/events`)}
-                className="professional-button flex items-center gap-2"
-                size="sm"
+              <Link
+                to={`/org/${orgSlug}/events`}
+                className="professional-button flex items-center gap-2 px-3 py-1.5 text-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
-              </Button>
+              </Link>
               <h1 className="text-2xl font-bold text-white">
                 {currentDraftId ? 'Edit Draft' : 'Create Event'}
               </h1>
