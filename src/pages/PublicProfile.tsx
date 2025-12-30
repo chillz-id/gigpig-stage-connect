@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveProfile } from '@/contexts/ProfileContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext';
@@ -48,6 +48,8 @@ const TABLE_MAP = {
 export default function PublicProfile({ type }: PublicProfileProps) {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  // Subscribe to location to ensure re-renders on navigation
+  const location = useLocation();
   const { setActiveProfile } = useActiveProfile();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -172,6 +174,9 @@ export default function PublicProfile({ type }: PublicProfileProps) {
 
   // For organization profiles, use the full organization pages with OrganizationProvider
   if (type === 'organization') {
+    // Debug: Log current location to verify re-renders on navigation
+    console.log('[PublicProfile] Rendering org routes, pathname:', location.pathname);
+
     return (
       <OrganizationProvider>
         <ErrorBoundary>
