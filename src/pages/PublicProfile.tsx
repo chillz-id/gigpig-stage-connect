@@ -174,11 +174,15 @@ export default function PublicProfile({ type }: PublicProfileProps) {
 
   // For organization profiles, use the full organization pages with OrganizationProvider
   if (type === 'organization') {
+    // Extract the sub-path for route matching (e.g., "events" or "events/create")
+    const basePath = `/org/${slug}`;
+    const subPath = location.pathname.replace(basePath, '').replace(/^\//, '') || 'index';
+
     // Debug: Log current location to verify re-renders on navigation
-    console.log('[PublicProfile] Rendering org routes, pathname:', location.pathname);
+    console.log('[PublicProfile] Rendering org routes, pathname:', location.pathname, 'subPath:', subPath);
 
     return (
-      <OrganizationProvider>
+      <OrganizationProvider key={subPath}>
         <ErrorBoundary>
           <Routes>
             <Route index element={<OrganizationProfileWrapper />} />
