@@ -81,7 +81,7 @@ const Gigs = () => {
   const [showDateRange, setShowDateRange] = useState(false);
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>('sydney'); // 'sydney' or 'melbourne'
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   // Image upload states for ProfileHeader
   const [selectedImage, setSelectedImage] = useState('');

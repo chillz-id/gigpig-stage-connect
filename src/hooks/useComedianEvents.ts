@@ -45,11 +45,13 @@ function transformNativeEvent(event: any, role: 'owner' | 'partner'): ComedianEv
  * Fetch events where user is owner or partner, deduplicate and sort
  */
 async function fetchUserEvents(userId: string, dateFilter?: { operator: 'gte' | 'lt'; value: string }, statusFilter?: string) {
-  // Fetch events where user is owner (promoter_id)
+  // Fetch events where user is owner (promoter_id) and NOT owned by an organization
+  // Organization events are handled separately via useOrganizationEvents
   let ownedQuery = supabase
     .from('events')
     .select('*')
-    .eq('promoter_id', userId);
+    .eq('promoter_id', userId)
+    .is('organization_id', null); // Only personal events, exclude org events
 
   if (dateFilter) {
     ownedQuery = dateFilter.operator === 'gte'
@@ -185,11 +187,12 @@ export const useComedianDraftEvents = () => {
         throw new Error('User ID is required');
       }
 
-      // Drafts are only for owned events
+      // Drafts are only for owned personal events (exclude org drafts)
       const { data: events, error } = await supabase
         .from('events')
         .select('*')
         .eq('promoter_id', user.id)
+        .is('organization_id', null) // Only personal drafts, exclude org drafts
         .eq('status', 'draft')
         .order('updated_at', { ascending: false });
 

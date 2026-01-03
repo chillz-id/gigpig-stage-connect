@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Plus, Repeat, Loader2, Trash2, Save, Send } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -87,6 +88,7 @@ export default function CreateOrganizationEvent() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { organization } = useOrganization();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const { toast } = useToast();
 
@@ -201,6 +203,7 @@ export default function CreateOrganizationEvent() {
           .insert({
             ...eventData,
             organization_id: organization.id,
+            promoter_id: user?.id, // Set who created it
             status: EventStatus.DRAFT,
           })
           .select('id')
@@ -336,6 +339,7 @@ export default function CreateOrganizationEvent() {
       const eventPromises = eventsToCreate.map(async (event) => {
         const eventData = {
           organization_id: organization.id,
+          promoter_id: user?.id, // Set who created it
           title: formData.title.trim(),
           type: formData.type || null,
           venue: formData.venue_name.trim(),

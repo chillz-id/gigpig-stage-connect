@@ -11,6 +11,7 @@ import { Calendar, ArrowLeft, Plus, Repeat } from 'lucide-react';
 import { useMyGigs } from '@/hooks/useMyGigs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useActiveProfile } from '@/contexts/ProfileContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { EventBannerUpload } from '@/components/gigs/EventBannerUpload';
@@ -21,6 +22,7 @@ const AddGig = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
+  const { activeProfile } = useActiveProfile();
   const { createGig, createRecurringGig, isCreating, isCreatingRecurring } = useMyGigs();
 
   const [formData, setFormData] = useState({
@@ -101,6 +103,10 @@ const AddGig = () => {
         endDateTime = endDate.toISOString();
       }
 
+      // Determine organization_id based on active profile
+      // If viewing as organization, set organization_id; otherwise null (personal event)
+      const organization_id = activeProfile?.type === 'organization' ? activeProfile.id : null;
+
       const baseGigData = {
         user_id: user.id,
         title: formData.title.trim(),
@@ -111,7 +117,8 @@ const AddGig = () => {
         end_datetime: endDateTime,
         description: formData.description.trim() || null,
         ticket_link: formData.ticket_link.trim() || null,
-        banner_url: formData.banner_url || null
+        banner_url: formData.banner_url || null,
+        organization_id: organization_id // Set if creating as organization
       };
 
       if (formData.is_recurring) {

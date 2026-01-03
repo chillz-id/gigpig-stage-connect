@@ -18,6 +18,10 @@ export interface OrganizationEvent {
   source: 'native' | 'humanitix' | 'eventbrite';
   canonical_source_id?: string;
 
+  // Ownership information (for native events only)
+  promoter_id?: string | null; // Who created the event
+  organization_id?: string | null; // Which organization owns the event
+
   // Financial totals (from session_complete)
   total_ticket_count?: number | null;
   total_order_count?: number | null;
@@ -107,6 +111,8 @@ function transformNativeEvent(event: any): OrganizationEvent {
     ticket_price: event.ticket_price,
     ticket_link: null,
     source: 'native',
+    promoter_id: event.promoter_id || null,
+    organization_id: event.organization_id || null,
   };
 }
 
@@ -363,6 +369,8 @@ export const useOrganizationDraftEvents = () => {
         ticket_price: event.ticket_price,
         ticket_link: event.ticket_url,
         source: 'native',
+        promoter_id: event.promoter_id || null,
+        organization_id: event.organization_id || null,
       }));
     },
     enabled: !!orgId,
