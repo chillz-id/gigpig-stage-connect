@@ -1,0 +1,6 @@
+{
+    "id": "sbevnt",
+    "name": "Supabase Events Sync",
+    "modes": ["configureManagedCollection", "syncManagedCollection"],
+    "icon": "/icon.svg"
+}

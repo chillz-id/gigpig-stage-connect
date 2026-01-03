@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface ComedianEvent {
   id: string;
   event_date: string;
+  start_time?: string | null; // Local time (e.g., "19:00:00")
   event_name: string;
   event_description?: string | null;
   event_image?: string | null;
@@ -28,6 +29,7 @@ function transformNativeEvent(event: any, role: 'owner' | 'partner'): ComedianEv
   return {
     id: event.id,
     event_date: event.event_date,
+    start_time: event.start_time || null,
     event_name: event.title || event.name || 'Untitled Event',
     event_description: event.description || event.details,
     event_image: event.banner_url || event.hero_image_url,

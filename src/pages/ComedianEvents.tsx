@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Layers,
+  Repeat,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -316,10 +317,17 @@ export default function ComedianEvents() {
                   {event.venue.name}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                {eventDate.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+              {event.start_time && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  {(() => {
+                    const [hours, minutes] = event.start_time.split(':').map(Number);
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    const displayHour = hours % 12 || 12;
+                    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+                  })()}
+                </span>
+              )}
             </div>
           </div>
 
@@ -340,6 +348,12 @@ export default function ComedianEvents() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link to="/recurring">
+            <Button variant="secondary">
+              <Repeat className="mr-2 h-4 w-4" />
+              Recurring
+            </Button>
+          </Link>
           <Link to="/tours">
             <Button variant="secondary">
               <Layers className="mr-2 h-4 w-4" />

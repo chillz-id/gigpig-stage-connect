@@ -9,7 +9,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Calendar, MapPin, Plus, LayoutGrid, List, CalendarDays, X, Clock, Eye, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Calendar, MapPin, Plus, LayoutGrid, List, CalendarDays, X, Clock, Eye, ChevronLeft, ChevronRight, Layers, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -332,6 +332,12 @@ export default function OrganizationEvents() {
           <p className="mt-1 text-gray-600">Manage {organization.organization_name}'s events</p>
         </div>
         <div className="flex gap-2">
+          <Link to="/recurring">
+            <Button variant="secondary">
+              <Repeat className="mr-2 h-4 w-4" />
+              Recurring
+            </Button>
+          </Link>
           <Link to={`/org/${orgSlug}/events/tours`}>
             <Button variant="secondary">
               <Layers className="mr-2 h-4 w-4" />
