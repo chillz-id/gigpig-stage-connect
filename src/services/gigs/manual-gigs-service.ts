@@ -1,9 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export type ShowType = 'Solo Show' | 'Showcase' | 'Open Mic' | 'Competition' | 'Festival' | 'Corporate' | 'Other';
+
+export const SHOW_TYPES: ShowType[] = ['Solo Show', 'Showcase', 'Open Mic', 'Competition', 'Festival', 'Corporate', 'Other'];
+
 export interface ManualGig {
   id: string;
   user_id: string;
   title: string;
+  type: ShowType | null;
   venue_name: string | null;
   venue_address: string | null;
   start_datetime: string;
@@ -153,6 +158,7 @@ class ManualGigsService {
           instances.push({
             user_id: parentGig.user_id,
             title: parentGig.title,
+            type: parentGig.type,
             venue_name: parentGig.venue_name,
             venue_address: parentGig.venue_address,
             start_datetime: instanceDate.toISOString(),
@@ -198,6 +204,7 @@ class ManualGigsService {
         instances.push({
           user_id: parentGig.user_id,
           title: parentGig.title,
+          type: parentGig.type,
           venue_name: parentGig.venue_name,
           venue_address: parentGig.venue_address,
           start_datetime: currentDate.toISOString(),

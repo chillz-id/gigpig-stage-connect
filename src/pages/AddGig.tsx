@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, ArrowLeft, Plus, Repeat } from 'lucide-react';
 import { useMyGigs } from '@/hooks/useMyGigs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { EventBannerUpload } from '@/components/gigs/EventBannerUpload';
 import { RecurringGigPicker } from '@/components/gigs/RecurringGigPicker';
+import { SHOW_TYPES, type ShowType } from '@/services/gigs/manual-gigs-service';
 
 const AddGig = () => {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ const AddGig = () => {
 
   const [formData, setFormData] = useState({
     title: '',
+    type: '' as ShowType | '',
     venue_name: '',
     venue_address: '',
     start_datetime: '',
@@ -96,6 +99,7 @@ const AddGig = () => {
       const baseGigData = {
         user_id: user.id,
         title: formData.title.trim(),
+        type: formData.type || null,
         venue_name: formData.venue_name.trim() || null,
         venue_address: formData.venue_address.trim() || null,
         start_datetime: startDateTime,
@@ -196,6 +200,26 @@ const AddGig = () => {
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                     required
                   />
+                </div>
+
+                {/* Show Type */}
+                <div>
+                  <Label htmlFor="type" className="text-white">Show Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => handleInputChange('type', value)}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue placeholder="Select show type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SHOW_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Venue Name */}

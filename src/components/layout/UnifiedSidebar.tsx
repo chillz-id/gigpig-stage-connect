@@ -145,9 +145,10 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   const availableItems = useMemo(() => {
     return MENU_ITEMS.filter((item) => {
       // "My Events" shows for organizations OR comedians/comedian_lite
+      // Use hasRole() instead of primaryRole to support users with multiple roles (e.g., admin + comedian)
       if (item.id === 'my-events') {
         const isOrg = activeProfileData?.type === 'organization';
-        const isComedian = primaryRole === 'comedian' || primaryRole === 'comedian_lite';
+        const isComedian = hasRole('comedian') || hasRole('comedian_lite');
         if (!isOrg && !isComedian) {
           return false;
         }
@@ -171,7 +172,7 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
 
       return true;
     });
-  }, [primaryRole, hasAdminAccess, permissions, isItemHidden, activeProfileData?.type]);
+  }, [primaryRole, hasAdminAccess, permissions, isItemHidden, activeProfileData?.type, hasRole]);
 
   // Apply custom order from user preferences
   const orderedItems = useMemo(() => {

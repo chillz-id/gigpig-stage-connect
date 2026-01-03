@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Plus, Repeat, Loader2, Trash2, Save, Send } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,10 @@ import { EventBannerUpload } from '@/components/gigs/EventBannerUpload';
 import { RecurringGigPicker, CustomDateWithTime } from '@/components/gigs/RecurringGigPicker';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { EventStatus } from '@/types/events.unified';
+
+// Show types for events
+const SHOW_TYPES = ['Solo Show', 'Showcase', 'Open Mic', 'Competition', 'Festival', 'Corporate', 'Other'] as const;
+type ShowType = typeof SHOW_TYPES[number];
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +36,7 @@ import {
 
 interface FormData {
   title: string;
+  type: string;
   venue_name: string;
   venue_address: string;
   city: string;
@@ -54,6 +60,7 @@ interface FormData {
 
 const initialFormData: FormData = {
   title: '',
+  type: '',
   venue_name: '',
   venue_address: '',
   city: '',
@@ -120,6 +127,7 @@ export default function CreateOrganizationEvent() {
 
         setFormData({
           title: data.title || '',
+          type: data.type || '',
           venue_name: data.venue || '',
           venue_address: data.address || '',
           city: data.city || '',
@@ -222,6 +230,7 @@ export default function CreateOrganizationEvent() {
 
     return {
       title: formData.title.trim() || null,
+      type: formData.type || null,
       venue: formData.venue_name.trim() || null,
       address: formData.venue_address.trim() || null,
       city: formData.city || null,
@@ -328,6 +337,7 @@ export default function CreateOrganizationEvent() {
         const eventData = {
           organization_id: organization.id,
           title: formData.title.trim(),
+          type: formData.type || null,
           venue: formData.venue_name.trim(),
           address: formData.venue_address.trim(),
           city: formData.city || null,
@@ -555,6 +565,26 @@ export default function CreateOrganizationEvent() {
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                     required
                   />
+                </div>
+
+                {/* Show Type */}
+                <div>
+                  <Label htmlFor="type" className="text-white">Show Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => handleInputChange('type', value)}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue placeholder="Select show type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SHOW_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Venue Name - REQUIRED */}

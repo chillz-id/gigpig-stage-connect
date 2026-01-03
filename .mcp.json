@@ -145,8 +145,8 @@
       "accountId": "f49451e5-90c1-4451-8763-318a92308c0c"
     },
     "framer": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.unframer.co/sse?id=43da1ee95772bcf345bda18ba374248f9552283cadd66ccf5ee0bbbc8c01cbdd&secret=hM0J1SgCyFFjI5dRQlKHHhQNwP5kGUG7"]
+      "type": "sse",
+      "url": "https://mcp.unframer.co/sse?id=43da1ee95772bcf345bda18ba374248f9552283cadd66ccf5ee0bbbc8c01cbdd&secret=hM0J1SgCyFFjI5dRQlKHHhQNwP5kGUG7"
     },
     "perplexity": {
       "command": "npx",

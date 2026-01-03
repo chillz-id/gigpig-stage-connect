@@ -231,7 +231,7 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
       case 'avatar':
         return { width: 400, height: 400 };
       case 'banner':
-        return { width: 1280, height: 720 }; // 16:9 ratio
+        return { width: 1920, height: 1080 }; // 16:9 ratio (Full HD)
       default:
         return { width: 1920, height: 1080 }; // Default max
     }
