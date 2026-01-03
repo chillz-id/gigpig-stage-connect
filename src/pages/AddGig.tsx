@@ -86,14 +86,19 @@ const AddGig = () => {
     }
 
     try {
-      // Combine date and time for start
-      const startDateTime = `${formData.start_datetime}T${formData.start_time}:00`;
-      console.log('🎭 [AddGig] Start date/time:', startDateTime);
+      // Combine date and time for start and convert to ISO string with timezone
+      const startLocalDateTime = `${formData.start_datetime}T${formData.start_time}:00`;
+      const startDate = new Date(startLocalDateTime);
+      const startDateTime = startDate.toISOString();
+      console.log('🎭 [AddGig] Start date/time (local):', startLocalDateTime);
+      console.log('🎭 [AddGig] Start date/time (UTC):', startDateTime);
 
-      // Combine date and time for end (if provided)
+      // Combine date and time for end (if provided) and convert to ISO string with timezone
       let endDateTime = null;
       if (formData.end_datetime && formData.end_time) {
-        endDateTime = `${formData.end_datetime}T${formData.end_time}:00`;
+        const endLocalDateTime = `${formData.end_datetime}T${formData.end_time}:00`;
+        const endDate = new Date(endLocalDateTime);
+        endDateTime = endDate.toISOString();
       }
 
       const baseGigData = {
