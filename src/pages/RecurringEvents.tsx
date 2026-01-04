@@ -96,8 +96,8 @@ export default function RecurringEvents() {
   // Bulk edit form state
   const [bulkEditTitle, setBulkEditTitle] = useState('');
   const [bulkEditDescription, setBulkEditDescription] = useState('');
-  const [bulkEditShowType, setBulkEditShowType] = useState('');
-  const [bulkEditShowLevel, setBulkEditShowLevel] = useState('');
+  const [bulkEditShowType, setBulkEditShowType] = useState('__keep__');
+  const [bulkEditShowLevel, setBulkEditShowLevel] = useState('__keep__');
   const [bulkEditStartTime, setBulkEditStartTime] = useState('');
   const [bulkEditEndTime, setBulkEditEndTime] = useState('');
   const [bulkEditTicketPrice, setBulkEditTicketPrice] = useState('');
@@ -167,8 +167,8 @@ export default function RecurringEvents() {
     setTargetSeriesId(seriesId);
     setBulkEditTitle('');
     setBulkEditDescription('');
-    setBulkEditShowType(currentSeries.events[0]?.show_type || '');
-    setBulkEditShowLevel(currentSeries.events[0]?.show_level || '');
+    setBulkEditShowType(currentSeries.events[0]?.show_type || '__keep__');
+    setBulkEditShowLevel(currentSeries.events[0]?.show_level || '__keep__');
     setBulkEditStartTime(currentSeries.events[0]?.start_time || '');
     setBulkEditEndTime(currentSeries.events[0]?.end_time || '');
     setBulkEditTicketPrice(currentSeries.events[0]?.ticket_price?.toString() || '');
@@ -182,8 +182,8 @@ export default function RecurringEvents() {
     const updates: Record<string, unknown> = {};
     if (bulkEditTitle.trim()) updates.title = bulkEditTitle.trim();
     if (bulkEditDescription.trim()) updates.description = bulkEditDescription.trim();
-    if (bulkEditShowType) updates.show_type = bulkEditShowType;
-    if (bulkEditShowLevel) updates.show_level = bulkEditShowLevel;
+    if (bulkEditShowType && bulkEditShowType !== '__keep__') updates.show_type = bulkEditShowType;
+    if (bulkEditShowLevel && bulkEditShowLevel !== '__keep__') updates.show_level = bulkEditShowLevel;
     if (bulkEditStartTime) updates.start_time = bulkEditStartTime;
     if (bulkEditEndTime) updates.end_time = bulkEditEndTime;
     if (bulkEditTicketPrice) updates.ticket_price = parseFloat(bulkEditTicketPrice);
@@ -461,7 +461,7 @@ export default function RecurringEvents() {
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Keep current</SelectItem>
+                    <SelectItem value="__keep__">Keep current</SelectItem>
                     <SelectItem value="open-mic">Open Mic</SelectItem>
                     <SelectItem value="semi-pro">Semi-Pro</SelectItem>
                     <SelectItem value="pro">Pro</SelectItem>
@@ -476,7 +476,7 @@ export default function RecurringEvents() {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Keep current</SelectItem>
+                    <SelectItem value="__keep__">Keep current</SelectItem>
                     <SelectItem value="showcase">Showcase</SelectItem>
                     <SelectItem value="solo-show">Solo Show</SelectItem>
                     <SelectItem value="open-mic">Open Mic</SelectItem>
