@@ -8,6 +8,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 export interface OrganizationEvent {
   id: string;
   event_date: string;
+  start_time?: string | null; // Local time (e.g., "19:00:00")
   event_name: string;
   event_description?: string | null;
   event_image?: string | null;
@@ -103,6 +104,7 @@ function transformNativeEvent(event: any): OrganizationEvent {
   return {
     id: event.id,
     event_date: event.event_date,
+    start_time: event.start_time || null,
     event_name: event.title || event.name,
     event_description: event.description || event.details,
     event_image: event.banner_url || event.hero_image_url,
@@ -175,7 +177,19 @@ export const useOrganizationEvents = () => {
 
       // Combine and sort by date
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
 
       // Sort by event_date ascending
       allEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
@@ -246,7 +260,21 @@ export const useOrganizationUpcomingEvents = () => {
 
       // Combine and sort
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      console.log('[useOrganizationUpcomingEvents] Session events after dedup:', deduplicatedSessionEvents.length);
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
       allEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
 
       console.log('[useOrganizationUpcomingEvents] Total events:', allEvents.length);
@@ -309,7 +337,19 @@ export const useOrganizationPastEvents = () => {
 
       // Combine and sort (most recent first for past events)
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
       allEvents.sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime());
 
       return allEvents;
