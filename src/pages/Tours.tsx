@@ -445,20 +445,21 @@ export default function Tours() {
 
       {/* Add Events to Tour Modal */}
       <Dialog open={addEventsModalOpen} onOpenChange={setAddEventsModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-full overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add Events to {addEventsTargetTour?.name}</DialogTitle>
             <DialogDescription>
               Select events to add to this tour. Click on a recurring series to expand and see all shows.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 w-full overflow-hidden">
             <Input
+              className="w-full"
               placeholder="Search events by title, venue, or series name..."
               value={eventSearchQuery}
               onChange={(e) => setEventSearchQuery(e.target.value)}
             />
-            <div className="max-h-[400px] overflow-auto border rounded-md">
+            <div className="max-h-[400px] overflow-auto border rounded-md w-full">
               {(filteredRecurringSeries?.length === 0 && filteredStandaloneEvents?.length === 0) ? (
                 <p className="text-sm text-muted-foreground p-4 text-center">
                   {eventSearchQuery ? 'No events match your search.' : 'No available events to add.'}
