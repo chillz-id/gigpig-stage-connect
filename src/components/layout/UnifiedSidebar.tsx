@@ -303,8 +303,8 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
               className="flex items-center justify-between w-full"
             >
               <div className="flex items-center gap-2">
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
               </div>
             </a>
           </SidebarMenuButton>
@@ -331,32 +331,22 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
                     : 'text-gray-100 hover:bg-gray-800'
                 }
               >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {badge && (
-                      <Badge
-                        className={`text-xs ${
-                          badge.variant === 'destructive'
-                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                            : badge.variant === 'secondary'
-                            ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                            : 'bg-gray-500 hover:bg-gray-600 text-white'
-                        }`}
-                      >
-                        {badge.count}
-                      </Badge>
-                    )}
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </div>
-                </div>
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                {badge && (
+                  <Badge
+                    className={`text-xs ml-auto group-data-[collapsible=icon]:hidden ${
+                      badge.variant === 'destructive'
+                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                        : badge.variant === 'secondary'
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                        : 'bg-gray-500 hover:bg-gray-600 text-white'
+                    }`}
+                  >
+                    {badge.count}
+                  </Badge>
+                )}
+                <ChevronRight className={`h-4 w-4 ml-auto transition-transform group-data-[collapsible=icon]:hidden ${isExpanded ? 'rotate-90' : ''}`} />
               </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -384,15 +374,13 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
         >
           <Link
             to={getItemPath(item.path)}
-            className="flex items-center justify-between w-full"
+            className="flex items-center gap-2"
           >
-            <div className="flex items-center gap-2">
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </div>
+            <item.icon className="h-4 w-4 shrink-0" />
+            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             {badge && (
               <Badge
-                className={`text-xs ml-auto ${
+                className={`text-xs ml-auto group-data-[collapsible=icon]:hidden ${
                   badge.variant === 'destructive'
                     ? 'bg-red-500 hover:bg-red-600 text-white'
                     : badge.variant === 'secondary'
@@ -566,13 +554,13 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
         })}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-gray-800 p-4">
+      <SidebarFooter className="border-t border-gray-800 p-4 group-data-[collapsible=icon]:p-2">
         <Button
-          className="professional-button w-full justify-start"
+          className="professional-button w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
           onClick={signOut}
         >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span className="ml-2 group-data-[collapsible=icon]:hidden">Sign Out</span>
         </Button>
       </SidebarFooter>
 
