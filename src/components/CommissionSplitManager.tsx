@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Checkbox } from './ui/checkbox';
 import { usePayments } from '../hooks/usePayments';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../integrations/supabase/client';
@@ -338,7 +339,6 @@ export const CommissionSplitManager: React.FC = () => {
                       <SelectContent>
                         <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                         <SelectItem value="paypal">PayPal</SelectItem>
-                        <SelectItem value="stripe_connect">Stripe Connect</SelectItem>
                         <SelectItem value="manual">Manual Payment</SelectItem>
                       </SelectContent>
                     </Select>
@@ -383,14 +383,12 @@ export const CommissionSplitManager: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={
-                      selectedSplits.length > 0 && 
+                      selectedSplits.length > 0 &&
                       selectedSplits.length === commissionSplits?.filter(split => split.split_status === 'pending').length
                     }
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300"
+                    onCheckedChange={() => handleSelectAll()}
                   />
                 </TableHead>
                 <TableHead>Invoice</TableHead>
@@ -409,11 +407,9 @@ export const CommissionSplitManager: React.FC = () => {
                 <TableRow key={split.id}>
                   <TableCell>
                     {split.split_status === 'pending' && (
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedSplits.includes(split.id)}
-                        onChange={() => handleSelectSplit(split.id)}
-                        className="rounded border-gray-300"
+                        onCheckedChange={() => handleSelectSplit(split.id)}
                       />
                     )}
                   </TableCell>

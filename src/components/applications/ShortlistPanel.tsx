@@ -5,16 +5,182 @@
  * - Confirmed section at top
  * - Shortlist section below
  * - Individual confirm buttons on shortlisted items
+ * - Draggable items for lineup assignment
  */
 
 import React from 'react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { X, GripVertical, List, CheckCircle, Star } from 'lucide-react';
+import { X, GripVertical, List, CheckCircle, Star, GripHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ApplicationData } from '@/types/application';
+
+/**
+ * Draggable confirmed item for lineup assignment
+ */
+interface DraggableConfirmedItemProps {
+  application: ApplicationData;
+}
+
+function DraggableConfirmedItem({
+  application
+}: DraggableConfirmedItemProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `confirmed-${application.id}`,
+    data: {
+      type: 'shortlist-item', // Use same type so drop handlers work
+      applicationId: application.id,
+      comedianId: application.comedian_id,
+      comedianName: application.comedian_name,
+      comedianAvatar: application.comedian_avatar
+    }
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab'
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative flex flex-col items-center",
+        isDragging && "z-50"
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <div className="relative">
+        <OptimizedAvatar
+          src={application.comedian_avatar}
+          name={application.comedian_name}
+          className={cn(
+            "h-12 w-12 ring-2 ring-green-500 ring-offset-2 ring-offset-background transition-all",
+            isDragging ? "ring-primary scale-110" : "group-hover:ring-green-600"
+          )}
+        />
+        <CheckCircle className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background text-green-500" />
+        {/* Drag indicator */}
+        <div className={cn(
+          "absolute -bottom-1 left-1/2 -translate-x-1/2 bg-muted rounded-full p-0.5 transition-opacity",
+          isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-70"
+        )}>
+          <GripHorizontal className="h-3 w-3 text-muted-foreground" />
+        </div>
+      </div>
+      <span className="mt-1 max-w-[80px] truncate text-xs text-muted-foreground">
+        {application.comedian_name?.split(' ')[0]}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Draggable shortlist item for lineup assignment
+ */
+interface DraggableShortlistItemProps {
+  application: ApplicationData;
+  onConfirmSingle?: (id: string) => void;
+  onRemove: (id: string) => void;
+  isLoading?: boolean;
+}
+
+function DraggableShortlistItem({
+  application,
+  onConfirmSingle,
+  onRemove,
+  isLoading = false
+}: DraggableShortlistItemProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `shortlist-${application.id}`,
+    data: {
+      type: 'shortlist-item',
+      applicationId: application.id,
+      comedianId: application.comedian_id,
+      comedianName: application.comedian_name,
+      comedianAvatar: application.comedian_avatar
+    }
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab'
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative flex flex-col items-center",
+        isDragging && "z-50"
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <div className="relative">
+        <OptimizedAvatar
+          src={application.comedian_avatar}
+          name={application.comedian_name}
+          className={cn(
+            "h-12 w-12 ring-2 ring-yellow-400 ring-offset-2 ring-offset-background transition-all",
+            isDragging ? "ring-primary scale-110" : "group-hover:ring-yellow-500"
+          )}
+        />
+        {/* Drag indicator */}
+        <div className={cn(
+          "absolute -bottom-1 left-1/2 -translate-x-1/2 bg-muted rounded-full p-0.5 transition-opacity",
+          isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-70"
+        )}>
+          <GripHorizontal className="h-3 w-3 text-muted-foreground" />
+        </div>
+        {/* Action buttons on hover (hidden during drag) */}
+        {!isDragging && (
+          <div className="absolute -right-1 -top-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            {onConfirmSingle && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onConfirmSingle(application.id);
+                }}
+                disabled={isLoading}
+                size="sm"
+                variant="ghost"
+                className="h-5 w-5 rounded-full bg-green-500 p-0 text-white hover:bg-green-600"
+              >
+                <CheckCircle className="h-3 w-3" />
+              </Button>
+            )}
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(application.id);
+              }}
+              disabled={isLoading}
+              size="sm"
+              variant="ghost"
+              className="h-5 w-5 rounded-full bg-destructive p-0 text-destructive-foreground hover:bg-destructive/90"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+      <span className="mt-1 max-w-[80px] truncate text-xs text-muted-foreground">
+        {application.comedian_name?.split(' ')[0]}
+      </span>
+    </div>
+  );
+}
 
 interface ShortlistPanelProps {
   shortlistedApplications: ApplicationData[];
@@ -26,6 +192,8 @@ interface ShortlistPanelProps {
   onRemoveAll?: () => void;
   isLoading?: boolean;
   totalSpots?: number;
+  /** Layout mode: 'sidebar' (default) or 'horizontal' for inline display */
+  layout?: 'sidebar' | 'horizontal';
 }
 
 export function ShortlistPanel({
@@ -37,7 +205,8 @@ export function ShortlistPanel({
   onConfirmAll,
   onRemoveAll,
   isLoading = false,
-  totalSpots
+  totalSpots,
+  layout = 'sidebar'
 }: ShortlistPanelProps) {
   const PanelContent = () => (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -268,6 +437,108 @@ export function ShortlistPanel({
       </SheetContent>
     </Sheet>
   );
+
+  // Horizontal: Inline panel with avatar chips
+  const HorizontalPanel = () => {
+    const allItems = [...confirmedApplications, ...shortlistedApplications];
+    const hasItems = allItems.length > 0;
+
+    return (
+      <div className="rounded-lg border border-border bg-card">
+        {/* Header with counts and actions */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+              <span className="font-semibold">Shortlist</span>
+              {totalSpots && (
+                <Badge variant="secondary">
+                  {shortlistedApplications.length} / {totalSpots}
+                </Badge>
+              )}
+            </div>
+            {confirmedApplications.length > 0 && (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm text-muted-foreground">
+                  {confirmedApplications.length} confirmed
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Bulk Actions */}
+          {shortlistedApplications.length > 0 && (
+            <div className="flex gap-2">
+              {onConfirmAll && (
+                <Button
+                  onClick={onConfirmAll}
+                  disabled={isLoading}
+                  size="sm"
+                  variant="default"
+                  className="gap-1 bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Confirm All
+                </Button>
+              )}
+              {onRemoveAll && (
+                <Button
+                  onClick={onRemoveAll}
+                  disabled={isLoading}
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1"
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Avatar chips row */}
+        <div className="p-4">
+          {!hasItems ? (
+            <div className="flex items-center justify-center py-4 text-center">
+              <Star className="mr-2 h-5 w-5 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">
+                No comedians shortlisted yet
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {/* Confirmed items first - Also draggable for lineup assignment */}
+              {confirmedApplications.map((application) => (
+                <DraggableConfirmedItem
+                  key={application.id}
+                  application={application}
+                />
+              ))}
+
+              {/* Shortlisted items - Draggable for lineup assignment */}
+              {shortlistedApplications.map((application) => (
+                <DraggableShortlistItem
+                  key={application.id}
+                  application={application}
+                  onConfirmSingle={onConfirmSingle}
+                  onRemove={onRemove}
+                  isLoading={isLoading}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render based on layout mode
+  if (layout === 'horizontal') {
+    // Horizontal panel is now visible on all screen sizes
+    return <HorizontalPanel />;
+  }
 
   return (
     <>

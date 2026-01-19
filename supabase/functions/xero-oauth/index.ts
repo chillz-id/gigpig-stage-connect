@@ -32,9 +32,23 @@ serve(async (req) => {
       throw new Error('Not authenticated')
     }
 
-    const { action, code, state } = await req.json()
+    const body = await req.json()
+    const { action } = body
+
+    console.log('xero-oauth action:', action)
 
     if (action === 'exchange') {
+      const { code, organization_id, redirect_uri } = body
+
+      // Use redirect_uri from request (must match what was used in auth URL), fallback to PUBLIC_URL
+      const redirectUri = redirect_uri || `${Deno.env.get('PUBLIC_URL') || 'https://gigpigs.app'}/auth/xero-callback`
+
+      console.log('Token exchange starting...')
+      console.log('redirect_uri:', redirectUri)
+      console.log('XERO_CLIENT_ID exists:', !!Deno.env.get('XERO_CLIENT_ID'))
+      console.log('XERO_CLIENT_SECRET exists:', !!Deno.env.get('XERO_CLIENT_SECRET'))
+      console.log('code length:', code?.length || 0)
+
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
         method: 'POST',
@@ -44,17 +58,24 @@ serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: `${Deno.env.get('PUBLIC_URL')}/auth/xero-callback`,
+          redirect_uri: redirectUri,
           client_id: Deno.env.get('XERO_CLIENT_ID')!,
           client_secret: Deno.env.get('XERO_CLIENT_SECRET')!,
         }),
       })
 
       if (!tokenResponse.ok) {
-        throw new Error('Token exchange failed')
+        const errorText = await tokenResponse.text()
+        console.error('Token exchange failed with status:', tokenResponse.status)
+        console.error('Token exchange error response:', errorText)
+        console.error('redirect_uri used:', redirectUri)
+        console.error('XERO_CLIENT_ID exists:', !!Deno.env.get('XERO_CLIENT_ID'))
+        console.error('XERO_CLIENT_SECRET exists:', !!Deno.env.get('XERO_CLIENT_SECRET'))
+        throw new Error(`Token exchange failed: ${errorText}`)
       }
 
       const tokens = await tokenResponse.json()
+      console.log('Token exchange successful!')
 
       // Get tenant info
       const connectionsResponse = await fetch('https://api.xero.com/connections', {
@@ -64,23 +85,91 @@ serve(async (req) => {
       })
 
       const connections = await connectionsResponse.json()
+
+      if (!connections || connections.length === 0) {
+        throw new Error('No Xero organizations found')
+      }
+
       const tenant = connections[0]
+      console.log('Connected to Xero tenant:', tenant.tenantName)
 
-      // Store in database
-      const { error: dbError } = await supabaseClient
-        .from('xero_integrations')
-        .upsert({
-          user_id: user.id,
-          tenant_id: tenant.tenantId,
-          tenant_name: tenant.tenantName,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-          scopes: tokens.scope?.split(' ') || [],
-          is_active: true,
-        })
+      // Store in database - either for user or organization
+      // Use check-then-insert/update instead of upsert to avoid partial unique index issues
+      const integrationData: Record<string, any> = {
+        tenant_id: tenant.tenantId,
+        tenant_name: tenant.tenantName,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        connection_status: 'active',
+      }
 
-      if (dbError) throw dbError
+      let dbError: any = null
+
+      if (organization_id) {
+        console.log('Saving as organization-level connection for org:', organization_id)
+
+        // Check if record exists
+        const { data: existing } = await supabaseClient
+          .from('xero_integrations')
+          .select('id')
+          .eq('organization_id', organization_id)
+          .single()
+
+        if (existing) {
+          // Update existing record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .update(integrationData)
+            .eq('id', existing.id)
+          dbError = error
+        } else {
+          // Insert new record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .insert({
+              ...integrationData,
+              organization_id,
+              created_at: new Date().toISOString(),
+            })
+          dbError = error
+        }
+      } else {
+        console.log('Saving as user-level connection for user:', user.id)
+
+        // Check if record exists
+        const { data: existing } = await supabaseClient
+          .from('xero_integrations')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (existing) {
+          // Update existing record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .update(integrationData)
+            .eq('id', existing.id)
+          dbError = error
+        } else {
+          // Insert new record
+          const { error } = await supabaseClient
+            .from('xero_integrations')
+            .insert({
+              ...integrationData,
+              user_id: user.id,
+              created_at: new Date().toISOString(),
+            })
+          dbError = error
+        }
+      }
+
+      if (dbError) {
+        console.error('Database error:', dbError)
+        throw dbError
+      }
+
+      console.log('Integration saved successfully!')
 
       return new Response(
         JSON.stringify({ success: true, tenant: tenant.tenantName }),
@@ -91,8 +180,75 @@ serve(async (req) => {
       )
     }
 
+    if (action === 'refresh') {
+      // Refresh access token
+      const { data: integration, error: fetchError } = await supabaseClient
+        .from('xero_integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('connection_status', 'active')
+        .single()
+
+      if (fetchError || !integration) {
+        throw new Error('No active Xero integration found')
+      }
+
+      const tokenResponse = await fetch('https://identity.xero.com/connect/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: integration.refresh_token,
+          client_id: Deno.env.get('XERO_CLIENT_ID')!,
+          client_secret: Deno.env.get('XERO_CLIENT_SECRET')!,
+        }),
+      })
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text()
+        console.error('Token refresh failed:', errorText)
+
+        // Mark integration as disconnected if refresh fails
+        await supabaseClient
+          .from('xero_integrations')
+          .update({ connection_status: 'disconnected' })
+          .eq('id', integration.id)
+
+        throw new Error('Token refresh failed - please reconnect to Xero')
+      }
+
+      const tokens = await tokenResponse.json()
+
+      // Update stored tokens
+      const { error: updateError } = await supabaseClient
+        .from('xero_integrations')
+        .update({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        })
+        .eq('id', integration.id)
+
+      if (updateError) throw updateError
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          access_token: tokens.access_token,
+          expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     throw new Error('Invalid action')
   } catch (error) {
+    console.error('xero-oauth error:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       {

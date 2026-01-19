@@ -1,17 +1,25 @@
 // Invoice Service - Comprehensive invoice management with Xero integration
 import { supabase } from '@/integrations/supabase/client';
-import { Invoice, InvoiceItem, InvoiceRecipient, InvoicePayment } from '@/types/invoice';
+import { Invoice, InvoiceItem, InvoiceRecipient, InvoicePayment, InvoiceType } from '@/types/invoice';
 
 export interface CreateInvoiceRequest {
-  invoice_type: 'promoter' | 'comedian' | 'other';
+  invoice_type: InvoiceType;
   invoice_number?: string; // Auto-generated if not provided
   promoter_id?: string;
   comedian_id?: string;
+  organization_id?: string;
+  event_id?: string;
+  event_spot_id?: string;
+  recipient_id?: string; // Platform user ID if recipient is on platform
   sender_name: string;
   sender_email: string;
   sender_phone?: string;
   sender_address?: string;
   sender_abn?: string;
+  // Bank details for payment
+  sender_bank_name?: string;
+  sender_bank_bsb?: string;
+  sender_bank_account?: string;
   issue_date: string;
   due_date: string;
   currency?: string;
@@ -64,42 +72,37 @@ export interface InvoiceFromTicketSalesRequest {
   custom_line_items?: Omit<InvoiceItem, 'id' | 'invoice_id' | 'created_at'>[];
 }
 
+export interface InvoiceFromSpotRequest {
+  spot_id: string;
+  include_line_items?: boolean; // Include event_spot_line_items
+  custom_notes?: string;
+  custom_terms?: string;
+  due_days_after_event?: number; // Default 14 days after event
+}
+
 class InvoiceService {
   // =====================================
   // INVOICE GENERATION
   // =====================================
 
-  async generateInvoiceNumber(type: 'promoter' | 'comedian'): Promise<string> {
-    const prefix = type === 'promoter' ? 'PRO' : 'COM';
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    
-    // Get the last invoice number for this prefix and month
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('invoice_number')
-      .like('invoice_number', `${prefix}-${year}${month}-%`)
-      .order('invoice_number', { ascending: false })
-      .limit(1);
-
+  /**
+   * Generate a unique invoice number using PostgreSQL SEQUENCE.
+   * Format: GIG-XXXXXXXX (8-digit zero-padded sequence)
+   * Uses atomic database sequence to prevent collision when multiple invoices
+   * are created simultaneously.
+   */
+  async generateInvoiceNumber(): Promise<string> {
+    const { data, error } = await supabase.rpc('get_next_invoice_number');
     if (error) throw error;
-
-    let sequence = 1;
-    if (data && data.length > 0) {
-      const lastNumber = data[0].invoice_number;
-      const lastSequence = parseInt(lastNumber.split('-')[2]);
-      sequence = lastSequence + 1;
-    }
-
-    return `${prefix}-${year}${month}-${String(sequence).padStart(4, '0')}`;
+    return data; // Returns "GIG-00000001"
   }
 
   async createInvoice(request: CreateInvoiceRequest): Promise<Invoice> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Generate invoice number if not provided
-    const invoiceNumber = request.invoice_number || await this.generateInvoiceNumber(request.invoice_type);
+    // Generate invoice number if not provided (uses atomic PostgreSQL sequence)
+    const invoiceNumber = request.invoice_number || await this.generateInvoiceNumber();
 
     // Calculate deposit due date if needed
     let depositDueDate = request.deposit_due_date;
@@ -116,11 +119,19 @@ class InvoiceService {
         invoice_number: invoiceNumber,
         promoter_id: request.promoter_id,
         comedian_id: request.comedian_id,
+        organization_id: request.organization_id,
+        event_id: request.event_id,
+        event_spot_id: request.event_spot_id,
+        recipient_id: request.recipient_id,
         sender_name: request.sender_name,
         sender_email: request.sender_email,
         sender_phone: request.sender_phone,
         sender_address: request.sender_address,
         sender_abn: request.sender_abn,
+        // Bank details for direct payment
+        sender_bank_name: request.sender_bank_name,
+        sender_bank_bsb: request.sender_bank_bsb,
+        sender_bank_account: request.sender_bank_account,
         issue_date: request.issue_date,
         due_date: request.due_date,
         currency: request.currency || 'AUD',
@@ -340,6 +351,149 @@ class InvoiceService {
     });
   }
 
+  /**
+   * Create an invoice from an event spot booking.
+   * This is used when an organization confirms a booking and needs to create
+   * a payable invoice (the org owes the comedian money).
+   */
+  async createInvoiceFromSpot(request: InvoiceFromSpotRequest): Promise<Invoice> {
+    // Get spot with all related data
+    const { data: spot, error: spotError } = await supabase
+      .from('event_spots')
+      .select(`
+        *,
+        profiles:comedian_id (
+          id,
+          full_name,
+          stage_name,
+          email,
+          phone,
+          abn,
+          bank_name,
+          bank_bsb,
+          bank_account_number
+        ),
+        events:event_id (
+          id,
+          title,
+          event_date,
+          organizations:organization_id (
+            id,
+            organization_name,
+            email,
+            phone,
+            abn,
+            address
+          )
+        )
+      `)
+      .eq('id', request.spot_id)
+      .single();
+
+    if (spotError) throw spotError;
+    if (!spot) throw new Error('Spot not found');
+
+    const comedian = spot.profiles;
+    const event = spot.events;
+    const organization = event?.organizations;
+
+    if (!comedian) throw new Error('Comedian not found for this spot');
+    if (!event) throw new Error('Event not found for this spot');
+    if (!organization) throw new Error('Organization not found for this event');
+
+    // Get line items if requested
+    let lineItems: Array<{ description: string; quantity: number; unit_price: number; subtotal: number; tax_amount: number; total: number }> = [];
+
+    if (request.include_line_items) {
+      const { data: spotLineItems } = await supabase
+        .from('event_spot_line_items')
+        .select('*')
+        .eq('event_spot_id', request.spot_id)
+        .order('created_at');
+
+      if (spotLineItems) {
+        lineItems = spotLineItems.map(item => ({
+          description: item.label || item.description || 'Line item',
+          quantity: 1,
+          unit_price: item.amount || 0,
+          subtotal: item.amount || 0,
+          tax_amount: item.gst_type === 'addition' ? (item.amount || 0) * 0.1 : 0,
+          total: item.gst_type === 'addition' ? (item.amount || 0) * 1.1 : (item.amount || 0),
+        }));
+      }
+    }
+
+    // Add the main spot payment as a line item
+    const basePayment = spot.payment_amount || 0;
+    const gstType = spot.payment_gst_type || 'addition';
+    let spotTaxAmount = 0;
+    let spotTotal = basePayment;
+
+    if (gstType === 'addition') {
+      spotTaxAmount = basePayment * 0.1;
+      spotTotal = basePayment + spotTaxAmount;
+    } else if (gstType === 'included') {
+      spotTaxAmount = basePayment - (basePayment / 1.1);
+      spotTotal = basePayment;
+    }
+
+    const mainItem = {
+      description: `Performance: ${event.title} - ${spot.spot_name || 'Spot'}`,
+      quantity: 1,
+      unit_price: basePayment,
+      subtotal: basePayment,
+      tax_amount: spotTaxAmount,
+      total: spotTotal,
+    };
+
+    const allItems = [mainItem, ...lineItems];
+
+    // Calculate totals
+    const subtotal = allItems.reduce((sum, item) => sum + item.subtotal, 0);
+    const taxAmount = allItems.reduce((sum, item) => sum + item.tax_amount, 0);
+    const total = allItems.reduce((sum, item) => sum + item.total, 0);
+
+    // Calculate due date (default 14 days after event)
+    const dueDays = request.due_days_after_event ?? 14;
+    const eventDate = new Date(event.event_date);
+    const dueDate = new Date(eventDate.getTime() + dueDays * 24 * 60 * 60 * 1000);
+
+    // Create the payable invoice (org pays comedian)
+    return this.createInvoice({
+      invoice_type: 'payable',
+      organization_id: organization.id,
+      event_id: event.id,
+      event_spot_id: spot.id,
+      recipient_id: comedian.id,
+      // Sender is the organization (they are creating the invoice to pay)
+      sender_name: organization.organization_name,
+      sender_email: organization.email || '',
+      sender_phone: organization.phone,
+      sender_address: organization.address,
+      sender_abn: organization.abn,
+      issue_date: new Date().toISOString(),
+      due_date: dueDate.toISOString(),
+      event_date: event.event_date,
+      currency: 'AUD',
+      tax_rate: 10,
+      tax_treatment: gstType === 'excluded' ? 'none' : 'inclusive',
+      subtotal_amount: subtotal,
+      tax_amount: taxAmount,
+      total_amount: total,
+      notes: request.custom_notes || `Payment for performance at ${event.title}`,
+      terms: request.custom_terms || 'Payment due within 14 days of event.',
+      status: 'draft',
+      items: allItems,
+      recipients: [{
+        recipient_name: comedian.stage_name || comedian.full_name || 'Unknown',
+        recipient_email: comedian.email || '',
+        recipient_phone: comedian.phone,
+        recipient_abn: comedian.abn,
+        recipient_type: 'individual',
+      }],
+    });
+  }
+
   // =====================================
   // XERO INTEGRATION
   // =====================================
@@ -371,30 +525,52 @@ class InvoiceService {
     if (invoiceError) throw invoiceError;
     if (!invoice) throw new Error('Invoice not found');
 
-    // TODO: Implement actual Xero API calls
-    // For now, we'll create a record in xero_invoices
-    const { error: xeroError } = await supabase
-      .from('xero_invoices')
-      .upsert({
-        invoice_id: invoice.id,
-        xero_invoice_id: `XERO-${invoice.invoice_number}`,
-        xero_invoice_number: invoice.invoice_number,
-        total_amount: invoice.total_amount,
-        invoice_status: invoice.status,
-        sync_status: 'synced',
-        last_sync_at: new Date().toISOString()
-      });
+    // Determine Xero document type based on invoice_type:
+    // - receivable/comedian: Creates an INVOICE in Xero (Accounts Receivable - money owed to you)
+    // - payable/promoter: Creates a BILL in Xero (Accounts Payable - money you owe)
+    const isReceivable = invoice.invoice_type === 'receivable' || invoice.invoice_type === 'comedian';
+    const xeroDocType = isReceivable ? 'ACCREC' : 'ACCPAY'; // ACCREC = Invoice, ACCPAY = Bill
 
-    if (xeroError) throw xeroError;
+    try {
+      // TODO: Implement actual Xero API calls
+      // For now, we'll create a record in xero_invoices with proper type tracking
+      const { error: xeroError } = await supabase
+        .from('xero_invoices')
+        .upsert({
+          invoice_id: invoice.id,
+          xero_invoice_id: `XERO-${xeroDocType}-${invoice.invoice_number}`,
+          xero_invoice_number: invoice.invoice_number,
+          total_amount: invoice.total_amount,
+          invoice_status: invoice.status,
+          sync_status: 'synced',
+          last_sync_at: new Date().toISOString()
+        });
 
-    // Update invoice with Xero reference
-    await supabase
-      .from('invoices')
-      .update({
-        xero_invoice_id: `XERO-${invoice.invoice_number}`,
-        last_synced_at: new Date().toISOString()
-      })
-      .eq('id', invoice.id);
+      if (xeroError) throw xeroError;
+
+      // Update invoice with Xero reference and clear any previous sync error
+      await supabase
+        .from('invoices')
+        .update({
+          xero_invoice_id: `XERO-${xeroDocType}-${invoice.invoice_number}`,
+          last_synced_at: new Date().toISOString(),
+          xero_sync_error: null
+        })
+        .eq('id', invoice.id);
+
+      console.log(`Successfully synced invoice ${invoice.invoice_number} as Xero ${isReceivable ? 'Invoice' : 'Bill'}`);
+    } catch (syncError) {
+      // Record sync error on the invoice
+      const errorMessage = syncError instanceof Error ? syncError.message : 'Unknown sync error';
+      await supabase
+        .from('invoices')
+        .update({
+          xero_sync_error: errorMessage
+        })
+        .eq('id', invoice.id);
+
+      throw syncError;
+    }
   }
 
   async syncFromXero(): Promise<void> {

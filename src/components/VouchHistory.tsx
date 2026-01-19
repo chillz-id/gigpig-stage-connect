@@ -249,9 +249,9 @@ export function VouchHistory({ userId, mode }: VouchHistoryProps) {
                 } : null,
               }}
             />
-            {/* Action buttons */}
+            {/* Action buttons - only show edit/delete if current user is the voucher */}
             <div className="absolute top-4 right-4 flex gap-1">
-              {mode === 'given' && (
+              {mode === 'given' && vouch.voucher_id === user?.id && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -261,15 +261,17 @@ export function VouchHistory({ userId, mode }: VouchHistoryProps) {
                   <Edit2 className="w-4 h-4" />
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => handleDeleteClick(vouch.id)}
-                title={mode === 'given' ? "Delete your vouch" : "Remove this vouch"}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {(mode === 'received' || vouch.voucher_id === user?.id) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => handleDeleteClick(vouch.id)}
+                  title={mode === 'given' ? "Delete your vouch" : "Remove this vouch"}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
         ))

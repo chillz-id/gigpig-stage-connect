@@ -36,11 +36,20 @@ export const InvoiceItemsList: React.FC<InvoiceItemsListProps> = ({
         </Button>
       </div>
 
+      {/* Column Headers - visible on desktop */}
+      <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 pb-2 text-sm font-medium text-muted-foreground">
+        <div className="md:col-span-5">Description</div>
+        <div className="md:col-span-2">Qty</div>
+        <div className="md:col-span-2">Rate</div>
+        <div className="md:col-span-2">Total</div>
+        <div className="md:col-span-1"></div>
+      </div>
+
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div 
-            key={item.id} 
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border rounded-lg bg-gray-50"
+          <div
+            key={item.id}
+            className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-border rounded-lg bg-muted/50"
           >
             {/* Description */}
             <div className="md:col-span-5">
@@ -96,7 +105,7 @@ export const InvoiceItemsList: React.FC<InvoiceItemsListProps> = ({
 
             {/* Total */}
             <div className="md:col-span-2">
-              <div className="h-9 flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">
+              <div className="h-9 flex items-center px-3 bg-muted rounded-md text-sm font-medium">
                 ${item.total.toFixed(2)}
               </div>
             </div>

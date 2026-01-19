@@ -5,20 +5,26 @@ import { LinkSection } from './useCustomLinks';
 
 interface UseLinkSectionsOptions {
   userId: string;
+  organizationId?: string; // If provided, query by organization_id instead of user_id
 }
 
-export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
+export const useLinkSections = ({ userId, organizationId }: UseLinkSectionsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch link sections for a user
+  // Determine table name and filter column based on organizationId
+  const tableName = organizationId ? 'organization_link_sections' : 'link_sections';
+  const filterColumn = organizationId ? 'organization_id' : 'user_id';
+  const filterId = organizationId || userId;
+
+  // Fetch link sections for a user or organization
   const { data: sections = [], isLoading, error } = useQuery({
-    queryKey: ['link-sections', userId],
+    queryKey: ['link-sections', filterId, tableName],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('link_sections')
+        .from(tableName)
         .select('*')
-        .eq('user_id', userId)
+        .eq(filterColumn, filterId)
         .order('display_order', { ascending: true });
 
       if (error) throw error;
@@ -31,9 +37,9 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
   const addSectionMutation = useMutation({
     mutationFn: async (sectionData: Omit<LinkSection, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
-        .from('link_sections')
+        .from(tableName)
         .insert({
-          user_id: userId,
+          [filterColumn]: filterId,
           ...sectionData,
         })
         .select()
@@ -43,8 +49,8 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['link-sections', userId] });
-      queryClient.invalidateQueries({ queryKey: ['custom-links', userId] }); // Refresh links too
+      queryClient.invalidateQueries({ queryKey: ['link-sections', filterId] });
+      queryClient.invalidateQueries({ queryKey: ['custom-links', filterId] }); // Refresh links too
       toast({
         title: 'Section added',
         description: 'Your link section has been created successfully.',
@@ -64,13 +70,13 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
   const updateSectionMutation = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<LinkSection> & { id: string }) => {
       const { data, error } = await supabase
-        .from('link_sections')
+        .from(tableName)
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', userId)
+        .eq(filterColumn, filterId)
         .select()
         .single();
 
@@ -78,8 +84,8 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['link-sections', userId] });
-      queryClient.invalidateQueries({ queryKey: ['custom-links', userId] }); // Refresh links too
+      queryClient.invalidateQueries({ queryKey: ['link-sections', filterId] });
+      queryClient.invalidateQueries({ queryKey: ['custom-links', filterId] }); // Refresh links too
       toast({
         title: 'Section updated',
         description: 'Your section has been updated successfully.',
@@ -99,16 +105,16 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
   const deleteSectionMutation = useMutation({
     mutationFn: async (sectionId: string) => {
       const { error } = await supabase
-        .from('link_sections')
+        .from(tableName)
         .delete()
         .eq('id', sectionId)
-        .eq('user_id', userId);
+        .eq(filterColumn, filterId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['link-sections', userId] });
-      queryClient.invalidateQueries({ queryKey: ['custom-links', userId] }); // Refresh links (section_id will be null)
+      queryClient.invalidateQueries({ queryKey: ['link-sections', filterId] });
+      queryClient.invalidateQueries({ queryKey: ['custom-links', filterId] }); // Refresh links (section_id will be null)
       toast({
         title: 'Section deleted',
         description: 'Your section has been removed. Links have been moved to unsectioned.',
@@ -130,10 +136,10 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
       // Update display_order for each section
       const updates = reorderedSections.map((section, index) =>
         supabase
-          .from('link_sections')
+          .from(tableName)
           .update({ display_order: index })
           .eq('id', section.id)
-          .eq('user_id', userId)
+          .eq(filterColumn, filterId)
       );
 
       const results = await Promise.all(updates);
@@ -145,7 +151,7 @@ export const useLinkSections = ({ userId }: UseLinkSectionsOptions) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['link-sections', userId] });
+      queryClient.invalidateQueries({ queryKey: ['link-sections', filterId] });
       toast({
         title: 'Sections reordered',
         description: 'Your section order has been updated.',

@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface XeroConfig {
   clientId: string;
-  clientSecret: string;
   redirectUri: string;
   scopes: string[];
 }
@@ -38,8 +37,8 @@ export interface XeroInvoice {
 
 class XeroService {
   private config: XeroConfig = {
-    clientId: process.env.VITE_XERO_CLIENT_ID || '',
-    clientSecret: process.env.VITE_XERO_CLIENT_SECRET || '',
+    // Only client ID is needed on frontend (safe to expose)
+    clientId: import.meta.env.VITE_XERO_CLIENT_ID || '',
     redirectUri: `${window.location.origin}/auth/xero-callback`,
     scopes: [
       'accounting.transactions',
@@ -68,113 +67,51 @@ class XeroService {
     return `https://login.xero.com/identity/connect/authorize?${params.toString()}`;
   }
 
-  async handleCallback(code: string, state: string): Promise<void> {
+  async handleCallback(code: string, state: string): Promise<{ organizationId?: string }> {
     // Verify state
     const savedState = sessionStorage.getItem('xero_oauth_state');
     if (state !== savedState) {
       throw new Error('Invalid OAuth state');
     }
 
-    // Exchange code for tokens
-    const tokens = await this.exchangeCodeForTokens(code);
-    
-    // Get tenant information
-    const tenants = await this.getTenants(tokens.access_token);
-    if (tenants.length === 0) {
-      throw new Error('No Xero organizations found');
+    // Clear the state from session storage
+    sessionStorage.removeItem('xero_oauth_state');
+
+    // Check if this is an organization connection
+    const organizationId = sessionStorage.getItem('xero_oauth_org_id');
+    sessionStorage.removeItem('xero_oauth_org_id');
+
+    // Exchange code for tokens via edge function (secure - secrets stay server-side)
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) {
+      throw new Error('User not authenticated');
     }
 
-    // Save integration
-    await this.saveIntegration(tokens, tenants[0]);
-  }
-
-  private async exchangeCodeForTokens(code: string): Promise<XeroTokens> {
-    const response = await fetch('https://identity.xero.com/connect/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${btoa(`${this.config.clientId}:${this.config.clientSecret}`)}`
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: this.config.redirectUri
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to exchange code for tokens');
-    }
-
-    const data = await response.json();
-    
-    return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_at: Date.now() + (data.expires_in * 1000),
-      tenant_id: ''
+    const requestBody: Record<string, string> = {
+      action: 'exchange',
+      code,
+      state,
+      // Pass the redirect_uri so edge function uses the same one (must match for OAuth)
+      redirect_uri: this.config.redirectUri
     };
-  }
 
-  private async refreshAccessToken(refreshToken: string): Promise<XeroTokens> {
-    const response = await fetch('https://identity.xero.com/connect/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${btoa(`${this.config.clientId}:${this.config.clientSecret}`)}`
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh access token');
+    if (organizationId) {
+      requestBody.organization_id = organizationId;
     }
 
-    const data = await response.json();
-    
-    return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_at: Date.now() + (data.expires_in * 1000),
-      tenant_id: ''
-    };
-  }
-
-  private async getTenants(accessToken: string): Promise<any[]> {
-    const response = await fetch('https://api.xero.com/connections', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
+    const response = await supabase.functions.invoke('xero-oauth', {
+      body: requestBody
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to get Xero tenants');
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to connect to Xero');
     }
 
-    return response.json();
-  }
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Xero connection failed');
+    }
 
-  private async saveIntegration(tokens: XeroTokens, tenant: any): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-      .from('xero_integrations')
-      .upsert({
-        user_id: user.id,
-        tenant_id: tenant.tenantId,
-        tenant_name: tenant.tenantName,
-        connection_status: 'active',
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_expires_at: new Date(tokens.expires_at).toISOString()
-      });
-
-    if (error) throw error;
+    return { organizationId };
   }
 
   // =====================================
@@ -195,19 +132,20 @@ class XeroService {
     // Check if token is expired
     const expiresAt = new Date(integration.token_expires_at).getTime();
     if (Date.now() >= expiresAt - 60000) { // Refresh 1 minute before expiry
-      const newTokens = await this.refreshAccessToken(integration.refresh_token);
-      
-      // Update stored tokens
-      await supabase
-        .from('xero_integrations')
-        .update({
-          access_token: newTokens.access_token,
-          refresh_token: newTokens.refresh_token,
-          token_expires_at: new Date(newTokens.expires_at).toISOString()
-        })
-        .eq('id', integration.id);
+      // Use edge function to refresh token (keeps secrets server-side)
+      const response = await supabase.functions.invoke('xero-oauth', {
+        body: { action: 'refresh' }
+      });
 
-      return newTokens.access_token;
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to refresh Xero token');
+      }
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Token refresh failed');
+      }
+
+      return response.data.access_token;
     }
 
     return integration.access_token;
@@ -348,6 +286,29 @@ class XeroService {
 
     const result = await this.makeXeroRequest(endpoint);
     return result.Contacts;
+  }
+
+  // =====================================
+  // ACCOUNT OPERATIONS
+  // =====================================
+
+  async getAccounts(): Promise<Array<{
+    AccountID: string;
+    Code: string;
+    Name: string;
+    Type: string;
+    Status: string;
+    Class?: string;
+    Description?: string;
+  }>> {
+    const result = await this.makeXeroRequest('Accounts');
+    return result.Accounts || [];
+  }
+
+  async getAccountsByType(type: 'REVENUE' | 'EXPENSE' | 'ASSET' | 'LIABILITY' | 'EQUITY'): Promise<any[]> {
+    const endpoint = `Accounts?where=Type=="${type}"`;
+    const result = await this.makeXeroRequest(endpoint);
+    return result.Accounts || [];
   }
 
   // =====================================

@@ -15,7 +15,9 @@ import {
   Palette,
   Smartphone,
   ExternalLink,
+  Plug,
 } from 'lucide-react';
+import { XeroSettingsSection } from '@/components/settings/XeroSettingsSection';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -67,7 +69,7 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           <TabsTrigger value="account" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Account</span>
@@ -79,6 +81,10 @@ export default function Settings() {
           <TabsTrigger value="privacy" className="gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Privacy</span>
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Plug className="h-4 w-4" />
+            <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
           <TabsTrigger value="sidebar" className="gap-2">
             <Palette className="h-4 w-4" />
@@ -264,6 +270,11 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-4">
+          <XeroSettingsSection />
         </TabsContent>
 
         {/* Sidebar Customization Tab */}

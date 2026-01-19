@@ -12,7 +12,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
-import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { Suspense, useState, useEffect, lazy } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
@@ -73,6 +72,9 @@ const PublicProfile = lazy(() => import('@/pages/PublicProfile'));
 const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const BugTracker = lazy(() => import('@/pages/BugTracker'));
 const ABNChecker = lazy(() => import('@/pages/ABNChecker'));
+const ComedianEvents = lazy(() => import('@/pages/ComedianEvents'));
+const RecurringEvents = lazy(() => import('@/pages/RecurringEvents'));
+const Tours = lazy(() => import('@/pages/Tours'));
 const ComedianLinksPage = lazy(() => import('@/pages/ComedianLinksPage'));
 const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
 
@@ -162,11 +164,6 @@ const PWAIntegration = () => {
 
   return (
     <>
-      {/* Offline indicator in bottom right */}
-      <div className="fixed bottom-20 right-4 z-40 md:bottom-6">
-        <OfflineIndicator />
-      </div>
-
       {/* PWA installer modal */}
       {showInstaller && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -213,6 +210,9 @@ function App() {
                               <Route path="/post-signup-setup" element={<PostSignupSetup />} />
                               <Route path="/dashboard" element={<Dashboard />} />
                               <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
+                              <Route path="/my-events" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><ComedianEvents /></ProtectedRoute>} />
+                              <Route path="/recurring" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><RecurringEvents /></ProtectedRoute>} />
+                              <Route path="/tours" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Tours /></ProtectedRoute>} />
                               <Route path="/gigs" element={<Gigs />} />
                               <Route path="/shows" element={<Shows />} />
                               <Route path="/browse" element={<Navigate to="/gigs" replace />} />
@@ -296,7 +296,7 @@ function App() {
                               {/* Comedian routes now use nested routing via ComedianProfileLayout */}
                               {/* Keys force React to unmount/remount when switching between profile types */}
                               <Route path="/manager/:slug/*" element={<PublicProfile type="manager" key="manager-profile" />} />
-                              <Route path="/org/:slug/*" element={<PublicProfile type="organization" key="org-profile" />} />
+                              <Route path="/org/:slug/*" element={<PublicProfile type="organization" />} />
                               <Route path="/venue/:slug/*" element={<PublicProfile type="venue" key="venue-profile" />} />
                               <Route path="/photographer/:slug/*" element={<PublicProfile type="photographer" key="photographer-profile" />} />
 

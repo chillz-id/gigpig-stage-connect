@@ -146,7 +146,7 @@
     },
     "framer": {
       "type": "sse",
-      "url": "${FRAMER_MCP_URL}"
+      "url": "https://mcp.unframer.co/sse?id=43da1ee95772bcf345bda18ba374248f9552283cadd66ccf5ee0bbbc8c01cbdd&secret=hM0J1SgCyFFjI5dRQlKHHhQNwP5kGUG7"
     },
     "perplexity": {
       "command": "npx",

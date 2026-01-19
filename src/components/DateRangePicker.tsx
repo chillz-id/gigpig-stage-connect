@@ -202,9 +202,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                   {getQuickSelectPresets().map((preset) => (
                     <Button
                       key={preset.label}
-                      className="professional-button text-xs"
                       size="sm"
                       onClick={() => handlePresetClick(preset)}
+                      className="professional-button text-xs"
                     >
                       {preset.label}
                     </Button>

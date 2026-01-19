@@ -6,23 +6,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, ArrowLeft, Plus, Repeat } from 'lucide-react';
 import { useMyGigs } from '@/hooks/useMyGigs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useActiveProfile } from '@/contexts/ProfileContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { EventBannerUpload } from '@/components/gigs/EventBannerUpload';
 import { RecurringGigPicker } from '@/components/gigs/RecurringGigPicker';
+import { SHOW_TYPES, type ShowType } from '@/services/gigs/manual-gigs-service';
 
 const AddGig = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
+  const { activeProfile } = useActiveProfile();
   const { createGig, createRecurringGig, isCreating, isCreatingRecurring } = useMyGigs();
 
   const [formData, setFormData] = useState({
     title: '',
+    type: '' as ShowType | '',
     venue_name: '',
     venue_address: '',
     start_datetime: '',
@@ -83,26 +88,37 @@ const AddGig = () => {
     }
 
     try {
-      // Combine date and time for start
-      const startDateTime = `${formData.start_datetime}T${formData.start_time}:00`;
-      console.log('🎭 [AddGig] Start date/time:', startDateTime);
+      // Combine date and time for start and convert to ISO string with timezone
+      const startLocalDateTime = `${formData.start_datetime}T${formData.start_time}:00`;
+      const startDate = new Date(startLocalDateTime);
+      const startDateTime = startDate.toISOString();
+      console.log('🎭 [AddGig] Start date/time (local):', startLocalDateTime);
+      console.log('🎭 [AddGig] Start date/time (UTC):', startDateTime);
 
-      // Combine date and time for end (if provided)
+      // Combine date and time for end (if provided) and convert to ISO string with timezone
       let endDateTime = null;
       if (formData.end_datetime && formData.end_time) {
-        endDateTime = `${formData.end_datetime}T${formData.end_time}:00`;
+        const endLocalDateTime = `${formData.end_datetime}T${formData.end_time}:00`;
+        const endDate = new Date(endLocalDateTime);
+        endDateTime = endDate.toISOString();
       }
+
+      // Determine organization_id based on active profile
+      // If viewing as organization, set organization_id; otherwise null (personal event)
+      const organization_id = activeProfile?.type === 'organization' ? activeProfile.id : null;
 
       const baseGigData = {
         user_id: user.id,
         title: formData.title.trim(),
+        type: formData.type || null,
         venue_name: formData.venue_name.trim() || null,
         venue_address: formData.venue_address.trim() || null,
         start_datetime: startDateTime,
         end_datetime: endDateTime,
         description: formData.description.trim() || null,
         ticket_link: formData.ticket_link.trim() || null,
-        banner_url: formData.banner_url || null
+        banner_url: formData.banner_url || null,
+        organization_id: organization_id // Set if creating as organization
       };
 
       if (formData.is_recurring) {
@@ -196,6 +212,26 @@ const AddGig = () => {
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
                     required
                   />
+                </div>
+
+                {/* Show Type */}
+                <div>
+                  <Label htmlFor="type" className="text-white">Show Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => handleInputChange('type', value)}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue placeholder="Select show type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SHOW_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Venue Name */}

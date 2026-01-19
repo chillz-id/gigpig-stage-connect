@@ -16,6 +16,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import GoogleSignInButton from './GoogleSignInButton';
 import { Calendar, CheckCircle2, Bell, Star } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 /**
  * Horizontal Authentication Banner
@@ -152,7 +158,7 @@ export function HorizontalAuthBanner() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Left Column: Auth Forms */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="signin" className="w-full">
+          <Tabs defaultValue="signup" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 h-auto mb-6">
               <TabsTrigger
                 value="signin"
@@ -348,7 +354,7 @@ export function HorizontalAuthBanner() {
               Join Sydney's Premier Comedy Network
             </h3>
             <p className="text-white/70 text-sm">
-              Everything you need to launch and grow your comedy career
+              Everything you need to launch, grow & manage your comedy career
             </p>
           </div>
 
@@ -358,8 +364,21 @@ export function HorizontalAuthBanner() {
                 <Calendar className="h-5 w-5 text-purple-400" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm mb-0.5">Browse 1000+ Comedy Gigs</h4>
-                <p className="text-white/60 text-xs">Access the largest database of comedy shows, open mics, and paid gigs across Sydney</p>
+                <h4 className="text-white font-medium text-sm mb-0.5">
+                  Browse{' '}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="line-through decoration-white/50 cursor-help">1000+</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Eventually! Just iD Comedy shows for now</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {' '}Comedy Gigs
+                </h4>
+                <p className="text-white/60 text-xs">Access the largest database of comedy shows, open mics, and paid gigs across Sydney & Australia</p>
               </div>
             </div>
 
@@ -398,8 +417,8 @@ export function HorizontalAuthBanner() {
                 <Bell className="h-5 w-5 text-pink-400" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm mb-0.5">Instant Gig Notifications</h4>
-                <p className="text-white/60 text-xs">Get alerted when new spots open up or promoters are looking for your style</p>
+                <h4 className="text-white font-medium text-sm mb-0.5">Instant Gig Notifications <span className="text-white/50 font-normal">(optional)</span></h4>
+                <p className="text-white/60 text-xs">Get alerted when new spots open up or promoters are looking to book you</p>
               </div>
             </div>
 

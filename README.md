@@ -54,7 +54,7 @@ See [CLAUDE.md](CLAUDE.md) for comprehensive developer documentation.
 
 ## Tech Stack
 
-- **Frontend**: Vite + React 18 + TypeScript (strict mode)
+- **Frontend**: Vite 7 + React 19 + TypeScript (strict mode)
 - **UI**: shadcn/ui + Radix UI + Tailwind CSS
 - **State**: TanStack Query + React Context
 - **Database**: Supabase (PostgreSQL + Auth + Realtime + RLS)

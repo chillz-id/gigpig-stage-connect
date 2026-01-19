@@ -53,6 +53,7 @@ export const profileConfig: ProfileConfigMap = {
       hasFinancial: true,          // Show financial section
       hasRates: false,             // No hourly rates
       hasMedia: true,              // Show media portfolio
+      hasStateDropdown: true,      // Use Australian states dropdown instead of text input
     },
   },
 
@@ -73,6 +74,11 @@ export const profileConfig: ProfileConfigMap = {
       primaryName: 'Organization Name',
       secondaryName: 'Legal Name',
       bio: 'Company Description',
+      // Organization-specific labels
+      highlightsButton: '+ Company Highlights',
+      highlightsEmpty: 'No company highlights yet. Add your notable accomplishments, awards, and company milestones',
+      publicContact: 'Public Contact',
+      platformContact: 'Platform Only',
     },
     tables: {
       main: 'organization_profiles',
@@ -87,6 +93,9 @@ export const profileConfig: ProfileConfigMap = {
       hasFinancial: true,          // Show financial section
       hasRates: false,             // No hourly rates
       hasMedia: true,              // Show media portfolio
+      hasLastName: false,          // Hide last name for organizations
+      hasLinkedIn: true,           // Show LinkedIn field
+      hasStateDropdown: true,      // Use Australian states dropdown instead of text input
     },
   },
 

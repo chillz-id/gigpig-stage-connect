@@ -12,6 +12,172 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import type { ProfileAwareProps } from '@/types/universalProfile';
 import { getProfileConfig } from '@/utils/profileConfig';
 
+// Countries list (Australia first as primary market)
+const COUNTRIES = [
+  { value: 'Australia', label: 'Australia' },
+  { value: 'New Zealand', label: 'New Zealand' },
+  { value: 'United States', label: 'United States' },
+  { value: 'United Kingdom', label: 'United Kingdom' },
+  { value: 'Canada', label: 'Canada' },
+  { value: 'Ireland', label: 'Ireland' },
+  { value: 'South Africa', label: 'South Africa' },
+  { value: 'Singapore', label: 'Singapore' },
+  { value: 'Hong Kong', label: 'Hong Kong' },
+  { value: 'Japan', label: 'Japan' },
+  { value: 'Germany', label: 'Germany' },
+  { value: 'France', label: 'France' },
+  { value: 'Netherlands', label: 'Netherlands' },
+  { value: 'Other', label: 'Other' },
+];
+
+// Regions/States by country
+const REGIONS_BY_COUNTRY: Record<string, { value: string; label: string }[]> = {
+  Australia: [
+    { value: 'NSW', label: 'New South Wales' },
+    { value: 'VIC', label: 'Victoria' },
+    { value: 'QLD', label: 'Queensland' },
+    { value: 'WA', label: 'Western Australia' },
+    { value: 'SA', label: 'South Australia' },
+    { value: 'TAS', label: 'Tasmania' },
+    { value: 'NT', label: 'Northern Territory' },
+    { value: 'ACT', label: 'Australian Capital Territory' },
+  ],
+  'New Zealand': [
+    { value: 'Auckland', label: 'Auckland' },
+    { value: 'Wellington', label: 'Wellington' },
+    { value: 'Canterbury', label: 'Canterbury' },
+    { value: 'Waikato', label: 'Waikato' },
+    { value: 'Bay of Plenty', label: 'Bay of Plenty' },
+    { value: 'Otago', label: 'Otago' },
+    { value: 'Manawatu-Whanganui', label: 'Manawatu-Whanganui' },
+    { value: 'Hawkes Bay', label: "Hawke's Bay" },
+    { value: 'Taranaki', label: 'Taranaki' },
+    { value: 'Southland', label: 'Southland' },
+    { value: 'Northland', label: 'Northland' },
+    { value: 'Nelson', label: 'Nelson' },
+    { value: 'Marlborough', label: 'Marlborough' },
+    { value: 'Gisborne', label: 'Gisborne' },
+    { value: 'West Coast', label: 'West Coast' },
+    { value: 'Tasman', label: 'Tasman' },
+  ],
+  'United States': [
+    { value: 'AL', label: 'Alabama' },
+    { value: 'AK', label: 'Alaska' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'AR', label: 'Arkansas' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
+    { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
+    { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
+    { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
+    { value: 'WY', label: 'Wyoming' },
+    { value: 'DC', label: 'Washington D.C.' },
+  ],
+  'United Kingdom': [
+    { value: 'England', label: 'England' },
+    { value: 'Scotland', label: 'Scotland' },
+    { value: 'Wales', label: 'Wales' },
+    { value: 'Northern Ireland', label: 'Northern Ireland' },
+  ],
+  Canada: [
+    { value: 'AB', label: 'Alberta' },
+    { value: 'BC', label: 'British Columbia' },
+    { value: 'MB', label: 'Manitoba' },
+    { value: 'NB', label: 'New Brunswick' },
+    { value: 'NL', label: 'Newfoundland and Labrador' },
+    { value: 'NS', label: 'Nova Scotia' },
+    { value: 'NT', label: 'Northwest Territories' },
+    { value: 'NU', label: 'Nunavut' },
+    { value: 'ON', label: 'Ontario' },
+    { value: 'PE', label: 'Prince Edward Island' },
+    { value: 'QC', label: 'Quebec' },
+    { value: 'SK', label: 'Saskatchewan' },
+    { value: 'YT', label: 'Yukon' },
+  ],
+  Ireland: [
+    { value: 'Carlow', label: 'Carlow' },
+    { value: 'Cavan', label: 'Cavan' },
+    { value: 'Clare', label: 'Clare' },
+    { value: 'Cork', label: 'Cork' },
+    { value: 'Donegal', label: 'Donegal' },
+    { value: 'Dublin', label: 'Dublin' },
+    { value: 'Galway', label: 'Galway' },
+    { value: 'Kerry', label: 'Kerry' },
+    { value: 'Kildare', label: 'Kildare' },
+    { value: 'Kilkenny', label: 'Kilkenny' },
+    { value: 'Laois', label: 'Laois' },
+    { value: 'Leitrim', label: 'Leitrim' },
+    { value: 'Limerick', label: 'Limerick' },
+    { value: 'Longford', label: 'Longford' },
+    { value: 'Louth', label: 'Louth' },
+    { value: 'Mayo', label: 'Mayo' },
+    { value: 'Meath', label: 'Meath' },
+    { value: 'Monaghan', label: 'Monaghan' },
+    { value: 'Offaly', label: 'Offaly' },
+    { value: 'Roscommon', label: 'Roscommon' },
+    { value: 'Sligo', label: 'Sligo' },
+    { value: 'Tipperary', label: 'Tipperary' },
+    { value: 'Waterford', label: 'Waterford' },
+    { value: 'Westmeath', label: 'Westmeath' },
+    { value: 'Wexford', label: 'Wexford' },
+    { value: 'Wicklow', label: 'Wicklow' },
+  ],
+  'South Africa': [
+    { value: 'EC', label: 'Eastern Cape' },
+    { value: 'FS', label: 'Free State' },
+    { value: 'GP', label: 'Gauteng' },
+    { value: 'KZN', label: 'KwaZulu-Natal' },
+    { value: 'LP', label: 'Limpopo' },
+    { value: 'MP', label: 'Mpumalanga' },
+    { value: 'NC', label: 'Northern Cape' },
+    { value: 'NW', label: 'North West' },
+    { value: 'WC', label: 'Western Cape' },
+  ],
+};
+
+// Helper to get regions for a country
+const getRegionsForCountry = (country: string) => REGIONS_BY_COUNTRY[country] || null;
+
 interface ProfileData {
   firstName: string;
   lastName: string;
@@ -21,6 +187,7 @@ interface ProfileData {
   phone: string;
   bio: string;
   location: string;
+  country: string;
   customShowTypes: string[];
   instagramUrl: string;
   twitterUrl: string;
@@ -28,6 +195,7 @@ interface ProfileData {
   youtubeUrl: string;
   facebookUrl: string;
   tiktokUrl: string;
+  linkedinUrl: string;
 }
 
 interface ProfileInformationProps extends Partial<ProfileAwareProps> {
@@ -48,22 +216,27 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   const [showMoreSocial, setShowMoreSocial] = useState(false);
 
   // Initial form data for change detection
+  // For organizations: use display_name/legal_name, for individuals: use first_name/last_name
+  // For orgs, stageName field is used for "Legal Name" display
+  const isOrganization = profileType === 'organization';
   const initialFormData: ProfileData = {
-    firstName: user.first_name || user.name?.split(' ')[0] || '',
-    lastName: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
-    stageName: user.stage_name || '',
-    nameDisplayPreference: user.name_display_preference || 'real',
-    email: user.email || '',
-    phone: user.phone || '',
-    bio: user.bio || '',
-    location: user.location || '',
-    customShowTypes: user.custom_show_types || [],
-    instagramUrl: user.instagram_url || '',
-    twitterUrl: user.twitter_url || '',
-    websiteUrl: user.website_url || '',
-    youtubeUrl: user.youtube_url || '',
-    facebookUrl: user.facebook_url || '',
-    tiktokUrl: user.tiktok_url || ''
+    firstName: user?.first_name || user?.display_name || user?.organization_name || user?.name?.split(' ')?.[0] || '',
+    lastName: user?.last_name || user?.legal_name || user?.name?.split(' ')?.slice(1)?.join(' ') || '',
+    stageName: isOrganization ? (user?.legal_name || '') : (user?.stage_name || ''),
+    nameDisplayPreference: user?.name_display_preference || user?.display_name_preference || 'real',
+    email: user?.email || user?.contact_email || '',
+    phone: user?.phone || user?.contact_phone || '',
+    bio: user?.bio || '',
+    location: user?.location || user?.city || user?.state || '',
+    country: user?.country || 'Australia',
+    customShowTypes: user?.custom_show_types || [],
+    instagramUrl: user?.instagram_url || '',
+    twitterUrl: user?.twitter_url || '',
+    websiteUrl: user?.website_url || '',
+    youtubeUrl: user?.youtube_url || '',
+    facebookUrl: user?.facebook_url || '',
+    tiktokUrl: user?.tiktok_url || '',
+    linkedinUrl: user?.linkedin_url || ''
   };
 
   const [formData, setFormData] = useState<ProfileData>(initialFormData);
@@ -72,19 +245,35 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      // Clear location when country changes (regions are country-specific)
+      if (field === 'country' && value !== prev.country) {
+        return {
+          ...prev,
+          [field]: value,
+          location: '', // Reset state/region when country changes
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
 
+  // Check if lastName is required (not required for organizations)
+  const isLastNameRequired = config.fields.hasLastName !== false;
+
   const handleSubmit = async () => {
-    // Basic validation
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+    // Basic validation - lastName not required for organizations
+    const isLastNameValid = !isLastNameRequired || formData.lastName.trim();
+    if (!formData.firstName.trim() || !isLastNameValid || !formData.email.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields (First Name, Last Name, Email).",
+        description: isLastNameRequired
+          ? "Please fill in all required fields (First Name, Last Name, Email)."
+          : "Please fill in all required fields (Name, Email).",
         variant: "destructive"
       });
       return;
@@ -110,10 +299,10 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="first-name">{config.labels.primaryName || 'First Name'} *</Label>
+    <div className="space-y-4 px-2">
+        <div className={`grid grid-cols-1 ${isLastNameRequired ? 'md:grid-cols-2' : ''} gap-4`}>
+          <div className="space-y-2">
+            <Label htmlFor="first-name" className="mb-2 block">{config.labels.primaryName || 'First Name'} *</Label>
             <Input
               id="first-name"
               value={formData.firstName}
@@ -121,31 +310,45 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               required
             />
           </div>
-          <div>
-            <Label htmlFor="last-name">Last Name *</Label>
-            <Input
-              id="last-name"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-              required
-            />
-          </div>
+          {/* Hide Last Name for organizations */}
+          {isLastNameRequired && (
+            <div className="space-y-2">
+              <Label htmlFor="last-name" className="mb-2 block">Last Name *</Label>
+              <Input
+                id="last-name"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                required
+              />
+            </div>
+          )}
         </div>
 
         {/* Conditionally show secondary name field (Stage Name for comedians, Legal Name for organizations) */}
         {config.fields.hasSecondaryName && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="stage-name">{config.labels.secondaryName || 'Stage Name'}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="stage-name" className="mb-2 block">
+                {config.labels.secondaryName || 'Stage Name'}
+              </Label>
               <Input
                 id="stage-name"
                 value={formData.stageName}
                 onChange={(e) => handleInputChange('stageName', e.target.value)}
-                placeholder={`Your ${config.labels.secondaryName?.toLowerCase() || 'stage name'}`}
+                placeholder={
+                  profileType === 'organization'
+                    ? 'Your business legal name'
+                    : `Your ${config.labels.secondaryName?.toLowerCase() || 'stage name'}`
+                }
               />
+              {profileType === 'organization' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your business legal name as registered
+                </p>
+              )}
             </div>
-            <div>
-              <Label htmlFor="name-display">Name Display Preference</Label>
+            <div className="space-y-2">
+              <Label htmlFor="name-display" className="mb-2 block">Name Display Preference</Label>
               <Select
                 value={formData.nameDisplayPreference}
                 onValueChange={(value) => handleInputChange('nameDisplayPreference', value)}
@@ -154,9 +357,18 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                   <SelectValue placeholder="Select how your name is displayed" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="real">Real name only</SelectItem>
-                  <SelectItem value="stage">{config.labels.secondaryName || 'Stage name'} only</SelectItem>
-                  <SelectItem value="both">Both ({config.labels.secondaryName || 'Stage name'} - Real name)</SelectItem>
+                  {profileType === 'organization' ? (
+                    <>
+                      <SelectItem value="real">Organization Name</SelectItem>
+                      <SelectItem value="stage">Legal Name</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="real">Real name only</SelectItem>
+                      <SelectItem value="stage">{config.labels.secondaryName || 'Stage name'} only</SelectItem>
+                      <SelectItem value="both">Both ({config.labels.secondaryName || 'Stage name'} - Real name)</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -164,8 +376,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="email">Email *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email" className="mb-2 block">Email *</Label>
             <Input
               id="email"
               type="email"
@@ -179,8 +391,8 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
               Contact support to change your email address
             </p>
           </div>
-          <div>
-            <Label htmlFor="phone">Phone</Label>
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="mb-2 block">Phone</Label>
             <PhoneInput
               value={formData.phone}
               onChange={(value) => handleInputChange('phone', value)}
@@ -188,18 +400,68 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="location">Location</Label>
-          <Input 
-            id="location" 
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            placeholder="Sydney, NSW"
-          />
+        {/* Country first, then State/Region (adapts based on country) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="country" className="mb-2 block">Country</Label>
+            {config.fields.hasStateDropdown ? (
+              <Select
+                value={formData.country}
+                onValueChange={(value) => handleInputChange('country', value)}
+              >
+                <SelectTrigger id="country">
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="country"
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                placeholder="Australia"
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location" className="mb-2 block">
+              {config.fields.hasStateDropdown ? (getRegionsForCountry(formData.country) ? 'State/Region' : 'Location') : 'Location'}
+            </Label>
+            {config.fields.hasStateDropdown && getRegionsForCountry(formData.country) ? (
+              <Select
+                value={formData.location}
+                onValueChange={(value) => handleInputChange('location', value)}
+              >
+                <SelectTrigger id="location">
+                  <SelectValue placeholder="Select state/region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getRegionsForCountry(formData.country)!.map((region) => (
+                    <SelectItem key={region.value} value={region.value}>
+                      {region.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder={config.fields.hasStateDropdown ? "City or region" : "Sydney, NSW"}
+              />
+            )}
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="bio">{config.labels.bio || 'Bio'}</Label>
+        <div className="space-y-2">
+          <Label htmlFor="bio" className="mb-2 block">{config.labels.bio || 'Bio'}</Label>
           <Textarea
             id="bio"
             value={formData.bio}
@@ -217,7 +479,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
 
         {/* Social Media Links */}
         <div className="space-y-4">
-          <Label className="text-base font-semibold">Social Media</Label>
+          <Label className="text-base font-semibold mb-2 block">Social Media</Label>
 
           {/* Always visible: Instagram, YouTube, TikTok, Website */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,7 +512,7 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
             />
           </div>
 
-          {/* Collapsible section for Facebook and Twitter */}
+          {/* Collapsible section for Facebook, Twitter, and LinkedIn */}
           <div>
             <Button
               type="button"
@@ -276,6 +538,12 @@ export const ProfileInformation: React.FC<ProfileInformationProps> = ({
                   platform="twitter"
                   value={formData.twitterUrl}
                   onChange={(value) => handleInputChange('twitterUrl', value)}
+                />
+                <SocialMediaInput
+                  id="linkedin"
+                  platform="linkedin"
+                  value={formData.linkedinUrl}
+                  onChange={(value) => handleInputChange('linkedinUrl', value)}
                 />
               </div>
             )}

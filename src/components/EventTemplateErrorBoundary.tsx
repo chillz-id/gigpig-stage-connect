@@ -47,9 +47,9 @@ export class EventTemplateErrorBoundary extends Component<Props, State> {
             </p>
             <div className="flex gap-2">
               <Button
-                className="professional-button border-red-300 hover:bg-red-100"
                 size="sm"
                 onClick={this.handleRetry}
+                className="professional-button border-red-300 hover:bg-red-100"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try Again

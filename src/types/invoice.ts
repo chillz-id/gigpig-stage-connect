@@ -1,7 +1,9 @@
 
+export type InvoiceType = 'promoter' | 'comedian' | 'other' | 'receivable' | 'payable';
+
 export interface Invoice {
   id: string;
-  invoice_type: 'promoter' | 'comedian' | 'other';
+  invoice_type: InvoiceType;
   invoice_number: string;
   issue_date: string;
   due_date: string;
@@ -10,30 +12,37 @@ export interface Invoice {
   currency: string;
   promoter_id?: string;
   comedian_id?: string;
+  organization_id?: string;
+  event_id?: string;
+  event_spot_id?: string;
+  recipient_id?: string;
   sender_name?: string;
   sender_email?: string;
   sender_address?: string;
   sender_phone?: string;
   sender_abn?: string;
+  sender_bank_name?: string;
+  sender_bank_bsb?: string;
+  sender_bank_account?: string;
   client_address?: string;
   client_mobile?: string;
   gst_treatment?: 'inclusive' | 'exclusive' | 'none';
   tax_treatment?: 'inclusive' | 'exclusive' | 'none';
-  subtotal?: number; // Database column is 'subtotal', not 'subtotal_amount'
+  subtotal?: number;
   tax_amount?: number;
   tax_rate?: number;
+  notes?: string;
+  terms?: string;
   xero_invoice_id?: string;
+  xero_sync_error?: string;
   last_synced_at?: string;
+  sent_at?: string;
   paid_at?: string;
   created_by?: string;
   created_at?: string;
   updated_at?: string;
-  invoice_recipients: Array<{
-    recipient_name: string;
-    recipient_email: string;
-    recipient_mobile?: string;
-  }>;
-  // Deposit fields
+  invoice_recipients: InvoiceRecipient[];
+  invoice_items?: InvoiceItem[];
   deposit_amount?: number;
   deposit_percentage?: number;
   deposit_due_days_before_event?: number;

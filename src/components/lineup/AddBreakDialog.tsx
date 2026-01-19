@@ -20,7 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { SpotCategory } from '@/types/spot';
+import { cn } from '@/lib/utils';
+import type { SpotCategory, StartTimeMode } from '@/types/spot';
 
 interface AddBreakDialogProps {
   open: boolean;
@@ -57,12 +58,17 @@ export function AddBreakDialog({
   // Form state
   const [label, setLabel] = useState(BREAK_LABELS[breakType]);
   const [duration, setDuration] = useState(DEFAULT_DURATIONS[breakType]);
+  const [startTimeMode, setStartTimeMode] = useState<StartTimeMode>('included');
+
+  // Check if this is a doors break (for showing start time mode toggle)
+  const isDoors = breakType === 'doors';
 
   // Update defaults when breakType changes
   useEffect(() => {
     if (open) {
       setLabel(BREAK_LABELS[breakType]);
       setDuration(DEFAULT_DURATIONS[breakType]);
+      setStartTimeMode('included');
     }
   }, [breakType, open]);
 
@@ -71,6 +77,7 @@ export function AddBreakDialog({
     if (!isOpen) {
       setLabel(BREAK_LABELS[breakType]);
       setDuration(DEFAULT_DURATIONS[breakType]);
+      setStartTimeMode('included');
     }
     onOpenChange(isOpen);
   };
@@ -92,7 +99,7 @@ export function AddBreakDialog({
         ? (existingSpots[0]?.spot_order ?? 0) + 1
         : 1;
 
-      const breakData = {
+      const breakData: Record<string, unknown> = {
         event_id: eventId,
         spot_name: label,
         spot_category: breakType,
@@ -102,6 +109,11 @@ export function AddBreakDialog({
         is_filled: false,
         confirmation_status: null,
       };
+
+      // Only include start_time_mode for doors breaks
+      if (isDoors) {
+        breakData.start_time_mode = startTimeMode;
+      }
 
       const { data, error } = await supabase
         .from('event_spots')
@@ -174,6 +186,44 @@ export function AddBreakDialog({
                 onChange={(e) => setDuration(parseInt(e.target.value) || 5)}
               />
             </div>
+
+            {/* Start Time Mode Toggle - only for doors */}
+            {isDoors && (
+              <div className="grid gap-2">
+                <Label>Event Start Time</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Does this event's listed start time include doors open, or does comedy start at the listed time?
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={startTimeMode === 'included' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setStartTimeMode('included')}
+                    className="flex-1"
+                  >
+                    Included
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={startTimeMode === 'before' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setStartTimeMode('before')}
+                    className={cn(
+                      "flex-1",
+                      startTimeMode === 'before' && "bg-amber-600 hover:bg-amber-700"
+                    )}
+                  >
+                    Before
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {startTimeMode === 'included'
+                    ? "Doors open is the event start - comedy starts after doors."
+                    : "Doors open before the listed start time - comedy starts at the listed time."}
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

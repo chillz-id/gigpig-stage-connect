@@ -18,6 +18,8 @@ export const LinkThumbnailUpload: React.FC<LinkThumbnailUploadProps> = ({
   layout = 'grid',
 }) => {
   const { user } = useAuth();
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS (React Rules of Hooks)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentThumbnailUrl || null);
   const [isUploading, setIsUploading] = useState(false);
@@ -32,13 +34,23 @@ export const LinkThumbnailUpload: React.FC<LinkThumbnailUploadProps> = ({
 
   // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
   // Path: {userId}/my-files/profile/Link Thumbnails maps to MediaBrowser's my-files/profile/Link Thumbnails
+  // Use 'temp' folder if user not authenticated (will be caught by guard below)
   const { uploadFile } = useFileUpload({
     bucket: 'media-library',
-    folder: `${user?.id}/my-files/profile/Link Thumbnails${linkId ? `/${linkId}` : ''}`,
+    folder: `${user?.id ?? 'temp'}/my-files/profile/Link Thumbnails${linkId ? `/${linkId}` : ''}`,
     maxSize: 5 * 1024 * 1024, // 5MB max
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     onProgress: setUploadProgress
   });
+
+  // Guard: user must be authenticated to upload (AFTER all hooks)
+  if (!user?.id) {
+    return (
+      <div className="text-xs text-gray-400 p-2 border border-white/10 rounded-lg">
+        Please sign in to upload thumbnails
+      </div>
+    );
+  }
 
   const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

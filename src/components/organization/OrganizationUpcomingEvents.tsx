@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useOrganizationUpcomingEvents, type OrganizationEvent } from '@/hooks/organization/useOrganizationEvents';
+import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface OrganizationUpcomingEventsProps {
@@ -20,6 +21,7 @@ const OrganizationUpcomingEvents: React.FC<OrganizationUpcomingEventsProps> = ({
   limit = 5
 }) => {
   const { organization } = useOrganization();
+  const { user } = useAuth();
   const { data: events, isLoading, error } = useOrganizationUpcomingEvents();
 
   const displayEvents = events?.slice(0, limit) || [];
@@ -45,6 +47,29 @@ const OrganizationUpcomingEvents: React.FC<OrganizationUpcomingEventsProps> = ({
       default:
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
     }
+  };
+
+  /**
+   * Get ownership badge for native events
+   * - Shows "Created by You" if promoter_id matches current user
+   * - Only applicable for native events (synced events don't have promoter_id)
+   */
+  const getOwnershipBadge = (event: OrganizationEvent) => {
+    // Only show ownership badge for native events with promoter info
+    if (event.source !== 'native' || !event.promoter_id || !user?.id) {
+      return null;
+    }
+
+    // Check if current user created this event
+    if (event.promoter_id === user.id) {
+      return (
+        <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+          Created by You
+        </Badge>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -145,10 +170,12 @@ const OrganizationUpcomingEvents: React.FC<OrganizationUpcomingEventsProps> = ({
                       </p>
                     )}
 
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge className={getSourceBadgeColor(event.source)}>
                         {event.source === 'native' ? 'Native' : event.source}
                       </Badge>
+
+                      {getOwnershipBadge(event)}
 
                       {event.total_ticket_count !== null && event.total_ticket_count !== undefined && event.total_ticket_count > 0 && (
                         <Badge variant="secondary" className="border-green-500/50 text-green-400">

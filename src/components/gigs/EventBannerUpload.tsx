@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/contexts/AuthContext';
+import { EventBannerImageEditor } from '@/components/events/EventBannerImageEditor';
 
 interface EventBannerUploadProps {
   onBannerSelected: (bannerUrl: string) => void;
@@ -20,6 +21,8 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dimensionWarning, setDimensionWarning] = useState<string | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [tempFileUrl, setTempFileUrl] = useState<string | null>(null);
 
   // Use unified media-library bucket with path matching useMediaStorage's virtual folder structure
   // Path: {userId}/my-files/events/Event Banners maps to MediaBrowser's my-files/events/Event Banners
@@ -52,31 +55,34 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
 
     setSelectedFile(file);
 
-    // Create preview and check dimensions
+    // Create local URL and open editor for cropping
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
-      setPreviewUrl(result);
-
-      // Check image dimensions
-      const img = new Image();
-      img.onload = () => {
-        if (img.width !== 1920 || img.height !== 1080) {
-          setDimensionWarning(
-            `Image is ${img.width}×${img.height}. Recommended: 1920×1080 for best quality.`
-          );
-        }
-      };
-      img.src = result;
+      setTempFileUrl(result);
+      setIsEditorOpen(true);
     };
     reader.readAsDataURL(file);
+  };
 
-    // Auto-upload the file
+  // Handle edited image from Toast UI editor
+  const handleImageSave = async (imageDataUrl: string, blob?: Blob) => {
+    setIsEditorOpen(false);
+    setTempFileUrl(null);
+
+    if (!blob) {
+      setError('Failed to process edited image.');
+      return;
+    }
+
     try {
       setIsUploading(true);
-      const fileUrl = await uploadFile(file);
+      // Convert blob to File for upload
+      const editedFile = new File([blob], selectedFile?.name || 'banner.jpg', { type: blob.type });
+      const fileUrl = await uploadFile(editedFile);
 
       if (fileUrl) {
+        setPreviewUrl(imageDataUrl); // Show the edited version as preview
         onBannerSelected(fileUrl);
       } else {
         setError('Failed to upload banner. Please try again.');
@@ -87,6 +93,12 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleEditorClose = () => {
+    setIsEditorOpen(false);
+    setTempFileUrl(null);
+    setSelectedFile(null);
   };
 
   const removeFile = () => {
@@ -192,6 +204,14 @@ export const EventBannerUpload: React.FC<EventBannerUploadProps> = ({
           {dimensionWarning}
         </div>
       )}
+
+      {/* Image Editor Dialog */}
+      <EventBannerImageEditor
+        isOpen={isEditorOpen}
+        onClose={handleEditorClose}
+        onImageSave={handleImageSave}
+        imageUrl={tempFileUrl || ''}
+      />
     </div>
   );
 };

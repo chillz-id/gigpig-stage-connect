@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { stripePaymentService } from '@/services/stripeService';
 import { toast } from 'sonner';
 
 interface InvoiceCardProps {
@@ -26,59 +25,14 @@ interface InvoiceCardProps {
 export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onView, onEdit, onPaymentLinkCreate }) => {
   const [paymentLink, setPaymentLink] = useState<{ url: string; status: string } | null>(null);
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<any>(null);
-  const [loadingPaymentInfo, setLoadingPaymentInfo] = useState(false);
-
-  const loadPaymentInfo = useCallback(async () => {
-    try {
-      setLoadingPaymentInfo(true);
-      
-      // Initialize Stripe if not already done
-      if (!stripePaymentService.isInitialized()) {
-        await stripePaymentService.initializeFromEnv();
-      }
-      
-      // Get existing payment link
-      const existingLink = await stripePaymentService.getPaymentLink(invoice.id);
-      setPaymentLink(existingLink);
-      
-      // Get payment status
-      const status = await stripePaymentService.getPaymentStatus(invoice.id);
-      setPaymentStatus(status);
-    } catch (error) {
-      console.error('Failed to load payment info:', error);
-    } finally {
-      setLoadingPaymentInfo(false);
-    }
-  }, [invoice]);
-
-  // Load payment information when component mounts
-  useEffect(() => {
-    if (invoice.status === 'sent' || invoice.status === 'overdue') {
-      loadPaymentInfo();
-    }
-  }, [invoice.status, loadPaymentInfo]);
+  const [paymentStatus] = useState<{ status: string; paymentDate?: string } | null>(null);
 
   const handleCreatePaymentLink = async () => {
-    try {
-      setIsCreatingPaymentLink(true);
-      
-      // Initialize Stripe if not already done
-      if (!stripePaymentService.isInitialized()) {
-        await stripePaymentService.initializeFromEnv();
-      }
-      
-      const response = await stripePaymentService.createPaymentLink(invoice);
-      setPaymentLink({ url: response.url, status: 'active' });
-      
-      toast.success('Payment link created successfully!');
-      onPaymentLinkCreate?.(invoice);
-    } catch (error) {
-      console.error('Failed to create payment link:', error);
-      toast.error('Failed to create payment link. Please try again.');
-    } finally {
-      setIsCreatingPaymentLink(false);
-    }
+    setIsCreatingPaymentLink(true);
+    // Payment link creation will be implemented with new payment provider
+    toast.info('Payment link feature coming soon with new payment provider');
+    setIsCreatingPaymentLink(false);
+    onPaymentLinkCreate?.(invoice);
   };
 
   const handleCopyPaymentLink = async () => {
@@ -86,7 +40,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
       try {
         await navigator.clipboard.writeText(paymentLink.url);
         toast.success('Payment link copied to clipboard!');
-      } catch (error) {
+      } catch {
         toast.error('Failed to copy payment link');
       }
     }
@@ -127,7 +81,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                 {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
               </Badge>
             </div>
-            
+
             <div className="text-sm text-muted-foreground space-y-2">
               <div className="break-all">
                 To: {invoice.invoice_recipients[0]?.recipient_name} ({invoice.invoice_recipients[0]?.recipient_email})
@@ -140,7 +94,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                   Due: {format(new Date(invoice.due_date), 'MMM dd, yyyy')}
                 </div>
               </div>
-              
+
               {/* Payment Status */}
               {paymentStatus && (
                 <div className="flex items-center gap-2 text-xs">
@@ -162,7 +116,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                   )}
                 </div>
               )}
-              
+
               {/* Payment Link Status */}
               {paymentLink && (
                 <div className="flex items-center gap-2 text-xs">
@@ -179,15 +133,15 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
             <div className="text-xl sm:text-2xl font-bold">
               {invoice.currency} {invoice.total_amount.toFixed(2)}
             </div>
-            
+
             {/* Desktop Actions */}
             <div className="hidden sm:flex gap-2">
               {/* Payment Actions */}
               {showPaymentActions() && (
                 <div className="flex gap-2">
                   {canCreatePaymentLink() && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="default"
                       onClick={handleCreatePaymentLink}
                       disabled={isCreatingPaymentLink}
@@ -196,19 +150,19 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                       {isCreatingPaymentLink ? 'Creating...' : 'Pay Link'}
                     </Button>
                   )}
-                  
+
                   {paymentLink && (
                     <>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="professional-button"
                         onClick={handleCopyPaymentLink}
                         title="Copy payment link"
                       >
                         <Link className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="professional-button"
                         onClick={handleOpenPaymentLink}
                         title="Open payment link"
@@ -219,25 +173,25 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                   )}
                 </div>
               )}
-              
+
               {/* Standard Actions */}
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="professional-button"
                   onClick={() => onView?.(invoice)}
                 >
                   <Eye className="w-4 h-4" />
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="professional-button"
                   onClick={() => onEdit?.(invoice)}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="destructive"
                   onClick={() => onDelete(invoice.id)}
                 >
@@ -259,7 +213,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                   {showPaymentActions() && (
                     <>
                       {canCreatePaymentLink() && (
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={handleCreatePaymentLink}
                           disabled={isCreatingPaymentLink}
                         >
@@ -267,7 +221,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                           {isCreatingPaymentLink ? 'Creating...' : 'Create Payment Link'}
                         </DropdownMenuItem>
                       )}
-                      
+
                       {paymentLink && (
                         <>
                           <DropdownMenuItem onClick={handleCopyPaymentLink}>
@@ -282,7 +236,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                       )}
                     </>
                   )}
-                  
+
                   {/* Standard Actions */}
                   <DropdownMenuItem onClick={() => onView?.(invoice)}>
                     <Eye className="w-4 h-4 mr-2" />
@@ -292,7 +246,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onDelete, onV
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => onDelete(invoice.id)}
                     className="text-destructive"
                   >

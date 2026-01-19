@@ -96,7 +96,9 @@ export const UniversalProfileEditor: React.FC<UniversalProfileEditorProps> = ({
     };
 
     loadProfileData();
-  }, [user?.id, propProfileType, organizationId, hasRole, toast]);
+    // Note: hasRole and toast are stable references from context, not included to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, propProfileType, organizationId]);
 
   const handleSaveProfile = async (data: any) => {
     if (!user?.id || !profileType) {

@@ -153,16 +153,22 @@ export const useRequiredOrganization = (): Omit<OrganizationContextValue, 'organ
 } => {
   const context = useOrganization();
 
-  if (!context.organization && !context.isLoading) {
-    throw new Error('Organization not found');
+  // Still loading - return context with null organization
+  // Components should check isLoading and show loading state
+  if (context.isLoading) {
+    return {
+      ...context,
+      organization: null as unknown as OrganizationProfile, // Temporarily null while loading
+    };
   }
 
-  if (context.isLoading) {
-    throw new Promise(() => {}); // Suspend until loaded
+  // Done loading but no organization found - throw error
+  if (!context.organization) {
+    throw new Error('Organization not found');
   }
 
   return {
     ...context,
-    organization: context.organization!,
+    organization: context.organization,
   };
 };

@@ -140,13 +140,15 @@ export function PhoneInput({
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
-            className="w-[110px] justify-between professional-button"
+            variant="secondary"
+            size="sm"
+            className="w-[100px] justify-between py-0.5"
             disabled={disabled}
             aria-label={`Selected country: ${selectedCountry.name}`}
           >
-            <span className="flex items-center gap-2">
-              <span className="text-lg">{selectedCountry.flag}</span>
-              <span className="text-sm font-medium">{selectedCountry.dial}</span>
+            <span className="flex items-center gap-1">
+              <span className="text-base">{selectedCountry.flag}</span>
+              <span className="text-xs font-medium">{selectedCountry.dial}</span>
             </span>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>

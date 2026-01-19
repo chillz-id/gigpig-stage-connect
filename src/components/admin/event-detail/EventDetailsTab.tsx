@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, Calendar, MapPin, Users, DollarSign } from 'lucide-react';
@@ -370,16 +372,14 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ eventId, event, onEve
           </div>
 
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="allow_recording"
               checked={formData.allow_recording}
-              onChange={(e) => handleInputChange('allow_recording', e.target.checked)}
-              className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded"
+              onCheckedChange={(checked) => handleInputChange('allow_recording', checked === true)}
             />
-            <label htmlFor="allow_recording" className="text-white/80 text-sm">
+            <Label htmlFor="allow_recording" className="text-white/80 text-sm cursor-pointer">
               Allow recording during performances
-            </label>
+            </Label>
           </div>
 
           <div className="pt-4">

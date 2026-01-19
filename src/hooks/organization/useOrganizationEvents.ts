@@ -8,6 +8,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 export interface OrganizationEvent {
   id: string;
   event_date: string;
+  start_time?: string | null; // Local time (e.g., "19:00:00")
   event_name: string;
   event_description?: string | null;
   event_image?: string | null;
@@ -17,6 +18,10 @@ export interface OrganizationEvent {
   ticket_link?: string | null;
   source: 'native' | 'humanitix' | 'eventbrite';
   canonical_source_id?: string;
+
+  // Ownership information (for native events only)
+  promoter_id?: string | null; // Who created the event
+  organization_id?: string | null; // Which organization owns the event
 
   // Financial totals (from session_complete)
   total_ticket_count?: number | null;
@@ -99,6 +104,7 @@ function transformNativeEvent(event: any): OrganizationEvent {
   return {
     id: event.id,
     event_date: event.event_date,
+    start_time: event.start_time || null,
     event_name: event.title || event.name,
     event_description: event.description || event.details,
     event_image: event.banner_url || event.hero_image_url,
@@ -107,6 +113,8 @@ function transformNativeEvent(event: any): OrganizationEvent {
     ticket_price: event.ticket_price,
     ticket_link: null,
     source: 'native',
+    promoter_id: event.promoter_id || null,
+    organization_id: event.organization_id || null,
   };
 }
 
@@ -169,7 +177,19 @@ export const useOrganizationEvents = () => {
 
       // Combine and sort by date
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
 
       // Sort by event_date ascending
       allEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
@@ -225,9 +245,9 @@ export const useOrganizationUpcomingEvents = () => {
       }
 
       // Use RPC to get upcoming sessions efficiently (joins session_partners + session_complete)
+      // Note: Can't chain .limit() after .rpc() - it causes 500 errors
       const { data: sessions, error: sessionsError } = await supabase
-        .rpc('get_org_upcoming_sessions', { p_org_id: orgId })
-        .limit(100);
+        .rpc('get_org_upcoming_sessions', { p_org_id: orgId });
 
       if (sessionsError) {
         console.error('Error fetching upcoming session details:', sessionsError);
@@ -240,7 +260,21 @@ export const useOrganizationUpcomingEvents = () => {
 
       // Combine and sort
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      console.log('[useOrganizationUpcomingEvents] Session events after dedup:', deduplicatedSessionEvents.length);
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
       allEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
 
       console.log('[useOrganizationUpcomingEvents] Total events:', allEvents.length);
@@ -303,10 +337,81 @@ export const useOrganizationPastEvents = () => {
 
       // Combine and sort (most recent first for past events)
       const nativeTransformed = (nativeEvents || []).map(transformNativeEvent);
-      const allEvents = [...nativeTransformed, ...sessionEvents];
+
+      // Deduplicate: If a native event exists with the same name and date as a session event,
+      // prefer the native event (it has more complete data and is directly editable)
+      const nativeEventKeys = new Set(
+        nativeTransformed.map(e => `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`)
+      );
+
+      const deduplicatedSessionEvents = sessionEvents.filter(e => {
+        const key = `${e.event_name.toLowerCase().trim()}|${new Date(e.event_date).toDateString()}`;
+        return !nativeEventKeys.has(key);
+      });
+
+      const allEvents = [...nativeTransformed, ...deduplicatedSessionEvents];
       allEvents.sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime());
 
       return allEvents;
+    },
+    enabled: !!orgId,
+  });
+};
+
+/**
+ * Hook to fetch draft events for the current organization
+ *
+ * Returns native events with status='draft' for the organization.
+ * Does not include synced sessions as they cannot be drafts.
+ *
+ * @example
+ * ```tsx
+ * function DraftEvents() {
+ *   const { data: drafts } = useOrganizationDraftEvents();
+ *   return <EventsList events={drafts} />;
+ * }
+ * ```
+ */
+export const useOrganizationDraftEvents = () => {
+  const { orgId } = useOrganization();
+
+  return useQuery({
+    queryKey: ['organization-draft-events', orgId],
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error('Organization ID is required');
+      }
+
+      // Fetch draft events (only native events can be drafts, exclude linked events)
+      const { data: draftEvents, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('organization_id', orgId)
+        .eq('status', 'draft')
+        .is('humanitix_event_id', null)
+        .is('eventbrite_event_id', null)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching draft events:', error);
+        throw error;
+      }
+
+      // Transform to OrganizationEvent format
+      return (draftEvents || []).map((event): OrganizationEvent => ({
+        id: event.id,
+        event_date: event.event_date,
+        event_name: event.title || event.name || 'Untitled Draft',
+        event_description: event.description || event.details,
+        event_image: event.banner_url || event.hero_image_url,
+        is_published: false,
+        venue: event.venue ? { name: event.venue } : null,
+        ticket_price: event.ticket_price,
+        ticket_link: event.ticket_url,
+        source: 'native',
+        promoter_id: event.promoter_id || null,
+        organization_id: event.organization_id || null,
+      }));
     },
     enabled: !!orgId,
   });

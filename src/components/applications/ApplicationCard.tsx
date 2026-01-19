@@ -31,6 +31,7 @@ interface ApplicationCardProps {
   onFavourite: () => void;
   onUnfavourite: () => void;
   onHide: (scope: 'event' | 'global') => void;
+  onViewProfile?: () => void;
   isLoading?: boolean;
 }
 
@@ -43,6 +44,7 @@ export function ApplicationCard({
   onFavourite,
   onUnfavourite,
   onHide,
+  onViewProfile,
   isLoading = false
 }: ApplicationCardProps) {
   const { isMobile } = useMobileLayout();
@@ -56,7 +58,17 @@ export function ApplicationCard({
 
   return (
     <Card className={`transition-all duration-200 ${isHidden ? 'opacity-60' : ''}`}>
-      <CardHeader className={cn("flex flex-row items-start gap-4 space-y-0", isMobile ? "pb-3" : "pb-4")}>
+      <CardHeader
+        className={cn(
+          "flex flex-row items-start gap-4 space-y-0",
+          isMobile ? "pb-3" : "pb-4",
+          onViewProfile && "cursor-pointer hover:bg-muted/50 rounded-t-lg transition-colors"
+        )}
+        onClick={onViewProfile}
+        role={onViewProfile ? "button" : undefined}
+        tabIndex={onViewProfile ? 0 : undefined}
+        onKeyDown={onViewProfile ? (e) => e.key === 'Enter' && onViewProfile() : undefined}
+      >
         {/* Avatar */}
         <OptimizedAvatar
           src={application.comedian_avatar}

@@ -18,15 +18,19 @@ declare module 'jspdf' {
 export interface InvoicePDFData {
   id: string;
   invoice_number: string;
+  invoice_type?: 'promoter' | 'comedian' | 'other' | 'receivable' | 'payable';
   sender_name: string;
   sender_email: string;
   sender_phone?: string;
   sender_address?: string;
   sender_abn?: string;
+  sender_bank_name?: string;
+  sender_bank_bsb?: string;
+  sender_bank_account?: string;
   issue_date: string;
   due_date: string;
   total_amount: number;
-  subtotal: number; // Match database column name
+  subtotal: number;
   tax_amount: number;
   tax_rate: number;
   currency: string;
@@ -46,7 +50,6 @@ export interface InvoicePDFData {
     recipient_address?: string;
     recipient_abn?: string;
   }>;
-  // Deposit fields
   deposit_amount?: number;
   deposit_percentage?: number;
   deposit_due_date?: string;
@@ -98,9 +101,12 @@ class PDFService {
     
     // Add deposit information if applicable
     const afterDepositY = this.addDepositInfo(doc, invoiceData, afterTotalsY, colors);
-    
+
+    // Add payment/bank details section
+    const afterPaymentY = this.addPaymentDetails(doc, invoiceData, afterDepositY, colors);
+
     // Add notes and terms
-    const afterNotesY = this.addNotesAndTerms(doc, invoiceData, afterDepositY);
+    const afterNotesY = this.addNotesAndTerms(doc, invoiceData, afterPaymentY);
     
     // Add footer
     this.addEnhancedFooter(doc, invoiceData, afterNotesY, config);
@@ -588,6 +594,79 @@ class PDFService {
     }
 
     return yPos;
+  }
+
+  private addPaymentDetails(doc: jsPDF, invoiceData: InvoicePDFData, startY: number, colors: any): number {
+    let yPos = startY;
+
+    // Only show bank details for receivable invoices (comedian billing someone)
+    // or if bank details are present
+    const hasBankDetails = invoiceData.sender_bank_name ||
+                           invoiceData.sender_bank_bsb ||
+                           invoiceData.sender_bank_account;
+
+    if (!hasBankDetails) {
+      return yPos;
+    }
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Payment section header
+    doc.setFontSize(12);
+    doc.setTextColor(colors.primary);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Details', 20, yPos);
+
+    // Draw decorative line
+    doc.setDrawColor(colors.primary);
+    doc.setLineWidth(1);
+    doc.line(20, yPos + 2, 70, yPos + 2);
+
+    yPos += 10;
+
+    // Payment details box with professional styling
+    doc.setFillColor(240, 253, 244); // Light green background
+    doc.roundedRect(15, yPos, pageWidth - 30, 40, 3, 3, 'F');
+    doc.setDrawColor(34, 197, 94); // Green border
+    doc.setLineWidth(1);
+    doc.roundedRect(15, yPos, pageWidth - 30, 40, 3, 3, 'S');
+
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(22, 101, 52); // Dark green text
+    doc.setFont('helvetica', 'bold');
+    doc.text('Please transfer payment to:', 20, yPos);
+
+    yPos += 8;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 51, 51);
+
+    // Bank name
+    if (invoiceData.sender_bank_name) {
+      doc.text(`Bank: ${invoiceData.sender_bank_name}`, 20, yPos);
+      yPos += 5;
+    }
+
+    // BSB
+    if (invoiceData.sender_bank_bsb) {
+      doc.text(`BSB: ${invoiceData.sender_bank_bsb}`, 20, yPos);
+    }
+
+    // Account number (positioned to the right)
+    if (invoiceData.sender_bank_account) {
+      doc.text(`Account: ${invoiceData.sender_bank_account}`, 80, yPos);
+    }
+
+    yPos += 8;
+
+    // Reference instruction
+    doc.setFontSize(9);
+    doc.setTextColor(colors.light);
+    doc.text(`Reference: ${invoiceData.invoice_number}`, 20, yPos);
+
+    return startY + 55;
   }
 
   private addNotesAndTerms(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {

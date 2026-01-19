@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -7,10 +7,16 @@ import { format, isThisMonth, isThisQuarter, isThisYear, isBefore, subMonths, is
 import { Invoice, DateFilter, AmountRange } from '@/types/invoice';
 
 export const useInvoices = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, isLoading: authLoading, roles, profile } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchAttempted = useRef(false);
+
+  // Profile and roles are fetched together in the same setTimeout callback in AuthContext
+  // So we can use profile !== null as an indicator that roles have also been loaded
+  // This handles the race condition where authLoading becomes false BEFORE roles are fetched
+  const initialDataLoaded = !user || profile !== null;
 
   const fetchInvoices = useCallback(async () => {
     if (!user) {
@@ -64,7 +70,7 @@ export const useInvoices = () => {
           deposit_paid_date,
           deposit_paid_amount,
           event_date,
-          invoice_recipients (
+          invoice_recipients!invoice_recipients_invoice_id_fkey (
             recipient_name,
             recipient_email,
             recipient_mobile,
@@ -110,16 +116,40 @@ export const useInvoices = () => {
   }, [user]);
 
   useEffect(() => {
-    if (user && (hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin'))) {
-      console.log('=== FETCHING INVOICES ===', user.id);
+    // Wait for profile/roles to be loaded before making any decisions
+    // Profile and roles are fetched together, so profile !== null means roles are ready too
+    if (!initialDataLoaded) {
+      console.log('=== WAITING FOR PROFILE/ROLES TO LOAD ===', {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        rolesCount: roles.length
+      });
+      return;
+    }
+
+    const canAccessInvoices = hasRole('comedian') || hasRole('comedian_lite') || hasRole('admin');
+
+    if (user && canAccessInvoices) {
+      console.log('=== FETCHING INVOICES ===', user.id, {
+        hasComedian: hasRole('comedian'),
+        hasComedianLite: hasRole('comedian_lite'),
+        hasAdmin: hasRole('admin'),
+        rolesCount: roles.length
+      });
+      fetchAttempted.current = true;
       fetchInvoices();
-    } else {
-      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===');
+    } else if (initialDataLoaded) {
+      // Only clear/reset after initial data is loaded
+      console.log('=== NO USER OR INSUFFICIENT PERMISSIONS, CLEARING INVOICES ===', {
+        hasUser: !!user,
+        canAccessInvoices,
+        rolesCount: roles.length
+      });
       setInvoices([]);
       setLoading(false);
       setError(null);
     }
-  }, [fetchInvoices, hasRole, user]);
+  }, [fetchInvoices, hasRole, user, initialDataLoaded, profile, roles.length]);
 
   const deleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;

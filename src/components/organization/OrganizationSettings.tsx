@@ -5,10 +5,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Settings, Shield, Users } from 'lucide-react';
+import { Settings, Shield, Users, Plug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ALL_ORG_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS, OrgFeature } from '@/config/organizationTypes';
+import { OrgXeroSettingsSection } from './OrgXeroSettingsSection';
 
 /**
  * Organization Settings Component
@@ -88,7 +89,7 @@ export default function OrganizationSettings() {
         </CardHeader>
       </Card>
 
-      <Accordion type="multiple" defaultValue={['features', 'privacy', 'team']}>
+      <Accordion type="multiple" defaultValue={['features', 'integrations', 'privacy', 'team']}>
         {/* Feature Toggles */}
         <AccordionItem value="features">
           <AccordionTrigger>Feature Toggles</AccordionTrigger>
@@ -135,6 +136,21 @@ export default function OrganizationSettings() {
                   Only organization owners and admins can change feature settings.
                 </p>
               )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Integrations */}
+        <AccordionItem value="integrations">
+          <AccordionTrigger>
+            <div className="flex items-center gap-2">
+              <Plug className="h-4 w-4" />
+              Integrations
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="p-4">
+              <OrgXeroSettingsSection />
             </div>
           </AccordionContent>
         </AccordionItem>

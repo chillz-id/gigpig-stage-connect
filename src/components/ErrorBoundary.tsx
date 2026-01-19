@@ -42,6 +42,16 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-purple-200 mb-4 text-sm">
                 We encountered an unexpected error. Please try refreshing the page.
               </p>
+              {this.state.error && (
+                <div className="bg-red-900/50 border border-red-500 rounded p-3 mb-4 text-left">
+                  <p className="text-red-300 text-xs font-mono break-all">
+                    {this.state.error.message}
+                  </p>
+                  <p className="text-red-400/70 text-xs font-mono mt-2 break-all whitespace-pre-wrap">
+                    {this.state.error.stack?.split('\n').slice(0, 5).join('\n')}
+                  </p>
+                </div>
+              )}
               <Button 
                 onClick={this.handleReset}
                 className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"

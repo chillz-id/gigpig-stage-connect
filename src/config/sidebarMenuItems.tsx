@@ -25,6 +25,8 @@ import {
   Lightbulb,
   AlertTriangle,
   BookUser,
+  Repeat,
+  Layers,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -176,7 +178,7 @@ export const MENU_ITEMS: MenuItem[] = [
     section: 'opportunities',
   },
 
-  // My Work Section
+  // My Work Section (now "Events")
   // Note: "My Events" for organizations - path transformed by UnifiedSidebar based on active org
   {
     id: 'my-events',
@@ -184,6 +186,22 @@ export const MENU_ITEMS: MenuItem[] = [
     path: '/my-events', // Transformed to /org/{slug}/events when org is active
     icon: Calendar,
     roles: ['member', 'comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'], // Shown when org context is active
+    section: 'work',
+  },
+  {
+    id: 'tours',
+    label: 'Tours',
+    path: '/tours', // Transformed to /org/{slug}/events/tours when org is active
+    icon: Layers,
+    roles: ['comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
+    section: 'work',
+  },
+  {
+    id: 'recurring',
+    label: 'Recurring',
+    path: '/recurring', // Transformed to /org/{slug}/events/recurring when org is active
+    icon: Repeat,
+    roles: ['comedian', 'comedian_lite', 'co_promoter', 'admin', 'photographer', 'videographer'],
     section: 'work',
   },
   {
@@ -228,7 +246,7 @@ export const MENU_ITEMS: MenuItem[] = [
     path: '/tasks',
     icon: CheckSquare,
     roles: ['comedian', 'photographer', 'videographer', 'admin'],
-    section: 'work',
+    section: 'business',
   },
 
   // Business Section
@@ -382,10 +400,10 @@ export const getDefaultHiddenItemsForRole = (role: UserRole): string[] => {
  * Section labels for grouping menu items
  */
 export const SECTION_LABELS: Record<string, string> = {
-  opportunities: 'Opportunities',
-  work: 'My Work',
+  opportunities: 'Talent',
+  work: 'Events',
   business: 'Business',
   manager: 'Manager Features',
   admin: 'Admin',
-  account: 'Account',
+  account: 'Platform',
 };

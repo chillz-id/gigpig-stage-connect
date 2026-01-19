@@ -350,7 +350,7 @@ export const AccountSettings: React.FC = () => {
               <AccordionContent>
                 <div className="space-y-6 pt-4">
                   <div className="space-y-2">
-                    <Label>Email Address</Label>
+                    <Label className="mb-2 block">Email Address</Label>
                     <Input
                       value={user?.email || ''}
                       disabled
@@ -362,7 +362,7 @@ export const AccountSettings: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="display-name">Display Name</Label>
+                    <Label htmlFor="display-name" className="mb-2 block">Display Name</Label>
                     <Input
                       id="display-name"
                       defaultValue={profile?.name || ''}

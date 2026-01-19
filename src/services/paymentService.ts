@@ -1,7 +1,7 @@
 import { supabase } from '../integrations/supabase/client';
 
 // Payment gateway types
-export type PaymentGateway = 'stripe' | 'paypal' | 'bank_transfer';
+export type PaymentGateway = 'paypal' | 'bank_transfer';
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'bank_transfer' | 'paypal_account' | 'cash';
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'refunded';
 
@@ -46,7 +46,7 @@ export interface CommissionSplit {
 
 /**
  * FlexPay - Multi-gateway payment processing service
- * Handles Stripe, PayPal, and bank transfer payments with commission splitting
+ * Handles PayPal and bank transfer payments with commission splitting
  */
 export class FlexPayService {
   private static instance: FlexPayService;
@@ -119,9 +119,6 @@ export class FlexPayService {
       // Process payment based on gateway
       let paymentResponse: PaymentResponse;
       switch (request.paymentGateway) {
-        case 'stripe':
-          paymentResponse = await this.processStripePayment(request, gatewayConfig, paymentRecordId);
-          break;
         case 'paypal':
           paymentResponse = await this.processPayPalPayment(request, gatewayConfig, paymentRecordId);
           break;
@@ -193,50 +190,6 @@ export class FlexPayService {
       .eq('id', paymentRecordId);
 
     if (error) throw error;
-  }
-
-  /**
-   * Process Stripe payment
-   */
-  private async processStripePayment(
-    request: PaymentRequest,
-    config: PaymentGatewayConfig,
-    paymentRecordId: string
-  ): Promise<PaymentResponse> {
-    try {
-      // This is a placeholder for actual Stripe integration
-      // In a real implementation, you would use Stripe SDK
-      
-      const stripeResponse = await this.mockStripePayment(request, config);
-      
-      // Calculate fees and commission splits
-      const processorFee = request.amount * 0.029 + 0.30; // Stripe's standard fee
-      const netAmount = request.amount - processorFee;
-      
-      // Update payment record with fees
-      await supabase
-        .from('payment_records')
-        .update({
-          processor_fee: processorFee,
-          net_amount: netAmount
-        })
-        .eq('id', paymentRecordId);
-
-      return {
-        success: true,
-        paymentRecordId,
-        gatewayTransactionId: stripeResponse.transactionId,
-        status: 'completed',
-        gatewayResponse: stripeResponse
-      };
-    } catch (error) {
-      console.error('Stripe payment failed:', error);
-      return {
-        success: false,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Stripe payment failed'
-      };
-    }
   }
 
   /**
@@ -433,24 +386,6 @@ export class FlexPayService {
   }
 
   /**
-   * Mock Stripe payment for development/testing
-   */
-  private async mockStripePayment(request: PaymentRequest, config: PaymentGatewayConfig): Promise<any> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful payment
-    return {
-      transactionId: `stripe_${Date.now()}`,
-      status: 'succeeded',
-      amount: request.amount,
-      currency: request.currency,
-      paymentMethod: request.paymentMethod,
-      created: new Date().toISOString()
-    };
-  }
-
-  /**
    * Mock PayPal payment for development/testing
    */
   private async mockPayPalPayment(request: PaymentRequest, config: PaymentGatewayConfig): Promise<any> {
@@ -486,9 +421,6 @@ export class FlexPayService {
 
       // Process webhook based on gateway
       switch (gatewayName) {
-        case 'stripe':
-          await this.processStripeWebhook(payload);
-          break;
         case 'paypal':
           await this.processPayPalWebhook(payload);
           break;
@@ -513,23 +445,6 @@ export class FlexPayService {
     // Implementation depends on the specific gateway
     // This is a placeholder - real implementation would use crypto libraries
     return true;
-  }
-
-  /**
-   * Process Stripe webhook
-   */
-  private async processStripeWebhook(payload: any): Promise<void> {
-    // Handle different Stripe webhook events
-    switch (payload.type) {
-      case 'payment_intent.succeeded':
-        await this.handlePaymentSuccess(payload.data.object);
-        break;
-      case 'payment_intent.payment_failed':
-        await this.handlePaymentFailure(payload.data.object);
-        break;
-      default:
-        console.log(`Unhandled Stripe webhook event: ${payload.type}`);
-    }
   }
 
   /**

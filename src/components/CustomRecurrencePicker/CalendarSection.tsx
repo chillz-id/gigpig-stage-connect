@@ -23,8 +23,8 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       <div>
         <Button
           type="button"
-          className="professional-button bg-white/10 border-white/20 text-white hover:bg-white/20"
           onClick={onToggleCalendar}
+          className="professional-button bg-white/10 border-white/20 text-white hover:bg-white/20"
         >
           {isCalendarOpen ? 'Hide Calendar' : 'Select Dates'}
         </Button>

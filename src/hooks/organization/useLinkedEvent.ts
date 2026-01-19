@@ -58,11 +58,34 @@ export function useLinkedEvent(event: OrganizationEvent | null) {
 
       // No linked event exists - create minimal link record
       // Display data comes from session_complete, we only store the link
+
+      // Extract local time from event_date timestamp for start_time field
+      // event_date is a full timestamp like "2025-01-15T09:00:00+00:00"
+      // We need to extract the local time portion (e.g., "19:00:00" for Sydney)
+      let startTime: string | null = null;
+      if (event.event_date) {
+        try {
+          const eventDateObj = new Date(event.event_date);
+          // Format time in Sydney timezone (same as the events are displayed)
+          const timeFormatter = new Intl.DateTimeFormat('en-AU', {
+            timeZone: 'Australia/Sydney',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          startTime = timeFormatter.format(eventDateObj);
+        } catch (e) {
+          console.warn('Could not extract start time from event_date:', e);
+        }
+      }
+
       const eventData: Record<string, unknown> = {
         // Required fields (NOT NULL in schema)
         title: `Linked: ${event.event_name}`,
         name: event.event_name,
         event_date: event.event_date,
+        start_time: startTime, // Extract local time from the timestamp
         venue: event.venue?.name || 'See ticketing platform',
         address: event.venue?.name || 'See ticketing platform',
         // Link metadata

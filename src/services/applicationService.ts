@@ -9,6 +9,7 @@ export interface EventOption {
 
 // Real database functions
 export async function getApplicationsByPromoter(promoterId: string): Promise<ApplicationData[]> {
+  // Note: We filter by promoter_id client-side because PostgREST doesn't support .eq() on embedded fields
   const { data, error } = await supabase
     .from('applications')
     .select(`
@@ -37,7 +38,6 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
         years_experience
       )
     `)
-    .eq('events.promoter_id', promoterId)
     .order('applied_at', { ascending: false });
 
   if (error) {
@@ -45,7 +45,10 @@ export async function getApplicationsByPromoter(promoterId: string): Promise<App
     throw error;
   }
 
-  return (data || []).map(app => ({
+  // Filter to only applications for this promoter's events
+  return (data || [])
+    .filter(app => app.events?.promoter_id === promoterId)
+    .map(app => ({
     id: app.id,
     comedian_id: app.comedian_id,
     comedian_name: app.profiles?.name || 'Unknown',

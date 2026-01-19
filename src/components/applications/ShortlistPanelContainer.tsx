@@ -21,12 +21,15 @@ interface ShortlistPanelContainerProps {
   eventId: string;
   userId: string;
   totalSpots?: number;
+  /** Layout mode: 'sidebar' (default) or 'horizontal' for inline display */
+  layout?: 'sidebar' | 'horizontal';
 }
 
 export function ShortlistPanelContainer({
   eventId,
   userId,
-  totalSpots
+  totalSpots,
+  layout = 'sidebar'
 }: ShortlistPanelContainerProps) {
   const { toast } = useToast();
 
@@ -139,6 +142,21 @@ export function ShortlistPanelContainer({
 
   // Loading state
   if (isLoading) {
+    if (layout === 'horizontal') {
+      return (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+          <div className="mt-4 flex gap-3">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-12 w-12 rounded-full" />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="hidden h-full w-80 flex-col gap-4 border-l border-border bg-muted p-4 lg:flex">
         <Skeleton className="h-10 w-full" />
@@ -160,6 +178,7 @@ export function ShortlistPanelContainer({
       onRemoveAll={handleRemoveAll}
       isLoading={isAnyMutating}
       totalSpots={totalSpots}
+      layout={layout}
     />
   );
 }

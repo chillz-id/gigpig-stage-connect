@@ -34,15 +34,17 @@ interface GigPillProps {
  * - Orange: Pending gigs awaiting confirmation
  */
 function GigPillComponent({ event, onDelete, onClick, showDelete = false }: GigPillProps) {
-  // Format time from ISO string
+  // Format time from date string
   const time = React.useMemo(() => {
     if (!event.date) return 'TBA';
 
-    const timeMatch = event.date.match(/T(\d{2}):(\d{2})/);
-    if (!timeMatch) return 'TBA';
+    // Parse the date - expects local time format like "2025-12-29T19:00:00"
+    // ProfileCalendarView combines date from event_date with local start_time
+    const date = new Date(event.date);
+    if (isNaN(date.getTime())) return 'TBA';
 
-    const hours = parseInt(timeMatch[1], 10);
-    const minutes = timeMatch[2];
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
 
     // Convert to 12-hour format
     if (hours === 0) {

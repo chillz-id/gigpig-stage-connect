@@ -3,20 +3,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useEventApplications } from '@/hooks/useEventApplications';
-import { CalendarDays, Clock, MapPin, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, CheckCircle, XCircle, AlertTriangle, ExternalLink } from 'lucide-react';
+import { generateGoogleMapsUrl } from '@/utils/maps';
 import { format, differenceInDays, differenceInHours, isAfter, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const PendingConfirmationsSection = () => {
   const { userApplications, isLoadingUserApplications, updateApplication, isUpdating } = useEventApplications();
-  const navigate = useNavigate();
 
-  // Filter for accepted applications that need confirmation
-  const pendingConfirmations = userApplications?.filter(app => 
-    app.status === 'accepted' && !app.availability_confirmed
-  ) || [];
+  // Filter for accepted applications that need confirmation (upcoming events only)
+  const today = new Date().toISOString().split('T')[0];
+  const pendingConfirmations = userApplications?.filter(app => {
+    const eventDate = app.event?.event_date;
+    return app.status === 'accepted' && !app.availability_confirmed && eventDate && eventDate >= today;
+  }) || [];
 
   const getDeadlineStatus = (eventDate: string | null) => {
     if (!eventDate) return { status: 'unknown', text: 'Date TBD', color: 'text-gray-500' };
@@ -126,43 +127,65 @@ export const PendingConfirmationsSection = () => {
       <CardContent>
         <div className="space-y-4">
           {pendingConfirmations.map((application) => {
-            const deadline = getDeadlineStatus(application.events?.event_date);
-            
+            const deadline = getDeadlineStatus(application.event?.event_date);
+
             return (
               <div
                 key={application.id}
                 className={cn(
                   "group relative p-4 border rounded-lg transition-all",
-                  deadline.status === 'overdue' && "border-red-200 bg-red-50",
-                  deadline.status === 'urgent' && "border-yellow-200 bg-yellow-50",
-                  deadline.status === 'soon' && "border-yellow-100 bg-yellow-25",
-                  deadline.status === 'normal' && "border-green-100 bg-green-25"
+                  deadline.status === 'overdue' && "border-red-500/50",
+                  deadline.status === 'urgent' && "border-yellow-500/50",
+                  deadline.status === 'soon' && "border-yellow-500/30",
+                  deadline.status === 'normal' && "border-green-500/30"
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
                       <h4 className="font-semibold text-lg">
-                        {application.events?.title || 'Event'}
+                        {application.event?.title || 'Event'}
                       </h4>
                       <Badge className="bg-green-500 hover:bg-green-600 text-white">
                         Accepted
                       </Badge>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        <span>{application.events?.venue || 'Venue'}</span>
+                        <span>{application.event?.venue || 'Venue'}</span>
+                        {(() => {
+                          const mapsUrl = generateGoogleMapsUrl({
+                            address: application.event?.address,
+                            venue: application.event?.venue,
+                            city: application.event?.city,
+                            state: application.event?.state,
+                          });
+                          return mapsUrl ? (
+                            <a
+                              href={mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary/80"
+                              title="Open in Google Maps"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null;
+                        })()}
                       </div>
-                      
-                      {application.events?.event_date && (
+
+                      {application.event?.event_date && (
                         <div className="flex items-center gap-1">
                           <CalendarDays className="h-3 w-3" />
-                          <span>{format(new Date(application.events.event_date), 'MMM d, yyyy • h:mm a')}</span>
+                          <span>
+                            {format(new Date(application.event.event_date), 'MMM d, yyyy')}
+                            {application.event?.start_time && ` • ${application.event.start_time.substring(0, 5)}`}
+                          </span>
                         </div>
                       )}
-                      
+
                       {application.spot_type && (
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Spot:</span>
@@ -171,48 +194,32 @@ export const PendingConfirmationsSection = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
                       {getDeadlineIcon(deadline.status)}
                       <span className="text-sm font-medium">
-                        Confirmation deadline: 
+                        Confirmation deadline:
                         <span className={cn("ml-1", deadline.color)}>
                           {deadline.text}
                         </span>
                       </span>
                     </div>
 
-                    {deadline.status === 'overdue' && (
-                      <div className="flex items-center gap-2 p-2 bg-red-100 border border-red-200 rounded-lg">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-700">
-                          This confirmation is overdue! Please respond immediately.
-                        </span>
-                      </div>
-                    )}
-
                     {application.message && (
-                      <p className="text-sm text-muted-foreground italic bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm text-muted-foreground italic bg-muted/50 p-3 rounded-lg">
                         Original message: "{application.message}"
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <Button
-                    className="professional-button"
-                    size="sm"
-                    onClick={() => navigate(`/events/${application.event_id}`)}
-                  >
-                    View Event Details
-                  </Button>
-                  
+                <div className="mt-4 flex justify-end">
                   <div className="flex gap-2">
                     <Button
-                      className="professional-button text-red-600 hover:text-red-700 hover:bg-red-50"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleConfirmation(application.id, false)}
                       disabled={isUpdating}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Decline

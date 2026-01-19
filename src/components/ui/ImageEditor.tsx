@@ -2,11 +2,11 @@
  * ImageEditor - Toast UI Image Editor wrapper component
  *
  * Full-featured image editor with crop, rotate, flip, filters, annotations, and more.
- * Replaces the basic canvas-based cropping components (ImageCrop, EventImageCrop).
+ * Uses the core tui-image-editor library directly for React 19 compatibility.
  */
 
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import ImageEditor from '@toast-ui/react-image-editor';
+import TuiImageEditor from 'tui-image-editor';
 import 'tui-image-editor/dist/tui-image-editor.css';
 
 // Type definitions for Toast UI Image Editor output
@@ -209,7 +209,8 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
   quality = 0.92,
   format = 'jpeg',
 }) => {
-  const editorRef = useRef<ImageEditor>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorInstanceRef = useRef<TuiImageEditor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Get aspect ratio value
@@ -230,7 +231,7 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
       case 'avatar':
         return { width: 400, height: 400 };
       case 'banner':
-        return { width: 1280, height: 720 }; // 16:9 ratio
+        return { width: 1920, height: 1080 }; // 16:9 ratio (Full HD)
       default:
         return { width: 1920, height: 1080 }; // Default max
     }
@@ -238,7 +239,7 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
 
   // Handle save with resize
   const handleSave = useCallback(async () => {
-    const editorInstance = editorRef.current?.getInstance();
+    const editorInstance = editorInstanceRef.current;
     if (!editorInstance) return;
 
     const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
@@ -329,30 +330,72 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
     }
   }, [onClose]);
 
-  // Load image when source changes
-  useEffect(() => {
-    const editorInstance = editorRef.current?.getInstance();
-    if (editorInstance && source) {
-      setIsLoading(true);
-      editorInstance
-        .loadImageFromURL(source, 'image')
-        .then(() => {
-          setIsLoading(false);
-          // Apply initial crop ratio if specified
-          const ratio = getAspectRatio();
-          if (!isNaN(ratio)) {
-            editorInstance.setCropzoneRect(ratio);
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Failed to load image:', err);
-          setIsLoading(false);
-        });
-    }
-  }, [source, getAspectRatio]);
-
   // Editor height calculation
   const heightValue = typeof height === 'number' ? `${height}px` : height;
+
+  // Initialize editor
+  useEffect(() => {
+    if (!containerRef.current || !source) return;
+
+    // Cleanup previous instance
+    if (editorInstanceRef.current) {
+      editorInstanceRef.current.destroy();
+      editorInstanceRef.current = null;
+    }
+
+    setIsLoading(true);
+
+    // Create new editor instance
+    const editor = new TuiImageEditor(containerRef.current, {
+      includeUI: {
+        loadImage: {
+          path: source,
+          name: 'image',
+        },
+        theme: darkTheme,
+        menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'filter'],
+        initMenu: defaultTab || '',
+        uiSize: {
+          width: '100%',
+          height: heightValue,
+        },
+        menuBarPosition: 'bottom',
+        locale: customLocale,
+      },
+      cssMaxHeight: 800,
+      cssMaxWidth: 1200,
+      selectionStyle: {
+        cornerSize: 20,
+        rotatingPointOffset: 70,
+      },
+      usageStatistics: false,
+    });
+
+    editorInstanceRef.current = editor;
+
+    // Wait for image to load
+    editor.loadImageFromURL(source, 'image')
+      .then(() => {
+        setIsLoading(false);
+        // Apply initial crop ratio if specified
+        const ratio = getAspectRatio();
+        if (!isNaN(ratio)) {
+          editor.setCropzoneRect(ratio);
+        }
+      })
+      .catch((err: Error) => {
+        console.error('Failed to load image:', err);
+        setIsLoading(false);
+      });
+
+    // Cleanup on unmount
+    return () => {
+      if (editorInstanceRef.current) {
+        editorInstanceRef.current.destroy();
+        editorInstanceRef.current = null;
+      }
+    };
+  }, [source, defaultTab, heightValue, getAspectRatio]);
 
   return (
     <div className="toast-ui-image-editor-container relative" style={{ height: heightValue }}>
@@ -375,31 +418,8 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
         </div>
       )}
 
-      <ImageEditor
-        ref={editorRef}
-        includeUI={{
-          loadImage: {
-            path: source,
-            name: 'image',
-          },
-          theme: darkTheme,
-          menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'filter'],
-          initMenu: defaultTab || '', // Empty string = no menu open by default
-          uiSize: {
-            width: '100%',
-            height: heightValue,
-          },
-          menuBarPosition: 'bottom',
-          locale: customLocale,
-        }}
-        cssMaxHeight={800}
-        cssMaxWidth={1200}
-        selectionStyle={{
-          cornerSize: 20,
-          rotatingPointOffset: 70,
-        }}
-        usageStatistics={false}
-      />
+      {/* Container for Toast UI Image Editor */}
+      <div ref={containerRef} style={{ width: '100%', height: heightValue }} />
 
       {/* Custom action buttons */}
       <div className="absolute bottom-4 right-4 flex gap-2 z-20">

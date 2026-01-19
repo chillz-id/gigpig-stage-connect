@@ -1,10 +1,11 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveProfile } from '@/contexts/ProfileContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { NotFoundHandler } from '@/components/profile/NotFoundHandler';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GiveVouchForm } from '@/components/GiveVouchForm';
@@ -13,7 +14,7 @@ import { Crown } from 'lucide-react';
 import { OrganizationProfileWrapper } from '@/components/organization/OrganizationProfileWrapper';
 
 // Lazy load organization pages
-const UniversalProfileEditor = lazy(() => import('@/pages/UniversalProfileEditor').then(m => ({ default: m.UniversalProfileEditor })));
+const OrganizationProfileEditorLayout = lazy(() => import('@/components/organization/OrganizationProfileEditorLayout').then(m => ({ default: m.OrganizationProfileEditorLayout })));
 const OrganizationDashboard = lazy(() => import('@/pages/organization/OrganizationDashboard'));
 const OrganizationEvents = lazy(() => import('@/pages/organization/OrganizationEvents'));
 const OrganizationTeam = lazy(() => import('@/pages/organization/OrganizationTeam'));
@@ -23,7 +24,7 @@ const OrganizationMediaLibrary = lazy(() => import('@/pages/organization/Organiz
 const OrganizationInvoices = lazy(() => import('@/pages/organization/OrganizationInvoices'));
 const OrganizationBookComedian = lazy(() => import('@/pages/organization/OrganizationBookComedian'));
 const CreateOrganizationEvent = lazy(() => import('@/pages/organization/CreateOrganizationEvent'));
-const OrganizationEventSeries = lazy(() => import('@/pages/organization/OrganizationEventSeries'));
+const OrganizationEventTours = lazy(() => import('@/pages/organization/OrganizationEventTours'));
 
 interface PublicProfileProps {
   type: 'comedian' | 'manager' | 'organization' | 'venue';
@@ -47,6 +48,8 @@ const TABLE_MAP = {
 export default function PublicProfile({ type }: PublicProfileProps) {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  // Subscribe to location to ensure re-renders on navigation
+  const location = useLocation();
   const { setActiveProfile } = useActiveProfile();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -156,33 +159,47 @@ export default function PublicProfile({ type }: PublicProfileProps) {
     return <NotFoundHandler profileType={type} attemptedSlug={slug || ''} />;
   }
 
+  // Suspense wrapper for lazy-loaded components
+  const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+
   // For organization profiles, use the full organization pages with OrganizationProvider
   if (type === 'organization') {
+    // Extract the sub-path for route matching (e.g., "events" or "events/create")
+    const basePath = `/org/${slug}`;
+    const subPath = location.pathname.replace(basePath, '').replace(/^\//, '') || 'index';
+
+    // Debug: Log current location to verify re-renders on navigation
+    console.log('[PublicProfile] Rendering org routes, pathname:', location.pathname, 'subPath:', subPath);
+
     return (
-      <OrganizationProvider>
-        <Suspense
-          fallback={
-            <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          }
-        >
+      <OrganizationProvider key={subPath}>
+        <ErrorBoundary>
           <Routes>
             <Route index element={<OrganizationProfileWrapper />} />
-            <Route path="edit" element={<UniversalProfileEditor profileType="organization" organizationId={profile.id} />} />
-            <Route path="dashboard" element={<OrganizationDashboard />} />
-            <Route path="events" element={<OrganizationEvents />} />
-            <Route path="events/create" element={<CreateOrganizationEvent />} />
-            <Route path="events/series" element={<OrganizationEventSeries />} />
-            <Route path="team" element={<OrganizationTeam />} />
-            <Route path="tasks" element={<OrganizationTasks />} />
-            <Route path="analytics" element={<OrganizationAnalytics />} />
-            <Route path="media" element={<OrganizationMediaLibrary />} />
-            <Route path="invoices" element={<OrganizationInvoices />} />
-            <Route path="book-comedian" element={<OrganizationBookComedian />} />
+            <Route path="edit" element={<SuspenseWrapper><OrganizationProfileEditorLayout /></SuspenseWrapper>} />
+            <Route path="dashboard" element={<SuspenseWrapper><OrganizationDashboard /></SuspenseWrapper>} />
+            <Route path="events" element={<SuspenseWrapper><OrganizationEvents /></SuspenseWrapper>} />
+            <Route path="events/create" element={<SuspenseWrapper><CreateOrganizationEvent /></SuspenseWrapper>} />
+            <Route path="events/tours" element={<SuspenseWrapper><OrganizationEventTours /></SuspenseWrapper>} />
+            <Route path="team" element={<SuspenseWrapper><OrganizationTeam /></SuspenseWrapper>} />
+            <Route path="tasks" element={<SuspenseWrapper><OrganizationTasks /></SuspenseWrapper>} />
+            <Route path="analytics" element={<SuspenseWrapper><OrganizationAnalytics /></SuspenseWrapper>} />
+            <Route path="media" element={<SuspenseWrapper><OrganizationMediaLibrary /></SuspenseWrapper>} />
+            <Route path="invoices" element={<SuspenseWrapper><OrganizationInvoices /></SuspenseWrapper>} />
+            <Route path="book-comedian" element={<SuspenseWrapper><OrganizationBookComedian /></SuspenseWrapper>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Suspense>
+        </ErrorBoundary>
       </OrganizationProvider>
     );
   }

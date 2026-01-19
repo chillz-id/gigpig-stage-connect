@@ -85,40 +85,80 @@ export const ProfileCalendarView: React.FC = () => {
     disconnect
   } = useGoogleCalendarSync();
 
-  // Fetch applications (accepted = confirmed gigs, pending = awaiting response)
+  // Fetch bookings from both applications AND event_spots tables
   const { data: confirmedBookings = [] } = useQuery({
-    queryKey: ['comedian-applications', user?.id],
+    queryKey: ['comedian-bookings', user?.id],
     queryFn: async () => {
       if (!user?.id || !isComedian) return [];
 
-      // Fetch applications (accepted and pending)
+      const bookings: Array<{ id: string; status: string; events: any }> = [];
+
+      // 1. Fetch from applications table (comedian applied to event)
       const { data: applications, error: applicationsError } = await supabase
         .from('applications')
         .select('id, status, event_id')
         .eq('comedian_id', user.id)
         .in('status', ['accepted', 'pending']);
 
-      if (applicationsError) throw applicationsError;
-      if (!applications || applications.length === 0) return [];
+      if (applicationsError) {
+        console.error('Error fetching applications:', applicationsError);
+      }
 
-      // Then batch-fetch related events
-      const eventIds = [...new Set(applications.map(a => a.event_id).filter(Boolean))];
-      if (eventIds.length === 0) return [];
+      // 2. Fetch from event_spots table (promoter added comedian directly)
+      const { data: eventSpots, error: spotsError } = await supabase
+        .from('event_spots')
+        .select('id, confirmation_status, event_id')
+        .eq('comedian_id', user.id)
+        .in('confirmation_status', ['confirmed', 'pending']);
 
+      if (spotsError) {
+        console.error('Error fetching event spots:', spotsError);
+      }
+
+      // Collect all event IDs from both sources
+      const applicationEventIds = (applications || []).map(a => a.event_id).filter(Boolean);
+      const spotEventIds = (eventSpots || []).map(s => s.event_id).filter(Boolean);
+      const allEventIds = [...new Set([...applicationEventIds, ...spotEventIds])];
+
+      if (allEventIds.length === 0) return [];
+
+      // Batch-fetch all related events
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('id, title, venue, event_date, start_time')
-        .in('id', eventIds);
+        .in('id', allEventIds);
 
       if (eventsError) throw eventsError;
 
-      // Map events to applications
       const eventMap = new Map(events?.map(e => [e.id, e]) || []);
-      return applications.map(application => ({
-        id: application.id,
-        status: application.status === 'accepted' ? 'confirmed' : application.status,
-        events: eventMap.get(application.event_id!)
-      })).filter(b => b.events); // Only include applications with valid events
+
+      // Map applications to bookings
+      (applications || []).forEach(application => {
+        const event = eventMap.get(application.event_id!);
+        if (event) {
+          bookings.push({
+            id: application.id,
+            status: application.status === 'accepted' ? 'confirmed' : application.status,
+            events: event
+          });
+        }
+      });
+
+      // Map event_spots to bookings (avoid duplicates by event_id)
+      const addedEventIds = new Set(bookings.map(b => b.events?.id));
+      (eventSpots || []).forEach(spot => {
+        const event = eventMap.get(spot.event_id!);
+        if (event && !addedEventIds.has(event.id)) {
+          bookings.push({
+            id: spot.id,
+            status: spot.confirmation_status === 'confirmed' ? 'confirmed' : 'pending',
+            events: event
+          });
+          addedEventIds.add(event.id);
+        }
+      });
+
+      return bookings;
     },
     enabled: !!user?.id && isComedian
   });
@@ -130,11 +170,32 @@ export const ProfileCalendarView: React.FC = () => {
     // Add confirmed and pending bookings
     confirmedBookings.forEach(booking => {
       if (booking.events) {
+        // event_date is stored in UTC (e.g., "2025-12-29 08:00:00+00")
+        // start_time is stored as local time (e.g., "19:00" or "19:00:00")
+        // We need to combine the DATE from event_date with the TIME from start_time
+        const eventDateRaw = booking.events.event_date;
+        const startTime = booking.events.start_time;
+
+        // Extract date portion (YYYY-MM-DD) from event_date
+        const datePortion = eventDateRaw?.includes('T')
+          ? eventDateRaw.split('T')[0]
+          : eventDateRaw?.split(' ')[0];
+
+        // Combine date with local start_time, falling back to event_date if no start_time
+        let combinedDateTime: string;
+        if (datePortion && startTime) {
+          // Create ISO-like string with local time: "2025-12-29T19:00:00"
+          combinedDateTime = `${datePortion}T${startTime}`;
+        } else {
+          // Fallback to original event_date if start_time is missing
+          combinedDateTime = eventDateRaw;
+        }
+
         events.push({
           id: booking.id,
           title: booking.events.title,
           venue: booking.events.venue,
-          date: booking.events.start_time || booking.events.event_date,
+          date: combinedDateTime,
           end_time: null,
           type: booking.status === 'confirmed' ? 'confirmed' : 'pending' as GigType,
           notes: null
@@ -201,7 +262,11 @@ export const ProfileCalendarView: React.FC = () => {
     const grouped: Record<string, GigPillEvent[]> = {};
 
     filteredEvents.forEach(event => {
-      const dateKey = event.date.split('T')[0];
+      if (!event.date) return;
+      // Handle both ISO format (2025-12-29T19:00:00) and timestamp format (2025-12-29 08:00:00+00)
+      const dateKey = event.date.includes('T')
+        ? event.date.split('T')[0]
+        : event.date.split(' ')[0];
       if (!dateKey) return;
 
       if (!grouped[dateKey]) {
