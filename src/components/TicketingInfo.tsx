@@ -170,8 +170,7 @@ export const TicketingInfo: React.FC<TicketingInfoProps> = ({
                   type="button"
                   onClick={addTicket}
                   size="sm"
-                  className="professional-button"
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="professional-button border-white/20 text-white hover:bg-white/10"
                   disabled={!newTicket.name || newTicket.price < 0}
                 >
                   <Plus className="w-4 h-4" />

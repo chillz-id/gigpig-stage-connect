@@ -464,9 +464,9 @@ const XeroIntegration = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">{contact.name}</span>
-                    <Badge className="professional-button" className={
+                    <Badge className={`professional-button ${
                       contact.contactType === 'Customer' ? 'border-green-500/50 text-green-400' : 'border-blue-500/50 text-blue-400'
-                    }>
+                    }`}>
                       {contact.contactType}
                     </Badge>
                     {contact.syncedFromPlatform && (

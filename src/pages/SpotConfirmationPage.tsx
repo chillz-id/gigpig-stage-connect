@@ -290,10 +290,9 @@ export default function SpotConfirmationPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
         {/* Back button */}
-        <Button 
+        <Button
           onClick={() => navigate('/dashboard')}
-          className="professional-button"
-          className="mb-6"
+          className="professional-button mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard

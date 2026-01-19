@@ -49,7 +49,7 @@ export function ManagerTypeBadge({ type, className = '' }: ManagerTypeBadgeProps
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge className="professional-button" className={`gap-1 ${className}`}>
+          <Badge className={`professional-button gap-1 ${className}`}>
             <Icon className="h-3 w-3" />
             {config.label}
           </Badge>

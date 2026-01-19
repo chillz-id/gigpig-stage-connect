@@ -306,11 +306,10 @@ const EventManagementContent = () => {
               </Badge>
             </CardTitle>
             <div className="flex gap-2">
-              <Button 
-                className="professional-button" 
-                size="sm" 
+              <Button
+                className="professional-button text-white border-white/20 hover:bg-white/10"
+                size="sm"
                 onClick={exportEvents}
-                className="text-white border-white/20 hover:bg-white/10"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export
@@ -356,35 +355,31 @@ const EventManagementContent = () => {
                     {selectedEvents.length} event(s) selected
                   </span>
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      className="professional-button"
+                    <Button
+                      size="sm"
+                      className="professional-button text-green-400 border-green-400/50 hover:bg-green-400/10"
                       onClick={() => handleBulkAction('publish')}
-                      className="text-green-400 border-green-400/50 hover:bg-green-400/10"
                     >
                       Publish
                     </Button>
-                    <Button 
-                      size="sm" 
-                      className="professional-button"
+                    <Button
+                      size="sm"
+                      className="professional-button text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10"
                       onClick={() => handleBulkAction('unpublish')}
-                      className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10"
                     >
                       Unpublish
                     </Button>
-                    <Button 
-                      size="sm" 
-                      className="professional-button"
+                    <Button
+                      size="sm"
+                      className="professional-button text-red-400 border-red-400/50 hover:bg-red-400/10"
                       onClick={() => handleBulkAction('delete')}
-                      className="text-red-400 border-red-400/50 hover:bg-red-400/10"
                     >
                       Delete
                     </Button>
-                    <Button 
-                      size="sm" 
-                      className="professional-button"
+                    <Button
+                      size="sm"
+                      className="professional-button text-gray-400 border-gray-400/50 hover:bg-gray-400/10"
                       onClick={() => setSelectedEvents([])}
-                      className="text-gray-400 border-gray-400/50 hover:bg-gray-400/10"
                     >
                       Clear
                     </Button>

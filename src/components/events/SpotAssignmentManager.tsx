@@ -423,7 +423,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
               </Button>
               <Button
                 size="sm"
-                className="professional-button"
+                variant="secondary"
                 onClick={() => setSelectedApplications([])}
               >
                 Clear Selection
@@ -471,7 +471,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                             {isAssigned && <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />}
                             <div>
                               <div className="flex items-center gap-2">
-                                <Badge className="professional-button">#{index + 1}</Badge>
+                                <Badge variant="secondary">#{index + 1}</Badge>
                                 <span className="font-medium">{spot.spot_name}</span>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
@@ -514,7 +514,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                               </div>
                               <Button
                                 size="sm"
-                                className="professional-button"
+                                variant="secondary"
                                 onClick={() => handleRemoveFromSpot(spot.id)}
                                 disabled={assigningSpots.has(spot.id)}
                               >
@@ -558,7 +558,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                 </h3>
                 <Button
                   size="sm"
-                  className="professional-button"
+                  variant="secondary"
                   onClick={() => {
                     if (selectedApplications.length === approvedApplications.length) {
                       setSelectedApplications([]);
@@ -617,8 +617,7 @@ const SpotAssignmentManager: React.FC<SpotAssignmentManagerProps> = ({
                             <div>
                               <p className="font-medium">{getDisplayName(application)}</p>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Badge 
-                                  className="professional-button"
+                                <Badge
                                   className={`${getStatusColor(application.status || 'pending')} text-white`}
                                 >
                                   {application.spot_type}

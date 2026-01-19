@@ -158,9 +158,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
-            className="professional-button"
             className={cn(
-              "w-full justify-between rounded-xl",
+              "professional-button w-full justify-between rounded-xl",
               getButtonStyles()
             )}
           >
@@ -203,10 +202,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                   {getQuickSelectPresets().map((preset) => (
                     <Button
                       key={preset.label}
-                      className="professional-button"
+                      className="professional-button text-xs"
                       size="sm"
                       onClick={() => handlePresetClick(preset)}
-                      className="text-xs"
                     >
                       {preset.label}
                     </Button>

@@ -269,9 +269,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     </Button>
                     <Button
                       size="sm"
-                      className="professional-button"
                       onClick={() => onHide(application.id)}
-                      className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
+                      className="professional-button text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                     >
                       <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Reject
@@ -290,9 +289,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 )}
                 <Button
                   size="sm"
-                  className="professional-button"
                   onClick={() => onViewProfile(application.comedian_id)}
-                  className="text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
+                  className="professional-button text-white border-white/30 hover:bg-white/10 flex-1 sm:flex-none text-xs sm:text-sm"
                 >
                   <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   Profile

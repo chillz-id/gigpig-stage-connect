@@ -12,9 +12,8 @@ const BookingDialogActions: React.FC<BookingDialogActionsProps> = ({ loading, on
   return (
     <div className="flex justify-end space-x-2">
       <Button
-        className="professional-button"
+        className="professional-button border-white/20 text-white hover:bg-white/10"
         onClick={onCancel}
-        className="border-white/20 text-white hover:bg-white/10"
         disabled={loading}
       >
         Cancel

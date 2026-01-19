@@ -151,10 +151,9 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
 
                   {/* Delete action */}
                   <Button
-                    className="professional-button"
+                    className="professional-button text-red-600 hover:text-red-700"
                     size="sm"
                     onClick={onDeleteDrafts}
-                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Drafts

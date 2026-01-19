@@ -91,7 +91,7 @@ const VouchButton: React.FC<VouchButtonProps> = ({
     }
     
     return currentVouchCount > 0 ? (
-      <Badge className="professional-button" className={`text-xs ${className}`}>
+      <Badge className={`professional-button text-xs ${className}`}>
         <Crown className="w-3 h-3 mr-1 text-yellow-400 fill-current" />
         {currentVouchCount} vouch{currentVouchCount !== 1 ? 'es' : ''}
       </Badge>

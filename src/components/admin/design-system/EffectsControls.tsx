@@ -157,10 +157,9 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({ settings, updateSetti
             <div className="bg-muted rounded-lg p-4">
               <h4 className="font-medium mb-3">Animation Speed Demo</h4>
               <div className="flex gap-2">
-                <Button 
-                  className="professional-button" 
+                <Button
+                  className="professional-button transition-all"
                   size="sm"
-                  className="transition-all"
                   style={{
                     transitionDuration: settings.effects.animationSpeed === 'slow' ? '0.5s' :
                                      settings.effects.animationSpeed === 'normal' ? '0.3s' :

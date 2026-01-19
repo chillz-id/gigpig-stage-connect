@@ -217,9 +217,8 @@ const SystemSettings = () => {
             )}
             
             {facebookAdsStatus.connected && (
-              <Button 
-                className="professional-button"
-                className="border-white/30 text-white hover:bg-white/10"
+              <Button
+                className="professional-button border-white/30 text-white hover:bg-white/10"
                 onClick={() => {
                   setFacebookAdsStatus({
                     connected: false,
@@ -382,7 +381,7 @@ const SystemSettings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button 
+            <Button
               onClick={handleDatabaseBackup}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -390,25 +389,22 @@ const SystemSettings = () => {
               Create Database Backup
             </Button>
 
-            <Button 
-              className="professional-button"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Globe className="w-4 h-4 mr-2" />
               Clear Site Cache
             </Button>
 
-            <Button 
-              className="professional-button"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Mail className="w-4 h-4 mr-2" />
               Test Email System
             </Button>
 
-            <Button 
-              className="professional-button"
-              className="border-white/30 text-white hover:bg-white/10"
+            <Button
+              className="professional-button border-white/30 text-white hover:bg-white/10"
             >
               <Shield className="w-4 h-4 mr-2" />
               Security Audit

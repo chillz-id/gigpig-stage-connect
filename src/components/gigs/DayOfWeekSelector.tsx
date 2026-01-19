@@ -102,7 +102,7 @@ export function DayOfWeekSelector({
           return (
             <Button
               key={dayStat.label}
-              className="professional-button"
+              variant="ghost"
               className={buttonClasses}
               onClick={() => handleDayClick(dayStat)}
               disabled={isDisabled}
