@@ -20,17 +20,23 @@ cd /root/agents
 # Core workflow
 npm run dev                           # Dev server on port 8080
 npm run build                         # Production build (includes TypeScript checks)
+npm run build:dev                     # Development build
 npm run lint                          # ESLint + TypeScript (must pass before commits)
+npm run validate                      # Run lint + build + test together
 
-# Testing
+# Testing - Unit
 npm run test                          # All Jest unit tests
 npm run test -- path/to/file.test.ts  # Single test file
 npm run test -- --testNamePattern="pattern"  # Filter by test name
+npm run test:watch                    # Watch mode (re-runs on file changes)
 npm run test:coverage                 # Coverage report
 
+# Testing - E2E (Playwright)
 npm run test:e2e                      # Playwright E2E tests (headless)
 npm run test:e2e:headed               # E2E with visible browser
 npm run test:e2e:debug                # E2E with Playwright inspector
+npm run test:e2e:ui                   # E2E with interactive UI mode
+npm run test:e2e:auth                 # Auth-specific E2E tests
 
 # Integration testing
 npm run test:webhook:humanitix        # Test Humanitix webhook
@@ -56,6 +62,12 @@ npm run migrate:safe                  # Run safe migration
 - **Supabase** for database, auth, real-time, and RLS policies
 - **Stripe** for payments; **Xero** for accounting
 - **Vercel** for deployment
+
+### Build Configuration
+- **Dev server**: Port 8080 with HMR
+- **Chunk strategy**: `vendor` (all node_modules), `mobile`, `pwa` (feature-specific)
+- **Minification**: Terser with console/debugger removal in production
+- **Source maps**: Enabled for production debugging
 
 ### Key Directories (within /root/agents/)
 ```
@@ -105,15 +117,18 @@ Route protection: `<ProtectedRoute roles={['comedian', 'photographer']} />`
 ### Profile Context API
 ```typescript
 const {
-  profileType,     // 'comedian' | 'manager' | 'organization' | 'venue' | null
+  profileType,     // 'comedian' | 'manager' | 'photographer' | 'videographer' | 'organization' | 'venue' | null
   slug,            // URL slug from params
   profileData,     // Full profile data (id, name, avatar_url, user_id, etc.)
   isOwner,         // true if current user owns this profile
   isLoading,
   error,
+  permissions,     // array of permission strings (future use)
   refreshProfile,
 } = useActiveProfile();
 ```
+
+**Important:** Always check `isLoading` and `error` before using `profileData` to avoid null reference errors.
 
 ## TypeScript Configuration
 
@@ -138,6 +153,9 @@ Note: `tsconfig.app.json` relaxes some rules for build compatibility, but IDE to
 <Button variant="secondary">Click me</Button>
 <Button variant="ghost">Click me</Button>
 ```
+
+**ESLint Ignore Patterns**: The following directories are excluded from linting:
+- `dist/`, `legacy/**`, `docs/archive/**`, `scripts/**`, `tests/legacy/**`, `.worktrees/**`
 
 ## Coding Conventions
 
