@@ -189,7 +189,7 @@ export function CustomPermissionsBadge({ hasCustom, className = '' }: CustomPerm
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge className="professional-button" className={`gap-1 bg-blue-50 text-blue-800 border-blue-300 ${className}`}>
+          <Badge className={`professional-button gap-1 bg-blue-50 text-blue-800 border-blue-300 ${className}`}>
             <Shield className="h-3 w-3" />
             Custom
           </Badge>
