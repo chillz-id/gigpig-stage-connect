@@ -1,8 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Drama, Calendar, Users, Trophy, ArrowRight, Star, Mic, MapPin } from 'lucide-react';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
@@ -11,16 +11,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, isLoading, navigate]);
-
+  // Show loading spinner while auth state is being determined
   if (isLoading) return <LoadingSpinner size="lg" />;
-  if (!user) return null;
 
   const features = [
     {
