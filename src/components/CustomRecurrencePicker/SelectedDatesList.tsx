@@ -79,10 +79,9 @@ export const SelectedDatesList: React.FC<SelectedDatesListProps> = ({
                     <div className="flex gap-1">
                       <Button
                         type="button"
-                        className="professional-button"
+                        className="professional-button bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-8 px-2"
                         size="sm"
                         onClick={() => onAddTimeSlot(dateIndex)}
-                        className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-8 px-2"
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
