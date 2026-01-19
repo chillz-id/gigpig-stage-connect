@@ -50,8 +50,11 @@ export function HorizontalAuthBanner() {
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
     try {
-      const redirectUrl = import.meta.env.VITE_OAUTH_REDIRECT_URL ||
-                         `${window.location.origin}/auth/callback`;
+      const baseRedirectUrl = import.meta.env.VITE_OAUTH_REDIRECT_URL ||
+                             `${window.location.origin}/auth/callback`;
+
+      // Pass signup context as URL parameters so AuthCallback knows to assign comedian_lite role
+      const redirectUrl = `${baseRedirectUrl}?from=gigs&role=comedian_lite`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
