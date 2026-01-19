@@ -40,7 +40,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button className="professional-button" className={className}>
+          <Button className={`professional-button ${className}`}>
             <Upload className="w-4 h-4 mr-2" />
             Upload Banner
           </Button>

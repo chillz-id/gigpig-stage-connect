@@ -1,12 +1,25 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
+// All possible user roles in the system
+export type UserRole =
+  | 'comedian'
+  | 'comedian_lite'
+  | 'promoter'
+  | 'member'
+  | 'photographer'
+  | 'videographer'
+  | 'manager'
+  | 'organization'
+  | 'venue_manager'
+  | 'admin';
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar: string;
   isVerified: boolean;
-  roles: ('comedian' | 'promoter' | 'member')[];
+  roles: UserRole[];
   bio?: string;
   location?: string;
   joinDate?: string;

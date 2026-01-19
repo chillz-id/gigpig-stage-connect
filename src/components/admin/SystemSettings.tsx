@@ -381,7 +381,7 @@ const SystemSettings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button 
+            <Button
               onClick={handleDatabaseBackup}
               className="bg-blue-600 hover:bg-blue-700"
             >
