@@ -3,6 +3,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
+// Format Date as yyyy-mm-dd using local time to avoid UTC timezone shift
+const toLocalDateString = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 interface UsePrefetchNextMonthOptions {
   currentMonth: Date;
   timezone: string;
@@ -22,8 +26,8 @@ export function usePrefetchNextMonth({
 
   const prefetchNextMonth = useCallback(async () => {
     const nextMonth = addMonths(currentMonth, 1);
-    const startDate = startOfMonth(nextMonth).toISOString().split('T')[0];
-    const endDate = endOfMonth(nextMonth).toISOString().split('T')[0];
+    const startDate = toLocalDateString(startOfMonth(nextMonth));
+    const endDate = toLocalDateString(endOfMonth(nextMonth));
 
     // Use datetime format matching event-browse-service
     const startDateTime = `${startDate} 00:00:00`;
@@ -50,8 +54,8 @@ export function usePrefetchNextMonth({
 
   const prefetchPrevMonth = useCallback(async () => {
     const prevMonth = addMonths(currentMonth, -1);
-    const startDate = startOfMonth(prevMonth).toISOString().split('T')[0];
-    const endDate = endOfMonth(prevMonth).toISOString().split('T')[0];
+    const startDate = toLocalDateString(startOfMonth(prevMonth));
+    const endDate = toLocalDateString(endOfMonth(prevMonth));
 
     // Use datetime format matching event-browse-service
     const startDateTime = `${startDate} 00:00:00`;

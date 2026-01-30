@@ -139,6 +139,11 @@ const Gigs = () => {
     }
   }, [selectedCity, firstEventMonth, cityHasEvents, isLoadingFirstEvent]);
 
+  // Format a Date as yyyy-mm-dd using local time (not UTC) to avoid
+  // timezone shifts where e.g. Jan 31 00:00 AEDT becomes Jan 30 in UTC.
+  const toLocalDateString = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   // Calculate date range for session calendar based on view mode and filters
   const getDateRange = () => {
     if (useAdvancedFilters && (dateRange.start || dateRange.end)) {
@@ -146,22 +151,22 @@ const Gigs = () => {
       const start = dateRange.start || new Date(selectedYear, selectedMonth, 1);
       const end = dateRange.end || new Date(selectedYear, selectedMonth + 1, 0);
       return {
-        startDate: start.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0]
+        startDate: toLocalDateString(start),
+        endDate: toLocalDateString(end)
       };
     } else if (viewMode === 'list') {
       // List view: Show from loadedMonthsStart to loadedMonthsEnd
       return {
-        startDate: loadedMonthsStart.toISOString().split('T')[0],
-        endDate: loadedMonthsEnd.toISOString().split('T')[0]
+        startDate: toLocalDateString(loadedMonthsStart),
+        endDate: toLocalDateString(loadedMonthsEnd)
       };
     } else {
       // Calendar view: Use single month range
       const start = new Date(selectedYear, selectedMonth, 1);
       const end = new Date(selectedYear, selectedMonth + 1, 0);
       return {
-        startDate: start.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0]
+        startDate: toLocalDateString(start),
+        endDate: toLocalDateString(end)
       };
     }
   };
