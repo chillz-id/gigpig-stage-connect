@@ -13,7 +13,7 @@ export const PlatformMobileNav = () => {
   const { toggleSidebar } = useSidebar();
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 lg:hidden">
+    <div className="fixed bottom-4 right-4 z-40 md:hidden">
       <Button
         onClick={toggleSidebar}
         size="lg"

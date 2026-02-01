@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { UnifiedSidebar } from './UnifiedSidebar';
@@ -26,6 +26,41 @@ import { PlatformMobileNav } from './PlatformMobileNav';
 interface PlatformLayoutProps {
   children: ReactNode;
 }
+
+/**
+ * Inner layout that can access useSidebar() context to adjust
+ * main content width based on sidebar expanded/collapsed state.
+ */
+const PlatformLayoutInner = ({ children, activeProfile }: { children: ReactNode; activeProfile?: string }) => {
+  const { state, isMobile } = useSidebar();
+  const sidebarWidth = state === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
+
+  return (
+    <>
+      <UnifiedSidebar activeProfile={activeProfile} />
+
+      <main
+        className="overflow-x-hidden overflow-y-auto bg-background pb-24 md:pb-0 md:ml-auto transition-[width] duration-200 ease-linear"
+        style={isMobile ? undefined : { width: `calc(100vw - ${sidebarWidth})` }}
+        role="main"
+        aria-label="Platform main content"
+      >
+        {children || <Outlet />}
+      </main>
+
+      <PlatformMobileNav />
+
+      {/* ARIA live region for dynamic status updates */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        id="platform-status-announcements"
+      />
+    </>
+  );
+};
 
 export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
   const { activeProfile, isLoading: isProfileLoading } = useProfile();
@@ -61,28 +96,9 @@ export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full flex-col lg:flex-row">
-        <UnifiedSidebar activeProfile={activeProfile} />
-
-        <main
-          className="flex-1 overflow-y-auto bg-background pb-24 lg:pb-0"
-          role="main"
-          aria-label="Platform main content"
-        >
-          {children || <Outlet />}
-        </main>
-
-        <PlatformMobileNav />
-      </div>
-
-      {/* ARIA live region for dynamic status updates */}
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-        id="platform-status-announcements"
-      />
+      <PlatformLayoutInner activeProfile={activeProfile}>
+        {children}
+      </PlatformLayoutInner>
     </SidebarProvider>
   );
 };
