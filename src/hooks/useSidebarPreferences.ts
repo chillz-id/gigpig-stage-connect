@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface SidebarPreferences {
   hidden_items?: string[];
   item_order?: string[];
+  collapsed_sections?: string[];
 }
 
 interface UseSidebarPreferencesOptions {
@@ -25,7 +26,7 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
 
       let query = supabase
         .from('sidebar_preferences')
-        .select('hidden_items, item_order')
+        .select('hidden_items, item_order, collapsed_sections')
         .eq('user_id', user.id);
 
       // If profileId and profileType provided, query for per-profile preferences
@@ -65,6 +66,7 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
         profile_id: profileId || null,
         hidden_items: sidebarPrefs.hidden_items || [],
         item_order: sidebarPrefs.item_order || [],
+        collapsed_sections: sidebarPrefs.collapsed_sections || [],
       };
 
       const { error } = await supabase
@@ -100,6 +102,7 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
       await updateSidebarMutation.mutateAsync({
         hidden_items: [...currentHidden, itemId],
         item_order: preferences?.item_order,
+        collapsed_sections: preferences?.collapsed_sections,
       });
     }
   };
@@ -109,6 +112,7 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
     await updateSidebarMutation.mutateAsync({
       hidden_items: currentHidden.filter((id) => id !== itemId),
       item_order: preferences?.item_order,
+      collapsed_sections: preferences?.collapsed_sections,
     });
   };
 
@@ -116,6 +120,29 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
     await updateSidebarMutation.mutateAsync({
       hidden_items: preferences?.hidden_items,
       item_order: order,
+      collapsed_sections: preferences?.collapsed_sections,
+    });
+  };
+
+  // Collapsed sections helpers
+  const isSectionCollapsed = (sectionKey: string): boolean => {
+    return preferences?.collapsed_sections?.includes(sectionKey) || false;
+  };
+
+  const getCollapsedSections = (): string[] => {
+    return preferences?.collapsed_sections || [];
+  };
+
+  const toggleSectionCollapsed = async (sectionKey: string) => {
+    const currentCollapsed = preferences?.collapsed_sections || [];
+    const newCollapsed = currentCollapsed.includes(sectionKey)
+      ? currentCollapsed.filter((key) => key !== sectionKey)
+      : [...currentCollapsed, sectionKey];
+
+    await updateSidebarMutation.mutateAsync({
+      hidden_items: preferences?.hidden_items,
+      item_order: preferences?.item_order,
+      collapsed_sections: newCollapsed,
     });
   };
 
@@ -127,6 +154,9 @@ export const useSidebarPreferences = (options?: UseSidebarPreferencesOptions) =>
     hideItem,
     showItem,
     setItemOrder,
+    isSectionCollapsed,
+    getCollapsedSections,
+    toggleSectionCollapsed,
     updateSidebar: updateSidebarMutation.mutateAsync,
   };
 };

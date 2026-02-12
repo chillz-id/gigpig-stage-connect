@@ -28,7 +28,8 @@ import { useSidebarPreferences } from '@/hooks/useSidebarPreferences';
 import { useActiveProfile } from '@/contexts/ProfileContext';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { MENU_ITEMS, SECTION_LABELS, type UserRole, type MenuItem } from '@/config/sidebarMenuItems';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface UnifiedSidebarProps {
@@ -52,8 +53,50 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   const { unreadCount } = useNotifications();
   const { userApplications } = useEventApplications();
   const { confirmedGigCount } = useUpcomingGigs();
-  const { isItemHidden, getItemOrder } = useSidebarPreferences();
+  const { isItemHidden, getItemOrder, preferences, toggleSectionCollapsed, isLoading: isPreferencesLoading } = useSidebarPreferences();
   const { activeProfile: activeProfileData } = useActiveProfile();
+
+  // Local state for optimistic collapsed sections updates
+  const [localCollapsedSections, setLocalCollapsedSections] = useState<Set<string>>(new Set());
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const initializedRef = useRef(false);
+
+  // Sync local state with preferences when they load (only once after initial load)
+  useEffect(() => {
+    if (!isPreferencesLoading && !initializedRef.current) {
+      initializedRef.current = true;
+      const sections = preferences.collapsed_sections || [];
+      setLocalCollapsedSections(new Set(sections));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPreferencesLoading]);
+
+  // Handle section toggle with debounced persistence
+  const handleSectionToggle = useCallback((sectionKey: string) => {
+    // Optimistic update for instant feedback
+    setLocalCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionKey)) {
+        next.delete(sectionKey);
+      } else {
+        next.add(sectionKey);
+      }
+      return next;
+    });
+
+    // Debounced persistence
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      toggleSectionCollapsed(sectionKey);
+    }, 300);
+  }, [toggleSectionCollapsed]);
+
+  // Check if section should be collapsed
+  const isSectionOpen = useCallback((sectionKey: string) => {
+    return !localCollapsedSections.has(sectionKey);
+  }, [localCollapsedSections]);
 
   // Removed navigation debounce - was causing issues with navigation
 
@@ -300,9 +343,9 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
               href={item.path}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between w-full"
+              className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
                 <item.icon className="h-4 w-4 shrink-0" />
                 <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
               </div>
@@ -374,7 +417,7 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
         >
           <Link
             to={getItemPath(item.path)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center"
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -539,17 +582,36 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
           const sectionItems = itemsBySection.grouped[sectionKey];
           if (!sectionItems || sectionItems.length === 0) return null;
 
+          const isOpen = isSectionOpen(sectionKey);
+          const isCollapsed = !isOpen;
+
           return (
-            <SidebarGroup key={sectionKey}>
-              <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                {SECTION_LABELS[sectionKey]}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {sectionItems.map(renderMenuItem)}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <Collapsible
+              key={sectionKey}
+              open={isOpen}
+              onOpenChange={() => handleSectionToggle(sectionKey)}
+            >
+              <SidebarGroup>
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-gray-400 cursor-pointer flex items-center justify-between hover:text-gray-300 transition-colors group-data-[collapsible=icon]:!mt-0 group-data-[collapsible=icon]:!opacity-100 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!h-6">
+                    <span className="group-data-[collapsible=icon]:hidden">{SECTION_LABELS[sectionKey]}</span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform duration-200 shrink-0",
+                        isCollapsed && "-rotate-90"
+                      )}
+                    />
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {sectionItems.map(renderMenuItem)}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
           );
         })}
       </SidebarContent>

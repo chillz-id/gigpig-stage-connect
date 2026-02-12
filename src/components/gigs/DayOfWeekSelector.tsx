@@ -107,11 +107,6 @@ export function DayOfWeekSelector({
               disabled={isDisabled}
             >
               <span className="text-xs font-semibold">{dayStat.label}</span>
-              {dayStat.total > 0 && (
-                <span className="text-[10px] opacity-80">
-                  {dayStat.selected}/{dayStat.total}
-                </span>
-              )}
             </Button>
           );
         })}
