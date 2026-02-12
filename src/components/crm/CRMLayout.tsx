@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { CRMSidebar } from './CRMSidebar';
 import { CRMMobileNav } from './CRMMobileNav';
 
@@ -17,22 +17,34 @@ import { CRMMobileNav } from './CRMMobileNav';
  *
  * Usage: Wrap CRM routes with this layout in App.tsx
  */
-export const CRMLayout = () => {
+
+/**
+ * Inner layout that can access useSidebar() context to adjust
+ * main content width based on sidebar expanded/collapsed state.
+ */
+const CRMLayoutInner = () => {
+  const { state, isMobile } = useSidebar();
+  const sidebarWidth = state === 'collapsed'
+    ? 'calc(var(--sidebar-width-icon) + 4rem)'
+    : 'var(--sidebar-width)';
+
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full flex-col lg:flex-row">
-        <CRMSidebar />
-        <main
-          className="flex-1 overflow-y-auto bg-background pb-24 lg:pb-0"
-          role="main"
-          aria-label="CRM main content"
-        >
-          <div className="w-full px-4 py-6 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-            <Outlet />
-          </div>
-        </main>
-        <CRMMobileNav />
-      </div>
+    <>
+      <CRMSidebar />
+      <main
+        className="overflow-x-hidden overflow-y-auto bg-background pb-24 md:pb-0"
+        style={isMobile ? { width: '100%' } : {
+          width: `calc(100% - ${sidebarWidth})`,
+          marginLeft: 'auto'
+        }}
+        role="main"
+        aria-label="CRM main content"
+      >
+        <div className="w-full px-4 py-6 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <Outlet />
+        </div>
+      </main>
+      <CRMMobileNav />
       {/* ARIA live region for dynamic status updates */}
       <div
         role="status"
@@ -41,6 +53,14 @@ export const CRMLayout = () => {
         className="sr-only"
         id="crm-status-announcements"
       />
+    </>
+  );
+};
+
+export const CRMLayout = () => {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <CRMLayoutInner />
     </SidebarProvider>
   );
 };

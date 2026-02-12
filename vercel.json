@@ -1,5 +1,18 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "feedback.standupsydney.com"
+        }
+      ],
+      "destination": "https://docs.google.com/forms/d/e/1FAIpQLSe9zUS8YC29JZZwFmJj1Qu8UJjJHvgD5AA54sF1_MEbvTTiXg/viewform?usp=header",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/",

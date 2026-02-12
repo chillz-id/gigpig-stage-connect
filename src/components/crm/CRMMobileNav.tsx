@@ -15,7 +15,7 @@ export const CRMMobileNav = () => {
   return (
     <nav
       aria-label="CRM navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 md:hidden"
     >
       <ul className="mx-auto grid max-w-4xl grid-cols-4">
         {LINKS.map(({ to, label, icon: Icon }) => {
