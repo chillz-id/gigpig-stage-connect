@@ -2975,10 +2975,9 @@ export type Database = {
           address_line2: string | null
           age_band: string | null
           au_state_code: string | null
-          brevo_contact_id: string | null
-          brevo_last_sync: string | null
-          brevo_sync_error: string | null
-          brevo_sync_status: string | null
+          mautic_contact_id: number | null
+          mautic_last_sync: string | null
+          mautic_sync_status: string | null
           city: string | null
           company: string | null
           country: string | null
@@ -3014,10 +3013,9 @@ export type Database = {
           address_line2?: string | null
           age_band?: string | null
           au_state_code?: string | null
-          brevo_contact_id?: string | null
-          brevo_last_sync?: string | null
-          brevo_sync_error?: string | null
-          brevo_sync_status?: string | null
+          mautic_contact_id?: number | null
+          mautic_last_sync?: string | null
+          mautic_sync_status?: string | null
           city?: string | null
           company?: string | null
           country?: string | null
@@ -3053,10 +3051,9 @@ export type Database = {
           address_line2?: string | null
           age_band?: string | null
           au_state_code?: string | null
-          brevo_contact_id?: string | null
-          brevo_last_sync?: string | null
-          brevo_sync_error?: string | null
-          brevo_sync_status?: string | null
+          mautic_contact_id?: number | null
+          mautic_last_sync?: string | null
+          mautic_sync_status?: string | null
           city?: string | null
           company?: string | null
           country?: string | null
@@ -15925,7 +15922,7 @@ export type Database = {
       customer_analytics: {
         Row: {
           address: string | null
-          brevo_sync_status: string | null
+          mautic_sync_status: string | null
           company: string | null
           customer_segment: string | null
           customer_since: string | null
@@ -15944,7 +15941,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          brevo_sync_status?: string | null
+          mautic_sync_status?: string | null
           company?: string | null
           customer_segment?: string | null
           customer_since?: string | null
@@ -15963,7 +15960,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          brevo_sync_status?: string | null
+          mautic_sync_status?: string | null
           company?: string | null
           customer_segment?: string | null
           customer_since?: string | null
@@ -17725,7 +17722,7 @@ export type Database = {
           notifications_sent: number
         }[]
       }
-      queue_brevo_sync: {
+      queue_mautic_sync: {
         Args: never
         Returns: {
           customer_id: string

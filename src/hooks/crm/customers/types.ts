@@ -17,9 +17,9 @@ export interface Customer {
   last_event_name: string | null;
   customer_segment: string | null;
   preferred_venue: string | null;
-  brevo_contact_id: string | null;
-  brevo_sync_status: string | null;
-  brevo_last_sync: string | null;
+  mautic_contact_id: number | null;
+  mautic_sync_status: string | null;
+  mautic_last_sync: string | null;
   lead_score: number | null;
   rfm_recency: number | null;
   rfm_frequency: number | null;
