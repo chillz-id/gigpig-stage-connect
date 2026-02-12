@@ -40,7 +40,8 @@ interface MauticEmailClickEvent extends MauticEmailEvent {
 }
 
 function validateSignature(body: string, signature: string | null): boolean {
-  if (!WEBHOOK_SECRET || !signature) return !WEBHOOK_SECRET;
+  if (!WEBHOOK_SECRET) return true;
+  if (!signature) return false;
 
   try {
     const hmac = createHmac('sha256', WEBHOOK_SECRET);
@@ -89,9 +90,12 @@ serve(async (req) => {
     for (const [eventKey, events] of Object.entries(payload)) {
       if (eventKey === 'timestamp' || !Array.isArray(events)) continue;
 
-      const eventType = eventKey
-        .replace('mautic.email_on_', '')
-        .replace('mautic.email_on', '');
+      const eventType = eventKey.replace('mautic.email_on_', '');
+      const validEventTypes = ['open', 'click', 'unsubscribe', 'bounce'];
+      if (!validEventTypes.includes(eventType)) {
+        console.warn(`Unknown event type: ${eventKey} -> ${eventType}`);
+        continue;
+      }
 
       for (const event of events) {
         const mauticEmail = event.lead?.email;
@@ -117,8 +121,7 @@ serve(async (req) => {
             .from('customer_emails')
             .select('customer_id')
             .eq('email', mauticEmail)
-            .limit(1)
-            .single();
+            .maybeSingle();
 
           customerId = emailRecord?.customer_id ?? null;
         }
