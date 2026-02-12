@@ -43,6 +43,12 @@ async function getAccessToken(): Promise<string> {
   }
 
   const data = await response.json();
+
+  // Issue 4: OAuth response validation
+  if (!data.access_token || !data.expires_in) {
+    throw new Error('Invalid OAuth2 response: missing access_token or expires_in');
+  }
+
   cachedToken = {
     access_token: data.access_token,
     expires_at: Date.now() + (data.expires_in * 1000),
@@ -127,15 +133,21 @@ function mapToMauticFields(contact: CrmContact): Record<string, unknown> {
     last_order_date: contact.last_order_date,
     last_event_name: contact.last_event_name,
     preferred_venue: contact.preferred_venue,
-    marketing_opt_in: contact.marketing_opt_in ? 1 : 0,
+    // Issue 5: Fix null handling for marketing_opt_in
+    marketing_opt_in: contact.marketing_opt_in === null ? null : (contact.marketing_opt_in ? 1 : 0),
     customer_since: contact.customer_since,
   };
 }
 
 // --- Change Detection ---
 
-async function computeHash(fields: Record<string, unknown>): Promise<string> {
-  const json = JSON.stringify(fields, Object.keys(fields).sort());
+async function computeHash(fields: Record<string, unknown>, segments: string[]): Promise<string> {
+  // Issue 2: Include sorted segments in hash to detect segment changes
+  const fieldsWithSegments = {
+    ...fields,
+    _segments: segments.slice().sort().join(','),
+  };
+  const json = JSON.stringify(fieldsWithSegments, Object.keys(fieldsWithSegments).sort());
   const data = new TextEncoder().encode(json);
   const hashBuffer = await crypto.subtle.digest('MD5', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -182,26 +194,35 @@ async function ensureMauticSegments(): Promise<Record<string, number>> {
   return existing;
 }
 
+// Issue 1: Optimized segment sync - only sync segments that changed
 async function syncContactSegments(
   mauticContactId: number,
-  customerSegments: string[],
+  currentSegments: string[],
+  previousSegments: string[],
   segmentNameToId: Record<string, number>
 ): Promise<void> {
-  for (const [slug, name] of Object.entries(SEGMENT_MAP)) {
+  const toAdd = currentSegments.filter(s => !previousSegments.includes(s));
+  const toRemove = previousSegments.filter(s => !currentSegments.includes(s));
+
+  // Only make API calls for segments that actually changed
+  for (const slug of toAdd) {
+    const name = SEGMENT_MAP[slug];
+    if (!name) continue;
     const segmentId = segmentNameToId[name];
     if (!segmentId) continue;
+    await mauticFetch(`/segments/${segmentId}/contact/${mauticContactId}/add`, {
+      method: 'POST',
+    });
+  }
 
-    const shouldBeMember = customerSegments.includes(slug);
-
-    if (shouldBeMember) {
-      await mauticFetch(`/segments/${segmentId}/contact/${mauticContactId}/add`, {
-        method: 'POST',
-      });
-    } else {
-      await mauticFetch(`/segments/${segmentId}/contact/${mauticContactId}/remove`, {
-        method: 'POST',
-      });
-    }
+  for (const slug of toRemove) {
+    const name = SEGMENT_MAP[slug];
+    if (!name) continue;
+    const segmentId = segmentNameToId[name];
+    if (!segmentId) continue;
+    await mauticFetch(`/segments/${segmentId}/contact/${mauticContactId}/remove`, {
+      method: 'POST',
+    });
   }
 }
 
@@ -244,21 +265,31 @@ serve(async (req) => {
       );
     }
 
-    // 3. Fetch existing sync status
+    // 3. Fetch existing sync status with previous segments
     const { data: syncStatuses } = await supabase
       .from('mautic_sync_status')
-      .select('customer_id, mautic_contact_id, sync_hash');
+      .select('customer_id, mautic_contact_id, sync_hash, previous_segments');
 
     const syncMap = new Map(
       (syncStatuses || []).map(s => [s.customer_id, s])
     );
 
     // 4. Determine which contacts need syncing
-    const toSync: Array<{ contact: CrmContact; mauticFields: Record<string, unknown>; hash: string; existing: { mautic_contact_id: number | null; sync_hash: string | null } | null }> = [];
+    const toSync: Array<{
+      contact: CrmContact;
+      mauticFields: Record<string, unknown>;
+      hash: string;
+      existing: {
+        mautic_contact_id: number | null;
+        sync_hash: string | null;
+        previous_segments?: string[] | null;
+      } | null
+    }> = [];
 
     for (const contact of contacts) {
       const mauticFields = mapToMauticFields(contact as CrmContact);
-      const hash = await computeHash(mauticFields);
+      const segments = contact.customer_segments || [];
+      const hash = await computeHash(mauticFields, segments);
       const existing = syncMap.get(contact.id) || null;
 
       if (!existing || existing.sync_hash !== hash) {
@@ -304,17 +335,27 @@ serve(async (req) => {
           }
 
           // Sync segment membership
-          await syncContactSegments(
-            mauticContactId,
-            contact.customer_segments || [],
-            segmentNameToId
-          );
+          // Issue 3: Wrap segment sync in try-catch to avoid failing entire contact
+          try {
+            const currentSegments = contact.customer_segments || [];
+            const previousSegments = existing?.previous_segments || [];
+            await syncContactSegments(
+              mauticContactId,
+              currentSegments,
+              previousSegments,
+              segmentNameToId
+            );
+          } catch (segmentErr) {
+            console.error(`Segment sync failed for contact ${contact.id}:`, segmentErr);
+            // Don't fail the entire contact sync
+          }
 
-          // Update sync status
+          // Update sync status with current segments for next run
           await supabase.from('mautic_sync_status').upsert({
             customer_id: contact.id,
             mautic_contact_id: mauticContactId,
             sync_hash: hash,
+            previous_segments: contact.customer_segments || [],
             last_synced_at: new Date().toISOString(),
             sync_error: null,
             updated_at: new Date().toISOString(),
