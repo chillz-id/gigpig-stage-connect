@@ -17,7 +17,7 @@ export const PlatformMobileNav = () => {
       <Button
         onClick={toggleSidebar}
         size="lg"
-        className="h-14 w-14 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+        className="h-14 w-14 rounded-full bg-[#1e2a3d] hover:bg-[#283548] text-white shadow-lg border border-gray-700"
         aria-label="Open navigation menu"
       >
         <Menu className="h-6 w-6" />

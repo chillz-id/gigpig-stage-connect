@@ -149,7 +149,7 @@ export default function PublicProfile({ type }: PublicProfileProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -163,7 +163,7 @@ export default function PublicProfile({ type }: PublicProfileProps) {
   const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-pink-700 via-purple-600 to-purple-800 flex items-center justify-center">
+        <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
       }

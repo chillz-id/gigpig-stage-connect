@@ -34,7 +34,7 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#131b2b] flex items-center justify-center p-4">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white max-w-md w-full">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />

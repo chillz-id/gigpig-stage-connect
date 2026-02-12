@@ -65,10 +65,7 @@ const Profile = () => {
   }, [location.search]); // Re-run when URL search params change
 
   const getBackgroundStyles = () => {
-    if (theme === 'pleasure') {
-      return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
-    }
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+    return 'bg-[#131b2b]';
   };
 
   if (!user) {

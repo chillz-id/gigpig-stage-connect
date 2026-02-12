@@ -61,7 +61,7 @@ export function NotFoundHandler({ profileType, attemptedSlug }: NotFoundHandlerP
   const browsePath = profileType ? `/${profileType}s` : '/dashboard';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#131b2b] flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

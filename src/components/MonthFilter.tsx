@@ -197,7 +197,7 @@ export const MonthFilter: React.FC<MonthFilterProps> = ({
       </div>
       
       {/* Month tabs - hidden on mobile */}
-      <div className="hidden md:flex gap-6 overflow-x-auto">
+      <div className="hidden md:flex gap-6 overflow-x-auto scrollbar-hide">
         {months.map((month, index) => {
           const isSelected = selectedMonth === index && selectedYear === selectedYear;
           const isPastMonthThisYear = selectedYear === currentYear && index < currentMonth;

@@ -129,11 +129,7 @@ export const UniversalProfileEditor: React.FC<UniversalProfileEditorProps> = ({
     }
   };
 
-  const bgClass = cn("min-h-screen",
-    theme === 'pleasure'
-      ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
-      : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
-  );
+  const bgClass = cn("min-h-screen", "bg-[#131b2b]");
 
   if (loading) {
     return (

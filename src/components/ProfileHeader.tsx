@@ -74,8 +74,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   return (
     <Card className="professional-card mb-8">
       <CardContent className="p-8">
-        <div className="flex flex-col md:flex-row items-start gap-6">
-          <div className="relative">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
+          <div className="relative shrink-0">
             <OptimizedAvatar
               src={user.avatar}
               name={userName}
@@ -98,8 +98,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               />
             </div>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+          <div className="flex-1 min-w-0 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-3 mb-2 flex-wrap">
               <h1 className="text-3xl font-bold">{userName}</h1>
               {user.isVerified && <Shield className="w-6 h-6 text-blue-500" />}
               {membership !== 'basic' && (
@@ -109,7 +109,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               )}
             </div>
             <p className="text-muted-foreground mb-4">{userBio}</p>
-            
+
             {/* Profile URL Editor */}
             <div className="mb-4">
               <ProfileUrlEditor
@@ -119,25 +119,25 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 isOwner={true}
               />
             </div>
-            
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 shrink-0">
+                <MapPin className="w-4 h-4 shrink-0" />
                 <span>{userLocation}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+              <div className="flex items-center gap-1 shrink-0">
+                <Calendar className="w-4 h-4 shrink-0" />
                 <span>Member since {joinDate}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Trophy className="w-4 h-4 text-yellow-400 fill-current" />
+              <div className="flex items-center gap-1 shrink-0">
+                <Trophy className="w-4 h-4 text-yellow-400 fill-current shrink-0" />
                 <span>{showCount} shows performed</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-row flex-wrap justify-center gap-2 w-full lg:w-auto lg:flex-col lg:shrink-0">
             <Button
-              className="professional-button"
+              className="professional-button shrink-0 whitespace-nowrap"
               size="sm"
               onClick={() => {
                 const slug = profile?.profile_slug || user.id;
@@ -148,14 +148,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <ExternalLink className="w-4 h-4 mr-2" />
               EPK
             </Button>
-            <Button className="professional-button" size="sm" onClick={() => {
+            <Button className="professional-button shrink-0 whitespace-nowrap" size="sm" onClick={() => {
               // Navigate to profile page with vouches tab using forceNavigate for reliability
               forceNavigate('/profile?tab=vouches');
             }}>
               <Crown className="w-4 h-4 mr-2 text-yellow-500" />
               Vouches
             </Button>
-            <Button className="professional-button" size="sm" onClick={onLogout}>
+            <Button className="professional-button shrink-0 whitespace-nowrap" size="sm" onClick={onLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>

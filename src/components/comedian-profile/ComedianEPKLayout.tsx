@@ -251,10 +251,7 @@ const ComedianEPKLayout: React.FC = () => {
   };
 
   const getBackgroundStyles = () => {
-    if (theme === 'pleasure') {
-      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
-    }
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+    return 'bg-[#131b2b]';
   };
 
   return (

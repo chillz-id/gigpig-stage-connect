@@ -28,20 +28,25 @@ interface PlatformLayoutProps {
 }
 
 /**
- * Inner layout that can access useSidebar() context to adjust
- * main content width based on sidebar expanded/collapsed state.
+ * Inner layout component that renders the sidebar and main content.
+ * Uses useSidebar hook to sync margin with sidebar collapsed state.
  */
 const PlatformLayoutInner = ({ children, activeProfile }: { children: ReactNode; activeProfile?: string }) => {
   const { state, isMobile } = useSidebar();
-  const sidebarWidth = state === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
+
+  // On desktop, set margin to match sidebar width with matching transition timing
+  // Note: collapsed sidebar has internal padding, so we add 3rem buffer to --sidebar-width-icon
+  const mainStyle = !isMobile ? {
+    marginLeft: state === 'collapsed' ? 'calc(var(--sidebar-width-icon) + 3rem)' : 'var(--sidebar-width)',
+  } : undefined;
 
   return (
     <>
       <UnifiedSidebar activeProfile={activeProfile} />
 
       <main
-        className="overflow-x-hidden overflow-y-auto bg-background pb-24 md:pb-0 md:ml-auto transition-[width] duration-200 ease-linear"
-        style={isMobile ? undefined : { width: `calc(100vw - ${sidebarWidth})` }}
+        className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto bg-[#131b2b] pb-24 md:pb-0 transition-[margin] duration-200 ease-linear"
+        style={mainStyle}
         role="main"
         aria-label="Platform main content"
       >
@@ -85,7 +90,7 @@ export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
   // Show loading state while auth OR profile is loading to prevent sidebar flash
   if (isAuthLoading || isProfileLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-red-900">
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#131b2b]">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
           <p className="text-white text-sm">Loading...</p>
@@ -95,7 +100,7 @@ export const PlatformLayout = ({ children }: PlatformLayoutProps) => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={true} className="bg-[#131b2b]">
       <PlatformLayoutInner activeProfile={activeProfile}>
         {children}
       </PlatformLayoutInner>

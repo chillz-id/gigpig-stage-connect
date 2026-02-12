@@ -73,26 +73,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Apply theme-specific styles with solid backgrounds
     if (theme === 'pleasure') {
-      body.style.background = 'linear-gradient(135deg, #1F2937, #111827, #450A0A)';
+      body.style.background = '#131b2b';
       body.style.color = '#F3F4F6';
-      body.className = `theme-pleasure bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 text-gray-100 min-h-screen`;
+      body.className = `theme-pleasure bg-[#131b2b] text-gray-100 min-h-screen`;
     } else {
-      body.style.background = 'linear-gradient(135deg, #1F2937, #111827, #450A0A)';
+      body.style.background = '#131b2b';
       body.style.color = '#F3F4F6';
-      body.className = `theme-business bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 text-gray-100 min-h-screen`;
+      body.className = `theme-business bg-[#131b2b] text-gray-100 min-h-screen`;
     }
 
     // Set CSS custom properties for theme variables with solid colors
     if (theme === 'pleasure') {
-      root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #1F2937, #111827, #450A0A)');
-      root.style.setProperty('--card-bg', '#374151');
-      root.style.setProperty('--card-hover-bg', '#4B5563');
+      root.style.setProperty('--bg-gradient', '#131b2b');
+      root.style.setProperty('--card-bg', '#1e2a3d');
+      root.style.setProperty('--card-hover-bg', '#283548');
       root.style.setProperty('--accent-primary', '#DC2626');
       root.style.setProperty('--accent-secondary', '#6B7280');
     } else {
-      root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #1F2937, #111827, #450A0A)');
-      root.style.setProperty('--card-bg', '#374151');
-      root.style.setProperty('--card-hover-bg', '#4B5563');
+      root.style.setProperty('--bg-gradient', '#131b2b');
+      root.style.setProperty('--card-bg', '#1e2a3d');
+      root.style.setProperty('--card-hover-bg', '#283548');
       root.style.setProperty('--accent-primary', '#DC2626');
       root.style.setProperty('--accent-secondary', '#6B7280');
     }

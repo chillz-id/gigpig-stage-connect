@@ -49,8 +49,7 @@ const Photographers = () => {
   });
 
   const getBackgroundStyles = () => {
-    // Always use business theme for now
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+    return 'bg-[#131b2b]';
   };
 
   const getCardStyles = () => {

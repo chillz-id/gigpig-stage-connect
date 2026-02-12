@@ -130,6 +130,15 @@ export default {
 					'min-height': '48px',
 					'min-width': '48px',
 				},
+				'.scrollbar-hide': {
+					/* Hide scrollbar for IE, Edge and Firefox */
+					'-ms-overflow-style': 'none',
+					'scrollbar-width': 'none',
+					/* Hide scrollbar for Chrome, Safari and Opera */
+					'&::-webkit-scrollbar': {
+						display: 'none',
+					},
+				},
 			});
 		},
 	],

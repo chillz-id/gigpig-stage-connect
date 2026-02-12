@@ -112,7 +112,7 @@ const queryClient = new QueryClient({
 });
 
 const LoadingFallback = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900 flex items-center justify-center">
+  <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
     <LoadingSpinner size="lg" />
   </div>
 );

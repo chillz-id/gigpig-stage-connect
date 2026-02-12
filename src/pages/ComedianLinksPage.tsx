@@ -28,7 +28,7 @@ const ComedianLinksPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <div className="text-white text-lg">Loading...</div>
       </div>
     );
@@ -36,7 +36,7 @@ const ComedianLinksPage: React.FC = () => {
 
   if (error || !comedian) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <div className="text-white text-center">
           <h1 className="text-2xl mb-4">Comedian not found</h1>
           <Link to="/comedians" className="text-purple-400 hover:text-purple-300">
@@ -48,7 +48,7 @@ const ComedianLinksPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-black">
+    <div className="min-h-screen bg-[#131b2b]">
       {/* Header */}
       <div className="pt-12 pb-8 px-4">
         <div className="max-w-md mx-auto text-center">

@@ -15,7 +15,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#131b2b] flex items-center justify-center px-4">
       <div className="text-center max-w-2xl mx-auto">
         {/* Animated 404 with comedy theme */}
         <div className="mb-8 relative">

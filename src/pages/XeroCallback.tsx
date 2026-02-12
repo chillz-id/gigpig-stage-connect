@@ -62,7 +62,7 @@ const XeroCallback: React.FC = () => {
   }, [searchParams, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#131b2b] flex items-center justify-center p-4">
       <Card className="max-w-md w-full bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader>
           <CardTitle className="text-white text-center">

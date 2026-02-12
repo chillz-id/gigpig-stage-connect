@@ -148,7 +148,7 @@ function CalendarGridViewComponent({
             // Smaller cells on mobile
             isMobile ? "min-h-14 p-1" : "min-h-24 p-2",
             isCurrentMonth ? "bg-white/5" : "bg-white/[0.02]",
-            isCurrentDay && "ring-2 ring-purple-400",
+            isCurrentDay && "ring-2 ring-[#3a4a5e]",
             !isCurrentMonth && "opacity-50"
           );
 
@@ -158,7 +158,7 @@ function CalendarGridViewComponent({
               <div className={cn(
                 "font-medium",
                 isMobile ? "text-xs mb-0.5" : "text-sm mb-1",
-                isCurrentDay ? "text-purple-300" : "text-white/60"
+                isCurrentDay ? "text-gray-300" : "text-white/60"
               )}>
                 {format(day, 'd')}
               </div>

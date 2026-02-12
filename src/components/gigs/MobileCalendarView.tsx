@@ -92,13 +92,11 @@ export function MobileCalendarView({
     return grouped;
   }, [events]);
 
-  // Check if all events on a day are selected (for comedians)
+  // Check if any events on a day are selected (for comedians)
   const getDaySelectionStatus = (dayEvents: Event[]) => {
     if (!isComedian || dayEvents.length === 0) return 'none';
-    const selectedCount = dayEvents.filter(e => selectedEventIds.has(e.id)).length;
-    if (selectedCount === 0) return 'none';
-    if (selectedCount === dayEvents.length) return 'all';
-    return 'partial';
+    const hasAnySelected = dayEvents.some(e => selectedEventIds.has(e.id));
+    return hasAnySelected ? 'selected' : 'none';
   };
 
   const handleDayTap = (day: Date, dayEvents: Event[]) => {
@@ -123,7 +121,6 @@ export function MobileCalendarView({
   // Theme colors
   const eventDotColor = theme === 'pleasure' ? 'bg-pink-500' : 'bg-red-500';
   const selectedDotColor = 'bg-green-500';
-  const partialDotColor = theme === 'pleasure' ? 'bg-pink-300' : 'bg-red-300';
 
   return (
     <div className="bg-card rounded-2xl shadow-lg p-4">
@@ -190,11 +187,7 @@ export function MobileCalendarView({
                 <div
                   className={cn(
                     "absolute inset-1 rounded-full",
-                    selectionStatus === 'all'
-                      ? selectedDotColor
-                      : selectionStatus === 'partial'
-                        ? partialDotColor
-                        : eventDotColor
+                    selectionStatus === 'selected' ? selectedDotColor : eventDotColor
                   )}
                 />
               )}
@@ -234,16 +227,10 @@ export function MobileCalendarView({
           <span>Events</span>
         </div>
         {isComedian && (
-          <>
-            <div className="flex items-center gap-1.5">
-              <div className={cn("w-3 h-3 rounded-full", selectedDotColor)} />
-              <span>Available</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className={cn("w-3 h-3 rounded-full", partialDotColor)} />
-              <span>Partial</span>
-            </div>
-          </>
+          <div className="flex items-center gap-1.5">
+            <div className={cn("w-3 h-3 rounded-full", selectedDotColor)} />
+            <span>Available</span>
+          </div>
         )}
       </div>
     </div>

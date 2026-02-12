@@ -42,7 +42,7 @@ const EventApplicationPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <div className="text-white text-xl">Loading event details...</div>
       </div>
     );
@@ -50,7 +50,7 @@ const EventApplicationPage = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
@@ -116,7 +116,7 @@ const EventApplicationPage = () => {
   // Don't allow applications for past events or if already applied
   if (isPastEvent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white max-w-lg mx-auto">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
@@ -133,7 +133,7 @@ const EventApplicationPage = () => {
 
   if (hasApplied) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white max-w-lg mx-auto">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-green-400" />
@@ -149,7 +149,7 @@ const EventApplicationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className="min-h-screen bg-[#131b2b]">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">

@@ -229,9 +229,8 @@ const OrganizationProfileLayout: React.FC<OrganizationProfileLayoutProps> = ({ o
     }
   };
 
-  // Always use red-to-grey gradient (matching comedian_lite default)
   const getBackgroundStyles = () => {
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+    return 'bg-[#131b2b]';
   };
 
   return (

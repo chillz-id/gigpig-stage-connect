@@ -37,6 +37,8 @@ export const ProfileUrlEditor: React.FC<ProfileUrlEditorProps> = ({
 
   const baseUrl = window.location.origin;
   const profileUrl = `${baseUrl}/comedian/${currentSlug || 'profile'}`;
+  // Display URL as just the path for cleaner, shorter appearance
+  const displayUrl = `/comedian/${currentSlug || 'profile'}`;
 
   // Check if user can edit URL based on 30-day cooldown
   useEffect(() => {
@@ -181,26 +183,26 @@ export const ProfileUrlEditor: React.FC<ProfileUrlEditorProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center gap-2 text-sm">
-        <ExternalLink className="w-4 h-4 text-muted-foreground" />
+        <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
         <span className="text-muted-foreground">Sharable Url:</span>
       </div>
-      
+
       {isEditing && isOwner ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{baseUrl}/comedian/</span>
+        <div className="flex flex-col gap-2 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="text-sm text-muted-foreground break-all">{baseUrl}/comedian/</span>
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               placeholder="your-profile-name"
-              className="flex-1"
+              className="flex-1 min-w-[120px]"
               disabled={isUpdating}
             />
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               size="sm"
               onClick={handleSave}
@@ -231,9 +233,9 @@ export const ProfileUrlEditor: React.FC<ProfileUrlEditorProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2">
-          <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
-            {profileUrl}
+        <div className="flex items-center gap-2 min-w-0">
+          <code className="text-sm bg-muted px-2 py-1 rounded min-w-0 truncate block overflow-hidden">
+            {displayUrl}
           </code>
           <Button
             size="sm"

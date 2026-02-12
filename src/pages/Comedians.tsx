@@ -30,7 +30,7 @@ const Comedians = () => {
         {...metaTags}
         structuredData={[organizationSchema, breadcrumbSchema]}
       />
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-red-900">
+      <div className="min-h-screen bg-[#131b2b]">
         <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Comedians</h1>

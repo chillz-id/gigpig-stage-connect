@@ -146,7 +146,7 @@ const EventDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#131b2b] flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -154,7 +154,7 @@ const EventDetail = () => {
 
   if (error || !event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+      <div className="min-h-screen bg-[#131b2b]">
         <ResponsiveContainer className="py-8">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-center">
             <CardContent className="p-8">
@@ -176,7 +176,7 @@ const EventDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900">
+    <div className="min-h-screen bg-[#131b2b]">
       <ResponsiveContainer className="py-6">
         {/* Header */}
         <div className="mb-6">
