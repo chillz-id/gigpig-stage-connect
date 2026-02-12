@@ -29,6 +29,7 @@ interface CalendarGridViewProps {
   isComedian: boolean;
   selectedEventIds?: Set<string>;
   onToggleAvailability?: (eventId: string) => void;
+  onDayClick?: (date: Date, dayEvents: Event[]) => void;
 }
 
 /**
@@ -46,7 +47,8 @@ function CalendarGridViewComponent({
   selectedMonth,
   isComedian,
   selectedEventIds = new Set(),
-  onToggleAvailability
+  onToggleAvailability,
+  onDayClick
 }: CalendarGridViewProps) {
   const { isMobile } = useMobileLayout();
 
@@ -176,14 +178,17 @@ function CalendarGridViewComponent({
                   />
                 ))}
 
-                {/* More events indicator */}
+                {/* More events indicator - clickable to show all events */}
                 {hiddenCount > 0 && (
-                  <div className={cn(
-                    "text-white/50 text-center",
-                    isMobile ? "text-[8px] py-px" : "text-[10px] py-0.5"
-                  )}>
-                    +{hiddenCount}
-                  </div>
+                  <button
+                    onClick={() => onDayClick?.(day, dayEvents)}
+                    className={cn(
+                      "w-full text-white/50 text-center hover:text-white/80 hover:bg-white/10 rounded transition-colors cursor-pointer",
+                      isMobile ? "text-[8px] py-px" : "text-[10px] py-0.5"
+                    )}
+                  >
+                    +{hiddenCount} more
+                  </button>
                 )}
               </div>
             </div>

@@ -487,11 +487,7 @@ const Gigs = () => {
 
   if (isLoading) {
     return (
-      <div className={cn("min-h-screen flex items-center justify-center", 
-        theme === 'pleasure' 
-          ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
-          : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
-      )}>
+      <div className="min-h-screen flex items-center justify-center bg-[#131b2b]">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -499,11 +495,7 @@ const Gigs = () => {
 
   if (error) {
     return (
-      <div className={cn("min-h-screen flex items-center justify-center p-4",
-        theme === 'pleasure' 
-          ? 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900'
-          : 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900'
-      )}>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#131b2b]">
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold mb-2">Oops! Something went wrong</h2>
           <p className="text-gray-300">We couldn't load the events. Please try again later.</p>
@@ -514,9 +506,9 @@ const Gigs = () => {
 
   const getBackgroundStyles = () => {
     if (theme === 'pleasure') {
-      return 'bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900';
+      return 'bg-[#131b2b]';
     }
-    return 'bg-gradient-to-br from-gray-800 via-gray-900 to-red-900';
+    return 'bg-[#131b2b]';
   };
 
   return (
@@ -734,6 +726,7 @@ const Gigs = () => {
                 isComedian={isComedian}
                 selectedEventIds={selectedEvents}
                 onToggleAvailability={toggleEvent}
+                onDayClick={handleMobileDayClick}
               />
             )
           ) : (
