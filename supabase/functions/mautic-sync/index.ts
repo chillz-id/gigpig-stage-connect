@@ -85,6 +85,30 @@ async function mauticFetch(path: string, options: RequestInit = {}): Promise<Res
   return response;
 }
 
+// --- Country Code Mapping ---
+
+const COUNTRY_CODE_TO_NAME: Record<string, string> = {
+  AU: 'Australia', NZ: 'New Zealand', GB: 'United Kingdom', US: 'United States',
+  CA: 'Canada', IE: 'Ireland', DE: 'Germany', FR: 'France', NL: 'Netherlands',
+  SG: 'Singapore', NO: 'Norway', ES: 'Spain', AT: 'Austria', BE: 'Belgium',
+  IT: 'Italy', SE: 'Sweden', DK: 'Denmark', CH: 'Switzerland', JP: 'Japan',
+  IN: 'India', ZA: 'South Africa', BR: 'Brazil', MX: 'Mexico', PT: 'Portugal',
+  FI: 'Finland', PL: 'Poland', CZ: 'Czech Republic', HU: 'Hungary', RO: 'Romania',
+  GR: 'Greece', TH: 'Thailand', MY: 'Malaysia', PH: 'Philippines', ID: 'Indonesia',
+  HK: 'Hong Kong', TW: 'Taiwan', KR: 'South Korea', CN: 'China', AE: 'United Arab Emirates',
+};
+
+function normalizeCountry(value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  // If it's a 2-letter code, look up the full name
+  if (trimmed.length === 2) {
+    return COUNTRY_CODE_TO_NAME[trimmed.toUpperCase()] || null;
+  }
+  // If it's already a full name, pass through
+  return trimmed;
+}
+
 // --- Field Mapping ---
 
 interface CrmContact {
@@ -122,9 +146,9 @@ function mapToMauticFields(contact: CrmContact): Record<string, unknown> {
     address1: contact.address_line1,
     address2: contact.address_line2,
     city: contact.suburb,
-    state: contact.state,
+    state_location: contact.state,
     zipcode: contact.postcode,
-    country: contact.country,
+    country: normalizeCountry(contact.country),
     supabase_id: contact.id,
     customer_segment: contact.customer_segment,
     lead_score: contact.lead_score,
