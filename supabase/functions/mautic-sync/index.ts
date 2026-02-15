@@ -11,7 +11,8 @@ const MAUTIC_URL = Deno.env.get('MAUTIC_URL') ?? 'https://mautic.gigpigs.app';
 const MAUTIC_CLIENT_ID = Deno.env.get('MAUTIC_CLIENT_ID') ?? '';
 const MAUTIC_CLIENT_SECRET = Deno.env.get('MAUTIC_CLIENT_SECRET') ?? '';
 const BATCH_SIZE = 200;
-const BATCH_DELAY_MS = 1000;
+const CONCURRENCY = 10;
+const BATCH_DELAY_MS = 500;
 
 // --- OAuth2 Token Management ---
 
@@ -347,85 +348,75 @@ serve(async (req) => {
 
     console.log(`Mautic sync: ${toSync.length} contacts to sync out of ${contacts.length} total`);
 
-    // 5. Process in batches
-    for (let i = 0; i < toSync.length; i += BATCH_SIZE) {
-      const batch = toSync.slice(i, i + BATCH_SIZE);
+    // 5. Process concurrently in batches
+    async function syncOneContact(item: typeof toSync[0]): Promise<void> {
+      const { contact, mauticFields, hash, existing } = item;
+      try {
+        let mauticContactId: number;
 
-      for (const { contact, mauticFields, hash, existing } of batch) {
-        try {
-          let mauticContactId: number;
-
-          if (existing?.mautic_contact_id) {
-            // Update existing contact
-            const res = await mauticFetch(`/contacts/${existing.mautic_contact_id}/edit`, {
-              method: 'PATCH',
-              body: JSON.stringify(mauticFields),
-            });
-            if (!res.ok) {
-              const errText = await res.text();
-              throw new Error(`Update failed (${res.status}): ${errText}`);
-            }
-            mauticContactId = existing.mautic_contact_id;
-            contactsUpdated++;
-          } else {
-            // Create new contact
-            const res = await mauticFetch('/contacts/new', {
-              method: 'POST',
-              body: JSON.stringify(mauticFields),
-            });
-            if (!res.ok) {
-              const errText = await res.text();
-              throw new Error(`Create failed (${res.status}): ${errText}`);
-            }
-            const created = await res.json();
-            mauticContactId = created.contact.id;
-            contactsCreated++;
+        if (existing?.mautic_contact_id) {
+          const res = await mauticFetch(`/contacts/${existing.mautic_contact_id}/edit`, {
+            method: 'PATCH',
+            body: JSON.stringify(mauticFields),
+          });
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Update failed (${res.status}): ${errText}`);
           }
-
-          // Sync segment membership
-          // Issue 3: Wrap segment sync in try-catch to avoid failing entire contact
-          try {
-            const currentSegments = contact.customer_segments || [];
-            const previousSegments = existing?.previous_segments || [];
-            await syncContactSegments(
-              mauticContactId,
-              currentSegments,
-              previousSegments,
-              segmentNameToId
-            );
-          } catch (segmentErr) {
-            console.error(`Segment sync failed for contact ${contact.id}:`, segmentErr);
-            // Don't fail the entire contact sync
+          mauticContactId = existing.mautic_contact_id;
+          contactsUpdated++;
+        } else {
+          const res = await mauticFetch('/contacts/new', {
+            method: 'POST',
+            body: JSON.stringify(mauticFields),
+          });
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Create failed (${res.status}): ${errText}`);
           }
-
-          // Update sync status with current segments for next run
-          await supabase.from('mautic_sync_status').upsert({
-            customer_id: contact.id,
-            mautic_contact_id: mauticContactId,
-            sync_hash: hash,
-            previous_segments: contact.customer_segments || [],
-            last_synced_at: new Date().toISOString(),
-            sync_error: null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'customer_id' });
-
-          contactsSynced++;
-        } catch (err) {
-          contactsFailed++;
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          errors.push({ email: contact.email, error: errorMsg });
-
-          // Record error in sync status
-          await supabase.from('mautic_sync_status').upsert({
-            customer_id: contact.id,
-            sync_error: errorMsg,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'customer_id' });
+          const created = await res.json();
+          mauticContactId = created.contact.id;
+          contactsCreated++;
         }
-      }
 
-      // Delay between batches to avoid rate limiting
-      if (i + BATCH_SIZE < toSync.length) {
+        try {
+          const currentSegments = contact.customer_segments || [];
+          const previousSegments = existing?.previous_segments || [];
+          await syncContactSegments(mauticContactId, currentSegments, previousSegments, segmentNameToId);
+        } catch (segmentErr) {
+          console.error(`Segment sync failed for contact ${contact.id}:`, segmentErr);
+        }
+
+        await supabase.from('mautic_sync_status').upsert({
+          customer_id: contact.id,
+          mautic_contact_id: mauticContactId,
+          sync_hash: hash,
+          previous_segments: contact.customer_segments || [],
+          last_synced_at: new Date().toISOString(),
+          sync_error: null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'customer_id' });
+
+        contactsSynced++;
+      } catch (err) {
+        contactsFailed++;
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        errors.push({ email: contact.email, error: errorMsg });
+
+        await supabase.from('mautic_sync_status').upsert({
+          customer_id: contact.id,
+          sync_error: errorMsg,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'customer_id' });
+      }
+    }
+
+    // Process in chunks of CONCURRENCY
+    for (let i = 0; i < toSync.length; i += CONCURRENCY) {
+      const chunk = toSync.slice(i, i + CONCURRENCY);
+      await Promise.all(chunk.map(syncOneContact));
+
+      if (i + CONCURRENCY < toSync.length && (i / CONCURRENCY) % 20 === 19) {
         await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
       }
     }
