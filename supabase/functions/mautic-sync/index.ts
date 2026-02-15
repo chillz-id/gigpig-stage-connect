@@ -275,24 +275,48 @@ serve(async (req) => {
     const segmentNameToId = await ensureMauticSegments();
     segmentsSynced = Object.keys(segmentNameToId).length;
 
-    // 2. Fetch all contacts from CRM view
-    const { data: contacts, error: fetchError } = await supabase
-      .from('customers_crm_v')
-      .select('id, email, first_name, last_name, mobile, landline, address_line1, address_line2, suburb, state, postcode, country, customer_segment, lead_score, total_orders, total_spent, last_order_date, last_event_name, preferred_venue, marketing_opt_in, customer_since, customer_segments')
-      .not('email', 'is', null);
+    // 2. Fetch all contacts from CRM view (paginated - Supabase returns max 1000 per request)
+    const PAGE_SIZE = 1000;
+    const contacts: CrmContact[] = [];
+    let page = 0;
+    while (true) {
+      const { data: batch, error: fetchError } = await supabase
+        .from('customers_crm_v')
+        .select('id, email, first_name, last_name, mobile, landline, address_line1, address_line2, suburb, state, postcode, country, customer_segment, lead_score, total_orders, total_spent, last_order_date, last_event_name, preferred_venue, marketing_opt_in, customer_since, customer_segments')
+        .not('email', 'is', null)
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    if (fetchError) throw new Error(`Failed to fetch contacts: ${fetchError.message}`);
-    if (!contacts || contacts.length === 0) {
+      if (fetchError) throw new Error(`Failed to fetch contacts (page ${page}): ${fetchError.message}`);
+      if (!batch || batch.length === 0) break;
+
+      contacts.push(...(batch as unknown as CrmContact[]));
+      if (batch.length < PAGE_SIZE) break;
+      page++;
+    }
+
+    console.log(`Fetched ${contacts.length} total contacts across ${page + 1} pages`);
+
+    if (contacts.length === 0) {
       return new Response(
         JSON.stringify({ success: true, message: 'No contacts to sync' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 3. Fetch existing sync status with previous segments
-    const { data: syncStatuses } = await supabase
-      .from('mautic_sync_status')
-      .select('customer_id, mautic_contact_id, sync_hash, previous_segments');
+    // 3. Fetch existing sync status (also paginated)
+    const syncStatuses: Array<{ customer_id: string; mautic_contact_id: number | null; sync_hash: string | null; previous_segments: string[] | null }> = [];
+    page = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('mautic_sync_status')
+        .select('customer_id, mautic_contact_id, sync_hash, previous_segments')
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (!batch || batch.length === 0) break;
+      syncStatuses.push(...batch);
+      if (batch.length < PAGE_SIZE) break;
+      page++;
+    }
 
     const syncMap = new Map(
       (syncStatuses || []).map(s => [s.customer_id, s])
@@ -311,13 +335,13 @@ serve(async (req) => {
     }> = [];
 
     for (const contact of contacts) {
-      const mauticFields = mapToMauticFields(contact as CrmContact);
+      const mauticFields = mapToMauticFields(contact);
       const segments = contact.customer_segments || [];
       const hash = await computeHash(mauticFields, segments);
       const existing = syncMap.get(contact.id) || null;
 
       if (!existing || existing.sync_hash !== hash) {
-        toSync.push({ contact: contact as CrmContact, mauticFields, hash, existing });
+        toSync.push({ contact, mauticFields, hash, existing });
       }
     }
 
