@@ -378,7 +378,7 @@ async function handleReserve(
   }
 
   const totalTickets = (bookingItems as BookingItem[]).reduce(
-    (sum, item) => sum + item.count, 0
+    (sum, item) => sum + item.count * (item.groupSize || 1), 0
   );
 
   const avail = await getAvailabilityForEvent(supabase, productId, event, product.capacity_per_slot);
@@ -527,7 +527,7 @@ async function handleBook(
   }
 
   const totalTickets = (effectiveBookingItems as BookingItem[]).reduce(
-    (sum, item) => sum + item.count, 0
+    (sum, item) => sum + item.count * (item.groupSize || 1), 0
   );
 
   if (!reservationReference) {
