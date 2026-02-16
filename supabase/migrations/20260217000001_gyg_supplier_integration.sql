@@ -26,7 +26,8 @@ END $$;
 
 CREATE TABLE IF NOT EXISTS public.gyg_products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
+  event_name_match TEXT,
   gyg_product_id TEXT UNIQUE NOT NULL,
   gyg_option_id TEXT,
   product_title TEXT,
@@ -36,7 +37,8 @@ CREATE TABLE IF NOT EXISTS public.gyg_products (
   is_active BOOLEAN DEFAULT true,
   pricing_categories JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT gyg_products_event_mapping_check CHECK (event_id IS NOT NULL OR event_name_match IS NOT NULL)
 );
 
 CREATE INDEX idx_gyg_products_gyg_product_id ON public.gyg_products(gyg_product_id);

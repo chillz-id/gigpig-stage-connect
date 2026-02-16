@@ -20,6 +20,16 @@ interface Traveler {
   phoneNumber?: string;
 }
 
+interface EventRow {
+  id: string;
+  capacity: number;
+  event_date: string;
+  start_time?: string;
+  name?: string;
+  venue?: string;
+  duration_minutes?: number;
+}
+
 // =============================================================================
 // Auth
 // =============================================================================
@@ -71,53 +81,126 @@ function generateTicketCode(): string {
 }
 
 // =============================================================================
-// Calculate availability for a product
+// Event resolution: maps a GYG product to one or many events
 // =============================================================================
 
-async function getAvailability(
+// deno-lint-ignore no-explicit-any
+async function resolveEventsInRange(
+  supabase: SupabaseClient,
+  // deno-lint-ignore no-explicit-any
+  product: any,
+  fromDateTime: string,
+  toDateTime: string
+): Promise<EventRow[]> {
+  if (product.event_name_match) {
+    // Recurring product: match events by name within date range
+    const { data } = await supabase
+      .from('events')
+      .select('id, capacity, event_date, start_time, name, venue, duration_minutes')
+      .eq('name', product.event_name_match)
+      .gte('event_date', fromDateTime)
+      .lte('event_date', toDateTime)
+      .order('event_date', { ascending: true });
+    return (data || []) as EventRow[];
+  }
+
+  if (product.event_id) {
+    // Single-event product: return that one event if in range
+    const { data } = await supabase
+      .from('events')
+      .select('id, capacity, event_date, start_time, name, venue, duration_minutes')
+      .eq('id', product.event_id)
+      .gte('event_date', fromDateTime)
+      .lte('event_date', toDateTime)
+      .single();
+    return data ? [data as EventRow] : [];
+  }
+
+  return [];
+}
+
+async function resolveEventByDateTime(
+  supabase: SupabaseClient,
+  // deno-lint-ignore no-explicit-any
+  product: any,
+  dateTime: string
+): Promise<EventRow | null> {
+  if (product.event_name_match) {
+    // Recurring: find the event on this specific date
+    // Match by date portion — event_date is stored as TIMESTAMPTZ
+    const targetDate = dateTime.split('T')[0] || dateTime.split(' ')[0];
+    const dayStart = `${targetDate}T00:00:00+00:00`;
+    const dayEnd = `${targetDate}T23:59:59+00:00`;
+
+    const { data } = await supabase
+      .from('events')
+      .select('id, capacity, event_date, start_time, name, venue, duration_minutes')
+      .eq('name', product.event_name_match)
+      .gte('event_date', dayStart)
+      .lte('event_date', dayEnd)
+      .limit(1)
+      .single();
+    return data as EventRow | null;
+  }
+
+  if (product.event_id) {
+    const { data } = await supabase
+      .from('events')
+      .select('id, capacity, event_date, start_time, name, venue, duration_minutes')
+      .eq('id', product.event_id)
+      .single();
+    return data as EventRow | null;
+  }
+
+  return null;
+}
+
+// =============================================================================
+// Calculate availability for a specific event
+// =============================================================================
+
+async function getAvailabilityForEvent(
   supabase: SupabaseClient,
   gygProductId: string,
-  dateTime: string
-): Promise<{ vacancies: number; capacity: number; totalSold: number } | null> {
-  // Get product + event info
-  const { data: product } = await supabase
-    .from('gyg_products')
-    .select('*, events!inner(id, capacity, event_date, total_tickets_sold)')
-    .eq('gyg_product_id', gygProductId)
-    .eq('is_active', true)
-    .single();
+  event: EventRow,
+  capacityOverride?: number | null
+): Promise<{ vacancies: number; capacity: number; totalSold: number }> {
+  const capacity = capacityOverride ?? event.capacity ?? 0;
 
-  if (!product) return null;
-
-  const capacity = product.capacity_per_slot ?? product.events.capacity ?? 0;
-
-  // Get total sold across ALL platforms
+  // Get total sold across ALL platforms for this event
   const { data: platforms } = await supabase
     .from('ticket_platforms')
     .select('tickets_sold')
-    .eq('event_id', product.events.id);
+    .eq('event_id', event.id);
 
   const totalSold = (platforms || []).reduce(
     (sum: number, p: { tickets_sold: number }) => sum + (p.tickets_sold || 0),
     0
   );
 
-  // Also count active reservations (holds) for this product + datetime
+  // Count active GYG reservations (holds) for this product on this event's date
   const { data: activeReservations } = await supabase
     .from('gyg_reservations')
     .select('total_tickets')
     .eq('gyg_product_id', gygProductId)
-    .eq('date_time', dateTime)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString());
 
+  // Filter reservations to this event's date (same day match)
+  const eventDateStr = event.event_date.split('T')[0] || event.event_date.split(' ')[0];
   const reservedTickets = (activeReservations || []).reduce(
-    (sum: number, r: { total_tickets: number }) => sum + (r.total_tickets || 0),
+    (sum: number, r: { total_tickets: number; date_time?: string }) => {
+      // Only count reservations for this specific date
+      const resDate = String(r.date_time || '').split('T')[0] || String(r.date_time || '').split(' ')[0];
+      if (resDate === eventDateStr) {
+        return sum + (r.total_tickets || 0);
+      }
+      return sum;
+    },
     0
   );
 
   const vacancies = Math.max(0, capacity - totalSold - reservedTickets);
-
   return { vacancies, capacity, totalSold };
 }
 
@@ -138,10 +221,10 @@ async function handleGetAvailabilities(
     return gygError('MISSING_PARAMETER', 'productId, fromDateTime, and toDateTime are required');
   }
 
-  // Look up product
+  // Look up product (no event join — we resolve events separately)
   const { data: product } = await supabase
     .from('gyg_products')
-    .select('*, events!inner(id, capacity, event_date, start_time)')
+    .select('*')
     .eq('gyg_product_id', productId)
     .eq('is_active', true)
     .single();
@@ -150,26 +233,11 @@ async function handleGetAvailabilities(
     return gygError('PRODUCT_NOT_FOUND', `Product ${productId} not found`);
   }
 
-  const eventDate = new Date(product.events.event_date);
-  const from = new Date(fromDateTime);
-  const to = new Date(toDateTime);
+  // Resolve all events in the date range
+  const events = await resolveEventsInRange(supabase, product, fromDateTime, toDateTime);
 
-  // Check if event falls within requested range
-  if (eventDate < from || eventDate > to) {
-    return gygSuccess({ availabilities: [] });
-  }
-
-  // Check cutoff
   const now = new Date();
   const cutoffMs = (product.cutoff_seconds || 3600) * 1000;
-  if (eventDate.getTime() - now.getTime() < cutoffMs) {
-    return gygSuccess({ availabilities: [] });
-  }
-
-  const avail = await getAvailability(supabase, productId, fromDateTime);
-  if (!avail) {
-    return gygSuccess({ availabilities: [] });
-  }
 
   // Build pricing categories from product config
   const pricingCategories = (product.pricing_categories || []).map(
@@ -180,16 +248,31 @@ async function handleGetAvailabilities(
     })
   );
 
-  return gygSuccess({
-    availabilities: [
-      {
-        dateTime: product.events.event_date,
+  // Build availability for each event date
+  const availabilities = [];
+  for (const event of events) {
+    const eventDate = new Date(event.event_date);
+
+    // Skip events past booking cutoff
+    if (eventDate.getTime() - now.getTime() < cutoffMs) {
+      continue;
+    }
+
+    const avail = await getAvailabilityForEvent(
+      supabase, productId, event, product.capacity_per_slot
+    );
+
+    if (avail.vacancies > 0) {
+      availabilities.push({
+        dateTime: event.event_date,
         productId: product.gyg_product_id,
         vacancies: avail.vacancies,
         pricingCategories,
-      },
-    ],
-  });
+      });
+    }
+  }
+
+  return gygSuccess({ availabilities });
 }
 
 async function handleReserve(
@@ -208,10 +291,10 @@ async function handleReserve(
     return gygError('MISSING_PARAMETER', 'productId, dateTime, bookingItems, and bookingReference are required');
   }
 
-  // Validate product exists
+  // Look up product
   const { data: product } = await supabase
     .from('gyg_products')
-    .select('*, events!inner(id, event_date, capacity)')
+    .select('*')
     .eq('gyg_product_id', productId)
     .eq('is_active', true)
     .single();
@@ -220,8 +303,14 @@ async function handleReserve(
     return gygError('PRODUCT_NOT_FOUND', `Product ${productId} not found`);
   }
 
+  // Resolve the specific event for this dateTime
+  const event = await resolveEventByDateTime(supabase, product, dateTime);
+  if (!event) {
+    return gygError('NO_AVAILABILITY', 'No event found for the requested date');
+  }
+
   // Check cutoff
-  const eventDate = new Date(product.events.event_date);
+  const eventDate = new Date(event.event_date);
   const now = new Date();
   const cutoffMs = (product.cutoff_seconds || 3600) * 1000;
   if (eventDate.getTime() - now.getTime() < cutoffMs) {
@@ -235,8 +324,10 @@ async function handleReserve(
   );
 
   // Check availability
-  const avail = await getAvailability(supabase, productId, dateTime);
-  if (!avail || avail.vacancies < totalTickets) {
+  const avail = await getAvailabilityForEvent(
+    supabase, productId, event, product.capacity_per_slot
+  );
+  if (avail.vacancies < totalTickets) {
     return gygError('NO_AVAILABILITY', 'Not enough tickets available');
   }
 
@@ -357,16 +448,22 @@ async function handleBook(
     return gygError('MISSING_PARAMETER', 'productId, dateTime, and bookingItems are required');
   }
 
-  // Get product + event
+  // Look up product
   const { data: product } = await supabase
     .from('gyg_products')
-    .select('*, events!inner(id, capacity, event_date)')
+    .select('*')
     .eq('gyg_product_id', effectiveProductId)
     .eq('is_active', true)
     .single();
 
   if (!product) {
     return gygError('PRODUCT_NOT_FOUND', `Product ${effectiveProductId} not found`);
+  }
+
+  // Resolve the specific event for this dateTime
+  const event = await resolveEventByDateTime(supabase, product, effectiveDateTime);
+  if (!event) {
+    return gygError('PRODUCT_NOT_FOUND', 'No event found for the requested date');
   }
 
   const totalTickets = (effectiveBookingItems as BookingItem[]).reduce(
@@ -376,8 +473,10 @@ async function handleBook(
 
   // Check availability for direct bookings (no prior reservation)
   if (!reservationReference) {
-    const avail = await getAvailability(supabase, effectiveProductId, effectiveDateTime);
-    if (!avail || avail.vacancies < totalTickets) {
+    const avail = await getAvailabilityForEvent(
+      supabase, effectiveProductId, event, product.capacity_per_slot
+    );
+    if (avail.vacancies < totalTickets) {
       return gygError('NO_AVAILABILITY', 'Not enough tickets available');
     }
   }
@@ -402,10 +501,10 @@ async function handleBook(
 
   const bookingReference = generateBookingRef();
 
-  // Insert booking
+  // Insert booking — event_id comes from the resolved event
   const { error: bookingError } = await supabase.from('gyg_bookings').insert({
     gyg_product_id: effectiveProductId,
-    event_id: product.events.id,
+    event_id: event.id,
     booking_reference: bookingReference,
     gyg_booking_reference: gygBookingReference || reservation?.gyg_booking_reference || '',
     reservation_reference: reservationReference || null,
@@ -437,23 +536,23 @@ async function handleBook(
   }
 
   // Update ticket_platforms via update_ticket_sales()
-  // First get current sold count for GYG on this event
   const { data: currentPlatform } = await supabase
     .from('ticket_platforms')
     .select('tickets_sold, gross_sales')
-    .eq('event_id', product.events.id)
+    .eq('event_id', event.id)
     .eq('platform', 'getyourguide')
     .single();
 
   const newSold = (currentPlatform?.tickets_sold || 0) + totalTickets;
   const newGross = parseFloat(String(currentPlatform?.gross_sales || 0)) + totalRevenue / 100;
+  const eventCapacity = product.capacity_per_slot ?? event.capacity ?? 0;
 
   await supabase.rpc('update_ticket_sales', {
-    p_event_id: product.events.id,
+    p_event_id: event.id,
     p_platform: 'getyourguide',
     p_external_event_id: effectiveProductId,
     p_tickets_sold: newSold,
-    p_tickets_available: Math.max(0, (product.capacity_per_slot ?? product.events.capacity ?? 0) - newSold),
+    p_tickets_available: Math.max(0, eventCapacity - newSold),
     p_gross_sales: newGross,
     p_external_url: null,
     p_platform_data: { gyg_booking_reference: gygBookingReference },
@@ -462,7 +561,7 @@ async function handleBook(
   // Insert ticket_sales for unified tracking
   const traveler = (travelers as Traveler[] | null)?.[0];
   await supabase.from('ticket_sales').insert({
-    event_id: product.events.id,
+    event_id: event.id,
     customer_name: traveler
       ? `${traveler.firstName} ${traveler.lastName}`.trim()
       : 'GetYourGuide Guest',
@@ -493,9 +592,10 @@ async function handleCancelBooking(
     return gygError('MISSING_PARAMETER', 'bookingReference is required');
   }
 
+  // gyg_bookings has event_id directly, so join events for capacity
   const { data: booking } = await supabase
     .from('gyg_bookings')
-    .select('*, events!inner(id, capacity), gyg_products!inner(capacity_per_slot)')
+    .select('*, gyg_products!inner(capacity_per_slot)')
     .eq('booking_reference', bookingReference)
     .single();
 
@@ -527,6 +627,13 @@ async function handleCancelBooking(
     return gygError('INTERNAL_ERROR', 'Failed to cancel booking', 500);
   }
 
+  // Get event capacity for tickets_available calc
+  const { data: eventData } = await supabase
+    .from('events')
+    .select('capacity')
+    .eq('id', booking.event_id)
+    .single();
+
   // Decrement ticket_platforms count
   const { data: currentPlatform } = await supabase
     .from('ticket_platforms')
@@ -541,13 +648,14 @@ async function handleCancelBooking(
       0,
       parseFloat(String(currentPlatform.gross_sales || 0)) - (booking.total_revenue || 0) / 100
     );
+    const eventCapacity = booking.gyg_products?.capacity_per_slot ?? eventData?.capacity ?? 0;
 
     await supabase.rpc('update_ticket_sales', {
       p_event_id: booking.event_id,
       p_platform: 'getyourguide',
       p_external_event_id: booking.gyg_product_id,
       p_tickets_sold: newSold,
-      p_tickets_available: Math.max(0, (booking.gyg_products?.capacity_per_slot ?? booking.events?.capacity ?? 0) - newSold),
+      p_tickets_available: Math.max(0, eventCapacity - newSold),
       p_gross_sales: newGross,
       p_external_url: null,
       p_platform_data: null,
@@ -571,7 +679,7 @@ async function handleProductDetails(
 ): Promise<Response> {
   const { data: product } = await supabase
     .from('gyg_products')
-    .select('*, events!inner(id, title, venue_name, event_date, duration_minutes)')
+    .select('*')
     .eq('gyg_product_id', productId)
     .single();
 
@@ -579,16 +687,37 @@ async function handleProductDetails(
     return gygError('PRODUCT_NOT_FOUND', `Product ${productId} not found`);
   }
 
+  // Get next upcoming event for display info
+  let eventInfo = null;
+  if (product.event_name_match) {
+    const { data } = await supabase
+      .from('events')
+      .select('name, venue, duration_minutes')
+      .eq('name', product.event_name_match)
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
+      .limit(1)
+      .single();
+    eventInfo = data;
+  } else if (product.event_id) {
+    const { data } = await supabase
+      .from('events')
+      .select('name, venue, duration_minutes')
+      .eq('id', product.event_id)
+      .single();
+    eventInfo = data;
+  }
+
   return gygSuccess({
     product: {
       productId: product.gyg_product_id,
       optionId: product.gyg_option_id,
-      title: product.product_title || product.events.title,
+      title: product.product_title || eventInfo?.name,
       currency: product.default_currency,
       isActive: product.is_active,
       pricingCategories: product.pricing_categories,
-      location: product.events.venue_name,
-      durationMinutes: product.events.duration_minutes,
+      location: eventInfo?.venue,
+      durationMinutes: eventInfo?.duration_minutes,
     },
   });
 }
@@ -627,7 +756,7 @@ async function handleSupplierProducts(
 ): Promise<Response> {
   const { data: products } = await supabase
     .from('gyg_products')
-    .select('*, events!inner(id, title, venue_name, event_date)')
+    .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -635,7 +764,7 @@ async function handleSupplierProducts(
     products: (products || []).map((p) => ({
       productId: p.gyg_product_id,
       optionId: p.gyg_option_id,
-      title: p.product_title || p.events.title,
+      title: p.product_title,
       currency: p.default_currency,
       isActive: p.is_active,
     })),
@@ -699,11 +828,14 @@ serve(async (req: Request) => {
   const fullPath = url.pathname;
 
   // The edge function is mounted at /functions/v1/gyg-supplier-api
-  // So /functions/v1/gyg-supplier-api/1/reserve/ → apiPath = /1/reserve/
-  const basePath = '/functions/v1/gyg-supplier-api';
-  const apiPath = fullPath.startsWith(basePath)
-    ? fullPath.slice(basePath.length)
-    : fullPath;
+  // Supabase may pass the full path or strip /functions/v1/
+  let apiPath = fullPath;
+  for (const prefix of ['/functions/v1/gyg-supplier-api', '/gyg-supplier-api']) {
+    if (apiPath.startsWith(prefix)) {
+      apiPath = apiPath.slice(prefix.length);
+      break;
+    }
+  }
 
   // Normalize: strip trailing slash for matching
   const normalizedPath = apiPath.replace(/\/$/, '') || '/';
