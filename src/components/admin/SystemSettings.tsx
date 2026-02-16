@@ -10,6 +10,7 @@ import { Settings, Database, Mail, Shield, Globe, Bell, Palette, Facebook, Refre
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { facebookAdsService } from '@/services/facebookAdsService';
+import { TicketingPartnersCard } from './settings/TicketingPartnersCard';
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -239,6 +240,9 @@ const SystemSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Ticketing Partners */}
+      <TicketingPartnersCard />
 
       {/* General Settings */}
       <Card className="bg-white/10 backdrop-blur-sm border-white/20">
