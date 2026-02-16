@@ -163,6 +163,20 @@ const form = useForm<FormSchema>({
 </ProtectedRoute>
 ```
 
+### Sidebar Layout Pattern
+The platform uses a fixed sidebar with explicit width calculations to prevent content overlap:
+
+```tsx
+// PlatformLayout.tsx - Main content width calculation
+const sidebarWidth = state === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
+<main style={{ width: `calc(100vw - ${sidebarWidth})` }}>
+```
+
+**Sidebar collapse behavior** (UnifiedSidebar.tsx):
+- Use `group-data-[collapsible=icon]:hidden` on labels/badges/chevrons to hide when collapsed
+- Use `shrink-0` on icons to prevent shrinking
+- CSS variables: `--sidebar-width` (16rem), `--sidebar-width-icon` (3rem)
+
 ## Environment Configuration
 
 Copy `.env.example` to `.env` with required variables:
@@ -170,7 +184,7 @@ Copy `.env.example` to `.env` with required variables:
 - `VITE_GOOGLE_MAPS_API_KEY`
 - `VITE_APP_URL` (defaults to `http://localhost:8080`)
 
-Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN`, Filestash config (see `.env.example`).
+Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN` (see `.env.example`).
 
 ## Git Workflow
 
@@ -280,6 +294,7 @@ After pushing, verify on deployed preview:
 | Event management | `src/pages/EventManagement.tsx`, `src/components/event-management/` |
 | Invoicing | `src/components/InvoiceForm.tsx`, `src/services/invoiceService.ts` |
 | CRM | `src/components/crm/`, `src/pages/crm/`, `src/hooks/crm/` |
+| Media library | `src/pages/MediaLibrary.tsx`, `src/components/media-library/` |
 
 ## Key Documentation
 
