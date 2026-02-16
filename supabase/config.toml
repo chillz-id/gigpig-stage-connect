@@ -67,3 +67,6 @@ verify_jwt = false
 
 [functions.sitemap-scheduler]
 verify_jwt = false
+
+[functions.framer-cms-sync]
+verify_jwt = false
