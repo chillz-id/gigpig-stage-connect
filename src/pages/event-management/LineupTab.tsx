@@ -58,8 +58,16 @@ import TimelineRunsheet from '@/components/lineup/TimelineRunsheet';
 import { AddSpotDialog } from '@/components/lineup/AddSpotDialog';
 import { AddBreakDialog } from '@/components/lineup/AddBreakDialog';
 import { ShortlistPanelContainer } from '@/components/applications/ShortlistPanelContainer';
+import { DirectoryProfileBrowser } from '@/components/lineup/DirectoryProfileBrowser';
 import { useLineupStats, formatDuration, formatTimeRange } from '@/hooks/useLineupStats';
-import { useAssignComedianToSpot, useCreateAndAssignSpot, useReorderSpots, useEventSpots } from '@/hooks/useEventSpots';
+import {
+  useAssignComedianToSpot,
+  useCreateAndAssignSpot,
+  useReorderSpots,
+  useEventSpots,
+  useAssignDirectoryProfileToSpot,
+  useCreateAndAssignDirectoryProfile,
+} from '@/hooks/useEventSpots';
 import { formatCurrency } from '@/lib/utils';
 import type { SpotCategory } from '@/types/spot';
 
@@ -79,6 +87,13 @@ interface ShortlistDragData {
   comedianAvatar?: string;
 }
 
+interface DirectoryProfileDragData {
+  type: 'directory-profile';
+  directoryProfileId: string;
+  profileName: string;
+  profileAvatar?: string;
+}
+
 interface SpotDragData {
   type: 'spot-item';
   spotId: string;
@@ -86,7 +101,7 @@ interface SpotDragData {
   spotData?: unknown;
 }
 
-type DragData = ShortlistDragData | SpotDragData;
+type DragData = ShortlistDragData | DirectoryProfileDragData | SpotDragData;
 
 export default function LineupTab({ eventId, userId }: LineupTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('timeline');
@@ -120,6 +135,8 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   const assignToSpot = useAssignComedianToSpot();
   const createAndAssign = useCreateAndAssignSpot();
   const reorderSpots = useReorderSpots();
+  const assignDirectoryProfile = useAssignDirectoryProfileToSpot();
+  const createAndAssignDirectory = useCreateAndAssignDirectoryProfile();
 
   // Publish lineup hooks
   const { data: publishStatus } = useLineupPublishStatus(eventId);
@@ -135,9 +152,18 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
     })
   );
 
-  // Custom collision detection: prioritize spot droppables for shortlist items
+  // Custom collision detection: prioritize spot droppables for shortlist items,
+  // but let sortable collision work for spot reordering
   const customCollisionDetection: CollisionDetection = (args) => {
-    // First check pointerWithin for droppable spots (spot-xxx IDs)
+    const activeData = args.active.data.current as DragData | undefined;
+    const isDraggingSpot = activeData?.type === 'spot-item';
+
+    // For spot reordering, use rectIntersection directly to get sortable IDs
+    if (isDraggingSpot) {
+      return rectIntersection(args);
+    }
+
+    // For shortlist-item and directory-profile drags, prioritize droppables
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) {
       // Prioritize add-zone droppables first (for inline spot creation)
@@ -152,14 +178,14 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       if (spotCollision) return [spotCollision];
       return pointerCollisions;
     }
-    // Fall back to rectIntersection for sortable reordering
+    // Fall back to rectIntersection
     return rectIntersection(args);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
     console.log('🎯 Drag started:', event.active.id, event.active.data.current);
     const data = event.active.data.current as DragData | undefined;
-    if (data?.type === 'shortlist-item') {
+    if (data?.type === 'shortlist-item' || data?.type === 'directory-profile') {
       setActiveDrag(data);
     }
   };
@@ -178,7 +204,8 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
     // Handle spot reordering (spot-item dragged over another spot-item)
     if (dragData.type === 'spot-item') {
       const activeSpotId = active.id.toString();
-      const overSpotId = overId;
+      // Strip 'spot-' prefix if present (from droppable ID vs sortable ID)
+      const overSpotId = overId.startsWith('spot-') ? overId.slice(5) : overId;
 
       // Don't reorder if dropped on the same spot
       if (activeSpotId === overSpotId) return;
@@ -197,41 +224,75 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       return;
     }
 
-    // Handle shortlist item drag
-    if (dragData.type !== 'shortlist-item') return;
+    // Handle shortlist item drag (comedian with profile)
+    if (dragData.type === 'shortlist-item') {
+      // Dropped on "new-spot-zone" - create new spot and assign comedian
+      if (overId === 'new-spot-zone') {
+        createAndAssign.mutate({
+          eventId,
+          comedianId: dragData.comedianId
+        });
+        return;
+      }
 
-    // Dropped on "new-spot-zone" - create new spot and assign comedian
-    if (overId === 'new-spot-zone') {
-      createAndAssign.mutate({
-        eventId,
-        comedianId: dragData.comedianId
-      });
+      // Dropped on an add-zone - create new spot at specific position and assign comedian
+      if (overId.startsWith('add-zone-') && overData?.type === 'add-zone') {
+        const position = overData.position as number;
+        console.log('🎯 Creating spot at position and assigning:', { position, comedianId: dragData.comedianId });
+        createAndAssign.mutate({
+          eventId,
+          comedianId: dragData.comedianId,
+          position
+        });
+        return;
+      }
+
+      // Dropped on an existing spot
+      if (overId.startsWith('spot-') && overData?.type === 'spot') {
+        const spotId = overId.replace('spot-', '');
+        console.log('🎯 Assigning comedian to spot:', { spotId, comedianId: dragData.comedianId, isEmpty: overData.isEmpty });
+        assignToSpot.mutate({
+          spotId,
+          comedianId: dragData.comedianId,
+          eventId
+        });
+      }
       return;
     }
 
-    // Dropped on an add-zone - create new spot at specific position and assign comedian
-    if (overId.startsWith('add-zone-') && overData?.type === 'add-zone') {
-      const position = overData.position as number;
-      console.log('🎯 Creating spot at position and assigning:', { position, comedianId: dragData.comedianId });
-      createAndAssign.mutate({
-        eventId,
-        comedianId: dragData.comedianId,
-        position // Pass the position to create at specific location
-      });
-      return;
-    }
+    // Handle directory profile drag (unclaimed profiles)
+    if (dragData.type === 'directory-profile') {
+      // Dropped on "new-spot-zone" - create new spot and assign directory profile
+      if (overId === 'new-spot-zone') {
+        createAndAssignDirectory.mutate({
+          eventId,
+          directoryProfileId: dragData.directoryProfileId
+        });
+        return;
+      }
 
-    // Dropped on an existing spot
-    if (overId.startsWith('spot-') && overData?.type === 'spot') {
-      const spotId = overId.replace('spot-', '');
+      // Dropped on an add-zone - create new spot at specific position
+      if (overId.startsWith('add-zone-') && overData?.type === 'add-zone') {
+        const position = overData.position as number;
+        console.log('🎯 Creating spot at position with directory profile:', { position, directoryProfileId: dragData.directoryProfileId });
+        createAndAssignDirectory.mutate({
+          eventId,
+          directoryProfileId: dragData.directoryProfileId,
+          position
+        });
+        return;
+      }
 
-      // Always assign - allow reassignment if spot already has comedian
-      console.log('🎯 Assigning comedian to spot:', { spotId, comedianId: dragData.comedianId, isEmpty: overData.isEmpty });
-      assignToSpot.mutate({
-        spotId,
-        comedianId: dragData.comedianId,
-        eventId
-      });
+      // Dropped on an existing spot
+      if (overId.startsWith('spot-') && overData?.type === 'spot') {
+        const spotId = overId.replace('spot-', '');
+        console.log('🎯 Assigning directory profile to spot:', { spotId, directoryProfileId: dragData.directoryProfileId });
+        assignDirectoryProfile.mutate({
+          spotId,
+          directoryProfileId: dragData.directoryProfileId,
+          eventId
+        });
+      }
     }
   };
 
@@ -411,6 +472,13 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
         userId={userId}
         totalSpots={stats?.totalSpots}
         layout="horizontal"
+      />
+
+      {/* Directory Profile Browser - Drag unclaimed profiles to spots */}
+      <DirectoryProfileBrowser
+        assignedProfileIds={spots
+          ?.filter(s => s.directoryProfile?.id)
+          .map(s => s.directoryProfile!.id) || []}
       />
 
       {/* Lineup Display */}
@@ -623,9 +691,9 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
       />
       </div>
 
-      {/* Drag Overlay - Shows dragging comedian */}
+      {/* Drag Overlay - Shows dragging comedian or directory profile */}
       <DragOverlay>
-        {activeDrag && (
+        {activeDrag && activeDrag.type === 'shortlist-item' && (
           <div className="flex items-center gap-2 bg-card border rounded-lg p-2 shadow-lg">
             <Avatar className="h-8 w-8">
               <AvatarImage src={activeDrag.comedianAvatar} alt={activeDrag.comedianName} />
@@ -634,6 +702,20 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
               </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium">{activeDrag.comedianName}</span>
+          </div>
+        )}
+        {activeDrag && activeDrag.type === 'directory-profile' && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2 shadow-lg">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={activeDrag.profileAvatar} alt={activeDrag.profileName} />
+              <AvatarFallback className="text-xs bg-amber-100 text-amber-700">
+                {activeDrag.profileName?.slice(0, 2).toUpperCase() || '??'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">{activeDrag.profileName}</span>
+            <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">
+              Unclaimed
+            </Badge>
           </div>
         )}
       </DragOverlay>

@@ -12,7 +12,7 @@ export const useEventSpots = (eventId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch spots for an event with comedian profile data
+  // Fetch spots for an event with comedian and directory profile data
   const {
     data: spots = [],
     isLoading,
@@ -30,22 +30,37 @@ export const useEventSpots = (eventId?: string) => {
 
       if (error) throw error;
 
-      // Fetch comedian profiles separately for spots that have comedian_id
-      const spotsWithComedians = await Promise.all(
+      // Fetch comedian profiles and directory profiles for spots
+      const spotsWithProfiles = await Promise.all(
         (data || []).map(async (spot) => {
+          let comedian = null;
+          let directoryProfile = null;
+
+          // Fetch comedian profile if assigned
           if (spot.comedian_id) {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, stage_name, avatar_url')
               .eq('id', spot.comedian_id)
               .single();
-            return { ...spot, comedian: profile };
+            comedian = profile;
           }
-          return { ...spot, comedian: null };
+
+          // Fetch directory profile if assigned (for unclaimed profiles)
+          if (spot.directory_profile_id) {
+            const { data: dirProfile } = await supabase
+              .from('directory_profiles')
+              .select('id, stage_name, primary_headshot_url, origin_city, claimed_at')
+              .eq('id', spot.directory_profile_id)
+              .single();
+            directoryProfile = dirProfile;
+          }
+
+          return { ...spot, comedian, directoryProfile };
         })
       );
 
-      return spotsWithComedians;
+      return spotsWithProfiles;
     },
     enabled: !!eventId
   });
@@ -602,6 +617,7 @@ export const useUnassignComedianFromSpot = () => {
         .from('event_spots')
         .update({
           comedian_id: null,
+          directory_profile_id: null, // Also clear directory profile
           is_filled: false,
           confirmation_status: 'pending'
         })
@@ -623,6 +639,136 @@ export const useUnassignComedianFromSpot = () => {
     onError: (error) => {
       toast({
         title: 'Failed to unassign comedian',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
+  });
+};
+
+/**
+ * Assign an unclaimed directory profile to an existing spot
+ * Used for pre-launch lineup building with profiles that haven't been claimed yet
+ */
+export const useAssignDirectoryProfileToSpot = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      spotId,
+      directoryProfileId,
+      eventId
+    }: {
+      spotId: string;
+      directoryProfileId: string;
+      eventId: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('event_spots')
+        .update({
+          directory_profile_id: directoryProfileId,
+          comedian_id: null, // Clear comedian_id (mutually exclusive)
+          is_filled: true,
+          confirmation_status: 'confirmed',
+          confirmed_at: new Date().toISOString()
+        })
+        .eq('id', spotId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-spots', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['lineup-stats', variables.eventId] });
+      toast({
+        title: 'Profile assigned',
+        description: 'Directory profile has been assigned to the spot'
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to assign profile',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
+  });
+};
+
+/**
+ * Create a new spot and assign a directory profile in one operation
+ */
+export const useCreateAndAssignDirectoryProfile = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      eventId,
+      directoryProfileId,
+      spotType = 'Spot',
+      duration = 5,
+      position
+    }: {
+      eventId: string;
+      directoryProfileId: string;
+      spotType?: string;
+      duration?: number;
+      position?: number;
+    }) => {
+      let spotOrder: number;
+
+      if (position !== undefined) {
+        spotOrder = position;
+      } else {
+        // Get the next spot order (append to end)
+        const { data: existingSpots, error: fetchError } = await supabase
+          .from('event_spots')
+          .select('spot_order')
+          .eq('event_id', eventId)
+          .order('spot_order', { ascending: false })
+          .limit(1);
+
+        if (fetchError) throw fetchError;
+
+        spotOrder = existingSpots && existingSpots.length > 0
+          ? (existingSpots[0].spot_order || 0) + 1
+          : 1;
+      }
+
+      // Create the spot with directory profile assigned
+      const { data, error } = await supabase
+        .from('event_spots')
+        .insert({
+          event_id: eventId,
+          spot_name: spotType,
+          spot_order: spotOrder,
+          directory_profile_id: directoryProfileId,
+          duration_minutes: duration,
+          is_filled: true,
+          confirmation_status: 'confirmed',
+          confirmed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-spots', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['lineup-stats', variables.eventId] });
+      toast({
+        title: 'Spot created',
+        description: 'New spot created with directory profile assigned'
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to create spot',
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
