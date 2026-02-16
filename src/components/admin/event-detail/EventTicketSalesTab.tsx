@@ -7,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, Plus, Search, RefreshCw, Zap, Clock, BarChart3, Users } from 'lucide-react';
+import { Download, Plus, Search, RefreshCw, Zap, Clock, BarChart3, Users, Ticket } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ticketSyncService } from '@/services/ticketSyncService';
 import { format } from 'date-fns';
 import { TicketSalesDashboard } from '@/components/ticket-sales';
+import { ManualTicketEntryDialog } from './ManualTicketEntryDialog';
+import { useManualTicketEntries } from '@/hooks/useManualTicketEntries';
 
 interface TicketSale {
   id: string;
@@ -61,6 +63,15 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
   const [sourceBreakdown, setSourceBreakdown] = useState<TicketSourceBreakdown[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('all');
+  const [showManualEntryDialog, setShowManualEntryDialog] = useState(false);
+
+  // Manual ticket entries hook
+  const {
+    entries: manualEntries,
+    breakdownByPartner,
+    totals: manualTotals,
+    isLoading: manualEntriesLoading
+  } = useManualTicketEntries(eventId);
 
   const fetchTicketSales = useCallback(async () => {
     try {
@@ -369,6 +380,43 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
         </CardContent>
       </Card>
 
+      {/* Partner Sales (Manual Entries) */}
+      {breakdownByPartner.length > 0 && (
+        <Card className="bg-white/5 backdrop-blur-sm border-white/20">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Ticket className="w-5 h-5" />
+              Partner Sales
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {breakdownByPartner.map((partner) => (
+                <div key={partner.partnerId} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div>
+                    <div className="text-white font-medium">{partner.partnerName}</div>
+                    <div className="text-white/60 text-sm">
+                      {partner.ticketCount} tickets • ${partner.grossRevenue.toFixed(2)} gross
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-green-400 font-medium">${partner.netRevenue.toFixed(2)} net</div>
+                    <div className="text-red-400/80 text-sm">-${partner.commissionAmount.toFixed(2)} commission</div>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between p-3 bg-white/10 rounded-lg border border-white/20 mt-3">
+                <div className="text-white font-medium">Partner Sales Total</div>
+                <div className="text-right">
+                  <div className="text-white font-bold">{manualTotals.ticketCount} tickets • ${manualTotals.netRevenue.toFixed(2)} net</div>
+                  <div className="text-white/60 text-sm">${manualTotals.grossRevenue.toFixed(2)} gross • -${manualTotals.commissionAmount.toFixed(2)} commission</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-2 flex-1">
@@ -412,6 +460,7 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
           </Button>
           <Button
             size="sm"
+            onClick={() => setShowManualEntryDialog(true)}
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -480,6 +529,14 @@ const EventTicketSalesTab: React.FC<EventTicketSalesTabProps> = ({ eventId }) =>
         </CardContent>
       </Card>
       </TabsContent>
+
+      {/* Manual Ticket Entry Dialog */}
+      <ManualTicketEntryDialog
+        open={showManualEntryDialog}
+        onClose={() => setShowManualEntryDialog(false)}
+        eventId={eventId}
+        onSuccess={fetchTicketSales}
+      />
     </Tabs>
   );
 };
