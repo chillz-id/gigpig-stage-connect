@@ -78,20 +78,33 @@ function getSpotName(spot: RawSpot): string {
 
 /**
  * Helper to get comedian name - handles both raw DB (comedian object) and mapped SpotData
+ * Also handles directory profiles (unclaimed profiles)
  */
 function getComedianName(spot: RawSpot): string | undefined {
   if (spot.comedian_name) return spot.comedian_name;
   if (spot.comedian?.stage_name) return spot.comedian.stage_name;
+  // Check for directory profile (unclaimed)
+  if (spot.directoryProfile?.stage_name) return spot.directoryProfile.stage_name;
   return undefined;
 }
 
 /**
  * Helper to get comedian avatar
+ * Also handles directory profiles (unclaimed profiles)
  */
 function getComedianAvatar(spot: RawSpot): string | undefined {
   if (spot.comedian_avatar) return spot.comedian_avatar;
   if (spot.comedian?.avatar_url) return spot.comedian.avatar_url;
+  // Check for directory profile (unclaimed)
+  if (spot.directoryProfile?.primary_headshot_url) return spot.directoryProfile.primary_headshot_url;
   return undefined;
+}
+
+/**
+ * Check if spot has an unclaimed directory profile assigned
+ */
+function hasDirectoryProfile(spot: RawSpot): boolean {
+  return !!spot.directory_profile_id || !!spot.directoryProfile;
 }
 
 interface TimelineRunsheetProps {
@@ -326,15 +339,18 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, onAddLineItem, is
     },
   });
 
-  // Droppable for receiving dragged comedians
+  // Droppable for receiving dragged comedians or directory profiles
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `spot-${spot.id}`,
     data: {
       type: 'spot',
       spotId: spot.id,
-      isEmpty: !spot.comedian_id && !spot.staff_id,
+      isEmpty: !spot.comedian_id && !spot.staff_id && !spot.directory_profile_id,
     },
   });
+
+  // Check if this spot has an unclaimed directory profile
+  const isDirectoryProfile = hasDirectoryProfile(spot);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -353,7 +369,10 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, onAddLineItem, is
   // Build assignment display
   const getAssignment = () => {
     if (isExtra) {
-      return spot.staff_name || 'Unassigned';
+      // Check staff_name first, then directory profile for unclaimed profiles
+      if (spot.staff_name) return spot.staff_name;
+      if (spot.directoryProfile?.stage_name) return spot.directoryProfile.stage_name;
+      return 'Unassigned';
     }
     if (isBreak) {
       return null; // No assignment for breaks
@@ -381,8 +400,10 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, onAddLineItem, is
   const BreakIcon = isDoors ? DoorOpen : isIntermission ? Coffee : null;
   const ExtraIcon = isExtra && spot.extra_type ? EXTRA_ICONS[spot.extra_type] || Users : Users;
 
-  // Get avatar for assigned person
-  const avatarUrl = isExtra ? spot.staff_avatar : getComedianAvatar(spot);
+  // Get avatar for assigned person (check directory profile for extras too)
+  const avatarUrl = isExtra
+    ? (spot.staff_avatar || spot.directoryProfile?.primary_headshot_url)
+    : getComedianAvatar(spot);
 
   return (
     <div
@@ -461,6 +482,12 @@ function TimelineRow({ spot, time, onAssign, onEdit, onDelete, onAddLineItem, is
                 <span className="whitespace-nowrap">
                   {assignment}
                 </span>
+              )}
+              {/* Badge for unclaimed directory profiles */}
+              {isDirectoryProfile && (
+                <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  Unclaimed
+                </Badge>
               )}
             </div>
           </>
