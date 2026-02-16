@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, MapPin, Users, DollarSign, TrendingUp, Ticket, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { useManualTicketEntries } from '@/hooks/useManualTicketEntries';
 import type { EventData } from '@/types/event';
 
 interface SessionData {
@@ -97,6 +99,25 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
     },
     enabled: isSyncedEvent && !!sourceId,
   });
+
+  // Fetch manual ticket entries (from ticketing partners like FEVER, GetYourGuide)
+  const { totals: manualTotals, isLoading: manualEntriesLoading } = useManualTicketEntries(eventId);
+
+  // Calculate combined totals (platform + manual entries)
+  const combinedTotals = useMemo(() => {
+    const platformTickets = sessionData?.total_ticket_count || 0;
+    const platformOrders = sessionData?.total_order_count || 0;
+    const platformGross = parseFloat(sessionData?.total_gross_dollars || '0');
+    const platformNet = parseFloat(sessionData?.total_net_dollars || '0');
+
+    return {
+      totalTickets: platformTickets + manualTotals.ticketCount,
+      totalOrders: platformOrders, // Manual entries don't track order count
+      totalGross: platformGross + manualTotals.grossRevenue,
+      totalNet: platformNet + manualTotals.netRevenue,
+      hasManualEntries: manualTotals.ticketCount > 0,
+    };
+  }, [sessionData, manualTotals]);
 
   // Fetch event stats (only for native events - synced events use session_complete data)
   const { data: stats, isLoading: statsLoading } = useQuery<EventStats>({
@@ -198,7 +219,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
 
   // Loading state - different for synced vs native events
   const isLoading = isSyncedEvent
-    ? eventLoading || sessionLoading
+    ? eventLoading || sessionLoading || manualEntriesLoading
     : eventLoading || statsLoading || activityLoading;
 
   if (isLoading) {
@@ -318,7 +339,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
 
       {/* Stats Grid - different content for synced vs native events */}
       {isSyncedEvent ? (
-        /* Synced Event Stats - Ticket Sales from Humanitix/Eventbrite */
+        /* Synced Event Stats - Combined Ticket Sales (Platform + Partners) */
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -327,10 +348,12 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sessionData?.total_ticket_count || 0}
+                {combinedTotals.totalTickets}
               </div>
               <p className="text-xs text-muted-foreground">
-                via {event.source === 'humanitix' ? 'Humanitix' : 'Eventbrite'}
+                {combinedTotals.hasManualEntries
+                  ? `${sessionData?.total_ticket_count || 0} platform + ${manualTotals.ticketCount} partners`
+                  : `via ${event.source === 'humanitix' ? 'Humanitix' : 'Eventbrite'}`}
               </p>
             </CardContent>
           </Card>
@@ -342,7 +365,7 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sessionData?.total_order_count || 0}
+                {combinedTotals.totalOrders}
               </div>
               <p className="text-xs text-muted-foreground">
                 total orders placed
@@ -357,10 +380,12 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(sessionData?.total_gross_dollars || '0').toFixed(2)}
+                ${combinedTotals.totalGross.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
-                before fees
+                {combinedTotals.hasManualEntries
+                  ? `$${parseFloat(sessionData?.total_gross_dollars || '0').toFixed(2)} + $${manualTotals.grossRevenue.toFixed(2)} partners`
+                  : 'before fees'}
               </p>
             </CardContent>
           </Card>
@@ -372,10 +397,12 @@ export default function EventOverviewTab({ eventId, userId }: EventOverviewTabPr
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(sessionData?.total_net_dollars || '0').toFixed(2)}
+                ${combinedTotals.totalNet.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
-                after fees
+                {combinedTotals.hasManualEntries
+                  ? `$${parseFloat(sessionData?.total_net_dollars || '0').toFixed(2)} + $${manualTotals.netRevenue.toFixed(2)} partners`
+                  : 'after fees'}
               </p>
             </CardContent>
           </Card>
