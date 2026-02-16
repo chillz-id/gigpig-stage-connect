@@ -70,3 +70,6 @@ verify_jwt = false
 
 [functions.framer-cms-sync]
 verify_jwt = false
+
+[functions.gyg-supplier-api]
+verify_jwt = false
