@@ -26,12 +26,13 @@ import { RealtimeIndicator } from '@/components/event-management/RealtimeIndicat
 import EventOverviewTab from './event-management/EventOverviewTab';
 import ApplicationsTab from './event-management/ApplicationsTab';
 import LineupTab from './event-management/LineupTab';
+import TicketsTab from './event-management/TicketsTab';
 import DealsTab from './event-management/DealsTab';
 import PartnersTab from './event-management/PartnersTab';
 import { formatDate } from '@/lib/utils';
 import type { EventData } from '@/types/event';
 
-type TabValue = 'overview' | 'applications' | 'lineup' | 'deals' | 'partners';
+type TabValue = 'overview' | 'applications' | 'lineup' | 'tickets' | 'deals' | 'partners';
 
 export default function EventManagement() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -235,10 +236,11 @@ export default function EventManagement() {
       {/* Tabs Navigation */}
       <div className="container mx-auto px-6 py-6">
         <Tabs value={currentTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="lineup">Lineup</TabsTrigger>
+            <TabsTrigger value="tickets">Tickets</TabsTrigger>
             <TabsTrigger value="deals">Deals</TabsTrigger>
             <TabsTrigger value="partners">Partners</TabsTrigger>
           </TabsList>
@@ -260,6 +262,10 @@ export default function EventManagement() {
 
             <TabsContent value="lineup" className="space-y-6">
               <LineupTab eventId={eventId} userId={user.id} />
+            </TabsContent>
+
+            <TabsContent value="tickets" className="space-y-6">
+              <TicketsTab eventId={eventId} />
             </TabsContent>
 
             <TabsContent value="deals" className="space-y-6">

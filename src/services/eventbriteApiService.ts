@@ -135,7 +135,7 @@ export interface EventbriteAttendee {
 
 class EventbriteApiService {
   private baseUrl = 'https://www.eventbriteapi.com/v3';
-  private apiKey = process.env.EVENTBRITE_API_KEY;
+  private apiKey = import.meta.env.VITE_EVENTBRITE_API_KEY;
 
   constructor() {
     if (!this.apiKey) {

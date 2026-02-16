@@ -43,17 +43,73 @@ export default function EventNavigator() {
         throw new Error('Invalid navigation parameters');
       }
 
+      // Get current user ID for promoter_id (required by RLS policy)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to access this event');
+      }
+
       const source = sourceType as SourceType;
       const sourceColumn = source === 'humanitix' ? 'humanitix_event_id' : 'eventbrite_event_id';
 
-      // Fetch session details first (needed for both create and update)
+      // Step 1: Try session_complete view first (has aggregated financial data)
       const { data: session, error: sessionError } = await supabase
         .from('session_complete')
         .select('*')
         .eq('canonical_session_source_id', sourceId)
-        .single();
+        .maybeSingle(); // Won't error on zero rows
 
       if (sessionError) throw sessionError;
+
+      // Step 2: If not found in session_complete, fall back to sessions_htx + events_htx
+      let sessionData = session;
+      if (!sessionData && source === 'humanitix') {
+        // Query sessions_htx joined with events_htx to get full session and event data
+        const { data: htxSession, error: htxError } = await supabase
+          .from('sessions_htx')
+          .select(`
+            *,
+            events_htx!sessions_htx_event_source_fk (
+              name,
+              description,
+              banner_image_url,
+              hero_image_url,
+              url,
+              published,
+              venue_name,
+              venue_address,
+              status
+            )
+          `)
+          .eq('source_id', sourceId)
+          .maybeSingle();
+
+        if (htxError) throw htxError;
+
+        if (htxSession) {
+          // Map sessions_htx + events_htx fields to expected session_complete format
+          const event = htxSession.events_htx;
+          sessionData = {
+            session_name: htxSession.name,
+            event_name: event?.name || htxSession.name,
+            session_start: htxSession.start_date_local,
+            venue_name: htxSession.venue_name || event?.venue_name,
+            description: event?.description,
+            banner_image_url: event?.banner_image_url,
+            url: event?.url,
+            url_tickets_popup: null, // Not available in raw htx data
+            published: event?.published ?? event?.status === 'published',
+          };
+        }
+      }
+
+      // Step 3: If still not found, provide clear error message
+      if (!sessionData) {
+        throw new Error(
+          `Humanitix session "${sourceId}" not found. ` +
+          `The event may not have synced yet. Try refreshing your Humanitix data or create the event manually.`
+        );
+      }
 
       // Check for existing linked event
       const { data: existingEvent, error: findError } = await supabase
@@ -66,21 +122,21 @@ export default function EventNavigator() {
 
       // If existing linked event found, update it with latest session data
       if (existingEvent) {
-        const eventName = session.session_name || session.event_name;
+        const eventName = sessionData.session_name || sessionData.event_name;
         await supabase
           .from('events')
           .update({
             title: eventName,
             name: eventName,
-            event_date: session.session_start,
-            venue: session.venue_name || null,
-            address: session.venue_name || null,
-            description: session.description || null,
-            banner_url: session.banner_image_url || null,
-            hero_image_url: session.banner_image_url || null,
-            ticket_url: session.url || null,
-            ticket_popup_url: session.url_tickets_popup || null,
-            status: session.published ? 'open' : 'draft',
+            event_date: sessionData.session_start,
+            venue: sessionData.venue_name || null,
+            address: sessionData.venue_name || null,
+            description: sessionData.description || null,
+            banner_url: sessionData.banner_image_url || null,
+            hero_image_url: sessionData.banner_image_url || null,
+            ticket_url: sessionData.url || null,
+            ticket_popup_url: sessionData.url_tickets_popup || null,
+            status: sessionData.published ? 'open' : 'draft',
           })
           .eq('id', existingEvent.id);
 
@@ -105,21 +161,22 @@ export default function EventNavigator() {
       }
 
       // Create linked event record with full session data
-      const eventName = session.session_name || session.event_name;
+      const eventName = sessionData.session_name || sessionData.event_name;
       const eventData = {
         title: eventName,
         name: eventName,
-        event_date: session.session_start,
-        venue: session.venue_name || null,
-        address: session.venue_name || null,
-        description: session.description || null,
-        banner_url: session.banner_image_url || null,
-        hero_image_url: session.banner_image_url || null,
-        ticket_url: session.url || null,
-        ticket_popup_url: session.url_tickets_popup || null,
+        event_date: sessionData.session_start,
+        venue: sessionData.venue_name || null,
+        address: sessionData.venue_name || null,
+        description: sessionData.description || null,
+        banner_url: sessionData.banner_image_url || null,
+        hero_image_url: sessionData.banner_image_url || null,
+        ticket_url: sessionData.url || null,
+        ticket_popup_url: sessionData.url_tickets_popup || null,
         source: source,
         source_id: sourceId,
-        status: session.published ? 'open' : 'draft',
+        status: sessionData.published ? 'open' : 'draft',
+        promoter_id: user.id, // Required by RLS policy
         organization_id: orgId || null,
         created_by_organization_id: orgId || null,
         humanitix_event_id: source === 'humanitix' ? sourceId : null,
@@ -132,7 +189,16 @@ export default function EventNavigator() {
         .select('id')
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        // Provide clearer error message for RLS permission errors
+        if (createError.code === '42501' || createError.message?.includes('row-level security')) {
+          throw new Error(
+            'Permission denied: You do not have permission to create events for this organization. ' +
+            'Please contact an organization admin to add you as a member or admin.'
+          );
+        }
+        throw createError;
+      }
 
       return { eventId: newEvent.id };
     },
@@ -156,11 +222,24 @@ export default function EventNavigator() {
   }
 
   if (error) {
+    // Extract error message from various error formats (Error, Supabase error, etc.)
+    const errorMessage = error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error !== null
+        ? (error as { message?: string; error_description?: string; details?: string }).message
+          || (error as { message?: string; error_description?: string; details?: string }).error_description
+          || (error as { message?: string; error_description?: string; details?: string }).details
+          || JSON.stringify(error)
+        : String(error);
+
+    // Log full error for debugging
+    console.error('EventNavigator error:', error);
+
     return (
       <div className="container mx-auto py-16">
         <Alert variant="destructive">
           <AlertDescription>
-            Failed to load event: {error instanceof Error ? error.message : 'Unknown error'}
+            Failed to load event: {errorMessage}
           </AlertDescription>
         </Alert>
         <Button
