@@ -251,40 +251,366 @@ async function syncContactSegments(
   }
 }
 
-// --- Main Sync Logic ---
+// --- Shared Single-Contact Sync ---
+
+type SupabaseClient = ReturnType<typeof createClient>;
+
+interface SyncOneResult {
+  action: 'created' | 'updated';
+  mauticContactId: number;
+}
+
+async function syncOneContact(
+  contact: CrmContact,
+  mauticFields: Record<string, unknown>,
+  hash: string,
+  existing: { mautic_contact_id: number | null; sync_hash: string | null; previous_segments?: string[] | null } | null,
+  supabase: SupabaseClient,
+  segmentNameToId: Record<string, number>,
+): Promise<SyncOneResult> {
+  let mauticContactId: number;
+  let action: 'created' | 'updated';
+
+  if (existing?.mautic_contact_id) {
+    const res = await mauticFetch(`/contacts/${existing.mautic_contact_id}/edit`, {
+      method: 'PATCH',
+      body: JSON.stringify(mauticFields),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      // If 422 "email must be unique", look up existing contact by email
+      if (res.status === 422 && errText.includes('unique')) {
+        const searchRes = await mauticFetch(`/contacts?search=email:${contact.email}&minimal=true`);
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const contactIds = Object.keys(searchData.contacts || {}).map(Number).sort((a, b) => a - b);
+          if (contactIds.length > 0) {
+            mauticContactId = contactIds[0]!;
+            await mauticFetch(`/contacts/${mauticContactId}/edit`, {
+              method: 'PATCH',
+              body: JSON.stringify(mauticFields),
+            });
+            action = 'updated';
+          } else {
+            throw new Error(`Update failed (${res.status}): ${errText}`);
+          }
+        } else {
+          throw new Error(`Update failed (${res.status}): ${errText}`);
+        }
+      } else {
+        throw new Error(`Update failed (${res.status}): ${errText}`);
+      }
+    } else {
+      mauticContactId = existing.mautic_contact_id;
+      action = 'updated';
+    }
+  } else {
+    // Before creating, check if contact already exists in Mautic by email
+    const searchRes = await mauticFetch(`/contacts?search=email:${contact.email}&minimal=true`);
+    let existingMauticId: number | null = null;
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      const contactIds = Object.keys(searchData.contacts || {}).map(Number).sort((a, b) => a - b);
+      if (contactIds.length > 0) {
+        existingMauticId = contactIds[0]!;
+      }
+    }
+
+    if (existingMauticId) {
+      await mauticFetch(`/contacts/${existingMauticId}/edit`, {
+        method: 'PATCH',
+        body: JSON.stringify(mauticFields),
+      });
+      mauticContactId = existingMauticId;
+      action = 'updated';
+    } else {
+      const res = await mauticFetch('/contacts/new', {
+        method: 'POST',
+        body: JSON.stringify(mauticFields),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Create failed (${res.status}): ${errText}`);
+      }
+      const created = await res.json();
+      mauticContactId = created.contact.id;
+      action = 'created';
+    }
+  }
+
+  try {
+    const currentSegments = contact.customer_segments || [];
+    const previousSegments = existing?.previous_segments || [];
+    await syncContactSegments(mauticContactId, currentSegments, previousSegments, segmentNameToId);
+  } catch (segmentErr) {
+    console.error(`Segment sync failed for contact ${contact.id}:`, segmentErr);
+  }
+
+  await supabase.from('mautic_sync_status').upsert({
+    customer_id: contact.id,
+    mautic_contact_id: mauticContactId,
+    sync_hash: hash,
+    previous_segments: contact.customer_segments || [],
+    last_synced_at: new Date().toISOString(),
+    sync_error: null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'customer_id' });
+
+  return { action, mauticContactId };
+}
+
+// --- CRM View Select Columns ---
+
+const CRM_VIEW_SELECT = 'id, email, first_name, last_name, mobile, landline, address_line1, address_line2, suburb, state, postcode, country, customer_segment, lead_score, total_orders, total_spent, last_order_date, last_event_name, preferred_venue, marketing_opt_in, customer_since, customer_segments';
+
+// --- Single Customer Sync Handler ---
+
+async function handleSingleCustomerSync(
+  req: Request,
+  supabase: SupabaseClient,
+  segmentNameToId: Record<string, number>,
+): Promise<Response> {
+  const body = await req.json();
+  const customerId = body?.id;
+
+  if (!customerId) {
+    return new Response(
+      JSON.stringify({ error: 'Missing customer id in request body' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Fetch fresh data from the CRM view (not from trigger body, which may be stale)
+  const { data: contact, error: fetchError } = await supabase
+    .from('customers_crm_v')
+    .select(CRM_VIEW_SELECT)
+    .eq('id', customerId)
+    .single();
+
+  if (fetchError || !contact) {
+    return new Response(
+      JSON.stringify({ error: `Customer not found: ${fetchError?.message ?? 'no data'}` }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const crmContact = contact as unknown as CrmContact;
+  if (!crmContact.email || crmContact.email.startsWith('[gdpr-deleted')) {
+    return new Response(
+      JSON.stringify({ success: true, message: 'Skipped: no valid email' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const mauticFields = mapToMauticFields(crmContact);
+  const segments = crmContact.customer_segments || [];
+  const hash = await computeHash(mauticFields, segments);
+
+  // Check existing sync status
+  const { data: existingStatus } = await supabase
+    .from('mautic_sync_status')
+    .select('customer_id, mautic_contact_id, sync_hash, previous_segments')
+    .eq('customer_id', customerId)
+    .single();
+
+  const existing = existingStatus as { mautic_contact_id: number | null; sync_hash: string | null; previous_segments: string[] | null } | null;
+
+  // Skip if hash unchanged
+  if (existing?.sync_hash === hash) {
+    return new Response(
+      JSON.stringify({ success: true, message: 'No changes detected', customer_id: customerId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  try {
+    const result = await syncOneContact(crmContact, mauticFields, hash, existing, supabase, segmentNameToId);
+    return new Response(
+      JSON.stringify({ success: true, action: result.action, mautic_contact_id: result.mauticContactId, customer_id: customerId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    await supabase.from('mautic_sync_status').upsert({
+      customer_id: customerId,
+      sync_error: errorMsg,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'customer_id' });
+
+    return new Response(
+      JSON.stringify({ error: errorMsg, customer_id: customerId }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+// --- Queue Processing Handler ---
+
+async function handleProcessQueue(
+  supabase: SupabaseClient,
+  segmentNameToId: Record<string, number>,
+): Promise<Response> {
+  // Fetch up to BATCH_SIZE customer_ids from queue
+  const { data: queueItems, error: queueError } = await supabase
+    .from('mautic_sync_queue')
+    .select('customer_id')
+    .order('queued_at', { ascending: true })
+    .limit(BATCH_SIZE);
+
+  if (queueError) {
+    return new Response(
+      JSON.stringify({ error: `Failed to read queue: ${queueError.message}` }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (!queueItems || queueItems.length === 0) {
+    return new Response(
+      JSON.stringify({ success: true, processed: 0, message: 'Queue empty' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const customerIds = queueItems.map(q => q.customer_id);
+
+  // Fetch full contact data from CRM view
+  const { data: contacts, error: fetchError } = await supabase
+    .from('customers_crm_v')
+    .select(CRM_VIEW_SELECT)
+    .in('id', customerIds)
+    .not('email', 'is', null)
+    .not('email', 'like', '[gdpr-deleted%');
+
+  if (fetchError) {
+    return new Response(
+      JSON.stringify({ error: `Failed to fetch contacts: ${fetchError.message}` }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Fetch existing sync statuses for these contacts
+  const { data: syncStatuses } = await supabase
+    .from('mautic_sync_status')
+    .select('customer_id, mautic_contact_id, sync_hash, previous_segments')
+    .in('customer_id', customerIds);
+
+  const syncMap = new Map(
+    (syncStatuses || []).map(s => [s.customer_id, s])
+  );
+
+  let processed = 0;
+  let created = 0;
+  let updated = 0;
+  let failed = 0;
+  let skipped = 0;
+  const errors: Array<{ customer_id: string; error: string }> = [];
+
+  // Process contacts with concurrency control
+  const crmContacts = (contacts || []) as unknown as CrmContact[];
+
+  for (let i = 0; i < crmContacts.length; i += CONCURRENCY) {
+    const chunk = crmContacts.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(chunk.map(async (contact) => {
+      const mauticFields = mapToMauticFields(contact);
+      const segments = contact.customer_segments || [];
+      const hash = await computeHash(mauticFields, segments);
+      const existing = syncMap.get(contact.id) || null;
+
+      if (existing?.sync_hash === hash) {
+        skipped++;
+        return;
+      }
+
+      const result = await syncOneContact(contact, mauticFields, hash, existing, supabase, segmentNameToId);
+      if (result.action === 'created') created++;
+      else updated++;
+      processed++;
+    }));
+
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j]!;
+      if (result.status === 'rejected') {
+        failed++;
+        const contact = chunk[j]!;
+        const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        errors.push({ customer_id: contact.id, error: errorMsg });
+      }
+    }
+  }
+
+  // Delete processed rows from queue (all fetched IDs, including skipped)
+  const { error: deleteError } = await supabase
+    .from('mautic_sync_queue')
+    .delete()
+    .in('customer_id', customerIds);
+
+  if (deleteError) {
+    console.error('Failed to clear queue:', deleteError.message);
+  }
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      processed,
+      created,
+      updated,
+      skipped,
+      failed,
+      queue_cleared: customerIds.length,
+      errors: errors.length > 0 ? errors : undefined,
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+// --- Main Serve Handler ---
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  // Route based on action query param
+  const url = new URL(req.url);
+  const action = url.searchParams.get('action');
+
+  // Ensure Mautic segments exist (needed by all paths)
+  const segmentNameToId = await ensureMauticSegments();
+
+  if (action === 'sync-customer') {
+    return await handleSingleCustomerSync(req, supabase, segmentNameToId);
+  }
+
+  if (action === 'process-queue') {
+    return await handleProcessQueue(supabase, segmentNameToId);
+  }
+
+  // --- Full Sync (default, runs on 15-min cron) ---
+
   const runStarted = new Date().toISOString();
   let contactsSynced = 0;
   let contactsCreated = 0;
   let contactsUpdated = 0;
   let contactsFailed = 0;
-  let segmentsSynced = 0;
+  const segmentsSynced = Object.keys(segmentNameToId).length;
   const errors: Array<{ email: string; error: string }> = [];
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // 1. Ensure Mautic segments exist
-    const segmentNameToId = await ensureMauticSegments();
-    segmentsSynced = Object.keys(segmentNameToId).length;
-
-    // 2. Fetch all contacts from CRM view (paginated - Supabase returns max 1000 per request)
+    // Fetch all contacts from CRM view (paginated - Supabase returns max 1000 per request)
     const PAGE_SIZE = 1000;
     const contacts: CrmContact[] = [];
     let page = 0;
     while (true) {
       const { data: batch, error: fetchError } = await supabase
         .from('customers_crm_v')
-        .select('id, email, first_name, last_name, mobile, landline, address_line1, address_line2, suburb, state, postcode, country, customer_segment, lead_score, total_orders, total_spent, last_order_date, last_event_name, preferred_venue, marketing_opt_in, customer_since, customer_segments')
+        .select(CRM_VIEW_SELECT)
         .not('email', 'is', null)
+        .not('email', 'like', '[gdpr-deleted%')
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
       if (fetchError) throw new Error(`Failed to fetch contacts (page ${page}): ${fetchError.message}`);
@@ -304,7 +630,7 @@ serve(async (req) => {
       );
     }
 
-    // 3. Fetch existing sync status (also paginated)
+    // Fetch existing sync status (also paginated)
     const syncStatuses: Array<{ customer_id: string; mautic_contact_id: number | null; sync_hash: string | null; previous_segments: string[] | null }> = [];
     page = 0;
     while (true) {
@@ -323,7 +649,7 @@ serve(async (req) => {
       (syncStatuses || []).map(s => [s.customer_id, s])
     );
 
-    // 4. Determine which contacts need syncing
+    // Determine which contacts need syncing
     const toSync: Array<{
       contact: CrmContact;
       mauticFields: Record<string, unknown>;
@@ -348,80 +674,39 @@ serve(async (req) => {
 
     console.log(`Mautic sync: ${toSync.length} contacts to sync out of ${contacts.length} total`);
 
-    // 5. Process concurrently in batches
-    async function syncOneContact(item: typeof toSync[0]): Promise<void> {
-      const { contact, mauticFields, hash, existing } = item;
-      try {
-        let mauticContactId: number;
-
-        if (existing?.mautic_contact_id) {
-          const res = await mauticFetch(`/contacts/${existing.mautic_contact_id}/edit`, {
-            method: 'PATCH',
-            body: JSON.stringify(mauticFields),
-          });
-          if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Update failed (${res.status}): ${errText}`);
-          }
-          mauticContactId = existing.mautic_contact_id;
-          contactsUpdated++;
-        } else {
-          const res = await mauticFetch('/contacts/new', {
-            method: 'POST',
-            body: JSON.stringify(mauticFields),
-          });
-          if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Create failed (${res.status}): ${errText}`);
-          }
-          const created = await res.json();
-          mauticContactId = created.contact.id;
-          contactsCreated++;
-        }
-
-        try {
-          const currentSegments = contact.customer_segments || [];
-          const previousSegments = existing?.previous_segments || [];
-          await syncContactSegments(mauticContactId, currentSegments, previousSegments, segmentNameToId);
-        } catch (segmentErr) {
-          console.error(`Segment sync failed for contact ${contact.id}:`, segmentErr);
-        }
-
-        await supabase.from('mautic_sync_status').upsert({
-          customer_id: contact.id,
-          mautic_contact_id: mauticContactId,
-          sync_hash: hash,
-          previous_segments: contact.customer_segments || [],
-          last_synced_at: new Date().toISOString(),
-          sync_error: null,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'customer_id' });
-
-        contactsSynced++;
-      } catch (err) {
-        contactsFailed++;
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        errors.push({ email: contact.email, error: errorMsg });
-
-        await supabase.from('mautic_sync_status').upsert({
-          customer_id: contact.id,
-          sync_error: errorMsg,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'customer_id' });
-      }
-    }
-
-    // Process in chunks of CONCURRENCY
+    // Process concurrently in batches
     for (let i = 0; i < toSync.length; i += CONCURRENCY) {
       const chunk = toSync.slice(i, i + CONCURRENCY);
-      await Promise.all(chunk.map(syncOneContact));
+      const results = await Promise.allSettled(chunk.map(item =>
+        syncOneContact(item.contact, item.mauticFields, item.hash, item.existing, supabase, segmentNameToId)
+      ));
+
+      for (let j = 0; j < results.length; j++) {
+        const result = results[j]!;
+        if (result.status === 'fulfilled') {
+          contactsSynced++;
+          if (result.value.action === 'created') contactsCreated++;
+          else contactsUpdated++;
+        } else {
+          contactsFailed++;
+          const item = chunk[j]!;
+          const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+          errors.push({ email: item.contact.email, error: errorMsg });
+
+          await supabase.from('mautic_sync_status').upsert({
+            customer_id: item.contact.id,
+            sync_error: errorMsg,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'customer_id' });
+        }
+      }
 
       if (i + CONCURRENCY < toSync.length && (i / CONCURRENCY) % 20 === 19) {
         await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
       }
     }
 
-    // 6. Log the sync run
+    // Log the sync run
     await supabase.from('mautic_sync_logs').insert({
       run_started_at: runStarted,
       run_finished_at: new Date().toISOString(),
@@ -451,10 +736,6 @@ serve(async (req) => {
 
     // Try to log the failed run
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
       await supabase.from('mautic_sync_logs').insert({
         run_started_at: runStarted,
         run_finished_at: new Date().toISOString(),
