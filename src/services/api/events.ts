@@ -4,16 +4,18 @@ import { Event, CreateEventData, UpdateEventData } from '@/types/event';
 import { parseEventError } from '@/utils/eventErrorHandling';
 import { errorService } from '@/services/errorService';
 import { sessionManager } from '@/utils/sessionManager';
+import { generateRecurringDates } from '@/utils/recurringDateGenerator';
 
 export class EventsApi extends BaseApi<Event> {
   constructor() {
     super('events');
   }
   
-  // Override create to handle complex event creation
+  // Override create to handle complex event creation including recurring events
   async create(data: CreateEventData): Promise<{ data: Event | null; error: any }> {
     let createdEventId: string | null = null;
-    
+    let createdSeriesId: string | null = null;
+
     try {
       // Validate user authentication
       const userId = await sessionManager.getCurrentUserId();
@@ -21,20 +23,199 @@ export class EventsApi extends BaseApi<Event> {
         throw new Error('User must be authenticated to create events');
       }
 
+      // Check if this is a recurring event
+      const isRecurring = (data as any).isRecurring === true;
+      const recurrencePattern = (data as any).recurrencePattern;
+      const recurrenceEndDate = (data as any).recurrenceEndDate;
+      const customDates = (data as any).customDates;
+
       // Enhanced logging for debugging
       console.log('[EventsApi] Creating event with data:', {
         title: data.title,
         venue: data.venue,
         date: data.event_date,
         userId,
+        isRecurring,
+        recurrencePattern,
       });
 
-      // Start a transaction-like operation
+      // If recurring, first create the series
+      if (isRecurring && (recurrencePattern === 'custom' ? customDates?.length > 0 : recurrenceEndDate)) {
+        console.log('[EventsApi] Creating recurring series for:', data.title);
+
+        // Create the recurring_series record
+        const { data: series, error: seriesError } = await supabase
+          .from('recurring_series')
+          .insert({
+            name: data.title,
+            description: data.description,
+            created_by: userId,
+            default_venue: data.venue,
+            default_start_time: data.start_time,
+            default_end_time: data.end_time,
+            is_active: true,
+          })
+          .select('id')
+          .single();
+
+        if (seriesError) {
+          console.error('[EventsApi] Series creation failed:', seriesError);
+          throw {
+            ...seriesError,
+            userMessage: 'Failed to create recurring series',
+          };
+        }
+
+        createdSeriesId = series.id;
+        console.log('[EventsApi] Series created:', createdSeriesId);
+
+        // Generate all recurring dates
+        const recurringDates = generateRecurringDates(
+          data.event_date,
+          data.start_time || '',
+          data.end_time,
+          recurrencePattern,
+          recurrenceEndDate,
+          customDates
+        );
+
+        console.log('[EventsApi] Generated', recurringDates.length, 'recurring dates');
+
+        if (recurringDates.length === 0) {
+          // Fallback: at least create the base event
+          recurringDates.push({
+            eventDate: data.event_date,
+            startTime: data.start_time || '',
+            endTime: data.end_time,
+          });
+        }
+
+        // Create all events in the series
+        const eventsToCreate = recurringDates.map((dateInfo, index) => {
+          // Clean up the data - remove recurring-specific fields that aren't in events table
+          const {
+            isRecurring: _,
+            recurrencePattern: __,
+            recurrenceEndDate: ___,
+            customDates: ____,
+            spotDetails: _____,
+            spots: ______,
+            ...cleanData
+          } = data as any;
+
+          return {
+            ...cleanData,
+            promoter_id: userId,
+            event_date: dateInfo.eventDate,
+            start_time: dateInfo.startTime,
+            end_time: dateInfo.endTime || cleanData.end_time,
+            series_id: createdSeriesId,
+            is_recurring: true,
+            parent_event_id: index === 0 ? null : undefined, // First event is parent
+          };
+        });
+
+        // Insert all events
+        const { data: createdEvents, error: eventsError } = await supabase
+          .from('events')
+          .insert(eventsToCreate)
+          .select(`
+            *,
+            venue:venues(*),
+            organization:organization_profiles!events_organization_id_fkey(*)
+          `);
+
+        if (eventsError) {
+          console.error('[EventsApi] Recurring events creation failed:', eventsError);
+
+          // Rollback: delete the series
+          await supabase.from('recurring_series').delete().eq('id', createdSeriesId);
+
+          const parsedError = parseEventError(eventsError);
+          throw {
+            ...eventsError,
+            userMessage: parsedError.userMessage,
+            field: parsedError.field,
+          };
+        }
+
+        if (!createdEvents || createdEvents.length === 0) {
+          // Rollback: delete the series
+          await supabase.from('recurring_series').delete().eq('id', createdSeriesId);
+          throw new Error('Recurring events creation failed - no data returned');
+        }
+
+        // Set parent_event_id on all events after the first
+        const firstEventId = createdEvents[0].id;
+        createdEventId = firstEventId;
+
+        if (createdEvents.length > 1) {
+          const otherEventIds = createdEvents.slice(1).map(e => e.id);
+          await supabase
+            .from('events')
+            .update({ parent_event_id: firstEventId })
+            .in('id', otherEventIds);
+        }
+
+        console.log('[EventsApi] Created', createdEvents.length, 'recurring events in series', createdSeriesId);
+
+        // Create event spots for ALL events if provided
+        const spotDetails = (data as any).spotDetails || (data as any).spots;
+        if (spotDetails && spotDetails.length > 0) {
+          console.log('[EventsApi] Creating event spots for all recurring events');
+
+          const allSpotsData: any[] = [];
+          createdEvents.forEach(event => {
+            spotDetails.forEach((spot: any, index: number) => {
+              allSpotsData.push({
+                event_id: event.id,
+                performer_id: spot.performer_id,
+                order_number: index + 1,
+                performance_type: spot.performance_type || 'spot',
+                duration_minutes: spot.duration_minutes || 5,
+              });
+            });
+          });
+
+          if (allSpotsData.length > 0) {
+            const { error: spotsError } = await supabase
+              .from('event_spots')
+              .insert(allSpotsData);
+
+            if (spotsError) {
+              console.error('[EventsApi] Event spots creation failed for recurring events:', spotsError);
+              // Don't rollback entirely for spots failure, just log
+              await errorService.logError(spotsError, {
+                category: 'database_error',
+                severity: 'medium',
+                component: 'EventsApi',
+                action: 'create_recurring_event_spots',
+                metadata: { seriesId: createdSeriesId, eventCount: createdEvents.length },
+              });
+            }
+          }
+        }
+
+        // Return the first event
+        return { data: createdEvents[0], error: null };
+      }
+
+      // Non-recurring event: original single event creation logic
+      // Clean up recurring-specific fields
+      const {
+        isRecurring: _,
+        recurrencePattern: __,
+        recurrenceEndDate: ___,
+        customDates: ____,
+        spotDetails: _____,
+        ...cleanData
+      } = data as any;
+
       const { data: event, error: eventError } = await supabase
         .from('events')
         .insert({
-          ...data,
-          promoter_id: data.promoter_id || userId,
+          ...cleanData,
+          promoter_id: cleanData.promoter_id || userId,
         })
         .select(`
           *,
@@ -42,10 +223,10 @@ export class EventsApi extends BaseApi<Event> {
           organization:organization_profiles!events_organization_id_fkey(*)
         `)
         .single();
-      
+
       if (eventError) {
         console.error('[EventsApi] Event creation failed:', eventError);
-        
+
         // Parse and enhance error for better user feedback
         const parsedError = parseEventError(eventError);
         throw {
@@ -54,40 +235,41 @@ export class EventsApi extends BaseApi<Event> {
           field: parsedError.field,
         };
       }
-      
+
       if (!event) {
         throw new Error('Event creation failed - no data returned');
       }
-      
+
       createdEventId = event.id;
       console.log('[EventsApi] Event created successfully:', event.id);
-      
+
       // Create initial event spots if provided
-      if (data.spots && data.spots.length > 0) {
-        console.log('[EventsApi] Creating event spots:', data.spots.length);
-        
-        const spotsData = data.spots.map((spot, index) => ({
+      const spots = (data as any).spots || (data as any).spotDetails;
+      if (spots && spots.length > 0) {
+        console.log('[EventsApi] Creating event spots:', spots.length);
+
+        const spotsData = spots.map((spot: any, index: number) => ({
           event_id: event.id,
           performer_id: spot.performer_id,
           order_number: index + 1,
           performance_type: spot.performance_type || 'spot',
           duration_minutes: spot.duration_minutes || 5,
         }));
-        
+
         const { error: spotsError } = await supabase
           .from('event_spots')
           .insert(spotsData);
-        
+
         if (spotsError) {
           console.error('[EventsApi] Event spots creation failed:', spotsError);
-          
+
           // Rollback by deleting the event
           console.log('[EventsApi] Rolling back event creation');
           const { error: rollbackError } = await supabase
             .from('events')
             .delete()
             .eq('id', event.id);
-          
+
           if (rollbackError) {
             console.error('[EventsApi] Rollback failed:', rollbackError);
             // Log critical error - event created but spots failed and couldn't rollback
@@ -102,7 +284,7 @@ export class EventsApi extends BaseApi<Event> {
               },
             });
           }
-          
+
           const parsedError = parseEventError(spotsError);
           throw {
             ...spotsError,
@@ -110,7 +292,7 @@ export class EventsApi extends BaseApi<Event> {
           };
         }
       }
-      
+
       return { data: event, error: null };
     } catch (error: any) {
       // Log error with context
@@ -122,10 +304,11 @@ export class EventsApi extends BaseApi<Event> {
         metadata: {
           eventTitle: data.title,
           createdEventId,
+          createdSeriesId,
           errorCode: error.code,
         },
       });
-      
+
       return { data: null, error };
     }
   }

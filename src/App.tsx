@@ -74,6 +74,7 @@ const BugTracker = lazy(() => import('@/pages/BugTracker'));
 const ABNChecker = lazy(() => import('@/pages/ABNChecker'));
 const ComedianEvents = lazy(() => import('@/pages/ComedianEvents'));
 const RecurringEvents = lazy(() => import('@/pages/RecurringEvents'));
+const SeriesOverview = lazy(() => import('@/pages/SeriesOverview'));
 const Tours = lazy(() => import('@/pages/Tours'));
 const ComedianLinksPage = lazy(() => import('@/pages/ComedianLinksPage'));
 const NotFoundHandler = lazy(() => import('@/components/profile/NotFoundHandler').then(module => ({ default: module.NotFoundHandler })));
@@ -212,6 +213,7 @@ function App() {
                               <Route path="/my-gigs" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><MyGigs /></ProtectedRoute>} />
                               <Route path="/my-events" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><ComedianEvents /></ProtectedRoute>} />
                               <Route path="/recurring" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><RecurringEvents /></ProtectedRoute>} />
+                              <Route path="/series/:seriesId" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><SeriesOverview /></ProtectedRoute>} />
                               <Route path="/tours" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><Tours /></ProtectedRoute>} />
                               <Route path="/gigs" element={<Gigs />} />
                               <Route path="/shows" element={<Shows />} />

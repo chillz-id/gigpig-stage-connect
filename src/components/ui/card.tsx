@@ -13,7 +13,7 @@ const Card = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl text-card-foreground transition-all duration-300 hover:shadow-2xl hover:scale-[1.01]",
+        "rounded-2xl text-card-foreground transition-all duration-300 hover:shadow-2xl",
         themeStyles,
         className
       )}

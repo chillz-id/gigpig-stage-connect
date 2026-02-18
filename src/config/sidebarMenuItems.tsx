@@ -276,7 +276,7 @@ export const MENU_ITEMS: MenuItem[] = [
   },
   {
     id: 'epk',
-    label: 'EPK',
+    label: 'Press Kit',
     path: '/profile?tab=EPK',
     icon: ExternalLink,
     roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],

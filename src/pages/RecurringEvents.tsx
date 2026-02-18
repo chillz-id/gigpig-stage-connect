@@ -8,11 +8,12 @@
  * - Add events to existing series
  * - Bulk edit series properties (title, description, times, pricing)
  * - Edit individual events within a series
+ * - Search and select all standalone events
  *
  * Route: /recurring
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,28 +33,30 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  Archive,
   Calendar,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  DollarSign,
-  Edit2,
+  CheckSquare,
   Eye,
   EyeOff,
   FolderPlus,
   Layers,
   MapPin,
+  MoreHorizontal,
   Plus,
   RefreshCw,
+  Search,
+  Settings,
+  Square,
   Trash2,
-  Unlink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -62,7 +65,6 @@ import {
   useNonRecurringEvents,
   useCreateRecurringSeries,
   useAddToRecurringSeries,
-  useRemoveFromRecurringSeries,
   useBulkUpdateRecurringSeries,
   useDeleteRecurringSeries,
   type RecurringSeries,
@@ -79,12 +81,10 @@ export default function RecurringEvents() {
   // Mutations
   const createSeries = useCreateRecurringSeries();
   const addToSeries = useAddToRecurringSeries();
-  const removeFromSeries = useRemoveFromRecurringSeries();
   const bulkUpdate = useBulkUpdateRecurringSeries();
   const deleteSeries = useDeleteRecurringSeries();
 
   // UI state
-  const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set());
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [addToDialogOpen, setAddToDialogOpen] = useState(false);
@@ -92,6 +92,7 @@ export default function RecurringEvents() {
   const [targetSeriesId, setTargetSeriesId] = useState<string | null>(null);
   const [newSeriesName, setNewSeriesName] = useState('');
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Bulk edit form state
   const [bulkEditTitle, setBulkEditTitle] = useState('');
@@ -103,18 +104,23 @@ export default function RecurringEvents() {
   const [bulkEditTicketPrice, setBulkEditTicketPrice] = useState('');
   const [applyToFutureOnly, setApplyToFutureOnly] = useState(true);
 
-  // Toggle series expansion
-  const toggleSeries = (seriesId: string) => {
-    setExpandedSeries((prev) => {
-      const next = new Set(prev);
-      if (next.has(seriesId)) {
-        next.delete(seriesId);
-      } else {
-        next.add(seriesId);
-      }
-      return next;
-    });
-  };
+  // Filter standalone events by search query
+  const filteredStandaloneEvents = useMemo(() => {
+    if (!standaloneEvents) return [];
+    if (!searchQuery.trim()) return standaloneEvents;
+
+    const query = searchQuery.toLowerCase();
+    return standaloneEvents.filter((event) =>
+      event.title.toLowerCase().includes(query) ||
+      event.venue?.toLowerCase().includes(query)
+    );
+  }, [standaloneEvents, searchQuery]);
+
+  // Check if all filtered events are selected
+  const allFilteredSelected = useMemo(() => {
+    if (filteredStandaloneEvents.length === 0) return false;
+    return filteredStandaloneEvents.every((event) => selectedEvents.has(event.id));
+  }, [filteredStandaloneEvents, selectedEvents]);
 
   // Toggle event selection
   const toggleEventSelection = (eventId: string) => {
@@ -129,15 +135,33 @@ export default function RecurringEvents() {
     });
   };
 
+  // Select all filtered events
+  const selectAllFiltered = () => {
+    setSelectedEvents((prev) => {
+      const next = new Set(prev);
+      filteredStandaloneEvents.forEach((event) => next.add(event.id));
+      return next;
+    });
+  };
+
+  // Deselect all filtered events
+  const deselectAllFiltered = () => {
+    setSelectedEvents((prev) => {
+      const next = new Set(prev);
+      filteredStandaloneEvents.forEach((event) => next.delete(event.id));
+      return next;
+    });
+  };
+
   // Clear selection
   const clearSelection = () => {
     setSelectedEvents(new Set());
     setNewSeriesName('');
   };
 
-  // Handle create series
+  // Handle create series (can be empty)
   const handleCreateSeries = async () => {
-    if (!newSeriesName.trim() || selectedEvents.size === 0) return;
+    if (!newSeriesName.trim()) return;
 
     await createSeries.mutateAsync({
       name: newSeriesName,
@@ -208,11 +232,6 @@ export default function RecurringEvents() {
     await deleteSeries.mutateAsync(seriesId);
   };
 
-  // Handle remove from series
-  const handleRemoveFromSeries = async (eventId: string) => {
-    await removeFromSeries.mutateAsync(eventId);
-  };
-
   if (seriesLoading || standaloneLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -241,19 +260,12 @@ export default function RecurringEvents() {
   const hasSeries = series && series.length > 0;
   const hasStandalone = standaloneEvents && standaloneEvents.length > 0;
 
-  // Filter series to show upcoming vs all events
-  const now = new Date();
-  const filteredSeries = series?.map((s) => {
-    const upcomingEvents = s.events.filter((e) => new Date(e.event_date) >= now);
-    const pastEvents = s.events.filter((e) => new Date(e.event_date) < now);
-    return {
-      ...s,
-      displayEvents: showPastEvents ? s.events : upcomingEvents,
-      upcomingCount: upcomingEvents.length,
-      pastCount: pastEvents.length,
-      totalCount: s.events.length,
-    };
-  });
+  // Map series with counts (now pre-calculated from session_series + session_complete)
+  const filteredSeries = series?.map((s) => ({
+    ...s,
+    upcomingCount: s.upcoming_count ?? 0,
+    totalCount: s.event_count,
+  }));
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -270,6 +282,53 @@ export default function RecurringEvents() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Create Series Button - Always enabled */}
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <FolderPlus className="mr-2 h-4 w-4" />
+                Create Series
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Recurring Series</DialogTitle>
+                <DialogDescription>
+                  {selectedEvents.size > 0
+                    ? `Create a new series with ${selectedEvents.size} selected event(s).`
+                    : 'Create a new empty series. You can add events later.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="series-name">Series Name</Label>
+                  <Input
+                    id="series-name"
+                    value={newSeriesName}
+                    onChange={(e) => setNewSeriesName(e.target.value)}
+                    placeholder="e.g., Off The Record - Comedy Club"
+                  />
+                </div>
+                {selectedEvents.size > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedEvents.size} event(s) will be added to this series.
+                  </p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateSeries}
+                  disabled={!newSeriesName.trim() || createSeries.isPending}
+                >
+                  {createSeries.isPending ? 'Creating...' : 'Create Series'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {/* Show Past Toggle */}
           <Button
             variant={showPastEvents ? 'secondary' : 'ghost'}
@@ -301,91 +360,62 @@ export default function RecurringEvents() {
             Clear
           </Button>
 
-          {/* Create Series Dialog */}
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  Create Series
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Recurring Series</DialogTitle>
-                  <DialogDescription>
-                    Group {selectedEvents.size} selected event(s) into a new recurring series.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="series-name">Series Name</Label>
-                    <Input
-                      id="series-name"
-                      value={newSeriesName}
-                      onChange={(e) => setNewSeriesName(e.target.value)}
-                      placeholder="e.g., Off The Record - Comedy Club"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="ghost" onClick={() => setCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateSeries}
-                    disabled={!newSeriesName.trim() || createSeries.isPending}
-                  >
-                    {createSeries.isPending ? 'Creating...' : 'Create Series'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Add to Existing Series Dialog */}
-            {hasSeries && (
-              <Dialog open={addToDialogOpen} onOpenChange={setAddToDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="secondary">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add to Series
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add to Existing Series</DialogTitle>
-                    <DialogDescription>
-                      Add {selectedEvents.size} selected event(s) to an existing recurring series.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-2 py-4 max-h-[300px] overflow-auto">
-                    {series?.map((s) => (
-                      <Button
-                        key={s.series_id}
-                        variant={targetSeriesId === s.series_id ? 'default' : 'ghost'}
-                        className="justify-start"
-                        onClick={() => setTargetSeriesId(s.series_id)}
-                      >
-                        <Layers className="mr-2 h-4 w-4" />
-                        {s.series_name} ({s.event_count} events)
-                      </Button>
-                    ))}
-                  </div>
-                  <DialogFooter>
-                    <Button variant="ghost" onClick={() => setAddToDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddToSeries}
-                      disabled={!targetSeriesId || addToSeries.isPending}
-                    >
-                      {addToSeries.isPending ? 'Adding...' : 'Add to Series'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
+          {/* Add to Existing Series Button */}
+          {hasSeries && (
+            <Button size="sm" variant="secondary" onClick={() => setAddToDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add to Series
+            </Button>
+          )}
         </div>
       )}
+
+      {/* Add to Series Dialog (shared by selection bar and series card) */}
+      <Dialog open={addToDialogOpen} onOpenChange={(open) => {
+        setAddToDialogOpen(open);
+        if (!open) setTargetSeriesId(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {targetSeriesId
+                ? `Add Events to ${series?.find(s => s.series_id === targetSeriesId)?.series_name || 'Series'}`
+                : 'Add to Existing Series'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedEvents.size > 0
+                ? `Add ${selectedEvents.size} selected event(s) to this series.`
+                : 'Select events from the standalone events list below, then come back here to add them.'}
+            </DialogDescription>
+          </DialogHeader>
+          {!targetSeriesId && (
+            <div className="grid gap-2 py-4 max-h-[300px] overflow-auto">
+              {series?.map((s) => (
+                <Button
+                  key={s.series_id}
+                  variant={targetSeriesId === s.series_id ? 'default' : 'ghost'}
+                  className="justify-start"
+                  onClick={() => setTargetSeriesId(s.series_id)}
+                >
+                  <Layers className="mr-2 h-4 w-4" />
+                  {s.series_name} ({s.event_count} events)
+                </Button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAddToDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddToSeries}
+              disabled={!targetSeriesId || selectedEvents.size === 0 || addToSeries.isPending}
+            >
+              {addToSeries.isPending ? 'Adding...' : 'Add to Series'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Recurring Series List */}
       {hasSeries && (
@@ -395,17 +425,16 @@ export default function RecurringEvents() {
             <SeriesCard
               key={s.series_id}
               series={s}
-              displayEvents={s.displayEvents}
               upcomingCount={s.upcomingCount}
-              pastCount={s.pastCount}
               totalCount={s.totalCount}
               showPastEvents={showPastEvents}
-              isExpanded={expandedSeries.has(s.series_id)}
-              onToggle={() => toggleSeries(s.series_id)}
               onEdit={() => openBulkEditDialog(s.series_id, s)}
               onDelete={() => handleDeleteSeries(s.series_id)}
-              onRemoveEvent={handleRemoveFromSeries}
-              onNavigateToEvent={(eventId) => navigate(`/events/${eventId}/manage`)}
+              onAddEvents={() => {
+                setTargetSeriesId(s.series_id);
+                setAddToDialogOpen(true);
+              }}
+              onViewSeries={() => navigate(`/series/${s.series_id}`)}
             />
           ))}
         </div>
@@ -535,26 +564,72 @@ export default function RecurringEvents() {
       {/* Standalone Events */}
       {hasStandalone && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Standalone Events</h2>
-          <p className="text-sm text-muted-foreground">
-            Select events below to create a new recurring series or add them to an existing one.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Standalone Events</h2>
+              <p className="text-sm text-muted-foreground">
+                Select events below to create a new recurring series or add them to an existing one.
+              </p>
+            </div>
+          </div>
+
           <Card>
-            <CardContent className="p-4">
-              <div className="grid gap-2">
-                {standaloneEvents?.slice(0, 50).map((event) => (
-                  <EventRow
-                    key={event.id}
-                    event={event}
-                    isSelected={selectedEvents.has(event.id)}
-                    onToggleSelect={() => toggleEventSelection(event.id)}
-                    onNavigate={() => navigate(`/events/${event.id}/manage`)}
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Search Input */}
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search events..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
                   />
-                ))}
-                {standaloneEvents && standaloneEvents.length > 50 && (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Showing first 50 of {standaloneEvents.length} events
+                </div>
+
+                {/* Select All / Deselect All Buttons */}
+                <div className="flex items-center gap-2">
+                  {allFilteredSelected ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={deselectAllFiltered}
+                    >
+                      <Square className="mr-2 h-4 w-4" />
+                      Deselect All ({filteredStandaloneEvents.length})
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={selectAllFiltered}
+                      disabled={filteredStandaloneEvents.length === 0}
+                    >
+                      <CheckSquare className="mr-2 h-4 w-4" />
+                      Select All ({filteredStandaloneEvents.length})
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid gap-2">
+                {filteredStandaloneEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {searchQuery ? 'No events match your search' : 'No standalone events'}
                   </p>
+                ) : (
+                  <>
+                    {filteredStandaloneEvents.map((event) => (
+                      <EventRow
+                        key={event.id}
+                        event={event}
+                        isSelected={selectedEvents.has(event.id)}
+                        onToggleSelect={() => toggleEventSelection(event.id)}
+                        onNavigate={() => navigate(`/events/${event.id}/manage`)}
+                      />
+                    ))}
+                  </>
                 )}
               </div>
             </CardContent>
@@ -585,142 +660,89 @@ export default function RecurringEvents() {
 // Series Card Component
 interface SeriesCardProps {
   series: RecurringSeries;
-  displayEvents: RecurringSeriesEvent[];
   upcomingCount: number;
-  pastCount: number;
   totalCount: number;
   showPastEvents: boolean;
-  isExpanded: boolean;
-  onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onRemoveEvent: (eventId: string) => void;
-  onNavigateToEvent: (eventId: string) => void;
+  onAddEvents: () => void;
+  onViewSeries: () => void;
 }
 
 function SeriesCard({
   series,
-  displayEvents,
   upcomingCount,
-  pastCount,
   totalCount,
   showPastEvents,
-  isExpanded,
-  onToggle,
   onEdit,
   onDelete,
-  onRemoveEvent,
-  onNavigateToEvent,
+  onAddEvents,
+  onViewSeries,
 }: SeriesCardProps) {
   return (
-    <Collapsible open={isExpanded} onOpenChange={onToggle}>
-      <Card>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isExpanded ? (
-                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    <Card
+      className="cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
+      onClick={onViewSeries}
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">
+              {series.series_name}
+            </CardTitle>
+            <CardDescription className="flex items-center gap-4 mt-1 flex-wrap">
+              <span className="flex items-center gap-1">
+                <Layers className="h-4 w-4" />
+                {totalCount} events
+                {!showPastEvents && upcomingCount < totalCount && (
+                  <span className="text-xs">({upcomingCount} upcoming)</span>
                 )}
-                <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {series.series_name}
-                    <Badge variant="secondary" className="ml-2">
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      Recurring
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-4 mt-1 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Layers className="h-4 w-4" />
-                      {totalCount} total
-                      {!showPastEvents && upcomingCount < totalCount && (
-                        <span className="text-xs">({upcomingCount} upcoming)</span>
-                      )}
-                    </span>
-                    {series.venue_name && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {series.venue_name}
-                      </span>
-                    )}
-                    {series.next_event_date && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Next: {format(new Date(series.next_event_date), 'MMM d, yyyy')}
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                <Button variant="secondary" size="sm" onClick={onEdit}>
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Edit All
+              </span>
+              {series.venue_name && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {series.venue_name}
+                </span>
+              )}
+              {series.next_event_date && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  Next: {format(new Date(series.next_event_date), 'MMM d, yyyy')}
+                </span>
+              )}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={onDelete}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="border-t">
-            <div className="grid gap-2 pt-4">
-              {displayEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No upcoming events. Click "Show Past" to see past events.
-                </p>
-              ) : displayEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50"
-                >
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => onNavigateToEvent(event.id)}
-                  >
-                    <p className="font-medium">{event.title}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(event.event_date), 'EEE, MMM d, yyyy')}
-                      </span>
-                      {event.start_time && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {event.start_time}
-                        </span>
-                      )}
-                      {event.ticket_price !== null && event.ticket_price !== undefined && (
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          ${event.ticket_price}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{event.status}</Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveEvent(event.id)}
-                      title="Remove from series"
-                    >
-                      <Unlink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onAddEvents}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Events
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Series
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled className="text-muted-foreground">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Series
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
   );
 }
 

@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, MapPin, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,8 +37,12 @@ type TabValue = 'overview' | 'applications' | 'lineup' | 'tickets' | 'deals' | '
 export default function EventManagement() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, hasRole } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check if we came from a series page
+  const fromSeriesId = (location.state as { fromSeries?: string } | null)?.fromSeries;
 
   // Get tab from URL or default to 'overview'
   const currentTab = (searchParams.get('tab') as TabValue) || 'overview';
@@ -181,8 +185,10 @@ export default function EventManagement() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                // Navigate to org events page if we have a slug, otherwise go to dashboard
-                if (event?.organization_slug) {
+                // Navigate back to series if we came from there
+                if (fromSeriesId) {
+                  navigate(`/series/${fromSeriesId}`);
+                } else if (event?.organization_slug) {
                   navigate(`/org/${event.organization_slug}/events`);
                 } else {
                   navigate('/dashboard');
@@ -190,7 +196,7 @@ export default function EventManagement() {
               }}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Events
+              {fromSeriesId ? 'Back to Series' : 'Back to Events'}
             </Button>
           </div>
 

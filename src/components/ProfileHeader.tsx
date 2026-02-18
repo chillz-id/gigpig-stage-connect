@@ -146,7 +146,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               }}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              EPK
+              Press Kit
             </Button>
             <Button className="professional-button shrink-0 whitespace-nowrap" size="sm" onClick={() => {
               // Navigate to profile page with vouches tab using forceNavigate for reliability
