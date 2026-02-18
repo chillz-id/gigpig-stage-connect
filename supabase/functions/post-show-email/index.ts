@@ -109,6 +109,17 @@ interface RequestBody {
 
 // --- HTML Generation ---
 
+function encodeImageUrl(url: string): string {
+  // Split URL into base and path, encode spaces and special chars in path segments
+  try {
+    const u = new URL(url);
+    u.pathname = u.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
+    return u.toString();
+  } catch {
+    return url.replace(/ /g, '%20');
+  }
+}
+
 function truncateBio(bio: string | null): string {
   if (!bio) return '';
   const sentences = bio.match(/[^.!?]+[.!?]+/g) || [];
@@ -116,31 +127,24 @@ function truncateBio(bio: string | null): string {
   return sentences.slice(0, 2).join('').trim();
 }
 
+const ICON_BASE = 'https://pdikjpfulhhpqpxzpgtu.supabase.co/storage/v1/object/public/directory-media/social-icons';
+
+function socialIcon(url: string, iconFile: string, alt: string): string {
+  return `<a href="${url}" style="text-decoration:none;display:inline-block;margin-right:8px;"><img src="${ICON_BASE}/${iconFile}" alt="${alt}" width="24" height="24" style="width:24px;height:24px;display:block;border:0;" /></a>`;
+}
+
 function generateSocialLinksHTML(act: LineupAct): string {
-  const links: string[] = [];
+  const icons: string[] = [];
 
-  if (act.instagram_url) {
-    links.push(`<a href="${act.instagram_url}" style="color:#E1306C;text-decoration:none;">Instagram</a>`);
-  }
-  if (act.tiktok_url) {
-    links.push(`<a href="${act.tiktok_url}" style="color:#000000;text-decoration:none;">TikTok</a>`);
-  }
-  if (act.youtube_url) {
-    links.push(`<a href="${act.youtube_url}" style="color:#FF0000;text-decoration:none;">YouTube</a>`);
-  }
-  if (act.facebook_url) {
-    links.push(`<a href="${act.facebook_url}" style="color:#1877F2;text-decoration:none;">Facebook</a>`);
-  }
-  if (act.twitter_url) {
-    links.push(`<a href="${act.twitter_url}" style="color:#1DA1F2;text-decoration:none;">Twitter</a>`);
-  }
-  if (act.website) {
-    links.push(`<a href="${act.website}" style="color:#10B981;text-decoration:none;">Website</a>`);
-  }
+  if (act.instagram_url) icons.push(socialIcon(act.instagram_url, 'instagram.png', 'Instagram'));
+  if (act.tiktok_url) icons.push(socialIcon(act.tiktok_url, 'tiktok.png', 'TikTok'));
+  if (act.youtube_url) icons.push(socialIcon(act.youtube_url, 'youtube.png', 'YouTube'));
+  if (act.facebook_url) icons.push(socialIcon(act.facebook_url, 'facebook.png', 'Facebook'));
+  if (act.twitter_url) icons.push(socialIcon(act.twitter_url, 'twitter.png', 'X'));
 
-  if (links.length === 0) return '';
+  if (icons.length === 0) return '';
 
-  return `<div style="margin-top:8px;font-size:14px;">${links.join(' &middot; ')}</div>`;
+  return `<div style="margin-top:8px;">${icons.join('')}</div>`;
 }
 
 function generateLineupHTML(lineup: LineupAct[]): string {
@@ -149,8 +153,9 @@ function generateLineupHTML(lineup: LineupAct[]): string {
   }
 
   const actBlocks = lineup.map((act, index) => {
-    const headshot = act.headshot_url
-      ? `<img src="${act.headshot_url}" alt="${act.stage_name}" width="80" height="80" style="border-radius:50%;display:block;object-fit:cover;" />`
+    const encodedHeadshotUrl = act.headshot_url ? encodeImageUrl(act.headshot_url) : null;
+    const headshot = encodedHeadshotUrl
+      ? `<img src="${encodedHeadshotUrl}" alt="${act.stage_name}" width="80" height="80" style="border-radius:50%;width:80px;height:80px;display:block;object-fit:cover;" />`
       : `<div style="width:80px;height:80px;border-radius:50%;background-color:#E5E7EB;display:block;"></div>`;
 
     const truncatedBio = truncateBio(act.bio);
@@ -171,7 +176,7 @@ function generateLineupHTML(lineup: LineupAct[]): string {
               </td>
               <td style="vertical-align:top;font-family:Arial,Helvetica,sans-serif;">
                 <div style="font-size:18px;font-weight:bold;color:#111827;margin-bottom:4px;">
-                  ${act.spot_name}: ${act.stage_name}
+                  ${act.stage_name}
                 </div>
                 ${truncatedBio ? `<div style="font-size:14px;color:#4B5563;margin-bottom:8px;line-height:1.5;">${truncatedBio}</div>` : ''}
                 ${socialLinks}
@@ -210,8 +215,28 @@ serve(async (req) => {
   }
 
   try {
-    const body: RequestBody = await req.json();
-    const { event_id, mautic_email_id, dry_run = false, test_email = null } = body;
+    const body = await req.json();
+
+    // Admin route: proxy arbitrary Mautic API calls
+    if (body.action === 'mautic_admin') {
+      const { method = 'GET', api_path, email_id, patch_data } = body;
+      let path: string;
+      if (api_path) {
+        path = api_path;
+      } else {
+        path = method === 'PATCH' ? `/emails/${email_id}/edit` : `/emails/${email_id}`;
+      }
+      const fetchOptions: RequestInit = {};
+      if (method !== 'GET') {
+        fetchOptions.method = method;
+        if (patch_data) fetchOptions.body = JSON.stringify(patch_data);
+      }
+      const response = await mauticFetch(path, fetchOptions);
+      const data = await response.json();
+      return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const { event_id, mautic_email_id, dry_run = false, test_email = null } = body as RequestBody;
 
     if (!event_id || !mautic_email_id) {
       return new Response(
@@ -228,7 +253,7 @@ serve(async (req) => {
     // 1. Fetch event
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, title, name, venue, event_date, organization_id')
+      .select('id, title, name, venue, event_date, organization_id, discount_code')
       .eq('id', event_id)
       .single();
 
@@ -250,13 +275,13 @@ serve(async (req) => {
 
     if (event.organization_id) {
       const { data: org } = await supabase
-        .from('organizations')
-        .select('name, logo_url, google_review_url')
+        .from('organization_profiles')
+        .select('organization_name, logo_url, google_review_url')
         .eq('id', event.organization_id)
         .single();
 
       if (org) {
-        orgName = org.name || orgName;
+        orgName = org.organization_name || orgName;
         orgLogoUrl = org.logo_url;
         googleReviewUrl = org.google_review_url;
       }
@@ -336,6 +361,11 @@ serve(async (req) => {
     // 5. Prepare tokens for Mautic template
     const showDate = formatShowDate(event.event_date);
 
+    const discountCode = event.discount_code || null;
+    const discountExpiry = discountCode
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '';
+
     const tokens: Record<string, string> = {
       '{lineup_html}': lineupHTML,
       '{show_name}': showName,
@@ -343,7 +373,13 @@ serve(async (req) => {
       '{venue_name}': venueName,
       '{org_name}': orgName,
       '{google_review_url}': googleReviewUrl || '',
+      '{google_review_button}': googleReviewUrl
+        ? `<table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td align="center" bgcolor="#111827" style="border-radius:6px;"><a href="${googleReviewUrl}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">Leave a Google Review</a></td></tr></table>`
+        : '',
       '{org_logo_url}': orgLogoUrl || '',
+      '{discount_section}': discountCode
+        ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#ECFDF5;border-radius:8px;margin-top:8px;"><tr><td style="padding:24px;text-align:center;font-family:Arial,Helvetica,sans-serif;"><h2 style="margin:0 0 8px;font-size:20px;font-weight:bold;color:#111827;">50% off your next show!</h2><p style="margin:0 0 16px;font-size:14px;color:#4B5563;">Use this code at checkout — expires ${discountExpiry}</p><table cellpadding="0" cellspacing="0" border="0" align="center"><tr><td style="background-color:#ffffff;border:2px dashed #10B981;border-radius:8px;padding:12px 32px;"><span style="font-size:22px;font-weight:bold;color:#059669;letter-spacing:2px;font-family:monospace;">${discountCode}</span></td></tr></table></td></tr></table>`
+        : '',
     };
 
     // If dry run, return preview without sending

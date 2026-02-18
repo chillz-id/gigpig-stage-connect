@@ -207,17 +207,6 @@ class SpotNotificationService {
 
     await notificationManager.createNotification(comedianNotification);
 
-    // Send email confirmation
-    await emailNotificationService.sendSpotDeclinedEmail({
-      eventName: spotData.eventName,
-      eventDate: spotData.eventDate,
-      comedianName: spotData.comedianName,
-      comedianEmail: spotData.comedianEmail,
-      eventManagerName: spotData.eventManagerName,
-      eventManagerEmail: spotData.eventManagerEmail,
-      reason
-    });
-
     // TODO: Notify event manager about declined spot
     // This would require getting the event manager's user ID
   }

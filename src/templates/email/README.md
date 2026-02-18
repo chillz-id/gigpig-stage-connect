@@ -8,8 +8,7 @@ The spot notification system handles the complete workflow of assigning performa
 
 1. **Spot Assignment Notifications** - When a comedian is assigned a spot
 2. **Confirmation Deadline Reminders** - When confirmation deadlines are approaching
-3. **Spot Confirmation Notifications** - When a spot is confirmed or declined
-4. **Spot Declined Notifications** - When a spot is declined by a comedian
+3. **Spot Confirmation Notifications** - When a spot is confirmed
 
 ## Components
 
@@ -18,7 +17,6 @@ The spot notification system handles the complete workflow of assigning performa
 - **`spotAssignmentTemplate.ts`** - Initial spot assignment notification
 - **`spotDeadlineTemplate.ts`** - Deadline reminder notifications
 - **`spotConfirmationTemplate.ts`** - Confirmation success notifications
-- **`spotDeclinedTemplate.ts`** - Spot declined notifications
 - **`index.ts`** - Template utilities and metadata
 
 ### Services
@@ -78,16 +76,6 @@ The spot notification system handles the complete workflow of assigning performa
 - Event details
 - Next steps
 - Contact information
-
-### 4. Spot Declined (`spot_declined`)
-**Trigger:** When a spot is declined by comedian
-**Recipients:** Both comedian and promoter
-**Priority:** High (for promoter), Low (for comedian)
-**Contains:**
-- Decline confirmation
-- Reason (if provided)
-- Next steps for finding replacement
-- Alternative event suggestions
 
 ## Usage
 

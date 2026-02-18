@@ -1,10 +1,9 @@
 // Email Notification Service - Email-specific logic and templates
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  createSpotAssignmentEmail, 
-  createSpotDeadlineEmail, 
-  createSpotConfirmationEmail, 
-  createSpotDeclinedEmail,
+import {
+  createSpotAssignmentEmail,
+  createSpotDeadlineEmail,
+  createSpotConfirmationEmail,
   getEmailTemplateMetadata,
   EmailTemplateData
 } from '@/templates/email';
@@ -55,7 +54,7 @@ class EmailNotificationService {
       specialInstructions?: string;
     }
   ): Promise<void> {
-    const emailTemplate = createSpotAssignmentEmail(spotData);
+    const emailTemplate = await createSpotAssignmentEmail(spotData);
     await this.sendEmailNotification(emailTemplate);
   }
 
@@ -71,7 +70,7 @@ class EmailNotificationService {
       hoursRemaining: number;
     }
   ): Promise<void> {
-    const emailTemplate = createSpotDeadlineEmail(spotData);
+    const emailTemplate = await createSpotDeadlineEmail(spotData);
     await this.sendEmailNotification(emailTemplate);
   }
 
@@ -91,22 +90,7 @@ class EmailNotificationService {
       arrivalTime?: string;
     }
   ): Promise<void> {
-    const emailTemplate = createSpotConfirmationEmail(spotData);
-    await this.sendEmailNotification(emailTemplate);
-  }
-
-  async sendSpotDeclinedEmail(
-    spotData: {
-      eventName: string;
-      eventDate: string;
-      comedianName: string;
-      comedianEmail: string;
-      eventManagerName: string;
-      eventManagerEmail: string;
-      reason?: string;
-    }
-  ): Promise<void> {
-    const emailTemplate = createSpotDeclinedEmail(spotData);
+    const emailTemplate = await createSpotConfirmationEmail(spotData);
     await this.sendEmailNotification(emailTemplate);
   }
 

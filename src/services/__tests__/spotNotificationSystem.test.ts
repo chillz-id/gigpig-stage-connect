@@ -1,11 +1,10 @@
 // Test file for spot notification system
 import { notificationService } from '../notificationService';
 import { spotConfirmationService } from '../spotConfirmationService';
-import { 
-  createSpotAssignmentEmail, 
-  createSpotDeadlineEmail, 
-  createSpotConfirmationEmail, 
-  createSpotDeclinedEmail 
+import {
+  createSpotAssignmentEmail,
+  createSpotDeadlineEmail,
+  createSpotConfirmationEmail,
 } from '../../templates/email';
 
 // Mock Supabase client
@@ -114,21 +113,6 @@ describe('Spot Notification System', () => {
       expect(email.html).toContain('has confirmed their');
     });
 
-    test('should create spot declined email', () => {
-      const declineData = {
-        ...mockData,
-        reason: 'Schedule conflict',
-        isPromoterEmail: true,
-        applicationsUrl: 'https://app.com/applications',
-        eventsUrl: 'https://app.com/events'
-      };
-      
-      const email = createSpotDeclinedEmail(declineData);
-      
-      expect(email.to).toBe(mockData.promoterEmail);
-      expect(email.subject).toContain('Spot Declined');
-      expect(email.html).toContain('Schedule conflict');
-    });
   });
 
   describe('Notification Service', () => {
