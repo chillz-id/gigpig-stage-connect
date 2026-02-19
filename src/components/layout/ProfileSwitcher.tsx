@@ -127,69 +127,79 @@ export function ProfileSwitcher() {
 
   // Handle profile selection with ActiveProfileContext integration
   const handleProfileSelect = (profileType: ProfileTypeValue) => {
-    startTransition(() => {
-      // Switch the profile type in ProfileContext (existing behavior)
-      switchProfile(profileType);
+    // Handle organization profiles differently
+    if (isOrganizationProfile(profileType)) {
+      const orgId = getOrganizationId(profileType);
+      const org = orgId && organizations ? organizations[orgId] : null;
 
-      // Handle organization profiles differently
-      if (isOrganizationProfile(profileType)) {
-        const orgId = getOrganizationId(profileType);
-        const org = orgId && organizations ? organizations[orgId] : null;
+      if (org && org.url_slug) {
+        // Set active profile entity FIRST (this is what display reads)
+        // This must happen before navigation to prevent stale state
+        setActiveProfile({
+          id: org.id,
+          type: 'organization',
+          slug: org.url_slug,
+          name: org.organization_name,
+          avatarUrl: org.logo_url || undefined,
+        });
 
-        if (org && org.url_slug) {
-          // Set active profile in ActiveProfileContext
+        // Update profile type state
+        switchProfile(profileType);
+
+        // Navigate AFTER state is set
+        startTransition(() => {
+          navigate(`/org/${org.url_slug}/dashboard`);
+        });
+      }
+    } else {
+      // Handle base profiles (comedian, manager, etc.)
+      const profileInfo = profileData[profileType];
+
+      // Only certain profile types support profile URLs (comedian, manager, venue, photographer)
+      // Others are roles without profile pages
+      const supportsProfileUrls = ['comedian', 'manager', 'venue', 'photographer'].includes(profileType);
+
+      if (supportsProfileUrls) {
+        // Use profile-specific data if available, otherwise fall back to auth profile
+        const slug = profileInfo?.url_slug || profile?.profile_slug || profile?.id;
+        const profileId = profileInfo?.id || user?.id;
+        const displayName = profileInfo?.name || profile?.name || profile?.stage_name || profile?.display_name;
+        const avatar = profileInfo?.avatar_url || profileInfo?.logo_url || profile?.avatar_url;
+
+        if (slug && profileId && displayName) {
+          // Set active profile entity FIRST (this is what display reads)
           setActiveProfile({
-            id: org.id,
-            type: 'organization',
-            slug: org.url_slug,
-            name: org.organization_name,
-            avatarUrl: org.logo_url || undefined,
+            id: profileId,
+            type: profileType as 'comedian' | 'manager' | 'venue' | 'photographer',
+            slug: slug,
+            name: displayName,
+            avatarUrl: avatar || undefined,
           });
 
-          // Navigate to organization profile URL
-          navigate(`/org/${org.url_slug}/dashboard`);
+          // Update profile type state
+          switchProfile(profileType);
+
+          // Comedians use the main /dashboard route (full-featured dashboard)
+          // Other profile types use their profile-specific dashboard routes
+          const destination = profileType === 'comedian'
+            ? '/dashboard'
+            : `/${profileType}/${slug}/dashboard`;
+
+          // Navigate AFTER state is set
+          startTransition(() => {
+            navigate(destination);
+          });
+        } else {
+          console.warn(`[ProfileSwitcher] Cannot switch to ${profileType}: missing slug or profile data`);
         }
       } else {
-        // Handle base profiles (comedian, manager, etc.)
-        const profileInfo = profileData[profileType];
-
-        // Only certain profile types support profile URLs (comedian, manager, venue, photographer)
-        // Others are roles without profile pages
-        const supportsProfileUrls = ['comedian', 'manager', 'venue', 'photographer'].includes(profileType);
-
-        if (supportsProfileUrls) {
-          // Use profile-specific data if available, otherwise fall back to auth profile
-          const slug = profileInfo?.url_slug || profile?.profile_slug || profile?.id;
-          const profileId = profileInfo?.id || user?.id;
-          const displayName = profileInfo?.name || profile?.name || profile?.stage_name || profile?.display_name;
-          const avatar = profileInfo?.avatar_url || profileInfo?.logo_url || profile?.avatar_url;
-
-          if (slug && profileId && displayName) {
-            // Set active profile in ActiveProfileContext
-            setActiveProfile({
-              id: profileId,
-              type: profileType as 'comedian' | 'manager' | 'venue' | 'photographer',
-              slug: slug,
-              name: displayName,
-              avatarUrl: avatar || undefined,
-            });
-
-            // Comedians use the main /dashboard route (full-featured dashboard)
-            // Other profile types use their profile-specific dashboard routes
-            const destination = profileType === 'comedian'
-              ? '/dashboard'
-              : `/${profileType}/${slug}/dashboard`;
-
-            navigate(destination);
-          } else {
-            console.warn(`[ProfileSwitcher] Cannot switch to ${profileType}: missing slug or profile data`);
-          }
-        } else {
-          // For roles without profile pages, just navigate to main dashboard
+        // For roles without profile pages, update state and navigate to main dashboard
+        switchProfile(profileType);
+        startTransition(() => {
           navigate('/dashboard');
-        }
+        });
       }
-    });
+    }
   };
 
   if (isLoading || orgsLoading) {
@@ -209,17 +219,22 @@ export function ProfileSwitcher() {
   const isOrgProfile = isOrganizationProfile(activeProfile);
   const ActiveIcon = isOrgProfile ? Building2 : PROFILE_TYPES[activeProfile as BaseProfileType].icon;
 
-  // Get display name based on profile type
+  // Get display name - USE activeProfileData as source of truth
   let displayName: string;
   let avatarUrl: string | undefined;
 
-  if (isOrgProfile) {
+  // If we have activeProfileData, use it directly (authoritative)
+  if (activeProfileData) {
+    displayName = activeProfileData.name;
+    avatarUrl = activeProfileData.avatarUrl;
+  } else if (isOrgProfile) {
+    // Fallback: derive from org data
     const orgId = getOrganizationId(activeProfile);
     const org = orgId && organizations ? organizations[orgId] : null;
     displayName = org ? getOrganizationDisplayName(org) : 'Organization';
     avatarUrl = org?.logo_url;
   } else {
-    // For base profiles (comedian, promoter, etc), use user's display name
+    // Fallback: personal profile from auth context
     displayName = profile?.display_name || getDisplayName({
       firstName: profile?.first_name,
       lastName: profile?.last_name,

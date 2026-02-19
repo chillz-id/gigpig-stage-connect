@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { useProfile } from '@/contexts/ProfileContext';
-import { Drama, Users, Briefcase, Camera, Video } from 'lucide-react';
+import { useProfile, useActiveProfile, isOrganizationProfile } from '@/contexts/ProfileContext';
+import { Drama, Users, Briefcase, Camera, Video, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -67,6 +67,12 @@ const PROFILE_CONFIG = {
     colorClass: 'bg-teal-500 hover:bg-teal-600',
     textColorClass: 'text-white',
   },
+  organization: {
+    label: 'Organization',
+    icon: Building2,
+    colorClass: 'bg-indigo-500 hover:bg-indigo-600',
+    textColorClass: 'text-white',
+  },
 } as const;
 
 const SIZE_CONFIG = {
@@ -93,14 +99,44 @@ export function ProfileContextBadge({
   className
 }: ProfileContextBadgeProps) {
   const { activeProfile } = useProfile();
+  const { activeProfile: activeProfileData } = useActiveProfile();
 
   // Don't show if no active profile
   if (!activeProfile) {
     return null;
   }
 
-  const config = PROFILE_CONFIG[activeProfile];
   const sizeConfig = SIZE_CONFIG[size];
+
+  // Handle organization profiles
+  if (isOrganizationProfile(activeProfile)) {
+    const orgConfig = PROFILE_CONFIG.organization;
+    const Icon = orgConfig.icon;
+    // Use activeProfileData name if available, fallback to generic label
+    const label = activeProfileData?.name || orgConfig.label;
+
+    return (
+      <Badge
+        className={cn(
+          orgConfig.colorClass,
+          orgConfig.textColorClass,
+          sizeConfig.padding,
+          'font-medium transition-colors flex items-center gap-1.5 w-fit',
+          className
+        )}
+      >
+        <Icon className={cn(sizeConfig.iconSize)} />
+        {showLabel && (
+          <span className={cn(sizeConfig.textSize)}>
+            {label}
+          </span>
+        )}
+      </Badge>
+    );
+  }
+
+  // Handle base profiles
+  const config = PROFILE_CONFIG[activeProfile as keyof typeof PROFILE_CONFIG];
 
   if (!config) {
     return null;
@@ -153,12 +189,31 @@ export function ProfileContextIndicator({
   className
 }: ProfileContextIndicatorProps) {
   const { activeProfile } = useProfile();
+  const { activeProfile: activeProfileData } = useActiveProfile();
 
   if (!activeProfile) {
     return null;
   }
 
-  const config = PROFILE_CONFIG[activeProfile];
+  // Handle organization profiles
+  if (isOrganizationProfile(activeProfile)) {
+    const orgConfig = PROFILE_CONFIG.organization;
+    const Icon = orgConfig.icon;
+    const label = activeProfileData?.name || orgConfig.label;
+
+    return (
+      <span className={cn('flex items-center gap-2 text-sm', className)}>
+        <span className="text-muted-foreground">{prefix}:</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <Icon className="h-4 w-4" />
+          {label}
+        </span>
+      </span>
+    );
+  }
+
+  // Handle base profiles
+  const config = PROFILE_CONFIG[activeProfile as keyof typeof PROFILE_CONFIG];
 
   if (!config) {
     return null;

@@ -229,6 +229,54 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     }
   }, [availableProfiles, isLoading, activeProfileType]);
 
+  // Sync state with URL when landing on an org page directly
+  // This ensures the profile state matches the URL on initial page load or direct navigation
+  useEffect(() => {
+    if (isLoading || !organizations) return;
+
+    const path = window.location.pathname;
+    const orgMatch = path.match(/^\/org\/([^/]+)/);
+
+    if (orgMatch) {
+      const slug = orgMatch[1];
+      // Find the organization by slug
+      const org = Object.values(organizations).find(o => o.url_slug === slug);
+
+      if (org) {
+        const expectedProfileType = `org:${org.id}` as ProfileTypeValue;
+
+        // Only update if state doesn't match URL
+        if (activeProfileType !== expectedProfileType) {
+          console.log('[ProfileContext] Syncing state with URL, org slug:', slug);
+          setActiveProfileType(expectedProfileType);
+          localStorage.setItem(STORAGE_KEY, expectedProfileType);
+        }
+
+        // Also sync the entity state if it doesn't match
+        if (!activeProfileEntity || activeProfileEntity.id !== org.id) {
+          setActiveProfileEntityState({
+            id: org.id,
+            type: 'organization',
+            slug: org.url_slug,
+            name: org.organization_name,
+            avatarUrl: org.logo_url || undefined,
+          });
+          try {
+            localStorage.setItem(ENTITY_STORAGE_KEY, JSON.stringify({
+              id: org.id,
+              type: 'organization',
+              slug: org.url_slug,
+              name: org.organization_name,
+              avatarUrl: org.logo_url || undefined,
+            }));
+          } catch (err) {
+            console.error('Failed to save synced profile entity to localStorage:', err);
+          }
+        }
+      }
+    }
+  }, [isLoading, organizations, activeProfileType, activeProfileEntity]);
+
   const switchProfile = useCallback((type: ProfileTypeValue) => {
     if (!availableProfiles.includes(type)) {
       console.error(`Profile type "${type}" not available for user`);
