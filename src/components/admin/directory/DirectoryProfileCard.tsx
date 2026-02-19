@@ -27,6 +27,8 @@ import {
   Globe,
   Instagram,
   Facebook,
+  Youtube,
+  Twitter,
   MapPin,
   Calendar,
   Edit,
@@ -38,6 +40,7 @@ import {
   Images,
   Upload,
   Clock,
+  Music2,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
@@ -245,7 +248,7 @@ export function DirectoryProfileCard({
             )}
 
             {/* Social links */}
-            {(profile.website || profile.instagram_url || profile.facebook_url) && (
+            {(profile.website || profile.instagram_url || profile.facebook_url || profile.tiktok_url || profile.youtube_url || profile.twitter_url) && (
               <div>
                 <h4 className="text-sm font-medium text-white/60 mb-2">Social</h4>
                 <div className="flex flex-wrap gap-3">
@@ -269,6 +272,39 @@ export function DirectoryProfileCard({
                     >
                       <Instagram className="h-4 w-4" />
                       Instagram
+                    </a>
+                  )}
+                  {profile.tiktok_url && (
+                    <a
+                      href={profile.tiktok_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-sm text-white hover:underline"
+                    >
+                      <Music2 className="h-4 w-4" />
+                      TikTok
+                    </a>
+                  )}
+                  {profile.youtube_url && (
+                    <a
+                      href={profile.youtube_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-sm text-red-500 hover:underline"
+                    >
+                      <Youtube className="h-4 w-4" />
+                      YouTube
+                    </a>
+                  )}
+                  {profile.twitter_url && (
+                    <a
+                      href={profile.twitter_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-sm text-sky-400 hover:underline"
+                    >
+                      <Twitter className="h-4 w-4" />
+                      X / Twitter
                     </a>
                   )}
                   {profile.facebook_url && (
