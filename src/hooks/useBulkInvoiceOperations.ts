@@ -246,7 +246,7 @@ export const useBulkInvoiceOperations = () => {
     }
   }, [selectedInvoiceIds, handleProgress]);
 
-  const bulkExportPDF = useCallback(async (
+  const bulkExportPDFCombined = useCallback(async (
     options?: BulkExportOptions
   ): Promise<void> => {
     if (selectedInvoiceIds.size === 0) {
@@ -260,7 +260,7 @@ export const useBulkInvoiceOperations = () => {
 
     setIsProcessing(true);
     try {
-      const pdfBlob = await bulkInvoiceService.bulkExportPDF(
+      const pdfBlob = await bulkInvoiceService.bulkExportPDFCombined(
         Array.from(selectedInvoiceIds),
         options,
         handleProgress
@@ -270,7 +270,7 @@ export const useBulkInvoiceOperations = () => {
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `invoices_export_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `invoices_combined_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -278,7 +278,52 @@ export const useBulkInvoiceOperations = () => {
 
       toast({
         title: "Export completed",
-        description: `Exported ${selectedInvoiceIds.size} invoices to PDF`
+        description: `Exported ${selectedInvoiceIds.size} invoices to combined PDF`
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: error instanceof Error ? error.message : "Failed to export invoices",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [selectedInvoiceIds, handleProgress]);
+
+  const bulkExportPDFZip = useCallback(async (
+    options?: BulkExportOptions
+  ): Promise<void> => {
+    if (selectedInvoiceIds.size === 0) {
+      toast({
+        title: "No invoices selected",
+        description: "Please select invoices to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const zipBlob = await bulkInvoiceService.bulkExportPDFZip(
+        Array.from(selectedInvoiceIds),
+        options,
+        handleProgress
+      );
+
+      // Create and download ZIP file
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoices_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export completed",
+        description: `Exported ${selectedInvoiceIds.size} invoices to ZIP`
       });
     } catch (error) {
       toast({
@@ -319,7 +364,8 @@ export const useBulkInvoiceOperations = () => {
     bulkUpdateStatus,
     bulkDeleteDrafts,
     bulkExportCSV,
-    bulkExportPDF,
+    bulkExportPDFCombined,
+    bulkExportPDFZip,
     cancelOperation
   };
 };

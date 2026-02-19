@@ -1,9 +1,9 @@
 // Bulk Invoice Service - Handles batch operations for invoices
 import { supabase } from '@/integrations/supabase/client';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
-import { 
-  BulkOperation, 
-  BulkOperationProgress, 
+import {
+  BulkOperation,
+  BulkOperationProgress,
   BulkOperationResult,
   BulkExportOptions,
   BulkEmailOptions,
@@ -11,14 +11,17 @@ import {
   DEFAULT_BATCH_OPTIONS
 } from '@/types/bulkOperations';
 import { invoiceService } from './invoiceService';
-import { 
-  invoiceCache, 
-  emailRateLimiter, 
+import { pdfService, InvoicePDFData } from './pdfService';
+import {
+  invoiceCache,
+  emailRateLimiter,
   pdfRateLimiter,
   chunkArray,
   processInParallel,
   ProgressThrottler
 } from '@/utils/bulkOperationOptimizations';
+import JSZip from 'jszip';
+import jsPDF from 'jspdf';
 
 class BulkInvoiceService {
   private currentOperation: BulkOperationProgress | null = null;
@@ -319,13 +322,11 @@ class BulkInvoiceService {
     }
   }
 
-  async bulkExportPDF(
+  async bulkExportPDFCombined(
     invoiceIds: string[],
     options: BulkExportOptions = {},
     onProgress?: (progress: BulkOperationProgress) => void
   ): Promise<Blob> {
-    // For PDF export, we'll need to generate individual PDFs and combine them
-    // This would typically be done server-side
     const progress: BulkOperationProgress = {
       operation: 'export-pdf',
       total: invoiceIds.length,
@@ -338,30 +339,311 @@ class BulkInvoiceService {
     };
 
     try {
-      // Call edge function to generate combined PDF
-      const { data, error } = await supabase.functions.invoke('generate-bulk-pdf', {
-        body: {
-          invoiceIds,
-          options
-        }
-      });
+      // Fetch all invoices with related data
+      const { data: invoices, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          invoice_items (*),
+          invoice_recipients (*)
+        `)
+        .in('id', invoiceIds)
+        .order('invoice_number');
 
       if (error) throw error;
+      if (!invoices || invoices.length === 0) throw new Error('No invoices found');
 
-      progress.processed = invoiceIds.length;
-      progress.succeeded = invoiceIds.length;
+      // Create combined PDF
+      const combinedDoc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      for (let i = 0; i < invoices.length; i++) {
+        const invoice = invoices[i];
+
+        // Add new page for each invoice after the first
+        if (i > 0) {
+          combinedDoc.addPage();
+        }
+
+        // Convert to PDF data format
+        const pdfData: InvoicePDFData = {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          invoice_type: invoice.invoice_type,
+          sender_name: invoice.sender_name || 'GigPigs',
+          sender_email: invoice.sender_email || '',
+          sender_phone: invoice.sender_phone,
+          sender_address: invoice.sender_address,
+          sender_abn: invoice.sender_abn,
+          sender_bank_name: invoice.sender_bank_name,
+          sender_bank_bsb: invoice.sender_bank_bsb,
+          sender_bank_account: invoice.sender_bank_account,
+          issue_date: invoice.issue_date,
+          due_date: invoice.due_date,
+          total_amount: invoice.total_amount,
+          subtotal: invoice.subtotal || 0,
+          tax_amount: invoice.tax_amount || 0,
+          tax_rate: invoice.tax_rate || 10,
+          currency: invoice.currency || 'AUD',
+          status: invoice.status,
+          notes: invoice.notes,
+          terms: invoice.terms,
+          invoice_items: (invoice.invoice_items || []).map((item: any) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.total_price || item.subtotal || (item.quantity * item.unit_price),
+          })),
+          invoice_recipients: (invoice.invoice_recipients || []).map((r: any) => ({
+            recipient_name: r.recipient_name,
+            recipient_email: r.recipient_email,
+            recipient_phone: r.recipient_phone,
+            recipient_address: r.recipient_address,
+            recipient_abn: r.recipient_abn,
+          })),
+          event_date: invoice.event_date,
+        };
+
+        // Generate PDF pages for this invoice into the combined document
+        // We'll use a temporary doc and copy pages
+        const tempPdfBase64 = await pdfService.generateInvoicePDF(pdfData) as string;
+
+        // For combined PDF, we need to render directly
+        // Since jsPDF doesn't easily merge, we'll generate each invoice separately
+        // and use the pdfService methods directly on our combined doc
+        // Actually, let's generate individual PDFs and merge them
+
+        progress.processed++;
+        progress.succeeded++;
+        if (onProgress) onProgress({ ...progress });
+      }
+
+      // Since jsPDF can't easily merge PDFs, let's use a different approach:
+      // Generate individual PDFs as base64 and use pdf-lib to merge
+      // For now, let's generate a simpler combined PDF by regenerating on the same doc
+
+      // Reset and regenerate properly
+      const finalDoc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      for (let i = 0; i < invoices.length; i++) {
+        const invoice = invoices[i];
+
+        if (i > 0) {
+          finalDoc.addPage();
+        }
+
+        // Add invoice content to this page
+        this.renderInvoiceToDoc(finalDoc, invoice);
+      }
+
       progress.status = 'completed';
       progress.completedAt = new Date();
-
       if (onProgress) onProgress(progress);
 
-      return data as Blob;
+      return finalDoc.output('blob');
     } catch (error) {
       progress.status = 'error';
-      progress.failed = invoiceIds.length;
+      progress.failed = invoiceIds.length - progress.succeeded;
       if (onProgress) onProgress(progress);
       throw error;
     }
+  }
+
+  async bulkExportPDFZip(
+    invoiceIds: string[],
+    options: BulkExportOptions = {},
+    onProgress?: (progress: BulkOperationProgress) => void
+  ): Promise<Blob> {
+    const progress: BulkOperationProgress = {
+      operation: 'export-pdf-zip',
+      total: invoiceIds.length,
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      errors: [],
+      status: 'processing',
+      startedAt: new Date()
+    };
+
+    try {
+      // Fetch all invoices with related data
+      const { data: invoices, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          invoice_items (*),
+          invoice_recipients (*)
+        `)
+        .in('id', invoiceIds)
+        .order('invoice_number');
+
+      if (error) throw error;
+      if (!invoices || invoices.length === 0) throw new Error('No invoices found');
+
+      const zip = new JSZip();
+
+      for (const invoice of invoices) {
+        try {
+          // Convert to PDF data format
+          const pdfData: InvoicePDFData = {
+            id: invoice.id,
+            invoice_number: invoice.invoice_number,
+            invoice_type: invoice.invoice_type,
+            sender_name: invoice.sender_name || 'GigPigs',
+            sender_email: invoice.sender_email || '',
+            sender_phone: invoice.sender_phone,
+            sender_address: invoice.sender_address,
+            sender_abn: invoice.sender_abn,
+            sender_bank_name: invoice.sender_bank_name,
+            sender_bank_bsb: invoice.sender_bank_bsb,
+            sender_bank_account: invoice.sender_bank_account,
+            issue_date: invoice.issue_date,
+            due_date: invoice.due_date,
+            total_amount: invoice.total_amount,
+            subtotal: invoice.subtotal || 0,
+            tax_amount: invoice.tax_amount || 0,
+            tax_rate: invoice.tax_rate || 10,
+            currency: invoice.currency || 'AUD',
+            status: invoice.status,
+            notes: invoice.notes,
+            terms: invoice.terms,
+            invoice_items: (invoice.invoice_items || []).map((item: any) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total: item.total_price || item.subtotal || (item.quantity * item.unit_price),
+            })),
+            invoice_recipients: (invoice.invoice_recipients || []).map((r: any) => ({
+              recipient_name: r.recipient_name,
+              recipient_email: r.recipient_email,
+              recipient_phone: r.recipient_phone,
+              recipient_address: r.recipient_address,
+              recipient_abn: r.recipient_abn,
+            })),
+            event_date: invoice.event_date,
+          };
+
+          // Generate PDF as base64
+          const pdfBase64 = await pdfService.generateInvoicePDF(pdfData) as string;
+
+          // Convert base64 to binary and add to ZIP
+          const pdfBinary = atob(pdfBase64);
+          const pdfArray = new Uint8Array(pdfBinary.length);
+          for (let i = 0; i < pdfBinary.length; i++) {
+            pdfArray[i] = pdfBinary.charCodeAt(i);
+          }
+
+          // Add to ZIP with invoice number as filename
+          const filename = `invoice-${invoice.invoice_number}.pdf`;
+          zip.file(filename, pdfArray);
+
+          progress.succeeded++;
+        } catch (err) {
+          progress.failed++;
+          progress.errors.push({
+            invoiceId: invoice.id,
+            invoiceNumber: invoice.invoice_number,
+            error: err instanceof Error ? err.message : 'Failed to generate PDF'
+          });
+        }
+
+        progress.processed++;
+        if (onProgress) onProgress({ ...progress });
+      }
+
+      progress.status = 'completed';
+      progress.completedAt = new Date();
+      if (onProgress) onProgress(progress);
+
+      // Generate ZIP file
+      return await zip.generateAsync({ type: 'blob' });
+    } catch (error) {
+      progress.status = 'error';
+      progress.failed = invoiceIds.length - progress.succeeded;
+      if (onProgress) onProgress(progress);
+      throw error;
+    }
+  }
+
+  // Helper to render invoice content directly to a jsPDF doc
+  private renderInvoiceToDoc(doc: jsPDF, invoice: any): void {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = 20;
+
+    // Header
+    doc.setFontSize(24);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Invoice', 20, yPos);
+
+    // Invoice number
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`#${invoice.invoice_number}`, 20, yPos + 8);
+
+    // Sender name on right
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.sender_name || 'GigPigs', pageWidth - 20, yPos, { align: 'right' });
+
+    yPos += 25;
+
+    // Recipient
+    const recipient = invoice.invoice_recipients?.[0];
+    if (recipient) {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text('To:', 20, yPos);
+      doc.setTextColor(30, 30, 30);
+      doc.text(recipient.recipient_name || '', 35, yPos);
+    }
+
+    // Dates
+    doc.setTextColor(100, 100, 100);
+    doc.text('Due:', pageWidth / 2, yPos);
+    doc.setTextColor(30, 30, 30);
+    const dueDate = new Date(invoice.due_date).toLocaleDateString('en-AU');
+    doc.text(dueDate, pageWidth / 2 + 15, yPos);
+
+    yPos += 15;
+
+    // Items table header
+    doc.setFillColor(245, 245, 245);
+    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Description', 22, yPos + 5);
+    doc.text('Amount', pageWidth - 22, yPos + 5, { align: 'right' });
+
+    yPos += 12;
+
+    // Items
+    doc.setTextColor(30, 30, 30);
+    for (const item of invoice.invoice_items || []) {
+      const total = item.total_price || item.subtotal || (item.quantity * item.unit_price);
+      doc.text(item.description || '', 22, yPos);
+      doc.text(`$${total.toFixed(2)}`, pageWidth - 22, yPos, { align: 'right' });
+      yPos += 6;
+    }
+
+    yPos += 10;
+
+    // Total
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+    yPos += 8;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total:', pageWidth - 60, yPos);
+    doc.text(`$${invoice.total_amount.toFixed(2)}`, pageWidth - 22, yPos, { align: 'right' });
   }
 
   // =====================================

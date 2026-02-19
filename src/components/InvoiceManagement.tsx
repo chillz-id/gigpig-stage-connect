@@ -288,7 +288,8 @@ export const InvoiceManagement: React.FC = () => {
         onUpdateStatus={handleBulkStatusUpdate}
         onDeleteDrafts={handleBulkDelete}
         onExportCSV={bulkOperations.bulkExportCSV}
-        onExportPDF={bulkOperations.bulkExportPDF}
+        onExportPDFCombined={bulkOperations.bulkExportPDFCombined}
+        onExportPDFZip={bulkOperations.bulkExportPDFZip}
         onClearSelection={clearSelection}
         onCancel={bulkOperations.cancelOperation}
       />

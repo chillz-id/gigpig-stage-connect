@@ -34,7 +34,8 @@ interface BulkActionsBarProps {
   onUpdateStatus: (status: InvoiceStatus) => Promise<void>;
   onDeleteDrafts: () => Promise<void>;
   onExportCSV: () => Promise<void>;
-  onExportPDF: () => Promise<void>;
+  onExportPDFCombined: () => Promise<void>;
+  onExportPDFZip: () => Promise<void>;
   onClearSelection: () => void;
   onCancel: () => void;
 }
@@ -49,7 +50,8 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   onUpdateStatus,
   onDeleteDrafts,
   onExportCSV,
-  onExportPDF,
+  onExportPDFCombined,
+  onExportPDFZip,
   onClearSelection,
   onCancel
 }) => {
@@ -143,8 +145,13 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                       <DropdownMenuItem onClick={onExportCSV}>
                         Export as CSV
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={onExportPDF}>
-                        Export as PDF
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">PDF Options</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={onExportPDFCombined}>
+                        Combined PDF (one file)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onExportPDFZip}>
+                        ZIP of PDFs (individual files)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
