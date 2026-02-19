@@ -1,85 +1,76 @@
 import * as React from 'react';
-import { Section, Heading, Text, Img } from '@react-email/components';
-import { colors, fonts, spacing } from '../tokens';
+import { Section, Heading, Text, Hr, Img } from '@react-email/components';
+import { colors, fonts } from '../tokens';
 
 interface BrandHeaderProps {
   title: string;
   subtitle?: string;
-  backgroundColor?: string;
 }
 
-export function BrandHeader({ title, subtitle, backgroundColor }: BrandHeaderProps) {
-  const bgStyle = backgroundColor
-    ? { backgroundColor }
-    : { background: colors.brand.gradient };
-
+/**
+ * Clean header: thin brand-color top bar + brand name + title.
+ * Follows the Stripe/Vercel pattern — no gradient, no hero banner.
+ */
+export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
   return (
-    <Section
-      style={{
-        ...bgStyle,
-        paddingTop: '40px',
-        paddingBottom: '36px',
-        paddingLeft: spacing.lg,
-        paddingRight: spacing.lg,
-        textAlign: 'center' as const,
-      }}
-    >
-      {/* Brand name masthead */}
-      <Text
+    <>
+      {/* Thin accent bar at top */}
+      <Section
         style={{
-          fontFamily: fonts.body,
-          fontSize: '11px',
-          fontWeight: 700,
-          color: 'rgba(255, 255, 255, 0.7)',
-          letterSpacing: '3px',
-          textTransform: 'uppercase' as const,
-          margin: '0 0 16px 0',
+          height: '4px',
+          backgroundColor: colors.brand.primary,
+          borderRadius: '8px 8px 0 0',
         }}
-      >
-        STAND UP SYDNEY
-      </Text>
+      />
 
-      {/* Decorative divider */}
-      <table role="presentation" cellPadding="0" cellSpacing="0" style={{ margin: '0 auto 16px auto' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '40px', height: '1px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
-            <td style={{ width: '8px' }} />
-            <td style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.brand.accent }} />
-            <td style={{ width: '8px' }} />
-            <td style={{ width: '40px', height: '1px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
-          </tr>
-        </tbody>
-      </table>
-
-      <Heading
-        as="h1"
-        style={{
-          fontFamily: fonts.body,
-          fontSize: '26px',
-          fontWeight: 700,
-          color: colors.neutral.white,
-          margin: '0',
-          padding: '0',
-          lineHeight: '1.3',
-        }}
-      >
-        {title}
-      </Heading>
-      {subtitle && (
+      <Section style={{ padding: '32px 48px 0 48px' }}>
+        {/* Brand name */}
         <Text
           style={{
             fontFamily: fonts.body,
-            fontSize: '15px',
-            color: 'rgba(255, 255, 255, 0.85)',
-            marginTop: '8px',
-            marginBottom: '0',
-            lineHeight: '1.4',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: colors.neutral.muted,
+            margin: '0 0 24px 0',
+            letterSpacing: '0.5px',
           }}
         >
-          {subtitle}
+          Stand Up Sydney
         </Text>
-      )}
-    </Section>
+
+        {/* Title */}
+        <Heading
+          as="h1"
+          style={{
+            fontFamily: fonts.body,
+            fontSize: '24px',
+            fontWeight: 600,
+            color: colors.neutral.heading,
+            margin: '0',
+            padding: '0',
+            lineHeight: '1.35',
+          }}
+        >
+          {title}
+        </Heading>
+
+        {subtitle && (
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: '15px',
+              color: colors.neutral.body,
+              marginTop: '8px',
+              marginBottom: '0',
+              lineHeight: '1.5',
+            }}
+          >
+            {subtitle}
+          </Text>
+        )}
+      </Section>
+
+      <Hr style={{ borderColor: colors.neutral.border, margin: '24px 48px' }} />
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Section, render } from '@react-email/components';
+import { Text, Link, Hr, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -61,19 +61,6 @@ export interface InvoiceReminderData {
 }
 
 // ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const sectionHeading: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 700,
-  color: colors.neutral.mediumGray,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1.5px',
-  margin: '0 0 12px 0',
-};
-
-// ---------------------------------------------------------------------------
 // Preview data
 // ---------------------------------------------------------------------------
 
@@ -103,18 +90,14 @@ const previewProps: InvoiceReminderData = {
 
 export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
   const urgencyLabel = data.isUrgent
-    ? 'OVERDUE'
+    ? 'Overdue'
     : data.isFirstReminder
-      ? 'REMINDER'
-      : 'FINAL NOTICE';
-
-  const urgencyColor = data.isUrgent
-    ? colors.status.urgent
-    : data.isFirstReminder
-      ? colors.status.warning
-      : '#dd6b20';
+      ? 'Reminder'
+      : 'Final Notice';
 
   const alertVariant = data.isUrgent ? 'urgent' as const : 'warning' as const;
+  const buttonColor = data.isUrgent ? colors.status.urgent : colors.status.warning;
+
   const previewText = `${urgencyLabel}: Invoice ${data.invoiceNumber} — ${formatCurrency(data.totalAmount, data.currency)} ${data.daysOverdue > 0 ? `${data.daysOverdue} days overdue` : 'due today'}`;
 
   return (
@@ -122,11 +105,10 @@ export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
       <BrandHeader
         title={urgencyLabel}
         subtitle={`Invoice ${data.invoiceNumber} — Payment Due`}
-        backgroundColor={urgencyColor}
       />
 
       <AlertBox variant={alertVariant}>
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           <strong>
             {data.daysOverdue > 0
               ? `Payment ${data.daysOverdue} days overdue`
@@ -137,11 +119,13 @@ export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
         </Text>
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '15px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
           Hello {data.recipientName},
         </Text>
-        <Text style={{ margin: '0', fontSize: '15px', lineHeight: '1.6' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           This is a {data.isFirstReminder ? 'friendly reminder' : data.isUrgent ? 'notice' : 'final notice'}{' '}
           that your invoice payment is{' '}
           {data.daysOverdue > 0
@@ -151,8 +135,9 @@ export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
         </Text>
       </ContentCard>
 
-      <ContentCard accentColor={urgencyColor}>
-        <Text style={sectionHeading}>Invoice Summary</Text>
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+      <ContentCard>
         <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
         <DetailRow label="Issued" value={formatDate(data.issueDate)} />
         <DetailRow label="Original Due" value={formatDate(data.originalDueDate)} />
@@ -163,10 +148,12 @@ export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
         />
       </ContentCard>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={{ margin: '0', fontSize: '14px', color: colors.neutral.mediumGray, lineHeight: '1.6' }}>
-          Questions or need to arrange payment? Contact us at{' '}
-          <Link href={`mailto:${data.senderEmail}`} style={{ color: urgencyColor, textDecoration: 'none' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          Questions or need to arrange payment? Contact{' '}
+          <Link href={`mailto:${data.senderEmail}`} style={{ color: buttonColor, textDecoration: 'none' }}>
             {data.senderEmail}
           </Link>
         </Text>

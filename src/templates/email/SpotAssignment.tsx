@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Section, render } from '@react-email/components';
+import { Text, Link, Hr, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -10,7 +10,7 @@ import {
   ContentCard,
   AlertBox,
 } from './components';
-import { colors, fonts } from './tokens';
+import { colors } from './tokens';
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -101,28 +101,18 @@ export function SpotAssignment(data: SpotAssignmentEmailData = previewProps) {
       />
 
       <ContentCard>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '16px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 12px 0' }}>
           Hey {data.comedianName},
         </Text>
-        <Text style={{ margin: '0', fontSize: '15px', lineHeight: '1.6', color: colors.neutral.darkGray }}>
-          Great news — you've been assigned a <strong>{data.spotType}</strong> spot
-          at <strong>{data.eventTitle}</strong>. Confirm your spot below to lock it in.
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          You've been assigned a <strong>{data.spotType}</strong> spot at{' '}
+          <strong>{data.eventTitle}</strong>. Confirm below.
         </Text>
       </ContentCard>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            color: colors.neutral.mediumGray,
-            textTransform: 'uppercase' as const,
-            letterSpacing: '1.5px',
-            margin: '0 0 12px 0',
-          }}
-        >
-          Event Details
-        </Text>
         <DetailRow label="Event" value={data.eventTitle} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
@@ -135,44 +125,36 @@ export function SpotAssignment(data: SpotAssignmentEmailData = previewProps) {
         <DetailRow label="Promoter" value={data.promoterName} />
       </ContentCard>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <AlertBox variant="warning">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
-          <strong>Confirm by {formatDeadline(data.confirmationDeadline)}</strong>
-          <br />
-          Your spot will be released if not confirmed by the deadline.
-        </Text>
+        Confirm by {formatDeadline(data.confirmationDeadline)} — your spot will be released if not confirmed.
       </AlertBox>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
-          Confirm My Spot
-        </PrimaryButton>
-        <SecondaryButton href={data.eventUrl}>View Event Details</SecondaryButton>
-      </Section>
+      <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
+        Confirm My Spot
+      </PrimaryButton>
+      <SecondaryButton href={data.eventUrl}>view event details</SecondaryButton>
+
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
       {data.specialInstructions ? (
-        <ContentCard accentColor={colors.brand.accent}>
-          <Text
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: colors.neutral.mediumGray,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '1.5px',
-              margin: '0 0 8px 0',
-            }}
-          >
-            Special Instructions
-          </Text>
-          <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.6' }}>
-            {data.specialInstructions}
-          </Text>
-        </ContentCard>
+        <>
+          <ContentCard>
+            <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
+              Note
+            </Text>
+            <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+              {data.specialInstructions}
+            </Text>
+          </ContentCard>
+          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+        </>
       ) : null}
 
       <ContentCard>
-        <Text style={{ margin: '0', fontSize: '14px', color: colors.neutral.mediumGray }}>
-          Questions? Reach out to <strong style={{ color: colors.neutral.darkGray }}>{data.promoterName}</strong> at{' '}
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          Questions? Contact <strong>{data.promoterName}</strong> at{' '}
           <Link
             href={`mailto:${data.promoterEmail}`}
             style={{ color: colors.brand.primary, textDecoration: 'none' }}

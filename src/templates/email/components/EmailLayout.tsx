@@ -22,23 +22,11 @@ export function EmailLayout({ previewText, children }: EmailLayoutProps) {
         <meta name="supported-color-schemes" content="light dark" />
         <style>{`
           @media (prefers-color-scheme: dark) {
-            body {
-              background-color: ${colors.darkMode.background} !important;
-              color: ${colors.darkMode.text} !important;
-            }
-            .email-card {
-              background-color: ${colors.darkMode.surface} !important;
-              border-color: #4a5568 !important;
-            }
+            body { background-color: #1a1a2e !important; }
+            .email-container { background-color: #2d2d44 !important; border-color: #404060 !important; }
           }
           @media only screen and (max-width: 620px) {
-            .email-container {
-              width: 100% !important;
-              padding: 8px !important;
-            }
-            .email-card {
-              padding: 16px !important;
-            }
+            .email-container { width: 100% !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; }
           }
         `}</style>
       </Head>
@@ -47,32 +35,27 @@ export function EmailLayout({ previewText, children }: EmailLayoutProps) {
         style={{
           fontFamily: fonts.body,
           backgroundColor: colors.neutral.offWhite,
-          color: colors.neutral.darkGray,
           margin: '0',
           padding: '0',
           WebkitTextSizeAdjust: '100%',
         }}
       >
-        {/* Top spacer */}
-        <Section style={{ height: '24px' }} />
+        <Section style={{ height: '40px' }} />
 
         <Container
           className="email-container"
           style={{
             maxWidth: '600px',
             margin: '0 auto',
-            padding: '0',
             backgroundColor: colors.neutral.white,
-            borderRadius: '12px',
-            overflow: 'hidden',
-            border: `1px solid ${colors.neutral.lightGray}`,
+            border: `1px solid ${colors.neutral.border}`,
+            borderRadius: '8px',
           }}
         >
           {children}
         </Container>
 
-        {/* Bottom spacer */}
-        <Section style={{ height: '24px' }} />
+        <Section style={{ height: '40px' }} />
       </Body>
     </Html>
   );

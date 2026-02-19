@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Section } from '@react-email/components';
+import { Text, Hr } from '@react-email/components';
 import { render } from '@react-email/components';
 import {
   EmailLayout,
@@ -42,15 +42,6 @@ function formatTime(dateStr: string): string {
   });
 }
 
-const sectionHeading: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 700,
-  color: colors.neutral.mediumGray,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1.5px',
-  margin: '0 0 12px 0',
-};
-
 const previewProps: DeadlineReminderEmailData = {
   comedianName: 'Jane Smith',
   spotType: '10-minute Set',
@@ -75,32 +66,38 @@ export function DeadlineReminder24Hour(data: DeadlineReminderEmailData = preview
       <BrandHeader
         title="Reminder"
         subtitle="Confirm your spot — 24 hours left"
-        backgroundColor={colors.status.info}
       />
 
       <ContentCard>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '15px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
           Hey {data.comedianName},
         </Text>
-        <Text style={{ margin: '0', fontSize: '15px', lineHeight: '1.6' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           Just a heads up — you have <strong>24 hours</strong> to confirm your{' '}
           <strong>{data.spotType}</strong> spot. Don't miss out!
         </Text>
       </ContentCard>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+      <AlertBox variant="info">
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          <strong>Deadline:</strong> {formatDate(data.deadline)}
+        </Text>
+      </AlertBox>
+
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={sectionHeading}>Event Details</Text>
         <DetailRow label="Event" value={data.eventName} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
         <DetailRow label="Venue" value={data.venue} />
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.confirmationUrl} color={colors.status.info}>
-          Confirm My Spot
-        </PrimaryButton>
-      </Section>
+      <PrimaryButton href={data.confirmationUrl} color={colors.status.info}>
+        Confirm My Spot
+      </PrimaryButton>
 
       <BrandFooter />
     </EmailLayout>
@@ -117,29 +114,27 @@ export function DeadlineReminder6Hour(data: DeadlineReminderEmailData = { ...pre
       <BrandHeader
         title="Time Running Out"
         subtitle={`Only ${data.hoursRemaining} hours left`}
-        backgroundColor={colors.status.warning}
       />
 
       <AlertBox variant="warning">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           <strong>Only {data.hoursRemaining} hours remaining</strong> to confirm your{' '}
           {data.spotType} spot. Act now to avoid losing it.
         </Text>
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={sectionHeading}>Event Details</Text>
         <DetailRow label="Event" value={data.eventName} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
         <DetailRow label="Venue" value={data.venue} />
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.confirmationUrl} color={colors.status.warning}>
-          Confirm Now
-        </PrimaryButton>
-      </Section>
+      <PrimaryButton href={data.confirmationUrl} color={colors.status.warning}>
+        Confirm Now
+      </PrimaryButton>
 
       <BrandFooter />
     </EmailLayout>
@@ -156,29 +151,27 @@ export function DeadlineReminder1Hour(data: DeadlineReminderEmailData = { ...pre
       <BrandHeader
         title="Final Notice"
         subtitle="This is your last chance to confirm"
-        backgroundColor={colors.status.urgent}
       />
 
       <AlertBox variant="urgent">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           <strong>This is your final notice.</strong> Your {data.spotType} spot will be
           automatically released if you do not confirm immediately.
         </Text>
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={sectionHeading}>Event Details</Text>
         <DetailRow label="Event" value={data.eventName} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
         <DetailRow label="Venue" value={data.venue} />
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.confirmationUrl} color={colors.status.urgent}>
-          Confirm Now — Last Chance
-        </PrimaryButton>
-      </Section>
+      <PrimaryButton href={data.confirmationUrl} color={colors.status.urgent}>
+        Confirm Now — Last Chance
+      </PrimaryButton>
 
       <BrandFooter />
     </EmailLayout>
@@ -195,40 +188,38 @@ export function DeadlineReminderExtended(data: DeadlineReminderEmailData = previ
       <BrandHeader
         title="Good News!"
         subtitle="Your deadline has been extended"
-        backgroundColor={colors.status.success}
       />
 
       <AlertBox variant="success">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           Your deadline has been extended to{' '}
           <strong>{data.newDeadline ? formatDate(data.newDeadline) : 'a new date'}</strong>.
         </Text>
       </AlertBox>
 
       {data.reason ? (
-        <ContentCard accentColor={colors.status.success}>
-          <Text style={{ ...sectionHeading, color: colors.status.success }}>
-            Reason for Extension
-          </Text>
-          <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.6' }}>
-            {data.reason}
-          </Text>
-        </ContentCard>
+        <>
+          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <ContentCard>
+            <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+              {data.reason}
+            </Text>
+          </ContentCard>
+        </>
       ) : null}
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={sectionHeading}>Event Details</Text>
         <DetailRow label="Event" value={data.eventName} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
         <DetailRow label="Venue" value={data.venue} />
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
-          Confirm My Spot
-        </PrimaryButton>
-      </Section>
+      <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
+        Confirm My Spot
+      </PrimaryButton>
 
       <BrandFooter />
     </EmailLayout>

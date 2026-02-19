@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Section, Text } from '@react-email/components';
-import { colors, spacing, fonts } from '../tokens';
+import { colors, fonts } from '../tokens';
 
 type AlertVariant = 'warning' | 'urgent' | 'info' | 'success';
 
@@ -9,58 +9,31 @@ interface AlertBoxProps {
   children: React.ReactNode;
 }
 
-const variantMap: Record<AlertVariant, { background: string; border: string; icon: string; label: string }> = {
-  warning: {
-    background: colors.status.warningBg,
-    border: colors.status.warning,
-    icon: '\u26A0\uFE0F',
-    label: 'Warning',
-  },
-  urgent: {
-    background: colors.status.urgentBg,
-    border: colors.status.urgent,
-    icon: '\u{1F6A8}',
-    label: 'Urgent',
-  },
-  info: {
-    background: colors.status.infoBg,
-    border: colors.status.info,
-    icon: '\u2139\uFE0F',
-    label: 'Info',
-  },
-  success: {
-    background: colors.status.successBg,
-    border: colors.status.success,
-    icon: '\u2705',
-    label: 'Success',
-  },
+const variantStyles: Record<AlertVariant, { background: string; border: string }> = {
+  warning: { background: colors.status.warningBg, border: colors.status.warning },
+  urgent: { background: colors.status.urgentBg, border: colors.status.urgent },
+  info: { background: colors.status.infoBg, border: colors.status.info },
+  success: { background: colors.status.successBg, border: colors.status.success },
 };
 
+/**
+ * Subtle alert box with tinted background and left border.
+ * No emoji icons — just content. Clean and professional.
+ */
 export function AlertBox({ variant, children }: AlertBoxProps) {
-  const { background, border, icon } = variantMap[variant];
+  const style = variantStyles[variant];
 
   return (
     <Section
       style={{
-        backgroundColor: background,
-        borderLeft: `4px solid ${border}`,
-        padding: `${spacing.md} ${spacing.lg}`,
-        margin: '0',
-        borderBottom: `1px solid ${colors.neutral.lightGray}`,
+        backgroundColor: style.background,
+        borderLeft: `3px solid ${style.border}`,
+        padding: '16px 24px',
+        margin: '0 48px 4px 48px',
+        borderRadius: '4px',
       }}
     >
-      <table role="presentation" cellPadding="0" cellSpacing="0" width="100%">
-        <tbody>
-          <tr>
-            <td style={{ width: '32px', verticalAlign: 'top', fontSize: '18px', paddingTop: '2px' }}>
-              {icon}
-            </td>
-            <td style={{ verticalAlign: 'top' }}>
-              {children}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {children}
     </Section>
   );
 }

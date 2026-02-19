@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Section, render } from '@react-email/components';
+import { Text, Link, Hr, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -90,31 +90,18 @@ export function SpotConfirmation(data: SpotConfirmationEmailData = previewProps)
     return (
       <EmailLayout previewText={`Confirmed! ${data.spotType} at ${data.eventTitle}`}>
         <BrandHeader
-          title="You're Confirmed!"
+          title="You're Confirmed"
           subtitle={`${data.spotType} \u2022 ${data.eventTitle}`}
-          backgroundColor={colors.status.success}
         />
 
         <AlertBox variant="success">
-          <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
-            <strong>You're locked in.</strong> Your <strong>{data.spotType}</strong> spot
-            at <strong>{data.eventTitle}</strong> is confirmed.
-          </Text>
+          Your <strong>{data.spotType}</strong> spot at{' '}
+          <strong>{data.eventTitle}</strong> is confirmed.
         </AlertBox>
 
+        <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
         <ContentCard>
-          <Text
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: colors.neutral.mediumGray,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '1.5px',
-              margin: '0 0 12px 0',
-            }}
-          >
-            Event Details
-          </Text>
           <DetailRow label="Event" value={data.eventTitle} highlight />
           <DetailRow label="Date" value={formatDate(data.eventDate)} />
           <DetailRow label="Time" value={formatTime(data.eventDate)} />
@@ -128,55 +115,43 @@ export function SpotConfirmation(data: SpotConfirmationEmailData = previewProps)
         </ContentCard>
 
         {data.arrivalTime || data.soundCheckTime ? (
-          <ContentCard accentColor={colors.brand.primary}>
-            <Text
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: colors.neutral.mediumGray,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '1.5px',
-                margin: '0 0 12px 0',
-              }}
-            >
-              Arrival &amp; Setup
-            </Text>
-            {data.arrivalTime ? (
-              <DetailRow label="Arrive By" value={data.arrivalTime} highlight />
-            ) : null}
-            {data.soundCheckTime ? (
-              <DetailRow label="Sound Check" value={data.soundCheckTime} />
-            ) : null}
-          </ContentCard>
+          <>
+            <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+            <ContentCard>
+              <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
+                Arrival
+              </Text>
+              {data.arrivalTime ? (
+                <DetailRow label="Arrive By" value={data.arrivalTime} highlight />
+              ) : null}
+              {data.soundCheckTime ? (
+                <DetailRow label="Sound Check" value={data.soundCheckTime} />
+              ) : null}
+            </ContentCard>
+          </>
         ) : null}
 
         {data.additionalInfo ? (
-          <ContentCard accentColor={colors.brand.accent}>
-            <Text
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: colors.neutral.mediumGray,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '1.5px',
-                margin: '0 0 8px 0',
-              }}
-            >
-              Good to Know
-            </Text>
-            <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.6' }}>
-              {data.additionalInfo}
-            </Text>
-          </ContentCard>
+          <>
+            <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+            <ContentCard>
+              <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
+                Note
+              </Text>
+              <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+                {data.additionalInfo}
+              </Text>
+            </ContentCard>
+          </>
         ) : null}
 
-        <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-          <PrimaryButton href={data.eventUrl}>View Event</PrimaryButton>
-        </Section>
+        <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+        <PrimaryButton href={data.eventUrl}>View Event</PrimaryButton>
 
         <ContentCard>
-          <Text style={{ margin: '0', fontSize: '14px', color: colors.neutral.mediumGray }}>
-            Questions? Reach out to <strong style={{ color: colors.neutral.darkGray }}>{data.promoterName}</strong> at{' '}
+          <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+            Questions? Contact <strong>{data.promoterName}</strong> at{' '}
             <Link
               href={`mailto:${data.promoterEmail}`}
               style={{ color: colors.brand.primary, textDecoration: 'none' }}
@@ -200,25 +175,13 @@ export function SpotConfirmation(data: SpotConfirmationEmailData = previewProps)
       />
 
       <AlertBox variant="success">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
-          <strong>{data.comedianName}</strong> has confirmed their{' '}
-          <strong>{data.spotType}</strong> spot at <strong>{data.eventTitle}</strong>.
-        </Text>
+        <strong>{data.comedianName}</strong> has confirmed their{' '}
+        <strong>{data.spotType}</strong> spot at <strong>{data.eventTitle}</strong>.
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            color: colors.neutral.mediumGray,
-            textTransform: 'uppercase' as const,
-            letterSpacing: '1.5px',
-            margin: '0 0 12px 0',
-          }}
-        >
-          Event Details
-        </Text>
         <DetailRow label="Event" value={data.eventTitle} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
@@ -230,12 +193,12 @@ export function SpotConfirmation(data: SpotConfirmationEmailData = previewProps)
         ) : null}
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton href={data.lineupUrl}>View Lineup</PrimaryButton>
-      </Section>
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+      <PrimaryButton href={data.lineupUrl}>View Lineup</PrimaryButton>
 
       <ContentCard>
-        <Text style={{ margin: '0', fontSize: '14px', color: colors.neutral.mediumGray }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           Need to reach {data.comedianName}?{' '}
           <Link
             href={`mailto:${data.comedianEmail}`}

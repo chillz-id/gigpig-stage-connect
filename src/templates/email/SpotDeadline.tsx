@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { Text, Section } from '@react-email/components';
-import { render } from '@react-email/components';
+import { Hr, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -48,7 +47,6 @@ type UrgencyLevel = 'urgent' | 'warning' | 'info';
 
 function getUrgency(hoursRemaining: number): {
   level: UrgencyLevel;
-  headerColor: string;
   subtitle: string;
   buttonColor: string;
   buttonLabel: string;
@@ -56,7 +54,6 @@ function getUrgency(hoursRemaining: number): {
   if (hoursRemaining <= 2) {
     return {
       level: 'urgent',
-      headerColor: colors.status.urgent,
       subtitle: 'Immediate action required',
       buttonColor: colors.status.urgent,
       buttonLabel: 'Confirm Now',
@@ -65,7 +62,6 @@ function getUrgency(hoursRemaining: number): {
   if (hoursRemaining <= 6) {
     return {
       level: 'warning',
-      headerColor: colors.status.warning,
       subtitle: 'Time is running out',
       buttonColor: colors.status.success,
       buttonLabel: 'Confirm My Spot',
@@ -73,7 +69,6 @@ function getUrgency(hoursRemaining: number): {
   }
   return {
     level: 'info',
-    headerColor: colors.status.info,
     subtitle: 'Please confirm your spot',
     buttonColor: colors.status.success,
     buttonLabel: 'Confirm My Spot',
@@ -105,32 +100,19 @@ export function SpotDeadline(data: SpotDeadlineEmailData = previewProps) {
       <BrandHeader
         title="Confirmation Reminder"
         subtitle={urgency.subtitle}
-        backgroundColor={urgency.headerColor}
       />
 
       <AlertBox variant={urgency.level}>
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
-          <strong>{data.hoursRemaining} hours remaining</strong> to confirm your{' '}
-          <strong>{data.spotType}</strong> spot at {data.eventTitle}.
-          {data.hoursRemaining <= 2 && (
-            <><br />Your spot will be released if not confirmed.</>
-          )}
-        </Text>
+        <strong>{data.hoursRemaining} hours remaining</strong> to confirm your{' '}
+        <strong>{data.spotType}</strong> spot at {data.eventTitle}.
+        {data.hoursRemaining <= 2 && (
+          <> Your spot will be released if not confirmed.</>
+        )}
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            color: colors.neutral.mediumGray,
-            textTransform: 'uppercase' as const,
-            letterSpacing: '1.5px',
-            margin: '0 0 12px 0',
-          }}
-        >
-          Event Details
-        </Text>
         <DetailRow label="Event" value={data.eventTitle} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
         <DetailRow label="Time" value={formatTime(data.eventDate)} />
@@ -138,14 +120,12 @@ export function SpotDeadline(data: SpotDeadlineEmailData = previewProps) {
         <DetailRow label="Your Spot" value={data.spotType} highlight />
       </ContentCard>
 
-      <Section style={{ backgroundColor: colors.neutral.white, borderBottom: `1px solid ${colors.neutral.lightGray}` }}>
-        <PrimaryButton
-          href={data.confirmationUrl}
-          color={urgency.buttonColor}
-        >
-          {urgency.buttonLabel}
-        </PrimaryButton>
-      </Section>
+      <PrimaryButton
+        href={data.confirmationUrl}
+        color={urgency.buttonColor}
+      >
+        {urgency.buttonLabel}
+      </PrimaryButton>
 
       <BrandFooter />
     </EmailLayout>

@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { Text, Link, Hr, Section, render } from '@react-email/components';
+import { Text, Link, Hr, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
   BrandFooter,
   DetailRow,
   ContentCard,
-  AlertBox,
 } from '../components';
 import { colors, fonts } from '../tokens';
 
@@ -57,36 +56,25 @@ export interface InvoiceEmailData {
 }
 
 // ---------------------------------------------------------------------------
-// Styles
+// Table styles
 // ---------------------------------------------------------------------------
-
-const sectionHeading: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 700,
-  color: colors.neutral.mediumGray,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1.5px',
-  margin: '0 0 12px 0',
-};
 
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
   textAlign: 'left',
   fontWeight: 600,
-  fontSize: '11px',
+  fontSize: '12px',
   fontFamily: fonts.body,
-  backgroundColor: colors.neutral.darkGray,
+  backgroundColor: colors.neutral.heading,
   color: colors.neutral.white,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
 };
 
 const tdStyle: React.CSSProperties = {
   padding: '10px 12px',
   fontSize: '14px',
   fontFamily: fonts.body,
-  borderBottom: `1px solid ${colors.neutral.lightGray}`,
-  color: colors.neutral.darkGray,
+  borderBottom: `1px solid ${colors.neutral.border}`,
+  color: colors.neutral.body,
 };
 
 // ---------------------------------------------------------------------------
@@ -129,34 +117,27 @@ export function InvoiceEmail(data: InvoiceEmailData = previewProps) {
       />
 
       <ContentCard>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '15px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
           Hello {data.recipientName},
         </Text>
-        <Text style={{ margin: '0', fontSize: '15px', lineHeight: '1.6' }}>
-          Please find your invoice details below. Payment is due by{' '}
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          Please find your invoice below. Payment due by{' '}
           <strong>{formatDate(data.dueDate)}</strong>.
         </Text>
       </ContentCard>
 
-      {/* Invoice summary with accent */}
-      <ContentCard accentColor={colors.brand.primary}>
-        <table role="presentation" cellPadding="0" cellSpacing="0" width="100%">
-          <tbody>
-            <tr>
-              <td style={{ verticalAlign: 'top' }}>
-                <Text style={{ ...sectionHeading, margin: '0 0 8px 0' }}>Invoice Details</Text>
-                <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
-                <DetailRow label="Issued" value={formatDate(data.issueDate)} />
-                <DetailRow label="Due" value={formatDate(data.dueDate)} highlight />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+      <ContentCard>
+        <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
+        <DetailRow label="Issued" value={formatDate(data.issueDate)} />
+        <DetailRow label="Due" value={formatDate(data.dueDate)} highlight />
       </ContentCard>
+
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
       {/* Line items table */}
       <ContentCard padding="0">
-        <Text style={{ ...sectionHeading, padding: '24px 24px 12px 24px' }}>Line Items</Text>
         <table
           role="presentation"
           cellPadding="0"
@@ -193,7 +174,7 @@ export function InvoiceEmail(data: InvoiceEmailData = previewProps) {
             <tr>
               <td
                 style={{
-                  padding: '16px 24px',
+                  padding: '16px 12px',
                   fontSize: '18px',
                   fontWeight: 700,
                   textAlign: 'right',
@@ -208,14 +189,15 @@ export function InvoiceEmail(data: InvoiceEmailData = previewProps) {
         </table>
       </ContentCard>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       {/* Payment instructions */}
-      <ContentCard accentColor={colors.brand.accent}>
-        <Text style={sectionHeading}>Payment Instructions</Text>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '14px', lineHeight: '1.6' }}>
+      <ContentCard>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
           {data.paymentInstructions ||
             `Please make payment by ${formatDate(data.dueDate)} to avoid any late fees.`}
         </Text>
-        <Text style={{ margin: '0', fontSize: '14px', color: colors.neutral.mediumGray }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           Questions? Contact us at{' '}
           <Link href={`mailto:${data.senderEmail}`} style={{ color: colors.brand.primary, textDecoration: 'none' }}>
             {data.senderEmail}
@@ -224,24 +206,28 @@ export function InvoiceEmail(data: InvoiceEmailData = previewProps) {
       </ContentCard>
 
       {data.notes ? (
-        <ContentCard>
-          <Text style={sectionHeading}>Notes</Text>
-          <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.6', color: colors.neutral.mediumGray }}>
-            {data.notes}
-          </Text>
-        </ContentCard>
+        <>
+          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <ContentCard>
+            <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+              {data.notes}
+            </Text>
+          </ContentCard>
+        </>
       ) : null}
 
       {(data.companyAddress || data.companyABN) ? (
-        <ContentCard>
-          <Text style={sectionHeading}>Company Information</Text>
-          {data.companyAddress ? (
-            <DetailRow label="Address" value={data.companyAddress} />
-          ) : null}
-          {data.companyABN ? (
-            <DetailRow label="ABN" value={data.companyABN} />
-          ) : null}
-        </ContentCard>
+        <>
+          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <ContentCard>
+            {data.companyAddress ? (
+              <DetailRow label="Address" value={data.companyAddress} />
+            ) : null}
+            {data.companyABN ? (
+              <DetailRow label="ABN" value={data.companyABN} />
+            ) : null}
+          </ContentCard>
+        </>
       ) : null}
 
       <BrandFooter />

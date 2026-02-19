@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Section } from '@react-email/components';
+import { Text, Hr } from '@react-email/components';
 import { render } from '@react-email/components';
 import {
   EmailLayout,
@@ -32,15 +32,6 @@ function formatDate(dateStr: string): string {
   });
 }
 
-const sectionHeading: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 700,
-  color: colors.neutral.mediumGray,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1.5px',
-  margin: '0 0 12px 0',
-};
-
 const previewProps: InvoicePaymentReceiptData = {
   invoiceNumber: 'INV-2026-0042',
   paymentAmount: 850.00,
@@ -58,27 +49,29 @@ export function PaymentReceipt(data: InvoicePaymentReceiptData = previewProps) {
     <EmailLayout previewText={`Payment received — Invoice ${data.invoiceNumber}`}>
       <BrandHeader
         title="Payment Received"
-        subtitle="Thank you for your payment!"
-        backgroundColor={colors.status.success}
+        subtitle="Thank you for your payment"
       />
 
       <AlertBox variant="success">
-        <Text style={{ margin: '0', fontSize: '14px', lineHeight: '1.5' }}>
-          <strong>Payment confirmed.</strong> Invoice {data.invoiceNumber} has been paid in full.
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          Payment confirmed for Invoice {data.invoiceNumber}.
         </Text>
       </AlertBox>
 
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
       <ContentCard>
-        <Text style={{ margin: '0 0 12px 0', fontSize: '15px', lineHeight: '1.5' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
           Hello {data.recipientName},
         </Text>
-        <Text style={{ margin: '0', fontSize: '15px', lineHeight: '1.6' }}>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           We've received your payment. Here's your receipt for your records.
         </Text>
       </ContentCard>
 
-      <ContentCard accentColor={colors.status.success}>
-        <Text style={sectionHeading}>Payment Details</Text>
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+
+      <ContentCard>
         <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
         <DetailRow label="Date" value={formatDate(data.paymentDate)} />
         <DetailRow label="Method" value={data.paymentMethod} />
