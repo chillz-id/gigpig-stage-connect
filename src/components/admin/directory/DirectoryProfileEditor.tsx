@@ -32,6 +32,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { directoryService } from '@/services/directory';
+import { ImageCropModal } from '@/components/ui/ImageEditorModal';
 import type { DirectoryProfile } from '@/types/directory';
 
 const profileSchema = z.object({
@@ -71,6 +72,8 @@ export function DirectoryProfileEditor({
     profile.primary_headshot_url
   );
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormValues>({
@@ -142,8 +145,25 @@ export function DirectoryProfileEditor({
       return;
     }
 
+    // Open crop modal with the selected image
+    const imageUrl = URL.createObjectURL(file);
+    setImageToCrop(imageUrl);
+    setCropModalOpen(true);
+
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleCropComplete = async (croppedImageDataUrl: string) => {
+    // Convert data URL to File
+    const response = await fetch(croppedImageDataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], 'headshot.png', { type: 'image/png' });
+
     setHeadshotFile(file);
-    setHeadshotPreview(URL.createObjectURL(file));
+    setHeadshotPreview(croppedImageDataUrl);
+    setCropModalOpen(false);
+    setImageToCrop(null);
   };
 
   const onSubmit = async (values: ProfileFormValues) => {
@@ -203,6 +223,7 @@ export function DirectoryProfileEditor({
   };
 
   return (
+    <>
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className={cn("max-w-lg max-h-[90vh] overflow-y-auto", getDialogStyles())}>
         <DialogHeader>
@@ -500,5 +521,19 @@ export function DirectoryProfileEditor({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Image Crop Modal - outside main dialog to avoid nesting issues */}
+    {imageToCrop && (
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        onClose={() => {
+          setCropModalOpen(false);
+          setImageToCrop(null);
+        }}
+        onCrop={handleCropComplete}
+        imageUrl={imageToCrop}
+      />
+    )}
+    </>
   );
 }
