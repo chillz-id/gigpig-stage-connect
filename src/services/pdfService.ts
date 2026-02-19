@@ -1,6 +1,6 @@
 // PDF Service - Generate professional invoice PDFs
 import { supabase } from '@/integrations/supabase/client';
-import { Invoice } from '@/types/invoice';
+import { Invoice, InvoiceItem } from '@/types/invoice';
 import { InvoiceTemplateConfig } from '@/types/invoiceTemplate';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -56,8 +56,14 @@ export interface InvoicePDFData {
   event_date?: string;
 }
 
+interface PDFGenerationOptions {
+  filename?: string;
+  download?: boolean;
+  returnBlob?: boolean;
+}
+
 class PDFService {
-  // Default Stand Up Sydney brand colors
+  // Default GigPigs brand colors
   private defaultColors = {
     primary: '#DC2626', // Red
     secondary: '#7C3AED', // Purple
@@ -68,51 +74,573 @@ class PDFService {
     border: '#E5E7EB'
   };
 
+  /**
+   * Validate that invoice data has required fields for PDF generation
+   */
+  validateInvoiceData(invoice: Invoice | InvoicePDFData): void {
+    if (!invoice) {
+      throw new Error('Invoice data is required');
+    }
+    if (!invoice.invoice_number) {
+      throw new Error('Invoice number is required');
+    }
+    if (!invoice.total_amount && invoice.total_amount !== 0) {
+      throw new Error('Invoice total amount is required');
+    }
+  }
+
+  /**
+   * Generate a filename for the PDF
+   */
+  formatFilename(invoice: Invoice | InvoicePDFData): string {
+    const invoiceNumber = invoice.invoice_number || 'invoice';
+    const sanitized = invoiceNumber.replace(/[^a-zA-Z0-9-_]/g, '-');
+    return `invoice-${sanitized}.pdf`;
+  }
+
+  /**
+   * Generate invoice PDF - supports multiple calling conventions:
+   * 1. generateInvoicePDF(invoiceData, config) - returns base64 string
+   * 2. generateInvoicePDF(invoice, items, options) - handles download/blob based on options
+   */
   async generateInvoicePDF(
-    invoiceData: InvoicePDFData, 
-    config?: InvoiceTemplateConfig
-  ): Promise<string> {
+    invoiceOrData: Invoice | InvoicePDFData,
+    itemsOrConfig?: InvoiceItem[] | InvoiceTemplateConfig,
+    options?: PDFGenerationOptions
+  ): Promise<string | Blob | void> {
+    // Determine which signature was used
+    let invoiceData: InvoicePDFData;
+    let pdfOptions: PDFGenerationOptions = {};
+
+    if (Array.isArray(itemsOrConfig)) {
+      const invoice = invoiceOrData as Invoice;
+      const items = itemsOrConfig;
+      pdfOptions = options || {};
+      invoiceData = this.convertToInvoicePDFData(invoice, items);
+    } else {
+      invoiceData = invoiceOrData as InvoicePDFData;
+    }
+
     const doc = new jsPDF({
-      orientation: config?.branding.layout.orientation || 'portrait',
+      orientation: 'portrait',
       unit: 'mm',
-      format: config?.branding.layout.pageSize?.toLowerCase() || 'a4'
+      format: 'a4'
     });
 
-    // Use template config colors or defaults
-    const colors = config?.branding.colors || this.defaultColors;
-    
     // Set up the document
     this.setupDocument(doc, invoiceData);
-    
-    // Add watermark for Stand Up Sydney branding
-    this.addWatermark(doc);
-    
-    // Add header with custom branding
-    const yPos = this.addEnhancedHeader(doc, invoiceData, config);
-    
-    // Add invoice details
-    const afterDetailsY = this.addInvoiceDetails(doc, invoiceData, yPos, colors);
-    
-    // Add items table with better formatting
-    const afterItemsY = this.addEnhancedItemsTable(doc, invoiceData, afterDetailsY, config);
-    
-    // Add totals
-    const afterTotalsY = this.addEnhancedTotals(doc, invoiceData, afterItemsY, colors);
-    
-    // Add deposit information if applicable
-    const afterDepositY = this.addDepositInfo(doc, invoiceData, afterTotalsY, colors);
 
-    // Add payment/bank details section
-    const afterPaymentY = this.addPaymentDetails(doc, invoiceData, afterDepositY, colors);
+    // Clean professional layout
+    let yPos = 20;
 
-    // Add notes and terms
-    const afterNotesY = this.addNotesAndTerms(doc, invoiceData, afterPaymentY);
-    
-    // Add footer
-    this.addEnhancedFooter(doc, invoiceData, afterNotesY, config);
+    // Header
+    yPos = this.addCleanHeader(doc, invoiceData, yPos);
 
-    // Return as base64 string
+    // From/To section
+    yPos = this.addContactSection(doc, invoiceData, yPos);
+
+    // Dates
+    yPos = this.addDatesLine(doc, invoiceData, yPos);
+
+    // Items table
+    yPos = this.addCleanItemsTable(doc, invoiceData, yPos);
+
+    // Totals
+    yPos = this.addCleanTotals(doc, invoiceData, yPos);
+
+    // Payment details
+    yPos = this.addCleanPaymentDetails(doc, invoiceData, yPos);
+
+    // Notes (if any)
+    yPos = this.addCleanNotes(doc, invoiceData, yPos);
+
+    // Footer
+    this.addCleanFooter(doc);
+
+    // Handle return based on options
+    if (pdfOptions.returnBlob) {
+      return doc.output('blob');
+    }
+
+    if (pdfOptions.download) {
+      const filename = pdfOptions.filename || this.formatFilename(invoiceData);
+      doc.save(filename);
+      return;
+    }
+
+    // Default: return as base64 string
     return doc.output('datauristring').split(',')[1];
+  }
+
+  // ============ MUZEEK-STYLE DESIGN METHODS ============
+
+  private addCleanHeader(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = startY;
+
+    // LEFT SIDE: "Invoice" title with status badge
+    doc.setFontSize(24);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Invoice', 20, yPos);
+
+    // Status badge next to "Invoice"
+    const statusText = invoiceData.status.charAt(0).toUpperCase() + invoiceData.status.slice(1);
+    const statusWidth = doc.getTextWidth(statusText) + 6;
+    doc.setFontSize(9);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(58, yPos - 6, statusWidth, 8, 2, 2, 'S');
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    doc.text(statusText, 61, yPos - 1);
+
+    // RIGHT SIDE: Sender name, ABN, country
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoiceData.sender_name || 'Invoice', pageWidth - 20, yPos - 8, { align: 'right' });
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    if (invoiceData.sender_abn) {
+      doc.text(`ABN: ${invoiceData.sender_abn}`, pageWidth - 20, yPos - 2, { align: 'right' });
+    }
+    doc.text('Australia', pageWidth - 20, yPos + 4, { align: 'right' });
+
+    yPos += 12;
+
+    // Generated date
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    const generatedDate = new Date().toLocaleDateString('en-AU', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    doc.text(`Generated on ${generatedDate}`, 20, yPos);
+
+    return yPos + 15;
+  }
+
+  private addContactSection(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const midPoint = pageWidth / 2;
+    let yPos = startY;
+
+    // Summary section header
+    doc.setFontSize(14);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', 20, yPos);
+
+    // Line under Summary
+    yPos += 3;
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    yPos += 10;
+
+    // LEFT COLUMN
+    let leftY = yPos;
+
+    // Invoice No
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Invoice No:', 20, leftY);
+    leftY += 4;
+    doc.setTextColor(30, 30, 30);
+    doc.text(invoiceData.invoice_number, 20, leftY);
+    leftY += 8;
+
+    // Due Date
+    doc.setTextColor(100, 100, 100);
+    doc.text('Due Date:', 20, leftY);
+    leftY += 4;
+    doc.setTextColor(30, 30, 30);
+    const dueDate = new Date(invoiceData.due_date).toLocaleDateString('en-AU', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    doc.text(dueDate, 20, leftY);
+    leftY += 8;
+
+    // From
+    doc.setTextColor(100, 100, 100);
+    doc.text('From:', 20, leftY);
+    leftY += 4;
+    doc.setTextColor(30, 30, 30);
+    if (invoiceData.sender_abn) {
+      doc.text(`${invoiceData.sender_name} (ABN: ${invoiceData.sender_abn})`, 20, leftY);
+    } else {
+      doc.text(invoiceData.sender_name || '', 20, leftY);
+    }
+    leftY += 4;
+    doc.text(invoiceData.sender_name || '', 20, leftY);
+
+    // RIGHT COLUMN
+    let rightY = yPos;
+
+    // Event (we don't have event data, so skip or use notes)
+    // For now, skip Event section since we don't have that data
+
+    // Event Date (skip if no event_date)
+    if (invoiceData.event_date) {
+      doc.setTextColor(100, 100, 100);
+      doc.text('Event Date:', midPoint, rightY);
+      rightY += 4;
+      doc.setTextColor(30, 30, 30);
+      const eventDate = new Date(invoiceData.event_date).toLocaleDateString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      doc.text(eventDate, midPoint, rightY);
+      rightY += 8;
+    }
+
+    // To - Full client details
+    const recipient = invoiceData.invoice_recipients?.[0];
+    if (recipient) {
+      doc.setTextColor(100, 100, 100);
+      doc.text('To:', midPoint, rightY);
+      rightY += 4;
+
+      // Recipient name (bold)
+      doc.setTextColor(30, 30, 30);
+      doc.setFont('helvetica', 'bold');
+      doc.text(recipient.recipient_name || '', midPoint, rightY);
+      rightY += 5;
+
+      // Reset to normal for details
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+
+      // Email
+      if (recipient.recipient_email) {
+        doc.setTextColor(80, 80, 80);
+        doc.text(recipient.recipient_email, midPoint, rightY);
+        rightY += 4;
+      }
+
+      // Phone
+      if (recipient.recipient_phone) {
+        doc.setTextColor(80, 80, 80);
+        doc.text(recipient.recipient_phone, midPoint, rightY);
+        rightY += 4;
+      }
+
+      // ABN
+      if (recipient.recipient_abn) {
+        doc.setTextColor(80, 80, 80);
+        doc.text(`ABN: ${recipient.recipient_abn}`, midPoint, rightY);
+        rightY += 4;
+      }
+
+      // Address
+      if (recipient.recipient_address) {
+        doc.setTextColor(80, 80, 80);
+        const addressLines = doc.splitTextToSize(recipient.recipient_address, 70);
+        doc.text(addressLines, midPoint, rightY);
+        rightY += addressLines.length * 4;
+      }
+    }
+
+    return Math.max(leftY, rightY) + 15;
+  }
+
+  private addDatesLine(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    // Not needed in Muzeek style - dates are in Summary section
+    return startY;
+  }
+
+  private addCleanItemsTable(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Track deduction rows for styling
+    const deductionRows: number[] = [];
+
+    // Calculate GST for each item (assume 10%)
+    const taxRate = invoiceData.tax_rate ?? 10;
+
+    // Prepare table data - Muzeek style: Description | Sub Total | GST (10%) | Total
+    const headers = [['Description', 'Sub Total', `GST (${taxRate}%)`, 'Total']];
+    const data = invoiceData.invoice_items.map((item, index) => {
+      const quantity = item.quantity ?? 1;
+      const unitPrice = item.unit_price ?? 0;
+      const subtotal = quantity * unitPrice;
+      const gst = subtotal * (taxRate / 100);
+      const total = item.total ?? (subtotal + gst);
+      const isDeduction = total < 0;
+
+      if (isDeduction) deductionRows.push(index);
+
+      const desc = quantity > 1
+        ? `${item.description || ''} (x${quantity})`
+        : (item.description || '');
+
+      return [
+        isDeduction ? `${desc} (Deduction)` : desc,
+        isDeduction ? `-$${Math.abs(subtotal).toFixed(0)}` : `$${subtotal.toFixed(0)}`,
+        isDeduction ? `-$${Math.abs(gst).toFixed(0)}` : `$${gst.toFixed(0)}`,
+        isDeduction ? `-$${Math.abs(total).toFixed(0)}` : `$${total.toFixed(0)}`
+      ];
+    });
+
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: startY,
+      margin: { left: 20, right: 20 },
+      theme: 'plain',
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [30, 30, 30],
+        fontSize: 10,
+        fontStyle: 'bold',
+        cellPadding: { top: 3, bottom: 3, left: 2, right: 2 }
+      },
+      bodyStyles: {
+        fontSize: 10,
+        textColor: [30, 30, 30],
+        cellPadding: { top: 4, bottom: 4 }
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: 'left' },
+        1: { cellWidth: 30, halign: 'right' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' }
+      },
+      // Apply right alignment to header cells for numeric columns
+      didParseCell: (hookData: any) => {
+        // Align numeric column headers to the right
+        if (hookData.section === 'head' && hookData.column.index > 0) {
+          hookData.cell.styles.halign = 'right';
+        }
+        // Style deduction rows with red text
+        if (hookData.section === 'body' && deductionRows.includes(hookData.row.index)) {
+          hookData.cell.styles.textColor = [220, 38, 38];
+        }
+        // Add bottom border to header
+        if (hookData.section === 'head') {
+          hookData.cell.styles.lineWidth = { bottom: 0.5 };
+          hookData.cell.styles.lineColor = [200, 200, 200];
+        }
+      }
+    });
+
+    return doc.lastAutoTable?.finalY + 2 || startY + 30;
+  }
+
+  private addCleanTotals(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const rightX = pageWidth - 20;
+    let yPos = startY;
+
+    const subtotal = invoiceData.subtotal ?? 0;
+    const taxAmount = invoiceData.tax_amount ?? 0;
+    const taxRate = invoiceData.tax_rate ?? 10;
+    const total = invoiceData.total_amount ?? (subtotal + taxAmount);
+    const currency = invoiceData.currency || 'AUD';
+
+    // Sub total row with line
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.3);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sub total', 20, yPos);
+    doc.text(`$${subtotal.toFixed(0)}`, rightX - 60, yPos, { align: 'right' });
+    doc.text(`$${taxAmount.toFixed(0)}`, rightX - 30, yPos, { align: 'right' });
+    doc.text(`$${total.toFixed(0)}`, rightX, yPos, { align: 'right' });
+
+    // Total owed line
+    yPos += 12;
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Total owed to ${invoiceData.sender_name}`, 20, yPos);
+
+    // Big total amount
+    doc.setFontSize(28);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`$${total.toFixed(0)}`, rightX, yPos + 2, { align: 'right' });
+
+    // Currency label
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(currency, rightX, yPos + 8, { align: 'right' });
+
+    // Amount Due section
+    yPos += 20;
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.3);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Amount Due', 20, yPos);
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`$${total.toFixed(0)} ${currency}`, rightX, yPos, { align: 'right' });
+
+    // Line under Amount Due
+    yPos += 5;
+    doc.setDrawColor(230, 230, 230);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    return yPos + 15;
+  }
+
+  private addCleanPaymentDetails(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    const hasBankDetails = invoiceData.sender_bank_name ||
+                           invoiceData.sender_bank_bsb ||
+                           invoiceData.sender_bank_account;
+
+    if (!hasBankDetails) return startY;
+
+    let yPos = startY;
+
+    // Section title
+    doc.setFontSize(14);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Details', 20, yPos);
+
+    // Line under title
+    yPos += 3;
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, 80, yPos);
+
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    // Bank Account Name
+    if (invoiceData.sender_bank_name) {
+      doc.setTextColor(100, 100, 100);
+      doc.text('Bank Account Name:', 20, yPos);
+      yPos += 5;
+      doc.setTextColor(30, 30, 30);
+      doc.text(invoiceData.sender_bank_name, 20, yPos);
+      yPos += 8;
+    }
+
+    // Bank Account Number
+    if (invoiceData.sender_bank_account) {
+      doc.setTextColor(100, 100, 100);
+      doc.text('Bank Account Number:', 20, yPos);
+      yPos += 5;
+      doc.setTextColor(30, 30, 30);
+      doc.text(invoiceData.sender_bank_account, 20, yPos);
+      yPos += 8;
+    }
+
+    // BSB
+    if (invoiceData.sender_bank_bsb) {
+      doc.setTextColor(100, 100, 100);
+      doc.text('Bank Code (Eg. BSB, Sort, Routing No.):', 20, yPos);
+      yPos += 5;
+      doc.setTextColor(30, 30, 30);
+      doc.text(invoiceData.sender_bank_bsb, 20, yPos);
+      yPos += 8;
+    }
+
+    return yPos + 5;
+  }
+
+  private addCleanNotes(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
+    if (!invoiceData.notes) return startY;
+
+    let yPos = startY;
+
+    doc.setFontSize(14);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Notes', 20, yPos);
+
+    yPos += 3;
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, 50, yPos);
+
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(invoiceData.notes, 170);
+    doc.text(lines, 20, yPos);
+
+    return yPos + (lines.length * 5) + 8;
+  }
+
+  private addCleanFooter(doc: jsPDF): void {
+    // Muzeek style has no footer - clean and minimal
+    // Just leave blank space at bottom
+  }
+
+  /**
+   * Convert Invoice type to InvoicePDFData format
+   */
+  private convertToInvoicePDFData(invoice: Invoice, items: InvoiceItem[] = []): InvoicePDFData {
+    // Use provided items or invoice's items
+    const invoiceItems = items.length > 0 ? items : (invoice.invoice_items || []);
+
+    return {
+      id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      invoice_type: invoice.invoice_type,
+      sender_name: invoice.sender_name || 'GigPigs',
+      sender_email: invoice.sender_email || '',
+      sender_phone: invoice.sender_phone,
+      sender_address: invoice.sender_address,
+      sender_abn: invoice.sender_abn,
+      sender_bank_name: invoice.sender_bank_name,
+      sender_bank_bsb: invoice.sender_bank_bsb,
+      sender_bank_account: invoice.sender_bank_account,
+      issue_date: invoice.issue_date,
+      due_date: invoice.due_date,
+      total_amount: invoice.total_amount,
+      subtotal: invoice.subtotal || invoiceItems.reduce((sum, item) => sum + (item.subtotal || item.quantity * item.unit_price), 0),
+      tax_amount: invoice.tax_amount || 0,
+      tax_rate: invoice.tax_rate || 10,
+      currency: invoice.currency || 'AUD',
+      status: invoice.status,
+      notes: invoice.notes,
+      terms: invoice.terms,
+      invoice_items: invoiceItems.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total: item.total || item.subtotal || (item.quantity * item.unit_price),
+      })),
+      invoice_recipients: invoice.invoice_recipients?.map(r => ({
+        recipient_name: r.recipient_name,
+        recipient_email: r.recipient_email,
+        recipient_phone: r.recipient_phone,
+        recipient_address: r.recipient_address,
+        recipient_abn: r.recipient_abn,
+      })) || [],
+      deposit_amount: invoice.deposit_amount,
+      deposit_percentage: invoice.deposit_percentage,
+      deposit_due_date: invoice.deposit_due_date,
+      event_date: invoice.event_date,
+    };
+  }
+
+  /**
+   * Generate PDF and return as URL for preview
+   */
+  async generateInvoicePDFURL(invoice: Invoice, items: InvoiceItem[] = []): Promise<string> {
+    const invoiceData = this.convertToInvoicePDFData(invoice, items);
+    const base64 = await this.generateInvoicePDF(invoiceData) as string;
+    return `data:application/pdf;base64,${base64}`;
   }
 
   private setupDocument(doc: jsPDF, invoiceData: InvoicePDFData): void {
@@ -121,8 +649,8 @@ class PDFService {
       title: `Invoice ${invoiceData.invoice_number}`,
       subject: 'Invoice',
       author: invoiceData.sender_name,
-      creator: 'Stand Up Sydney',
-      producer: 'Stand Up Sydney Invoice System'
+      creator: 'GigPigs',
+      producer: 'GigPigs Invoice System'
     });
 
     // Set default font
@@ -141,7 +669,7 @@ class PDFService {
     // Center and rotate text
     doc.saveGraphicsState();
     doc.setGState(new doc.GState({ opacity: 0.1 }));
-    const text = 'STAND UP SYDNEY';
+    const text = 'GIGPIGS';
     const textWidth = doc.getTextWidth(text);
     doc.text(text, pageWidth / 2 - textWidth / 2, pageHeight / 2, {
       angle: -45
@@ -158,36 +686,19 @@ class PDFService {
     const colors = config?.branding.colors || this.defaultColors;
     let yPos = config?.branding.layout.marginTop || 20;
 
-    // Modern gradient header with brand colors
+    // Modern gradient header with brand colors (clean design, no diagonal lines)
     const headerHeight = 35;
-    
-    // Create gradient effect with rectangles
+
+    // Solid header background
     doc.setFillColor(colors.primary);
     doc.rect(15, yPos, pageWidth - 30, headerHeight, 'F');
-    
-    // Add subtle pattern overlay
-    doc.setDrawColor(255, 255, 255);
-    doc.setLineWidth(0.1);
-    for (let i = 0; i < 5; i++) {
-      doc.line(
-        15 + i * 20, 
-        yPos, 
-        15 + i * 20 + 10, 
-        yPos + headerHeight
-      );
-    }
 
-    // Company name with custom font
-    doc.setFontSize(26);
+    // Sender name (who is invoicing)
+    doc.setFontSize(24);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    const companyName = invoiceData.sender_name || 'Stand Up Sydney';
-    doc.text(companyName, 25, yPos + 18);
-
-    // Tagline
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Professional Comedy Entertainment', 25, yPos + 25);
+    const senderName = invoiceData.sender_name || 'Invoice';
+    doc.text(senderName, 25, yPos + 22);
 
     // Invoice number badge
     const invoiceNumText = `INVOICE #${invoiceData.invoice_number}`;
@@ -278,44 +789,24 @@ class PDFService {
       }
     }
 
-    return Math.max(yPos + 10, 120);
+    // Return the current Y position plus a small margin (removed forced minimum of 120 that created gap)
+    return yPos + 10;
   }
 
   private addInvoiceDetails(doc: jsPDF, invoiceData: InvoicePDFData, startY: number, colors: any): number {
+    // Simplified - just show dates inline, no box (totals shown in totals section)
     const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = startY;
+    const yPos = startY;
 
-    // Invoice details box
-    doc.setFillColor(248, 249, 250);
-    doc.rect(15, yPos, pageWidth - 30, 30, 'F');
-    
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(15, yPos, pageWidth - 30, 30, 'S');
+    doc.setFontSize(9);
+    doc.setTextColor(colors.light);
 
-    yPos += 5;
+    const issueDate = new Date(invoiceData.issue_date).toLocaleDateString('en-AU');
+    const dueDate = new Date(invoiceData.due_date).toLocaleDateString('en-AU');
 
-    // Date information
-    doc.setFontSize(10);
-    doc.setTextColor(51, 51, 51);
-    
-    const leftCol = 20;
-    const rightCol = pageWidth - 80;
+    doc.text(`Issue Date: ${issueDate}  |  Due Date: ${dueDate}  |  Status: ${invoiceData.status.toUpperCase()}`, 20, yPos);
 
-    doc.text('Issue Date:', leftCol, yPos + 5);
-    doc.text(new Date(invoiceData.issue_date).toLocaleDateString('en-AU'), leftCol, yPos + 10);
-
-    doc.text('Due Date:', rightCol, yPos + 5);
-    doc.text(new Date(invoiceData.due_date).toLocaleDateString('en-AU'), rightCol, yPos + 10);
-
-    doc.text('Status:', leftCol, yPos + 18);
-    doc.text(invoiceData.status.toUpperCase(), leftCol, yPos + 23);
-
-    doc.text('Total Amount:', rightCol, yPos + 18);
-    doc.setFontSize(12);
-    doc.setTextColor(103, 126, 234);
-    doc.text(`${invoiceData.currency} $${invoiceData.total_amount.toFixed(2)}`, rightCol, yPos + 23);
-
-    return yPos + 40;
+    return yPos + 8;
   }
 
   private addEnhancedItemsTable(
@@ -341,17 +832,43 @@ class PDFService {
     
     yPos += 15;
 
-    // Table data
+    // Table headers
     const headers = [
       ['Description', 'Qty', 'Rate', 'Amount']
     ];
-    
-    const data = invoiceData.invoice_items.map((item, index) => [
-      item.description,
-      item.quantity.toString(),
-      `$${item.unit_price.toFixed(2)}`,
-      `$${item.total.toFixed(2)}`
-    ]);
+
+    // Track which rows are deductions for styling
+    const deductionRows: number[] = [];
+
+    // Table data - detect deductions by negative total
+    const data = invoiceData.invoice_items.map((item, index) => {
+      const quantity = item.quantity ?? 1;
+      const unitPrice = item.unit_price ?? 0;
+      const total = item.total ?? (quantity * unitPrice);
+      const isDeduction = total < 0;
+
+      if (isDeduction) {
+        deductionRows.push(index);
+      }
+
+      // Format amounts - show negative amounts with minus sign
+      const formattedUnitPrice = isDeduction
+        ? `-$${Math.abs(unitPrice).toFixed(2)}`
+        : `$${unitPrice.toFixed(2)}`;
+      const formattedTotal = isDeduction
+        ? `-$${Math.abs(total).toFixed(2)}`
+        : `$${total.toFixed(2)}`;
+      const description = isDeduction
+        ? `${item.description || ''} (Deduction)`
+        : (item.description || '');
+
+      return [
+        description,
+        quantity.toString(),
+        formattedUnitPrice,
+        formattedTotal
+      ];
+    });
 
     // Add table with autoTable
     doc.autoTable({
@@ -380,16 +897,24 @@ class PDFService {
         2: { cellWidth: 35, halign: 'right' },
         3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' }
       },
-      didDrawCell: (data: any) => {
+      didParseCell: (hookData: any) => {
+        // Style deduction rows with red text and light red background
+        if (hookData.section === 'body' && deductionRows.includes(hookData.row.index)) {
+          hookData.cell.styles.textColor = [220, 38, 38]; // Red text
+          hookData.cell.styles.fillColor = [254, 242, 242]; // Light red background
+          hookData.cell.styles.fontStyle = 'italic';
+        }
+      },
+      didDrawCell: (cellData: any) => {
         // Add subtle borders
-        if (data.section === 'body') {
+        if (cellData.section === 'body') {
           doc.setDrawColor(colors.border);
           doc.setLineWidth(0.1);
           doc.line(
-            data.cell.x,
-            data.cell.y + data.cell.height,
-            data.cell.x + data.cell.width,
-            data.cell.y + data.cell.height
+            cellData.cell.x,
+            cellData.cell.y + cellData.cell.height,
+            cellData.cell.x + cellData.cell.width,
+            cellData.cell.y + cellData.cell.height
           );
         }
       }
@@ -444,11 +969,13 @@ class PDFService {
       }
 
       // Item data
-      const descriptionLines = doc.splitTextToSize(item.description, colWidths[0] - 4);
+      const descriptionLines = doc.splitTextToSize(item.description || '', colWidths[0] - 4);
+      const unitPrice = item.unit_price ?? 0;
+      const itemTotal = item.total ?? (item.quantity * unitPrice);
       doc.text(descriptionLines, colPositions[0] + 2, yPos + 5);
-      doc.text(item.quantity.toString(), colPositions[1] + 2, yPos + 5);
-      doc.text(`$${item.unit_price.toFixed(2)}`, colPositions[2] + 2, yPos + 5);
-      doc.text(`$${item.total.toFixed(2)}`, colPositions[3] + 2, yPos + 5);
+      doc.text((item.quantity ?? 1).toString(), colPositions[1] + 2, yPos + 5);
+      doc.text(`$${unitPrice.toFixed(2)}`, colPositions[2] + 2, yPos + 5);
+      doc.text(`$${itemTotal.toFixed(2)}`, colPositions[3] + 2, yPos + 5);
 
       yPos += Math.max(8, descriptionLines.length * 4);
     });
@@ -490,13 +1017,19 @@ class PDFService {
     yPos += 8;
 
     // Subtotal
+    const subtotal = invoiceData.subtotal ?? 0;
+    const taxAmount = invoiceData.tax_amount ?? 0;
+    const taxRate = invoiceData.tax_rate ?? 10;
+    const totalAmount = invoiceData.total_amount ?? (subtotal + taxAmount);
+    const currency = invoiceData.currency || 'AUD';
+
     doc.text('Subtotal:', labelX, yPos);
-    doc.text(`$${invoiceData.subtotal.toFixed(2)}`, totalsX, yPos, { align: 'right' });
+    doc.text(`$${subtotal.toFixed(2)}`, totalsX, yPos, { align: 'right' });
     yPos += 6;
 
     // Tax with percentage
-    doc.text(`Tax (${invoiceData.tax_rate}%):`, labelX, yPos);
-    doc.text(`$${invoiceData.tax_amount.toFixed(2)}`, totalsX, yPos, { align: 'right' });
+    doc.text(`Tax (${taxRate}%):`, labelX, yPos);
+    doc.text(`$${taxAmount.toFixed(2)}`, totalsX, yPos, { align: 'right' });
     yPos += 8;
 
     // Separator line
@@ -509,7 +1042,7 @@ class PDFService {
     doc.setTextColor(colors.primary);
     doc.setFont('helvetica', 'bold');
     doc.text('Total:', labelX, yPos + 6);
-    doc.text(`${invoiceData.currency} $${invoiceData.total_amount.toFixed(2)}`, totalsX, yPos + 6, { align: 'right' });
+    doc.text(`${currency} $${totalAmount.toFixed(2)}`, totalsX, yPos + 6, { align: 'right' });
     
     return startY + 55;
   }
@@ -524,14 +1057,21 @@ class PDFService {
     doc.setFontSize(10);
     doc.setTextColor(102, 102, 102);
 
+    // Handle null values
+    const subtotal = invoiceData.subtotal ?? 0;
+    const taxAmount = invoiceData.tax_amount ?? 0;
+    const taxRate = invoiceData.tax_rate ?? 10;
+    const totalAmount = invoiceData.total_amount ?? (subtotal + taxAmount);
+    const currency = invoiceData.currency || 'AUD';
+
     // Subtotal
     doc.text('Subtotal:', labelX, yPos);
-    doc.text(`$${invoiceData.subtotal.toFixed(2)}`, totalsX, yPos);
+    doc.text(`$${subtotal.toFixed(2)}`, totalsX, yPos);
     yPos += 6;
 
     // Tax
-    doc.text(`Tax (${invoiceData.tax_rate}%):`, labelX, yPos);
-    doc.text(`$${invoiceData.tax_amount.toFixed(2)}`, totalsX, yPos);
+    doc.text(`Tax (${taxRate}%):`, labelX, yPos);
+    doc.text(`$${taxAmount.toFixed(2)}`, totalsX, yPos);
     yPos += 6;
 
     // Total
@@ -539,7 +1079,7 @@ class PDFService {
     doc.setTextColor(51, 51, 51);
     doc.text('Total:', labelX, yPos);
     doc.setTextColor(103, 126, 234);
-    doc.text(`${invoiceData.currency} $${invoiceData.total_amount.toFixed(2)}`, totalsX, yPos);
+    doc.text(`${currency} $${totalAmount.toFixed(2)}`, totalsX, yPos);
     yPos += 10;
 
     return yPos;
@@ -576,18 +1116,20 @@ class PDFService {
       doc.setFontSize(10);
       doc.setTextColor(133, 100, 4);
 
-      const depositAmount = invoiceData.deposit_amount || 
-        (invoiceData.deposit_percentage && invoiceData.total_amount * (invoiceData.deposit_percentage / 100));
+      const totalAmt = invoiceData.total_amount ?? 0;
+      const curr = invoiceData.currency || 'AUD';
+      const depositAmount = invoiceData.deposit_amount ||
+        (invoiceData.deposit_percentage && totalAmt * (invoiceData.deposit_percentage / 100));
 
       if (depositAmount) {
-        doc.text(`Deposit Required: ${invoiceData.currency} $${depositAmount.toFixed(2)}`, 20, yPos + 5);
-        
+        doc.text(`Deposit Required: ${curr} $${depositAmount.toFixed(2)}`, 20, yPos + 5);
+
         if (invoiceData.deposit_due_date) {
           doc.text(`Due by: ${new Date(invoiceData.deposit_due_date).toLocaleDateString('en-AU')}`, 20, yPos + 10);
         }
 
-        const remainingBalance = invoiceData.total_amount - depositAmount;
-        doc.text(`Remaining Balance: ${invoiceData.currency} $${remainingBalance.toFixed(2)}`, 20, yPos + 15);
+        const remainingBalance = totalAmt - depositAmount;
+        doc.text(`Remaining Balance: ${curr} $${remainingBalance.toFixed(2)}`, 20, yPos + 15);
       }
 
       yPos += 30;
@@ -599,8 +1141,7 @@ class PDFService {
   private addPaymentDetails(doc: jsPDF, invoiceData: InvoicePDFData, startY: number, colors: any): number {
     let yPos = startY;
 
-    // Only show bank details for receivable invoices (comedian billing someone)
-    // or if bank details are present
+    // Only show bank details if present
     const hasBankDetails = invoiceData.sender_bank_name ||
                            invoiceData.sender_bank_bsb ||
                            invoiceData.sender_bank_account;
@@ -612,7 +1153,7 @@ class PDFService {
     const pageWidth = doc.internal.pageSize.getWidth();
 
     // Payment section header
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor(colors.primary);
     doc.setFont('helvetica', 'bold');
     doc.text('Payment Details', 20, yPos);
@@ -620,53 +1161,55 @@ class PDFService {
     // Draw decorative line
     doc.setDrawColor(colors.primary);
     doc.setLineWidth(1);
-    doc.line(20, yPos + 2, 70, yPos + 2);
+    doc.line(20, yPos + 2, 65, yPos + 2);
 
-    yPos += 10;
+    yPos += 8;
+
+    // Calculate box height based on content
+    const boxHeight = 35;
+    const boxStartY = yPos;
 
     // Payment details box with professional styling
     doc.setFillColor(240, 253, 244); // Light green background
-    doc.roundedRect(15, yPos, pageWidth - 30, 40, 3, 3, 'F');
+    doc.roundedRect(15, boxStartY, pageWidth - 30, boxHeight, 2, 2, 'F');
     doc.setDrawColor(34, 197, 94); // Green border
-    doc.setLineWidth(1);
-    doc.roundedRect(15, yPos, pageWidth - 30, 40, 3, 3, 'S');
+    doc.setLineWidth(0.5);
+    doc.roundedRect(15, boxStartY, pageWidth - 30, boxHeight, 2, 2, 'S');
 
-    yPos += 8;
+    // Content inside box
+    let contentY = boxStartY + 7;
 
-    doc.setFontSize(10);
-    doc.setTextColor(22, 101, 52); // Dark green text
+    doc.setFontSize(9);
+    doc.setTextColor(22, 101, 52);
     doc.setFont('helvetica', 'bold');
-    doc.text('Please transfer payment to:', 20, yPos);
+    doc.text('Please transfer payment to:', 20, contentY);
 
-    yPos += 8;
-
+    contentY += 6;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 51, 51);
-
-    // Bank name
-    if (invoiceData.sender_bank_name) {
-      doc.text(`Bank: ${invoiceData.sender_bank_name}`, 20, yPos);
-      yPos += 5;
-    }
-
-    // BSB
-    if (invoiceData.sender_bank_bsb) {
-      doc.text(`BSB: ${invoiceData.sender_bank_bsb}`, 20, yPos);
-    }
-
-    // Account number (positioned to the right)
-    if (invoiceData.sender_bank_account) {
-      doc.text(`Account: ${invoiceData.sender_bank_account}`, 80, yPos);
-    }
-
-    yPos += 8;
-
-    // Reference instruction
     doc.setFontSize(9);
-    doc.setTextColor(colors.light);
-    doc.text(`Reference: ${invoiceData.invoice_number}`, 20, yPos);
 
-    return startY + 55;
+    // Bank details on one line
+    const bankDetails = [];
+    if (invoiceData.sender_bank_name) bankDetails.push(`Account: ${invoiceData.sender_bank_name}`);
+    if (invoiceData.sender_bank_bsb) bankDetails.push(`BSB: ${invoiceData.sender_bank_bsb}`);
+    if (invoiceData.sender_bank_account) bankDetails.push(`Acc: ${invoiceData.sender_bank_account}`);
+
+    doc.text(bankDetails.join('  |  '), 20, contentY);
+
+    contentY += 6;
+
+    // Reference on next line
+    doc.setFontSize(8);
+    doc.setTextColor(colors.light);
+    const refText = `Reference: ${invoiceData.invoice_number}`;
+    if (invoiceData.sender_abn) {
+      doc.text(`${refText}  |  ABN: ${invoiceData.sender_abn}`, 20, contentY);
+    } else {
+      doc.text(refText, 20, contentY);
+    }
+
+    return boxStartY + boxHeight + 5;
   }
 
   private addNotesAndTerms(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): number {
@@ -704,51 +1247,44 @@ class PDFService {
   }
 
   private addEnhancedFooter(
-    doc: jsPDF, 
-    invoiceData: InvoicePDFData, 
+    doc: jsPDF,
+    invoiceData: InvoicePDFData,
     startY: number,
     config?: InvoiceTemplateConfig
   ): void {
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
     const colors = config?.branding.colors || this.defaultColors;
-    
-    // Footer position with margin
-    const footerY = Math.max(startY + 20, pageHeight - (config?.branding.layout.marginBottom || 30));
 
-    // Modern footer with gradient background
-    const footerHeight = 25;
-    doc.setFillColor(248, 249, 250);
-    doc.rect(0, footerY, pageWidth, footerHeight, 'F');
-    
-    // Top border with brand color
+    // Footer ALWAYS goes after content - never overlap
+    const footerY = startY + 10;
+
+    // If we'd go off page, add a new page
+    if (footerY > pageHeight - 15) {
+      doc.addPage();
+      // Draw footer at top of new page
+      const newFooterY = 20;
+      this.drawFooterContent(doc, newFooterY, pageWidth, colors);
+    } else {
+      this.drawFooterContent(doc, footerY, pageWidth, colors);
+    }
+  }
+
+  private drawFooterContent(doc: jsPDF, footerY: number, pageWidth: number, colors: any): void {
+    // Simple footer line
     doc.setDrawColor(colors.primary);
-    doc.setLineWidth(2);
-    doc.line(0, footerY, pageWidth, footerY);
+    doc.setLineWidth(1);
+    doc.line(15, footerY, pageWidth - 15, footerY);
 
-    // Footer content
-    doc.setFontSize(9);
+    // Footer text
+    doc.setFontSize(7);
     doc.setTextColor(colors.light);
     doc.setFont('helvetica', 'normal');
-    
-    // Left side - Thank you message
-    const footerText = config?.branding.footer.text || 'Thank you for your business with Stand Up Sydney!';
-    doc.text(footerText, 20, footerY + 10);
-    
-    // Center - Contact info
-    const centerX = pageWidth / 2;
-    doc.setFontSize(8);
-    doc.text('www.standupsydney.com', centerX, footerY + 8, { align: 'center' });
-    doc.text('info@standupsydney.com', centerX, footerY + 14, { align: 'center' });
-    
-    // Right side - Page info and copyright
-    doc.setFontSize(8);
-    doc.text(`Page 1 of 1`, pageWidth - 20, footerY + 8, { align: 'right' });
-    doc.text(`© ${new Date().getFullYear()} Stand Up Sydney`, pageWidth - 20, footerY + 14, { align: 'right' });
-    
-    // Add small brand accent
-    doc.setFillColor(colors.primary);
-    doc.circle(pageWidth / 2, footerY + footerHeight - 5, 2, 'F');
+
+    const textY = footerY + 6;
+    doc.text('Thank you for your business with GigPigs!', 15, textY);
+    doc.text('www.gigpigs.app', pageWidth / 2, textY, { align: 'center' });
+    doc.text(`Page 1 of 1 | © ${new Date().getFullYear()} GigPigs`, pageWidth - 15, textY, { align: 'right' });
   }
 
   private addFooter(doc: jsPDF, invoiceData: InvoicePDFData, startY: number): void {
@@ -769,8 +1305,8 @@ class PDFService {
     doc.text(`Generated on ${new Date().toLocaleDateString('en-AU')}`, 20, footerY + 14);
     
     // Contact information
-    doc.text('Stand Up Sydney', pageWidth - 80, footerY + 8);
-    doc.text('© 2024 Stand Up Sydney. All rights reserved.', pageWidth - 80, footerY + 14);
+    doc.text('GigPigs', pageWidth - 80, footerY + 8);
+    doc.text(`© ${new Date().getFullYear()} GigPigs. All rights reserved.`, pageWidth - 80, footerY + 14);
   }
 
   async fetchInvoiceData(invoiceId: string): Promise<InvoicePDFData> {

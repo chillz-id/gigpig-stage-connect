@@ -273,14 +273,14 @@ export function UserPhotoGallery() {
       const comedianProfiles = await directoryService.searchProfiles('', { profileType: 'comedian' });
       setComedians(Array.isArray(comedianProfiles) ? comedianProfiles : []);
 
-      // Load organizations from organizations table
+      // Load organizations from organization_profiles table
       const { data: orgData } = await supabase
-        .from('organizations')
-        .select('id, name')
-        .order('name')
+        .from('organization_profiles')
+        .select('id, organization_name')
+        .order('organization_name')
         .limit(100);
       if (orgData) {
-        setOrganizations(orgData.map(org => ({ id: org.id, stage_name: org.name })));
+        setOrganizations(orgData.map(org => ({ id: org.id, stage_name: org.organization_name })));
       }
     };
 

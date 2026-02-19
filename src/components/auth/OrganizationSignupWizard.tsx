@@ -53,14 +53,21 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
     setIsSearching(true);
     try {
       const { data, error } = await supabase
-        .from('organizations')
-        .select('id, name, type, description')
-        .ilike('name', `%${searchQuery}%`)
+        .from('organization_profiles')
+        .select('id, organization_name, organization_type, bio')
+        .ilike('organization_name', `%${searchQuery}%`)
         .limit(10);
 
       if (error) throw error;
 
-      setOrganizations(data || []);
+      // Map to expected format for UI compatibility
+      const mapped = (data || []).map(org => ({
+        id: org.id,
+        name: org.organization_name,
+        type: Array.isArray(org.organization_type) ? org.organization_type[0] : org.organization_type,
+        description: org.bio,
+      }));
+      setOrganizations(mapped);
 
       if (!data || data.length === 0) {
         toast({
@@ -92,23 +99,47 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
 
     setIsSubmitting(true);
     try {
-      // Create organization
-      const { data: newOrg, error: orgError } = await supabase
-        .from('organizations')
+      // Generate a unique ID for the organization profile
+      const orgId = crypto.randomUUID();
+
+      // First create a base profile for the organization
+      const { error: profileError } = await supabase
+        .from('profiles')
         .insert({
-          name: orgName,
-          type: orgType,
-          description: orgDescription,
-          created_by: userId,
+          id: orgId,
+          full_name: orgName,
+          email: `org-${orgId}@placeholder.local`, // Placeholder email, will be updated
+        });
+
+      if (profileError) throw profileError;
+
+      // Map org type to organization_profiles format (array)
+      const orgTypeMap: Record<string, string> = {
+        'venue': 'venue',
+        'production': 'event_promoter',
+        'agency': 'artist_agency',
+      };
+
+      // Create organization profile
+      const { data: newOrg, error: orgError } = await supabase
+        .from('organization_profiles')
+        .insert({
+          id: orgId,
+          organization_name: orgName,
+          organization_type: [orgTypeMap[orgType] || 'event_promoter'],
+          bio: orgDescription,
+          owner_id: userId,
+          contact_email: `org-${orgId}@placeholder.local`, // Will be updated by user
+          is_active: true,
         })
         .select()
         .single();
 
       if (orgError) throw orgError;
 
-      // Add user as admin member
+      // Add user as admin team member
       const { error: memberError } = await supabase
-        .from('organization_members')
+        .from('organization_team_members')
         .insert({
           organization_id: newOrg.id,
           user_id: userId,

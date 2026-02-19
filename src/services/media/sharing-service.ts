@@ -305,15 +305,15 @@ class SharingService {
         }
       } else if (share.shared_with_org_id) {
         const { data: orgData } = await supabase
-          .from('organizations')
-          .select('id, name')
+          .from('organization_profiles')
+          .select('id, organization_name')
           .eq('id', share.shared_with_org_id)
           .single();
 
         if (orgData) {
           share.target = {
             id: orgData.id,
-            name: orgData.name || 'Unknown Organization',
+            name: orgData.organization_name || 'Unknown Organization',
             type: 'organization',
           };
         }
@@ -455,15 +455,15 @@ class SharingService {
 
     // Search organizations
     const { data: orgs } = await supabase
-      .from('organizations')
-      .select('id, name')
-      .ilike('name', `%${query}%`)
+      .from('organization_profiles')
+      .select('id, organization_name')
+      .ilike('organization_name', `%${query}%`)
       .limit(10);
 
     if (orgs) {
       results.push(...orgs.map(o => ({
         id: o.id,
-        name: o.name || 'Unknown',
+        name: o.organization_name || 'Unknown',
         type: 'organization' as ShareTargetType,
         subtitle: 'Organization',
       })));

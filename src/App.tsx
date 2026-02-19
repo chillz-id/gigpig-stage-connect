@@ -241,10 +241,10 @@ function App() {
                               <Route path="/dashboard/gigs/add" element={<ProtectedRoute roles={['comedian', 'comedian_lite']}><AddGig /></ProtectedRoute>} />
                               {/* Invoice routes */}
                               <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
+                              <Route path="/invoices/:invoiceId/edit" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                               <Route path="/invoices/:invoiceId/payment-success" element={<InvoicePaymentSuccess />} />
                               <Route path="/invoices/:invoiceId/payment-cancelled" element={<InvoicePaymentCancelled />} />
                               <Route path="/invoices" element={<Navigate to="/profile?tab=invoices" replace />} />
-                              <Route path="/invoices/*" element={<Navigate to="/profile?tab=invoices" replace />} />
                               <Route path="/admin" element={<AdminDashboard />} />
                               <Route path="/admin/ticket-sales" element={<ProtectedRoute roles={['admin']}><TicketSalesTestPage /></ProtectedRoute>} />
                               <Route path="/admin/directory" element={<ProtectedRoute roles={['admin']}><ComedianDirectoryPage /></ProtectedRoute>} />

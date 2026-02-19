@@ -422,14 +422,16 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
           </div>
         )}
 
-        <Button
-          onClick={handleSaveFinancialInfo}
-          className="professional-button"
-          disabled={saving || loading}
-        >
-          {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {saving ? 'Saving...' : 'Save Financial Information'}
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSaveFinancialInfo}
+            className="professional-button"
+            disabled={saving || loading}
+          >
+            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {saving ? 'Saving...' : 'Save Financial Information'}
+          </Button>
+        </div>
 
       {/* XERO Integration Section - Hidden for comedian_lite */}
       {!hasRole('comedian_lite') && <XeroSyncButton />}

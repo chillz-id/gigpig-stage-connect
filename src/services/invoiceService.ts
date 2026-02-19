@@ -2,6 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Invoice, InvoiceItem, InvoiceRecipient, InvoicePayment, InvoiceType } from '@/types/invoice';
 
+export type GstTreatment = 'gst_included' | 'gst_excluded' | 'no_gst';
+
 export interface CreateInvoiceRequest {
   invoice_type: InvoiceType;
   invoice_number?: string; // Auto-generated if not provided
@@ -38,6 +40,8 @@ export interface CreateInvoiceRequest {
     subtotal: number;
     tax_amount: number;
     total: number;
+    gst_treatment?: GstTreatment;
+    is_deduction?: boolean;
   }>;
   recipients: Array<{
     recipient_name: string;
@@ -49,6 +53,8 @@ export interface CreateInvoiceRequest {
     recipient_abn?: string;
     company_name?: string;
     abn?: string;
+    cc_emails?: string[];
+    bcc_emails?: string[];
   }>;
   // Deposit fields
   deposit_amount?: number;
@@ -56,6 +62,10 @@ export interface CreateInvoiceRequest {
   deposit_due_days_before_event?: number;
   deposit_due_date?: string;
   event_date?: string;
+  // Client profile reference
+  client_profile_id?: string;
+  client_profile_type?: string;
+  client_gst_registered?: boolean;
 }
 
 export interface XeroSyncRequest {
@@ -93,7 +103,10 @@ class InvoiceService {
    */
   async generateInvoiceNumber(): Promise<string> {
     const { data, error } = await supabase.rpc('get_next_invoice_number');
-    if (error) throw error;
+    if (error) {
+      console.error('Failed to generate invoice number:', error);
+      throw new Error(`Failed to generate invoice number: ${error.message || JSON.stringify(error)}`);
+    }
     return data; // Returns "GIG-00000001"
   }
 
@@ -151,12 +164,17 @@ class InvoiceService {
         deposit_due_days_before_event: request.deposit_due_days_before_event || null,
         deposit_due_date: depositDueDate || null,
         event_date: request.event_date || null,
-        deposit_status: (request.deposit_amount || request.deposit_percentage) ? 'pending' : 'not_required'
+        deposit_status: (request.deposit_amount || request.deposit_percentage) ? 'pending' : null,
+        // Note: client_profile_id, client_profile_type, client_gst_registered
+        // require database migration before use. Store in recipients table for now.
       })
       .select()
       .single();
 
-    if (invoiceError) throw invoiceError;
+    if (invoiceError) {
+      console.error('Invoice insert error:', invoiceError);
+      throw new Error(`Failed to create invoice: ${invoiceError.message || JSON.stringify(invoiceError)}`);
+    }
 
     // Add invoice items
     if (request.items.length > 0) {
@@ -171,11 +189,15 @@ class InvoiceService {
             subtotal: item.subtotal,
             tax_amount: item.tax_amount,
             total_price: item.total, // Database column is 'total_price', not 'total'
-            item_order: index
+            item_order: index,
+            // Note: gst_treatment and is_deduction require database migration
           }))
         );
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Invoice items insert error:', itemsError);
+        throw new Error(`Failed to add invoice items: ${itemsError.message || JSON.stringify(itemsError)}`);
+      }
     }
 
     // Add invoice recipients
@@ -193,11 +215,15 @@ class InvoiceService {
             recipient_type: recipient.recipient_type || 'individual',
             recipient_abn: recipient.recipient_abn,
             company_name: recipient.company_name,
-            abn: recipient.abn
+            abn: recipient.abn,
+            // Note: cc_emails and bcc_emails require database migration
           }))
         );
 
-      if (recipientsError) throw recipientsError;
+      if (recipientsError) {
+        console.error('Invoice recipients insert error:', recipientsError);
+        throw new Error(`Failed to add invoice recipients: ${recipientsError.message || JSON.stringify(recipientsError)}`);
+      }
     }
 
     // If Xero is connected, sync the invoice

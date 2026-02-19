@@ -1,5 +1,6 @@
 
 export type InvoiceType = 'promoter' | 'comedian' | 'other' | 'receivable' | 'payable';
+export type GstTreatment = 'gst_included' | 'gst_excluded' | 'no_gst';
 
 export interface Invoice {
   id: string;
@@ -21,9 +22,9 @@ export interface Invoice {
   sender_address?: string;
   sender_phone?: string;
   sender_abn?: string;
-  sender_bank_name?: string;
-  sender_bank_bsb?: string;
-  sender_bank_account?: string;
+  sender_bank_name?: string; // Account holder name
+  sender_bank_bsb?: string; // BSB number
+  sender_bank_account?: string; // Account number
   client_address?: string;
   client_mobile?: string;
   gst_treatment?: 'inclusive' | 'exclusive' | 'none';
@@ -51,6 +52,10 @@ export interface Invoice {
   deposit_paid_date?: string;
   deposit_paid_amount?: number;
   event_date?: string;
+  // Client profile reference (for non-Xero users)
+  client_profile_id?: string;
+  client_profile_type?: string;
+  client_gst_registered?: boolean;
 }
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -87,6 +92,8 @@ export interface InvoiceItem {
   tax_amount: number;
   total: number;
   item_order?: number;
+  gst_treatment?: GstTreatment;
+  is_deduction?: boolean;
   created_at?: string;
 }
 
@@ -102,6 +109,8 @@ export interface InvoiceRecipient {
   recipient_abn?: string;
   company_name?: string;
   abn?: string;
+  cc_emails?: string[];
+  bcc_emails?: string[];
   created_at?: string;
 }
 

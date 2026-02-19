@@ -52,6 +52,9 @@ export const useInvoices = () => {
           sender_address,
           sender_phone,
           sender_abn,
+          sender_bank_name,
+          sender_bank_bsb,
+          sender_bank_account,
           client_address,
           client_mobile,
           gst_treatment,
@@ -80,9 +83,18 @@ export const useInvoices = () => {
             recipient_abn,
             company_name,
             abn
+          ),
+          invoice_items (
+            id,
+            description,
+            quantity,
+            unit_price,
+            subtotal,
+            tax_amount,
+            total_price
           )
         `)
-        .or(`promoter_id.eq.${user.id},comedian_id.eq.${user.id}`)
+        .or(`promoter_id.eq.${user.id},comedian_id.eq.${user.id},created_by.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       console.log('=== INVOICE FETCH RESPONSE ===', { data, error });
@@ -97,7 +109,12 @@ export const useInvoices = () => {
       // Type cast the data to match our Invoice interface
       const typedInvoices: Invoice[] = (data || []).map(invoice => ({
         ...invoice,
-        gst_treatment: invoice.gst_treatment as 'inclusive' | 'exclusive' | 'none'
+        gst_treatment: invoice.gst_treatment as 'inclusive' | 'exclusive' | 'none',
+        // Map invoice_items to match the expected InvoiceItem interface
+        invoice_items: (invoice.invoice_items || []).map((item: any) => ({
+          ...item,
+          total: item.total_price // Map total_price from DB to total for PDF generation
+        }))
       }));
       
       setInvoices(typedInvoices);
@@ -177,6 +194,73 @@ export const useInvoices = () => {
     }
   };
 
+  const voidInvoice = async (invoiceId: string) => {
+    if (!confirm('Are you sure you want to void this invoice? This will mark it as voided and remove it from outstanding totals.')) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'voided', updated_at: new Date().toISOString() })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === invoiceId
+          ? { ...invoice, status: 'voided' }
+          : invoice
+      ));
+      toast({
+        title: "Success",
+        description: "Invoice voided successfully"
+      });
+    } catch (error) {
+      console.error('Error voiding invoice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to void invoice",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateInvoiceStatus = async (invoiceId: string, status: string) => {
+    try {
+      // When marking as sent, also ensure invoice_type is 'receivable' (fixes legacy 'other' invoices)
+      const updatePayload: Record<string, unknown> = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+      if (status === 'sent') {
+        updatePayload.invoice_type = 'receivable';
+      }
+
+      const { error } = await supabase
+        .from('invoices')
+        .update(updatePayload)
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === invoiceId
+          ? { ...invoice, status, ...(status === 'sent' ? { invoice_type: 'receivable' as const } : {}) }
+          : invoice
+      ));
+      toast({
+        title: "Success",
+        description: `Invoice marked as ${status}`
+      });
+    } catch (error) {
+      console.error('Error updating invoice status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update invoice status",
+        variant: "destructive"
+      });
+    }
+  };
+
   const matchesDateFilter = (invoice: Invoice, dateFilter: DateFilter) => {
     if (dateFilter === 'all') return true;
     
@@ -227,6 +311,8 @@ export const useInvoices = () => {
     loading,
     error,
     deleteInvoice,
+    voidInvoice,
+    updateInvoiceStatus,
     filterInvoices,
     refetchInvoices: fetchInvoices
   };

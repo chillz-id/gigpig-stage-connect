@@ -4,14 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
-import { 
-  Printer, 
-  Download, 
-  Edit, 
-  Send, 
-  Save, 
-  Eye, 
+import {
+  Printer,
+  Download,
+  Edit,
+  Send,
+  Save,
+  Eye,
   FileText,
   Calendar,
   DollarSign,
@@ -21,7 +22,9 @@ import {
   Hash,
   Clock,
   Percent,
-  Receipt
+  Receipt,
+  Building2,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +34,8 @@ interface InvoiceItem {
   quantity: number;
   rate: number;
   total: number;
+  isDeduction?: boolean;
+  gstTreatment?: 'gst_included' | 'gst_excluded' | 'no_gst';
 }
 
 interface InvoicePreviewData {
@@ -39,11 +44,17 @@ interface InvoicePreviewData {
   clientPhone?: string;
   clientAddress?: string;
   clientABN?: string;
+  clientAvatarUrl?: string | null;
   senderName: string;
   senderEmail: string;
   senderPhone?: string;
   senderAddress?: string;
   senderABN?: string;
+  senderAvatarUrl?: string | null;
+  // Bank details for payment
+  senderBankName?: string;
+  senderBankBsb?: string;
+  senderBankAccount?: string;
   invoiceNumber?: string;
   issueDate: Date;
   dueDate: Date;
@@ -86,8 +97,11 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 }) => {
   const [isPrintMode, setIsPrintMode] = useState(false);
 
-  // Calculate totals
-  const subtotal = invoiceData.items.reduce((sum, item) => sum + item.total, 0);
+  // Calculate totals (accounting for deductions as negative amounts)
+  const subtotal = invoiceData.items.reduce((sum, item) => {
+    const amount = item.isDeduction ? -Math.abs(item.total) : item.total;
+    return sum + amount;
+  }, 0);
   const taxAmount = subtotal * (invoiceData.taxRate / 100);
   const total = subtotal + taxAmount;
   
@@ -146,9 +160,9 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Stand Up Sydney
+              GigPigs
             </h1>
-            <p className="text-gray-600">Comedy Platform</p>
+            <p className="text-gray-600">Invoice</p>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end mb-2">
@@ -189,8 +203,18 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill From</h3>
             <div className="space-y-2">
-              <div className="font-medium text-gray-900">
-                {invoiceData.senderName}
+              <div className="flex items-center gap-3">
+                {invoiceData.senderAvatarUrl && (
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={invoiceData.senderAvatarUrl} alt={invoiceData.senderName} />
+                    <AvatarFallback>{invoiceData.senderName?.slice(0, 2).toUpperCase() || '?'}</AvatarFallback>
+                  </Avatar>
+                )}
+                {invoiceData.senderName && (
+                  <div className="font-medium text-gray-900">
+                    {invoiceData.senderName}
+                  </div>
+                )}
               </div>
               {invoiceData.senderEmail && (
                 <div className="flex items-center gap-2 text-gray-600">
@@ -216,6 +240,11 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                   <span>ABN: {invoiceData.senderABN}</span>
                 </div>
               )}
+              {!invoiceData.senderName && !invoiceData.senderPhone && !invoiceData.senderAddress && !invoiceData.senderABN && (
+                <p className="text-sm text-gray-500 italic">
+                  Add your details in your profile settings
+                </p>
+              )}
             </div>
           </div>
 
@@ -223,8 +252,16 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill To</h3>
             <div className="space-y-2">
-              <div className="font-medium text-gray-900">
-                {invoiceData.clientName}
+              <div className="flex items-center gap-3">
+                {invoiceData.clientAvatarUrl && (
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={invoiceData.clientAvatarUrl} alt={invoiceData.clientName} />
+                    <AvatarFallback>{invoiceData.clientName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                )}
+                <div className="font-medium text-gray-900">
+                  {invoiceData.clientName}
+                </div>
               </div>
               {invoiceData.clientEmail && (
                 <div className="flex items-center gap-2 text-gray-600">
@@ -269,18 +306,27 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
               </tr>
             </thead>
             <tbody>
-              {invoiceData.items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100">
-                  <td className="py-3 text-sm text-gray-900">{item.description}</td>
-                  <td className="py-3 text-sm text-gray-600 text-right">{item.quantity}</td>
-                  <td className="py-3 text-sm text-gray-600 text-right">
-                    ${item.rate.toFixed(2)}
-                  </td>
-                  <td className="py-3 text-sm text-gray-900 text-right font-medium">
-                    ${item.total.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
+              {invoiceData.items.map((item) => {
+                const displayTotal = item.isDeduction ? -Math.abs(item.total) : item.total;
+                const displayRate = item.isDeduction ? -Math.abs(item.rate) : item.rate;
+                return (
+                  <tr key={item.id} className={cn("border-b border-gray-100", item.isDeduction && "bg-red-50")}>
+                    <td className={cn("py-3 text-sm", item.isDeduction ? "text-red-700" : "text-gray-900")}>
+                      {item.description}
+                      {item.isDeduction && <span className="ml-2 text-xs text-red-500">(Deduction)</span>}
+                    </td>
+                    <td className={cn("py-3 text-sm text-right", item.isDeduction ? "text-red-600" : "text-gray-600")}>
+                      {item.quantity}
+                    </td>
+                    <td className={cn("py-3 text-sm text-right", item.isDeduction ? "text-red-600" : "text-gray-600")}>
+                      {displayRate < 0 ? '-' : ''}${Math.abs(displayRate).toFixed(2)}
+                    </td>
+                    <td className={cn("py-3 text-sm text-right font-medium", item.isDeduction ? "text-red-700" : "text-gray-900")}>
+                      {displayTotal < 0 ? '-' : ''}${Math.abs(displayTotal).toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -340,6 +386,47 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
         </div>
       )}
 
+      {/* Payment Details */}
+      {(invoiceData.senderBankName || invoiceData.senderBankBsb || invoiceData.senderBankAccount || invoiceData.senderABN) && (
+        <div className="p-8 border-b border-gray-200">
+          <div className="bg-emerald-50 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-lg font-semibold text-emerald-900">Payment Details</h3>
+            </div>
+            <div className="space-y-3">
+              {invoiceData.senderBankName && (
+                <div className="flex justify-between">
+                  <span className="text-emerald-700">Account Name:</span>
+                  <span className="font-medium text-emerald-900">{invoiceData.senderBankName}</span>
+                </div>
+              )}
+              {invoiceData.senderBankBsb && (
+                <div className="flex justify-between">
+                  <span className="text-emerald-700">BSB:</span>
+                  <span className="font-medium text-emerald-900">{invoiceData.senderBankBsb}</span>
+                </div>
+              )}
+              {invoiceData.senderBankAccount && (
+                <div className="flex justify-between">
+                  <span className="text-emerald-700">Account Number:</span>
+                  <span className="font-medium text-emerald-900">{invoiceData.senderBankAccount}</span>
+                </div>
+              )}
+              {invoiceData.senderABN && (
+                <>
+                  <Separator className="bg-emerald-200" />
+                  <div className="flex justify-between">
+                    <span className="text-emerald-700">ABN:</span>
+                    <span className="font-medium text-emerald-900">{invoiceData.senderABN}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notes */}
       {invoiceData.notes && (
         <div className="p-8 border-b border-gray-200">
@@ -351,7 +438,7 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
       {/* Footer */}
       <div className="p-8 text-center text-gray-500">
         <p className="text-sm">
-          Thank you for your business! For questions, contact us at support@standupSydney.com
+          Thank you for your business! For questions, contact us at invoices@gigpigs.app
         </p>
       </div>
     </div>

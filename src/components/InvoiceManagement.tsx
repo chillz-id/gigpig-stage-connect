@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useBulkInvoiceOperations } from '@/hooks/useBulkInvoiceOperations';
 import { usePDFGeneration } from '@/hooks/usePDFGeneration';
+import { useInvoiceOperations } from '@/hooks/useInvoiceOperations';
 import { InvoiceDetails } from './InvoiceDetails';
 import { useAuth } from '@/contexts/AuthContext';
 import { Invoice, DateFilter, AmountRange, DEFAULT_AMOUNT_RANGE, InvoiceStatus, InvoiceType } from '@/types/invoice';
@@ -58,6 +59,7 @@ const STATUS_CONFIG: Record<InvoiceStatus | string, { label: string; color: stri
   sent: { label: 'Sent', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300', icon: <Send className="h-3 w-3" /> },
   paid: { label: 'Paid', color: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300', icon: <CheckCircle className="h-3 w-3" /> },
   overdue: { label: 'Overdue', color: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300', icon: <AlertCircle className="h-3 w-3" /> },
+  voided: { label: 'Voided', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300', icon: <AlertTriangle className="h-3 w-3" /> },
   cancelled: { label: 'Cancelled', color: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500', icon: <FileText className="h-3 w-3" /> },
 };
 
@@ -94,7 +96,7 @@ const formatCurrency = (amount: number, currency: string = 'AUD') => {
 export const InvoiceManagement: React.FC = () => {
   const navigate = useNavigate();
   const { user, hasRole, isLoading: authLoading, profile } = useAuth();
-  const { invoices, loading, error, deleteInvoice, filterInvoices, refetchInvoices } = useInvoices();
+  const { invoices, loading, error, deleteInvoice, voidInvoice, updateInvoiceStatus, filterInvoices, refetchInvoices } = useInvoices();
   const { isGenerating, generatePDF } = usePDFGeneration();
   const bulkOperations = useBulkInvoiceOperations();
   const {
@@ -104,10 +106,12 @@ export const InvoiceManagement: React.FC = () => {
     toggleInvoiceSelection
   } = bulkOperations;
   const selectedInvoiceIdsArray = useMemo(() => Array.from(selectedInvoiceIds), [selectedInvoiceIds]);
+  const { sendInvoiceReminder, checkOverdueInvoices } = useInvoiceOperations();
 
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -124,16 +128,18 @@ export const InvoiceManagement: React.FC = () => {
     return filteredInvoices.filter(inv => inv.invoice_type === typeFilter);
   }, [filteredInvoices, typeFilter]);
 
-  // Calculate stats
+  // Calculate stats - exclude voided and cancelled invoices from totals
   const stats = useMemo(() => {
+    const activeStatuses = ['draft', 'sent', 'overdue'];
+
     const totalReceivable = invoices
-      .filter(inv => inv.invoice_type === 'receivable' || inv.invoice_type === 'comedian')
-      .filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled')
+      .filter(inv => inv.invoice_type === 'receivable' || inv.invoice_type === 'comedian' || inv.invoice_type === 'other')
+      .filter(inv => activeStatuses.includes(inv.status))
       .reduce((sum, inv) => sum + inv.total_amount, 0);
 
     const totalPayable = invoices
       .filter(inv => inv.invoice_type === 'payable' || inv.invoice_type === 'promoter')
-      .filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled')
+      .filter(inv => activeStatuses.includes(inv.status))
       .reduce((sum, inv) => sum + inv.total_amount, 0);
 
     const overdue = invoices.filter(inv => inv.status === 'overdue').length;
@@ -141,6 +147,12 @@ export const InvoiceManagement: React.FC = () => {
 
     return { totalReceivable, totalPayable, overdue, draft };
   }, [invoices]);
+
+  // Check and update overdue invoices on mount
+  useEffect(() => {
+    checkOverdueInvoices.mutate();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Update filtered invoice IDs when filters change
   useEffect(() => {
@@ -390,6 +402,7 @@ export const InvoiceManagement: React.FC = () => {
                 <SelectItem value="sent">Sent</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="voided">Voided</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
@@ -539,6 +552,8 @@ export const InvoiceManagement: React.FC = () => {
                                 )}
                                 Download PDF
                               </DropdownMenuItem>
+
+                              {/* Draft actions */}
                               {invoice.status === 'draft' && (
                                 <>
                                   <DropdownMenuSeparator />
@@ -550,6 +565,68 @@ export const InvoiceManagement: React.FC = () => {
                                     onClick={() => deleteInvoice(invoice.id)}
                                   >
                                     Delete Invoice
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+
+                              {/* Sent/Overdue actions */}
+                              {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={async () => {
+                                      setSendingReminderId(invoice.id);
+                                      try {
+                                        await sendInvoiceReminder.mutateAsync({ invoiceId: invoice.id });
+                                      } finally {
+                                        setSendingReminderId(null);
+                                      }
+                                    }}
+                                    disabled={sendingReminderId === invoice.id}
+                                  >
+                                    {sendingReminderId === invoice.id ? (
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Send className="mr-2 h-4 w-4" />
+                                    )}
+                                    {sendingReminderId === invoice.id ? 'Sending...' : 'Send Reminder'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateInvoiceStatus(invoice.id, 'paid')}>
+                                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                    Mark as Paid
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-orange-600"
+                                    onClick={() => voidInvoice(invoice.id)}
+                                  >
+                                    <AlertTriangle className="mr-2 h-4 w-4" />
+                                    Void Invoice
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+
+                              {/* Voided actions */}
+                              {invoice.status === 'voided' && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
+                                    Edit & Resend
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => deleteInvoice(invoice.id)}
+                                  >
+                                    Delete Invoice
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+
+                              {/* Paid actions */}
+                              {invoice.status === 'paid' && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => updateInvoiceStatus(invoice.id, 'sent')}>
+                                    Mark as Unpaid
                                   </DropdownMenuItem>
                                 </>
                               )}

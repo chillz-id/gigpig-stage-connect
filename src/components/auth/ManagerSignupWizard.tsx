@@ -126,13 +126,20 @@ export const ManagerSignupWizard: React.FC<ManagerSignupWizardProps> = ({
         setSearchResults(data || []);
       } else {
         const { data, error } = await supabase
-          .from('organizations')
-          .select('id, name, type, description')
-          .ilike('name', `%${searchQuery}%`)
+          .from('organization_profiles')
+          .select('id, organization_name, organization_type, bio')
+          .ilike('organization_name', `%${searchQuery}%`)
           .limit(10);
 
         if (error) throw error;
-        setSearchResults(data || []);
+        // Map to expected format for UI compatibility
+        const mapped = (data || []).map(org => ({
+          id: org.id,
+          name: org.organization_name,
+          type: Array.isArray(org.organization_type) ? org.organization_type[0] : org.organization_type,
+          description: org.bio,
+        }));
+        setSearchResults(mapped);
       }
 
       if (!searchResults || searchResults.length === 0) {

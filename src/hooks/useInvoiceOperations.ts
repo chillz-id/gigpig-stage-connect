@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoiceService } from '@/services/invoiceService';
 import { xeroService } from '@/services/xeroService';
+import { invoiceEmailService, SendInvoiceEmailOptions } from '@/services/invoiceEmailService';
 import { toast } from '@/hooks/use-toast';
 
 export const useInvoiceOperations = () => {
@@ -9,7 +10,7 @@ export const useInvoiceOperations = () => {
 
   // Create invoice mutation
   const createInvoice = useMutation({
-    mutationFn: invoiceService.createInvoice,
+    mutationFn: (request) => invoiceService.createInvoice(request),
     onSuccess: (invoice) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -26,9 +27,91 @@ export const useInvoiceOperations = () => {
     },
   });
 
+  // Send invoice email mutation
+  const sendInvoiceEmail = useMutation({
+    mutationFn: (options: SendInvoiceEmailOptions) => invoiceEmailService.sendAndUpdateStatus(options),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        toast({
+          title: "Invoice Sent",
+          description: `Invoice email sent to ${result.recipients?.join(', ') || 'recipient'}.`,
+        });
+      } else {
+        toast({
+          title: "Send Failed",
+          description: result.error || "Failed to send invoice email",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Send Failed",
+        description: error instanceof Error ? error.message : "Failed to send invoice email",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Send invoice reminder mutation
+  const sendInvoiceReminder = useMutation({
+    mutationFn: ({ invoiceId, customMessage }: { invoiceId: string; customMessage?: string }) =>
+      invoiceEmailService.sendReminder(invoiceId, customMessage),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        toast({
+          title: "Reminder Sent",
+          description: `Payment reminder sent to ${result.recipients?.join(', ') || 'recipient'}.`,
+        });
+      } else {
+        toast({
+          title: "Send Failed",
+          description: result.error || "Failed to send reminder",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Send Failed",
+        description: error instanceof Error ? error.message : "Failed to send reminder",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Resend invoice mutation
+  const resendInvoice = useMutation({
+    mutationFn: (options: SendInvoiceEmailOptions) => invoiceEmailService.resendInvoice(options.invoiceId, options),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        toast({
+          title: "Invoice Resent",
+          description: `Invoice email resent to ${result.recipients?.join(', ') || 'recipient'}.`,
+        });
+      } else {
+        toast({
+          title: "Send Failed",
+          description: result.error || "Failed to resend invoice",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Send Failed",
+        description: error instanceof Error ? error.message : "Failed to resend invoice",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Create invoice from ticket sales
   const createFromTicketSales = useMutation({
-    mutationFn: invoiceService.createInvoiceFromTicketSales,
+    mutationFn: (request) => invoiceService.createInvoiceFromTicketSales(request),
     onSuccess: (invoice) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -47,7 +130,7 @@ export const useInvoiceOperations = () => {
 
   // Sync to Xero mutation
   const syncToXero = useMutation({
-    mutationFn: xeroService.syncInvoiceToXero,
+    mutationFn: (request) => xeroService.syncInvoiceToXero(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['xero-invoices'] });
@@ -92,7 +175,7 @@ export const useInvoiceOperations = () => {
 
   // Sync from Xero mutation
   const syncFromXero = useMutation({
-    mutationFn: xeroService.syncInvoicesFromXero,
+    mutationFn: () => xeroService.syncInvoicesFromXero(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['xero-invoices'] });
@@ -112,7 +195,7 @@ export const useInvoiceOperations = () => {
 
   // Generate recurring invoices
   const generateRecurringInvoices = useMutation({
-    mutationFn: invoiceService.generateRecurringInvoices,
+    mutationFn: () => invoiceService.generateRecurringInvoices(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -131,7 +214,7 @@ export const useInvoiceOperations = () => {
 
   // Check overdue invoices
   const checkOverdueInvoices = useMutation({
-    mutationFn: invoiceService.checkOverdueInvoices,
+    mutationFn: () => invoiceService.checkOverdueInvoices(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -151,6 +234,9 @@ export const useInvoiceOperations = () => {
   return {
     createInvoice,
     createFromTicketSales,
+    sendInvoiceEmail,
+    sendInvoiceReminder,
+    resendInvoice,
     syncToXero,
     recordPayment,
     connectToXero,
