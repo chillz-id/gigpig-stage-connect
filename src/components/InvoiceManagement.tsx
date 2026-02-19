@@ -106,7 +106,7 @@ export const InvoiceManagement: React.FC = () => {
     toggleInvoiceSelection
   } = bulkOperations;
   const selectedInvoiceIdsArray = useMemo(() => Array.from(selectedInvoiceIds), [selectedInvoiceIds]);
-  const { sendInvoiceReminder, checkOverdueInvoices } = useInvoiceOperations();
+  const { sendInvoiceReminder } = useInvoiceOperations();
 
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -148,11 +148,8 @@ export const InvoiceManagement: React.FC = () => {
     return { totalReceivable, totalPayable, overdue, draft };
   }, [invoices]);
 
-  // Check and update overdue invoices on mount
-  useEffect(() => {
-    checkOverdueInvoices.mutate();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Note: Overdue invoice status is handled by a scheduled backend job (pg_cron)
+  // that runs at midnight and creates notifications for 10am local time
 
   // Update filtered invoice IDs when filters change
   useEffect(() => {

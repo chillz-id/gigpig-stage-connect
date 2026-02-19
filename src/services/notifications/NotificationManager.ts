@@ -1,24 +1,25 @@
 // Notification Manager - Central orchestration and real-time subscriptions
 import { supabase } from '@/integrations/supabase/client';
 
-export type NotificationType = 
-  | 'tour_created' 
-  | 'tour_updated' 
+export type NotificationType =
+  | 'tour_created'
+  | 'tour_updated'
   | 'tour_cancelled'
-  | 'collaboration_invite' 
-  | 'collaboration_accepted' 
+  | 'collaboration_invite'
+  | 'collaboration_accepted'
   | 'collaboration_declined'
-  | 'task_assigned' 
-  | 'task_due_soon' 
+  | 'task_assigned'
+  | 'task_due_soon'
   | 'task_overdue'
   | 'task_completed'
-  | 'flight_delayed' 
-  | 'flight_cancelled' 
+  | 'flight_delayed'
+  | 'flight_cancelled'
   | 'flight_boarding'
-  | 'event_booking' 
+  | 'event_booking'
   | 'event_cancelled'
-  | 'payment_received' 
+  | 'payment_received'
   | 'payment_due'
+  | 'invoice_overdue'
   | 'system_update'
   | 'general'
   | 'spot_assigned'
@@ -46,6 +47,7 @@ export interface Notification {
   action_url?: string;
   action_label?: string;
   expires_at?: string;
+  display_after?: string;
   created_at: string;
   read_at?: string;
 }
@@ -110,17 +112,24 @@ class NotificationManager {
   }
 
   private handleNewNotification(notification: Notification): void {
-    // Notify subscribers
+    // Check if notification is scheduled for later
+    const isScheduledForLater = notification.display_after &&
+      new Date(notification.display_after) > new Date();
+
+    // Notify subscribers (they can decide whether to show based on display_after)
     const userSubscribers = this.subscribers.get(notification.user_id);
     if (userSubscribers) {
       userSubscribers.forEach(callback => callback(notification));
     }
 
-    // Show toast notification
-    this.showToastNotification(notification);
+    // Only show toast/push if not scheduled for later
+    if (!isScheduledForLater) {
+      // Show toast notification
+      this.showToastNotification(notification);
 
-    // Handle browser push notifications
-    this.handlePushNotification(notification);
+      // Handle browser push notifications
+      this.handlePushNotification(notification);
+    }
   }
 
   subscribe(userId: string, callback: (notification: Notification) => void): () => void {
@@ -171,12 +180,18 @@ class NotificationManager {
       priority?: NotificationPriority;
       limit?: number;
       offset?: number;
+      includeScheduled?: boolean;
     }
   ): Promise<{ notifications: Notification[]; total: number }> {
     let query = supabase
       .from('notifications')
       .select('*', { count: 'exact' })
       .eq('user_id', userId);
+
+    // Filter out scheduled notifications unless explicitly requested
+    if (!filters?.includeScheduled) {
+      query = query.or('display_after.is.null,display_after.lte.' + new Date().toISOString());
+    }
 
     if (filters?.type) {
       query = query.eq('type', filters.type);
@@ -252,7 +267,8 @@ class NotificationManager {
       .from('notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('is_read', false);
+      .eq('is_read', false)
+      .or('display_after.is.null,display_after.lte.' + new Date().toISOString());
 
     if (error) throw error;
     return count || 0;

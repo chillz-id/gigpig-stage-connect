@@ -475,6 +475,13 @@ export const usePaymentNotifications = () => {
   });
 };
 
+export const useInvoiceNotifications = () => {
+  return useNotifications({
+    types: ['payment_received', 'payment_due', 'invoice_overdue'],
+    enableRealtime: true
+  });
+};
+
 // Hook for unread notifications only
 export const useUnreadNotifications = () => {
   return useNotifications({
