@@ -297,10 +297,11 @@ const Gigs = () => {
       const matchesLocation = locationFilter === '' ||
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
 
-      // Note: Scraped events don't have show type or age restriction data
-      // These filters are not applicable for session_complete events
+      // Filter to showcases only (exclude solo shows)
+      // show_type = 'showcase' or NULL (unclassified, treated as showcase)
+      const isShowcase = event.show_type !== 'solo' && event.show_type !== 'live_podcast';
 
-      return matchesSearch && matchesLocation;
+      return matchesSearch && matchesLocation && isShowcase;
   }).sort((a, b) => {
       const dateA = new Date(a.event_date).getTime();
       const dateB = new Date(b.event_date).getTime();

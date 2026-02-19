@@ -34,6 +34,7 @@ export interface BrowseEvent {
   country: string | null;
   status: string | null;
   type: string | null;
+  show_type: 'showcase' | 'solo' | 'live_podcast' | null;
   ticket_price: number | null;
   ticket_url: string | null;
   external_ticket_url: string | null;
@@ -211,7 +212,8 @@ export const eventBrowseService = {
           eventbrite_order_count,
           eventbrite_ticket_count,
           merged_sources,
-          last_order_at
+          last_order_at,
+          show_type
         `
       );
 
@@ -324,6 +326,7 @@ export const eventBrowseService = {
         country: event.venue_country ?? null,
         status: null, // Not applicable for scraped events
         type: null, // Not in session_complete
+        show_type: (event.show_type as 'showcase' | 'solo' | 'live_podcast') ?? null,
         ticket_price: null, // Not in session_complete (could derive from financial data)
         ticket_url: event.url ?? null,
         external_ticket_url: event.url ?? null,
