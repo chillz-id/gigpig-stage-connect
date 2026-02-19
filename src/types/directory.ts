@@ -134,6 +134,7 @@ export interface DirectoryProfileInsert {
   twitter_url?: string | null;
   metadata?: Record<string, unknown>;
   tags?: string[];
+  profile_type?: DirectoryProfileType | null;
   source?: DirectoryProfileSource;
   import_batch_id?: string | null;
 }

@@ -12,6 +12,7 @@ import type {
   DirectoryImportValidation,
   DirectoryImportBatch,
   DirectoryProfileInsert,
+  DirectoryProfileType,
   FolderMatch,
   FolderFile,
   PhotoUploadResult,
@@ -444,7 +445,8 @@ export async function updateImportBatch(
 export async function importDirectoryProfiles(
   rows: ImportDirectoryProfileRow[],
   source: string,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  profileType: DirectoryProfileType = 'comedian_lite'
 ): Promise<DirectoryImportResult> {
   // Create import batch
   const batch = await createImportBatch(
@@ -517,6 +519,7 @@ export async function importDirectoryProfiles(
         twitter_url: row.twitter_url || null,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
         tags,
+        profile_type: profileType,
         source: 'bulk_import',
         import_batch_id: batch.id,
       };
