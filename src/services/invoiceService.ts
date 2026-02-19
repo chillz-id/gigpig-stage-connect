@@ -717,22 +717,8 @@ class InvoiceService {
   // AUTOMATION
   // =====================================
 
-  async checkOverdueInvoices(): Promise<void> {
-    const today = new Date().toISOString();
-
-    // Find all sent invoices past due date
-    const { data: overdueInvoices, error } = await supabase
-      .from('invoices')
-      .update({ status: 'overdue' })
-      .eq('status', 'sent')
-      .lt('due_date', today)
-      .select();
-
-    if (error) throw error;
-
-    // TODO: Send overdue notifications
-    console.log(`Marked ${overdueInvoices?.length || 0} invoices as overdue`);
-  }
+  // Note: checkOverdueInvoices is now handled by pg_cron job (process_overdue_invoices)
+  // that runs at midnight AEST and creates notifications for 10am local time
 
   async generateRecurringInvoices(): Promise<void> {
     // Get all active recurring invoices due today

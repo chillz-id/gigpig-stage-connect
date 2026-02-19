@@ -212,25 +212,6 @@ export const useInvoiceOperations = () => {
     },
   });
 
-  // Check overdue invoices
-  const checkOverdueInvoices = useMutation({
-    mutationFn: () => invoiceService.checkOverdueInvoices(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast({
-        title: "Check Complete",
-        description: "Overdue invoices have been updated.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Check Failed",
-        description: error instanceof Error ? error.message : "Failed to check overdue invoices",
-        variant: "destructive",
-      });
-    },
-  });
-
   return {
     createInvoice,
     createFromTicketSales,
@@ -242,6 +223,5 @@ export const useInvoiceOperations = () => {
     connectToXero,
     syncFromXero,
     generateRecurringInvoices,
-    checkOverdueInvoices,
   };
 };
