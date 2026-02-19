@@ -632,6 +632,9 @@ export async function matchFoldersToProfiles(
 
 /**
  * Upload photos from matched folders
+ *
+ * IMPORTANT: Each FolderFile must have the `file` property set with the actual
+ * File object for uploads to work. Without it, uploads will be skipped.
  */
 export async function uploadPhotosFromMatches(
   matches: FolderMatch[],
@@ -645,7 +648,7 @@ export async function uploadPhotosFromMatches(
 
   let totalFiles = 0;
   matchedFolders.forEach(m => {
-    totalFiles += m.files.filter(f => f.is_image).length;
+    totalFiles += m.files.filter(f => f.is_image && f.file).length;
   });
 
   let processed = 0;
@@ -661,26 +664,31 @@ export async function uploadPhotosFromMatches(
     };
 
     const imageFiles = match.files
-      .filter(f => f.is_image)
+      .filter(f => f.is_image && f.file) // Only files with actual File objects
       .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
     for (let i = 0; i < imageFiles.length; i++) {
-      const file = imageFiles[i];
-      if (!file) continue;
+      const folderFile = imageFiles[i];
+      if (!folderFile?.file) continue;
 
       try {
-        onProgress?.(processed, totalFiles, `${match.folder_name}/${file.name}`);
+        onProgress?.(processed, totalFiles, `${match.folder_name}/${folderFile.name}`);
 
         // First image is primary headshot
         const isFirst = i === 0;
 
-        // Note: This expects a File object - the actual file reading
-        // will be done in the UI component that calls this
-        // Here we just track what needs to be uploaded
+        // Actually upload the file to Supabase Storage
+        await uploadDirectoryPhoto(match.profile_id, folderFile.file, {
+          isHeadshot: true, // Treat all imported photos as potential headshots
+          isPrimary: isFirst,
+          displayOrder: isFirst ? 0 : i + 1,
+        });
+
         result.photos_uploaded++;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        result.errors.push(`${file.name}: ${errorMessage}`);
+        result.errors.push(`${folderFile.name}: ${errorMessage}`);
+        console.error(`[uploadPhotosFromMatches] Failed to upload ${folderFile.name}:`, error);
       }
 
       processed++;

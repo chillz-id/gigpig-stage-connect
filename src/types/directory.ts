@@ -246,6 +246,8 @@ export interface FolderFile {
   size: number;
   type: string;
   is_image: boolean;
+  /** The actual File object for upload - must be provided for uploads to work */
+  file?: File;
 }
 
 export interface PhotoUploadResult {
