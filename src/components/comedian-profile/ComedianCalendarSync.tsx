@@ -2,9 +2,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Link, Unlink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Calendar, Link, Unlink, CheckCircle, AlertCircle, Zap } from 'lucide-react';
 import { useCalendarIntegration } from '@/hooks/useCalendarIntegration';
 import { useComedianGigs } from '@/hooks/useComedianGigs';
+import { useComedianSettings } from '@/hooks/useComedianSettings';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ComedianCalendarSyncProps {
@@ -23,6 +26,11 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
     isConnecting,
     isDisconnecting
   } = useCalendarIntegration();
+  const {
+    settings,
+    setAutoConfirmSpots,
+    isUpdating: isUpdatingSettings,
+  } = useComedianSettings(comedianId);
 
   const isOwnProfile = user?.id === comedianId;
 
@@ -117,6 +125,38 @@ const ComedianCalendarSync: React.FC<ComedianCalendarSyncProps> = ({ comedianId 
               </>
             )}
           </Button>
+        </div>
+
+        {/* Auto-Confirm Setting */}
+        <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-600/20 rounded-lg">
+                <Zap className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <Label htmlFor="auto-confirm" className="text-white font-medium cursor-pointer">
+                  Auto-Confirm Spots
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Automatically confirm when added to a lineup
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="auto-confirm"
+              checked={settings.auto_confirm_spots}
+              onCheckedChange={setAutoConfirmSpots}
+              disabled={isUpdatingSettings}
+            />
+          </div>
+          {settings.auto_confirm_spots && (
+            <div className="mt-3 p-2 bg-purple-600/10 rounded border border-purple-500/20">
+              <p className="text-xs text-purple-300">
+                When a promoter publishes a lineup with you on it, your spot will be automatically confirmed and added to your Google Calendar (if connected).
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Statistics */}

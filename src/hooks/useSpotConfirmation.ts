@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/notificationService';
+import { calendarIntegrationService } from '@/services/calendar/calendar-integration-service';
+import { googleCalendarService } from '@/services/calendar/googleCalendarService';
 
 export interface SpotConfirmationData {
   spotId: string;
@@ -65,7 +67,7 @@ export const useSpotConfirmation = () => {
           const [eventResult, comedianResult] = await Promise.all([
             supabase
               .from('events')
-              .select('title, event_date, promoter_id')
+              .select('title, event_date, start_time, end_time, venue, address, promoter_id')
               .eq('id', eventId)
               .single(),
             supabase
@@ -76,7 +78,7 @@ export const useSpotConfirmation = () => {
           ]);
 
           if (eventResult.data && comedianResult.data) {
-            const { title, event_date, promoter_id } = eventResult.data;
+            const { title, event_date, start_time, end_time, venue, address, promoter_id } = eventResult.data;
             const { name: comedianName } = comedianResult.data;
 
             await notificationService.createNotification({
@@ -94,6 +96,46 @@ export const useSpotConfirmation = () => {
               action_url: `/admin/events/${eventId}`,
               action_label: 'View Event'
             });
+
+            // Auto-add to Google Calendar on confirmation
+            if (action === 'confirm') {
+              try {
+                const googleIntegration = await calendarIntegrationService.getByUserAndProvider(
+                  comedianId,
+                  'google'
+                );
+
+                if (googleIntegration?.is_active) {
+                  // Build event datetime
+                  const eventDateTime = new Date(event_date);
+                  if (start_time) {
+                    const [hours, minutes] = start_time.split(':').map(Number);
+                    eventDateTime.setHours(hours || 0, minutes || 0, 0, 0);
+                  }
+
+                  let endDateTime: string | undefined;
+                  if (end_time) {
+                    const endDate = new Date(event_date);
+                    const [endHours, endMinutes] = end_time.split(':').map(Number);
+                    endDate.setHours(endHours || 0, endMinutes || 0, 0, 0);
+                    endDateTime = endDate.toISOString();
+                  }
+
+                  await googleCalendarService.createEvent(comedianId, {
+                    summary: `🎤 ${title}`,
+                    description: `Confirmed gig via GigPigs`,
+                    location: [venue, address].filter(Boolean).join(', '),
+                    start: eventDateTime.toISOString(),
+                    end: endDateTime,
+                  });
+
+                  console.log('[useSpotConfirmation] Added gig to Google Calendar:', title);
+                }
+              } catch (calendarError) {
+                // Don't fail the confirmation if calendar sync fails
+                console.error('[useSpotConfirmation] Failed to add to Google Calendar:', calendarError);
+              }
+            }
           }
         } catch (notificationError) {
           console.error('Failed to send notification:', notificationError);
