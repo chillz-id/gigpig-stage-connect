@@ -297,9 +297,12 @@ const Gigs = () => {
       const matchesLocation = locationFilter === '' ||
         event.city?.toLowerCase().includes(locationFilter.toLowerCase());
 
-      // Filter to showcases only (exclude solo shows)
-      // show_type = 'showcase' or NULL (unclassified, treated as showcase)
-      const isShowcase = event.show_type !== 'solo' && event.show_type !== 'live_podcast';
+      // Filter to showcases only (exclude solo shows and live podcasts)
+      // Handle mixed casing in database (e.g., "Solo Show", "solo", "Live Podcast")
+      const showTypeLower = event.show_type?.toLowerCase() || '';
+      const isSoloShow = showTypeLower.includes('solo');
+      const isLivePodcast = showTypeLower.includes('podcast');
+      const isShowcase = !isSoloShow && !isLivePodcast;
 
       return matchesSearch && matchesLocation && isShowcase;
   }).sort((a, b) => {
