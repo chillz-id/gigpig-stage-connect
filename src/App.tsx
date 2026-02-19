@@ -16,6 +16,7 @@ import { Suspense, useState, useEffect, lazy } from 'react';
 import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
 import { initializeCDN } from '@/utils/cdnConfig';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Eagerly load critical pages
 import Index from '@/pages/Index';
@@ -308,6 +309,7 @@ function App() {
                           </Suspense>
                         </PlatformLayout>
                         <Toaster />
+                        <SpeedInsights />
                       </Router>
                     </DesignSystemInitializer>
                 </ProfileProvider>
