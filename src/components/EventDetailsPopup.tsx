@@ -20,7 +20,7 @@ import {
   Mic,
   AlertCircle,
   CheckCircle,
-  Navigation
+  ExternalLink
 } from 'lucide-react';
 import { useEventSpots } from '@/hooks/useEventSpots';
 import { useAuth } from '@/contexts/AuthContext';
@@ -352,12 +352,11 @@ export const EventDetailsPopup: React.FC<EventDetailsPopupProps> = ({
                 
                 {event.address && (
                   <Button
-                    className="professional-button"
-                    onClick={() => onGetDirections(event)}
                     className="w-full flex items-center gap-2"
+                    onClick={() => onGetDirections(event)}
                   >
-                    <Navigation className="w-4 h-4" />
-                    Get Directions
+                    <ExternalLink className="w-4 h-4" />
+                    View on Map
                   </Button>
                 )}
               </div>

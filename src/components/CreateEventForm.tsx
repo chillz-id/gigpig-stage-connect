@@ -1,9 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { GoogleMapsSetupCard } from './GoogleMapsSetupCard';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { useCreateEventForm } from '@/hooks/useCreateEventForm';
 import { BasicEventInfo } from './BasicEventInfo';
 import { VenueSelection } from './VenueSelection';
@@ -18,10 +16,6 @@ import { EventCostsSection } from './EventCostsSection';
 import { DuplicateEventDialog } from './event-management/DuplicateEventDialog';
 
 export const CreateEventForm: React.FC = () => {
-  const { isLoaded, loadScript } = useGoogleMaps();
-  const [showMapsSetup, setShowMapsSetup] = useState(false);
-  const [hasTriedLoading, setHasTriedLoading] = useState(false);
-
   const {
     form,
     eventSpots,
@@ -49,29 +43,11 @@ export const CreateEventForm: React.FC = () => {
 
   const { handleSubmit, control, formState: { errors } } = form;
 
-  useEffect(() => {
-    if (!hasTriedLoading) {
-      setHasTriedLoading(true);
-      loadScript().then(() => {
-        // Check if it failed to load (no API key)
-        setTimeout(() => {
-          if (!isLoaded) {
-            setShowMapsSetup(true);
-          }
-        }, 2000);
-      });
-    }
-  }, [isLoaded, loadScript, hasTriedLoading]);
-
   // Derive isProcessing to disable form during any async operation
   const isProcessing = isCreating || isCheckingDuplicates || isMergingData;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {showMapsSetup && (
-        <GoogleMapsSetupCard onDismiss={() => setShowMapsSetup(false)} />
-      )}
-
       {/* Duplicate Detection Dialog */}
       {pendingEventData && (
         <DuplicateEventDialog

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Navigation, Users } from 'lucide-react';
+import { ExternalLink, Users } from 'lucide-react';
 import { WaitlistDialog } from './WaitlistDialog';
 
 interface ShowCardActionsProps {
@@ -84,13 +84,12 @@ export const ShowCardActions: React.FC<ShowCardActionsProps> = ({
       
       {show.address && (
         <Button
-          className="professional-button"
+          className="flex items-center gap-2"
           size="sm"
           onClick={() => onGetDirections(show)}
-          className="flex items-center gap-2"
         >
-          <Navigation className="w-4 h-4" />
-          Directions
+          <ExternalLink className="w-4 h-4" />
+          View on Map
         </Button>
       )}
     </div>

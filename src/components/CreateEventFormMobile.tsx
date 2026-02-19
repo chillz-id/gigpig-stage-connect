@@ -24,8 +24,6 @@ import { EventSpotManagerDraggable } from './EventSpotManagerDraggable';
 import { EventBannerUpload } from './EventBannerUpload';
 import { EventCostsSection } from './EventCostsSection';
 import { EventTemplateLoader } from './EventTemplateLoader';
-import { GoogleMapsSetupCard } from './GoogleMapsSetupCard';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -244,21 +242,8 @@ const SummaryStep: React.FC<WizardStepProps> = () => {
 };
 
 export const CreateEventFormMobile: React.FC = () => {
-  const { isLoaded } = useGoogleMaps();
-  const [showMapsSetup, setShowMapsSetup] = React.useState(false);
-
   const formContext = useCreateEventForm();
   const { form, loadTemplate, onSubmit, onSaveDraft } = formContext;
-
-  // Check for Google Maps setup
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        setShowMapsSetup(true);
-      }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [isLoaded]);
 
   // Define wizard steps
   const wizardSteps: WizardStep[] = [
@@ -332,10 +317,6 @@ export const CreateEventFormMobile: React.FC = () => {
   return (
     <EventFormContext.Provider value={formContext}>
       <div className="space-y-4">
-        {showMapsSetup && (
-          <GoogleMapsSetupCard onDismiss={() => setShowMapsSetup(false)} />
-        )}
-
         <div className="flex justify-end mb-4">
           <EventTemplateLoader onLoadTemplate={loadTemplate} />
         </div>

@@ -181,7 +181,6 @@ const sidebarWidth = state === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(
 
 Copy `.env.example` to `.env` with required variables:
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- `VITE_GOOGLE_MAPS_API_KEY`
 - `VITE_APP_URL` (defaults to `http://localhost:8080`)
 
 Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN` (see `.env.example`).

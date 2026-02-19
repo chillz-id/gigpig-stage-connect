@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Heart, MapPin, Clock, Calendar, ArrowRight } from 'lucide-react';
+import { Heart, MapPin, Clock, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventApplications } from '@/hooks/useEventApplications';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { generateGoogleMapsUrl } from '@/utils/maps';
 
 interface ModernEventCardProps {
   show: any;
@@ -181,6 +182,28 @@ export const ModernEventCard: React.FC<ModernEventCardProps> = ({
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 flex-shrink-0 text-gray-400" />
             <span className="font-medium">{show.venue}</span>
+            {(() => {
+              const mapsUrl = generateGoogleMapsUrl({
+                address: show.address,
+                venue: show.venue,
+                city: show.city,
+                state: show.state,
+                latitude: show.latitude,
+                longitude: show.longitude,
+              });
+              return mapsUrl ? (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-gray-400 hover:text-purple-600 transition-colors"
+                  title="View on Google Maps"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              ) : null;
+            })()}
           </div>
           
           <div className="flex items-center gap-4">

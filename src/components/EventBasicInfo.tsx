@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import { GoogleMapsSetupCard } from './GoogleMapsSetupCard';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 
 interface EventBasicInfoProps {
   formData: {
@@ -25,58 +23,12 @@ interface EventBasicInfoProps {
 }
 
 export const EventBasicInfo: React.FC<EventBasicInfoProps> = ({ formData, onFormDataChange }) => {
-  const { isLoaded, loadScript } = useGoogleMaps();
-  const [showMapsSetup, setShowMapsSetup] = useState(false);
-  const [hasTriedLoading, setHasTriedLoading] = useState(false);
-
-  useEffect(() => {
-    if (!hasTriedLoading) {
-      setHasTriedLoading(true);
-      loadScript().then(() => {
-        // Check if it failed to load (no API key)
-        setTimeout(() => {
-          if (!isLoaded) {
-            setShowMapsSetup(true);
-          }
-        }, 2000);
-      });
-    }
-  }, [isLoaded, loadScript, hasTriedLoading]);
-
-  const handleAddressSelect = (address: string, placeDetails?: any) => {
-    
-    // Update address
+  const handleAddressSelect = (address: string) => {
     onFormDataChange({ address });
-    
-    // Extract city and state from place details if available
-    if (placeDetails?.address_components) {
-      let city = '';
-      let state = '';
-      
-      placeDetails.address_components.forEach((component: any) => {
-        if (component.types.includes('locality')) {
-          city = component.long_name;
-        }
-        if (component.types.includes('administrative_area_level_1')) {
-          state = component.short_name;
-        }
-      });
-      
-      if (city || state) {
-        onFormDataChange({ 
-          city: city || formData.city, 
-          state: state || formData.state 
-        });
-      }
-    }
   };
 
   return (
     <div className="space-y-4">
-      {showMapsSetup && (
-        <GoogleMapsSetupCard onDismiss={() => setShowMapsSetup(false)} />
-      )}
-      
       <Card className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

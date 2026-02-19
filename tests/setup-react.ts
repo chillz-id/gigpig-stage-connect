@@ -15,7 +15,6 @@ Object.defineProperty(globalThis, 'import', {
         VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'https://test.supabase.co',
         VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'test-anon-key',
         VITE_APP_URL: process.env.VITE_APP_URL || 'http://localhost:8080',
-        VITE_GOOGLE_MAPS_API_KEY: process.env.VITE_GOOGLE_MAPS_API_KEY || 'test-key',
         MODE: 'test',
         DEV: false,
         PROD: false,

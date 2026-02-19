@@ -1,8 +1,6 @@
 
-import React, { useRef, useEffect, useState, useImperativeHandle } from 'react';
+import React, { useRef, useImperativeHandle } from 'react';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 
 interface AddressAutocompleteProps {
   onAddressSelect: (address: string, placeDetails?: any) => void;
@@ -12,186 +10,29 @@ interface AddressAutocompleteProps {
   showSetupCard?: boolean;
 }
 
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
 export const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(({
   onAddressSelect,
   placeholder = "Enter address...",
   defaultValue = "",
   className = "",
-  showSetupCard = false
 }, forwardedRef) => {
   const internalRef = useRef<HTMLInputElement>(null);
-  const [autocomplete, setAutocomplete] = useState<any>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-  const { toast } = useToast();
-  const { isLoaded, loadScript } = useGoogleMaps();
-  
-  // Forward the ref to the internal input ref
+
   useImperativeHandle(forwardedRef, () => internalRef.current!);
 
-  const initializeAutocomplete = React.useCallback(() => {
-    if (!internalRef.current) {
-      setDebugInfo('Error: Input element not found');
-      return;
-    }
-    
-    if (!window.google) {
-      setDebugInfo('Error: Google Maps not available');
-      return;
-    }
-
-    if (!window.google.maps) {
-      setDebugInfo('Error: Google Maps API not loaded');
-      return;
-    }
-
-    if (!window.google.maps.places) {
-      setDebugInfo('Error: Google Places API not loaded');
-      return;
-    }
-
-    try {
-      const autocompleteInstance = new window.google.maps.places.Autocomplete(
-        internalRef.current,
-        {
-          types: ['address'],
-          componentRestrictions: { country: 'au' },
-          fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types']
-        }
-      );
-
-      autocompleteInstance.addListener('place_changed', () => {
-        const place = autocompleteInstance.getPlace();
-        
-        if (!place.formatted_address) {
-          toast({
-            title: "Invalid address",
-            description: "Please select a valid address from the dropdown.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        onAddressSelect(place.formatted_address, place);
-        
-        toast({
-          title: "Address selected",
-          description: place.formatted_address,
-        });
-      });
-
-      setAutocomplete(autocompleteInstance);
-      setDebugInfo('Autocomplete initialized successfully!');
-    } catch (error) {
-      setDebugInfo(`Error initializing autocomplete: ${error.message || 'Unknown error'}`);
-      // Don't show error toast here as it would be too intrusive
-      // The component will still work as a regular input field
-    }
-  }, [onAddressSelect, toast]);
-
-  useEffect(() => {
-    if (!isLoaded && !isInitializing) {
-      setIsInitializing(true);
-      setDebugInfo('Loading Google Maps script...');
-      
-      // Check if API key is configured
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!apiKey || apiKey === 'DEMO_KEY_PLEASE_CONFIGURE') {
-        setDebugInfo('Google Maps API key not configured');
-        setIsInitializing(false);
-        // Don't show error toast for missing API key - just allow manual entry
-        return;
-      }
-      
-      loadScript()
-        .then(() => {
-          if (window.google && window.google.maps && window.google.maps.places) {
-            setDebugInfo('Google Maps loaded, initializing autocomplete...');
-            initializeAutocomplete();
-          } else {
-            setDebugInfo('Google Maps loaded but Places library not available');
-            setIsInitializing(false);
-          }
-        })
-        .catch((error) => {
-          setDebugInfo(`Error loading Google Maps: ${error.message || 'Unknown error'}`);
-          // Only show toast for actual errors, not missing API key
-          if (apiKey && apiKey !== 'DEMO_KEY_PLEASE_CONFIGURE') {
-            toast({
-              title: "Maps service unavailable",
-              description: "Address autocomplete is currently unavailable. You can still enter addresses manually.",
-              variant: "destructive",
-            });
-          }
-        })
-        .finally(() => {
-          setIsInitializing(false);
-        });
-    } else if (isLoaded) {
-      setDebugInfo('Initializing autocomplete...');
-      initializeAutocomplete();
-    }
-  }, [initializeAutocomplete, isInitializing, isLoaded, loadScript, toast]);
-
-  // Handle manual address input when Google Maps is not available
-  const [manualInputTimeout, setManualInputTimeout] = useState<NodeJS.Timeout | null>(null);
-  
-  const handleManualInput = (value: string) => {
-    if (!isLoaded && value.trim()) {
-      // Clear previous timeout
-      if (manualInputTimeout) {
-        clearTimeout(manualInputTimeout);
-      }
-      
-      // Set new timeout for manual entry
-      const timeoutId = setTimeout(() => {
-        onAddressSelect(value.trim());
-      }, 1000); // Increased delay to 1 second
-      
-      setManualInputTimeout(timeoutId);
-    }
-  };
-
   return (
-    <div className="relative">
-      <Input
-        ref={internalRef}
-        placeholder={!isLoaded && !isInitializing ? 
-          "Enter full address manually..." : 
-          placeholder
+    <Input
+      ref={internalRef}
+      placeholder={placeholder}
+      defaultValue={defaultValue}
+      className={className}
+      onChange={(e) => {
+        const value = e.target.value.trim();
+        if (value) {
+          onAddressSelect(value);
         }
-        defaultValue={defaultValue}
-        className={`${className} ${(!isLoaded || isInitializing) ? 'bg-muted/50' : 'bg-background/50'}`}
-        disabled={isInitializing}
-        onChange={(e) => {
-          if (!isLoaded) {
-            handleManualInput(e.target.value);
-          }
-        }}
-      />
-      {isInitializing && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-      {!isLoaded && !isInitializing && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground">
-          📍 Manual entry
-        </div>
-      )}
-      {/* Debug info - remove this in production */}
-      {process.env.NODE_ENV === 'development' && debugInfo && (
-        <div className="absolute top-full left-0 right-0 bg-black/80 text-white text-xs p-2 rounded mt-1 z-50">
-          Debug: {debugInfo}
-        </div>
-      )}
-    </div>
+      }}
+    />
   );
 });
 

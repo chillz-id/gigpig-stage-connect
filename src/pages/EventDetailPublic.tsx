@@ -13,11 +13,12 @@ import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 import { ApplicationForm } from '@/components/ApplicationForm';
 import { ApplicationFormData } from '@/types/application';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Calendar, MapPin, Clock, Users, DollarSign, Info, Edit, Settings } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, DollarSign, Info, Edit, Settings, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useEvent } from '@/hooks/data/useEvents';
 import { WaitlistForm } from '@/components/WaitlistForm';
+import { generateGoogleMapsUrl } from '@/utils/maps';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const EventDetailPublic = () => {
@@ -282,6 +283,27 @@ const EventDetailPublic = () => {
                     <p className="text-gray-300">
                       {event.address}, {event.city}, {event.state}
                     </p>
+                    {(() => {
+                      const mapsUrl = generateGoogleMapsUrl({
+                        address: event.address,
+                        venue: event.venue,
+                        city: event.city,
+                        state: event.state,
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                      });
+                      return mapsUrl ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => window.open(mapsUrl, '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          View on Google Maps
+                        </Button>
+                      ) : null;
+                    })()}
                   </div>
                 )}
               </CardContent>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEventApplications } from '@/hooks/useEventApplications';
 import { ApplicationFormData } from '@/types/application';
+import { generateGoogleMapsDirectionsUrl } from '@/utils/maps';
 
 export const useBrowseLogic = () => {
   const { user, profile, hasRole } = useAuth();
@@ -126,10 +127,16 @@ export const useBrowseLogic = () => {
   };
 
   const handleGetDirections = (event: any) => {
-    if (event.address) {
-      const encodedAddress = encodeURIComponent(event.address);
-      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-      window.open(googleMapsUrl, '_blank');
+    const url = generateGoogleMapsDirectionsUrl({
+      address: event.address,
+      venue: event.venue,
+      city: event.city,
+      state: event.state,
+      latitude: event.latitude,
+      longitude: event.longitude,
+    });
+    if (url) {
+      window.open(url, '_blank');
     } else {
       toast({
         title: "Address not available",
