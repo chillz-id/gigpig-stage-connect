@@ -188,7 +188,10 @@ export function ComedianDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile?tab=calendar')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/comedian/${slug}/edit?tab=calendar` : '/profile?tab=calendar');
+                  }}
                   className="w-full justify-between bg-blue-600 hover:bg-blue-700 text-white border-0 touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
@@ -204,7 +207,10 @@ export function ComedianDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/comedian/${slug}/edit` : '/profile');
+                  }}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
@@ -213,7 +219,10 @@ export function ComedianDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile?tab=invoices')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/comedian/${slug}/edit?tab=invoices` : '/profile?tab=invoices');
+                  }}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >

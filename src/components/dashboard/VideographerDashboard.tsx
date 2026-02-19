@@ -178,7 +178,10 @@ export function VideographerDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/videographer/${slug}/edit` : '/profile');
+                  }}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
@@ -187,7 +190,10 @@ export function VideographerDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile?tab=calendar')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/videographer/${slug}/edit?tab=calendar` : '/profile?tab=calendar');
+                  }}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
@@ -196,7 +202,10 @@ export function VideographerDashboard() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/profile?tab=invoices')}
+                  onClick={() => {
+                    const slug = profile?.profile_slug || profile?.id;
+                    navigate(slug ? `/videographer/${slug}/edit?tab=invoices` : '/profile?tab=invoices');
+                  }}
                   className="professional-button w-full justify-start touch-target-44"
                   size={isMobile ? "mobile" : "default"}
                 >
