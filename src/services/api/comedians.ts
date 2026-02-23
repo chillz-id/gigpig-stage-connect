@@ -24,10 +24,21 @@ export class ComediansApi extends BaseApi<Comedian> {
   // Get comedians with performance stats
   async getComediansWithStats(filters?: ComedianFilters) {
     try {
+      // Query from comedians table with profile data joined
       let query = supabase
-        .from('profiles')
+        .from('comedians')
         .select(`
           *,
+          profiles!inner(
+            id,
+            name,
+            email,
+            avatar_url,
+            profile_slug,
+            profile_visible,
+            bio,
+            location
+          ),
           event_spots!performer_id(
             count,
             event:events(
@@ -36,20 +47,20 @@ export class ComediansApi extends BaseApi<Comedian> {
             )
           )
         `)
-        .eq('role', 'comedian')
-        .eq('profile_visible', true); // Only show visible profiles in browse/search
-      
+        .eq('active', true)
+        .eq('profiles.profile_visible', true); // Only show visible profiles in browse/search
+
       // Apply search filter
       if (filters?.search) {
         // Sanitize search input to prevent SQL injection
         const sanitizedSearch = filters.search.replace(/[%_]/g, '\\$&');
-        query = query.or(`full_name.ilike.%${sanitizedSearch}%,stage_name.ilike.%${sanitizedSearch}%`);
+        query = query.or(`stage_name.ilike.%${sanitizedSearch}%,profiles.name.ilike.%${sanitizedSearch}%`);
       }
-      
+
       // Apply sorting
       switch (filters?.sortBy) {
         case 'name':
-          query = query.order('full_name', { ascending: true });
+          query = query.order('stage_name', { ascending: true });
           break;
         case 'experience':
           // This would need a computed column or post-processing
@@ -63,32 +74,43 @@ export class ComediansApi extends BaseApi<Comedian> {
         default:
           query = query.order('created_at', { ascending: false });
       }
-      
+
       const { data, error } = await query;
       
       if (error) throw error;
-      
-      // Transform data to include computed stats
+
+      // Transform data to include computed stats and flatten profile data
       const currentDate = new Date().toISOString();
-      const transformedData = (data || []).map(comedian => {
+      const transformedData = (data || []).map((comedian: any) => {
         const spots = comedian.event_spots || [];
-        const upcomingShows = spots.filter((spot: any) => 
+        const profile = comedian.profiles || {};
+        const upcomingShows = spots.filter((spot: any) =>
           spot.event?.date >= currentDate && spot.event?.status === 'published'
         ).length;
-        const pastShows = spots.filter((spot: any) => 
+        const pastShows = spots.filter((spot: any) =>
           spot.event?.date < currentDate
         ).length;
-        
+
         return {
           ...comedian,
+          // Flatten profile data
+          name: comedian.stage_name || profile.name,
+          email: profile.email,
+          avatar_url: comedian.headshot_url || profile.avatar_url,
+          profile_slug: comedian.url_slug || profile.profile_slug,
+          bio: comedian.short_bio || profile.bio,
+          location: comedian.origin_city || profile.location,
+          // Computed stats
           total_spots: spots.length,
           upcoming_shows: upcomingShows,
           past_shows: pastShows,
           average_rating: 0, // Placeholder for ratings
-          event_spots: undefined // Remove nested data
+          // Clean up nested data
+          profiles: undefined,
+          event_spots: undefined
         };
       });
-      
+
       return { data: transformedData, error: null };
     } catch (error) {
       return { data: null, error };
