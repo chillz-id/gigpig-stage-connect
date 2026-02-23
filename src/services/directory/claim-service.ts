@@ -30,7 +30,7 @@ export async function findClaimableProfile(
       primary_headshot_url,
       directory_media(id)
     `)
-    .eq('email', email.toLowerCase().trim())
+    .ilike('email', email.toLowerCase().trim())
     .is('claimed_at', null)
     .single();
 
@@ -262,7 +262,7 @@ export async function checkForClaimableProfiles(
       primary_headshot_url,
       directory_media(id)
     `)
-    .eq('email', email.toLowerCase().trim())
+    .ilike('email', email.toLowerCase().trim())
     .is('claimed_at', null);
 
   if (error) {
