@@ -198,31 +198,19 @@ export const useVouches = (profileId?: string) => {
         throw new Error('You have already vouched for this person. You can edit your existing vouch instead.');
       }
 
-      const insertPayload = {
-        voucher_id: user.id, // Always use auth user ID (RLS requires auth.uid() = voucher_id)
-        vouchee_id: formData.vouchee_id,
-        message: formData.message,
-        rating: formData.rating,
-        organization_id: formData.organization_id || null // When set, vouch displays as org
-      };
-
-      console.log('[useVouches] Creating vouch with payload:', {
-        ...insertPayload,
-        activeProfileId,
-        'auth user.id': user.id,
-        'RLS expects': 'auth.uid() = voucher_id'
-      });
-
       const { data, error } = await supabase
         .from('vouches')
-        .insert(insertPayload)
+        .insert({
+          voucher_id: user.id, // Always use auth user ID (RLS requires auth.uid() = voucher_id)
+          vouchee_id: formData.vouchee_id,
+          message: formData.message,
+          rating: formData.rating,
+          organization_id: formData.organization_id || null // When set, vouch displays as org
+        })
         .select()
         .single();
 
-      if (error) {
-        console.error('[useVouches] Vouch insert error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toastRef.current({
         title: "Vouch Created",
