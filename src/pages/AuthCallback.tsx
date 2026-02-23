@@ -7,6 +7,7 @@ import { checkForClaimableProfiles } from '@/services/directory/claim-service';
 const AuthCallback = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState('Processing authentication...');
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -122,6 +123,11 @@ const AuthCallback = () => {
       try {
         setStatus('Processing OAuth callback...');
 
+        // Capture full URL for debugging
+        const fullUrl = window.location.href;
+        console.log('[AuthCallback] Full URL:', fullUrl);
+        setDebugInfo(`URL: ${fullUrl}`);
+
         // Parse URL query params for role context (passed from HorizontalAuthBanner)
         const searchParams = new URLSearchParams(window.location.search);
         const intendedRole = searchParams.get('role');
@@ -131,42 +137,55 @@ const AuthCallback = () => {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const error = hashParams.get('error');
         const errorDescription = hashParams.get('error_description');
-        
+
         if (error) {
-          console.error('OAuth error in URL:', error, errorDescription);
+          const errorMsg = `OAuth error: ${error} - ${errorDescription}`;
+          console.error('[AuthCallback]', errorMsg);
+          setDebugInfo(errorMsg);
+          setStatus('Authentication failed - OAuth error');
+          setIsLoading(false);
           toast({
             title: "Authentication Failed",
             description: errorDescription || error,
             variant: "destructive",
           });
-          navigate('/auth');
+          // Delay redirect so user can see the error
+          setTimeout(() => navigate('/auth'), 3000);
           return;
         }
-        
+
         setStatus('Retrieving session...');
-        
+
         // Handle the auth callback
         const { data, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError) {
-          console.error('Session error:', sessionError);
+          const errorMsg = `Session error: ${sessionError.message}`;
+          console.error('[AuthCallback]', errorMsg);
+          setDebugInfo(errorMsg);
+          setStatus('Authentication failed - Session error');
+          setIsLoading(false);
           toast({
             title: "Authentication Error",
             description: sessionError.message,
             variant: "destructive",
           });
-          navigate('/auth');
+          setTimeout(() => navigate('/auth'), 3000);
           return;
         }
 
         if (!data.session) {
-          console.error('No session found');
+          const errorMsg = 'No session found after OAuth callback';
+          console.error('[AuthCallback]', errorMsg);
+          setDebugInfo(errorMsg);
+          setStatus('Authentication failed - No session');
+          setIsLoading(false);
           toast({
             title: "Authentication Failed",
             description: "No session was created. Please try again.",
             variant: "destructive",
           });
-          navigate('/auth');
+          setTimeout(() => navigate('/auth'), 3000);
           return;
         }
 
@@ -317,13 +336,16 @@ const AuthCallback = () => {
         }
         
       } catch (error: any) {
-        console.error('Auth callback exception:', error);
+        const errorMsg = `Exception: ${error.message || 'Unknown error'}`;
+        console.error('[AuthCallback]', errorMsg, error);
+        setDebugInfo(errorMsg);
+        setStatus('Authentication failed - Exception');
         toast({
           title: "Authentication Error",
           description: error.message || "An unexpected error occurred.",
           variant: "destructive",
         });
-        navigate('/auth');
+        setTimeout(() => navigate('/auth'), 3000);
       } finally {
         setIsLoading(false);
       }
@@ -332,18 +354,22 @@ const AuthCallback = () => {
     handleAuthCallback();
   }, [createProfileWithRetry, createRoleWithRetry, navigate, toast]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#131b2b]">
-        <div className="text-center">
+  // Show loading state with debug info
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#131b2b]">
+      <div className="text-center max-w-lg px-4">
+        {isLoading && (
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">{status}</p>
-        </div>
+        )}
+        <p className="text-white text-lg mb-4">{status}</p>
+        {debugInfo && (
+          <p className="text-red-400 text-sm font-mono bg-red-900/20 p-3 rounded break-all">
+            {debugInfo}
+          </p>
+        )}
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 };
 
 export default AuthCallback;
