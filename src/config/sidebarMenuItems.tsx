@@ -263,7 +263,7 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Invoices',
     path: '/profile?tab=invoices',
     icon: FileText,
-    roles: ['comedian', 'photographer', 'videographer', 'admin'],
+    roles: ['comedian', 'comedian_lite', 'photographer', 'videographer', 'admin'],
     section: 'business',
   },
   {
@@ -373,7 +373,6 @@ export const getDefaultHiddenItemsForRole = (role: UserRole): string[] => {
         'browse-photographers',
         'add-gig',
         'tasks',
-        'invoices',
         'earnings',
         'social-media-manager',
         'calendar'            // comedian_lite uses My Gigs which points to calendar
