@@ -17,6 +17,7 @@ import { useGlobalDesignSystem } from '@/hooks/useGlobalDesignSystem';
 import { pwaService } from '@/services/pwaService';
 import { initializeCDN } from '@/utils/cdnConfig';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 
 // Eagerly load critical pages
 import Index from '@/pages/Index';
@@ -310,6 +311,7 @@ function App() {
                         </PlatformLayout>
                         <Toaster />
                         <SpeedInsights />
+                        <Analytics />
                       </Router>
                     </DesignSystemInitializer>
                 </ProfileProvider>
