@@ -39,8 +39,8 @@ export class ComediansApi extends BaseApi<Comedian> {
             bio,
             location
           ),
-          event_spots!performer_id(
-            count,
+          event_spots(
+            id,
             event:events(
               date,
               status
