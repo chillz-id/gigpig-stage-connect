@@ -326,7 +326,12 @@ export const MediaSliderLayout: React.FC<MediaSliderLayoutProps> = ({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Photos</h3>
           <div className="relative overflow-hidden">
-            <Marquee pauseOnHover className="[--duration:30s] [--gap:0.5rem]" repeat={photos.length > 3 ? 2 : 4}>
+            {/* Scale duration with photo count for consistent perceived speed (~0.8s per photo) */}
+            <Marquee
+              pauseOnHover
+              className={cn("[--gap:0.5rem]", `[--duration:${Math.max(20, Math.round(photos.length * 0.8))}s]`)}
+              repeat={photos.length > 6 ? 2 : 4}
+            >
               {photos.map((photo, index) => (
                 <div
                   key={photo.id}

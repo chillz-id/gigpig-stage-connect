@@ -149,6 +149,7 @@ export async function claimDirectoryProfile(
             tags: media.tags,
             alt_text: media.alt_text,
             source: 'directory_claim',
+            show_in_epk: true,
           });
 
           photosCopied++;
@@ -198,6 +199,40 @@ export async function claimDirectoryProfile(
         .from('comedians')
         .update(updateData)
         .eq('id', comedianId);
+    }
+
+    // Also update profiles table with social links, bio, and avatar
+    const profileUpdateData: Record<string, unknown> = {};
+    if (dirProfile.instagram_url) {
+      profileUpdateData.instagram_url = dirProfile.instagram_url;
+    }
+    if (dirProfile.facebook_url) {
+      profileUpdateData.facebook_url = dirProfile.facebook_url;
+    }
+    if (dirProfile.youtube_url) {
+      profileUpdateData.youtube_url = dirProfile.youtube_url;
+    }
+    if (dirProfile.tiktok_url) {
+      profileUpdateData.tiktok_url = dirProfile.tiktok_url;
+    }
+    if (dirProfile.twitter_url) {
+      profileUpdateData.twitter_url = dirProfile.twitter_url;
+    }
+    if (dirProfile.website) {
+      profileUpdateData.website_url = dirProfile.website;
+    }
+    if (dirProfile.short_bio) {
+      profileUpdateData.bio = dirProfile.short_bio;
+    }
+    if (dirProfile.primary_headshot_url) {
+      profileUpdateData.avatar_url = dirProfile.primary_headshot_url;
+    }
+
+    if (Object.keys(profileUpdateData).length > 0) {
+      await supabase
+        .from('profiles')
+        .update(profileUpdateData)
+        .eq('id', userId);
     }
 
     // If primary headshot was set, update comedian's primary headshot
