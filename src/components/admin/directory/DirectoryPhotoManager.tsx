@@ -5,7 +5,7 @@
  * set primary headshot, delete photos.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,8 @@ import {
   User,
   Users,
   Images,
+  Upload,
+  Plus,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
@@ -84,6 +86,11 @@ export function DirectoryPhotoManager({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkTagInput, setBulkTagInput] = useState('');
 
+  // Upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+
   const getDialogStyles = () => {
     if (theme === 'pleasure') {
       return 'bg-purple-900/95 border-white/20 text-white';
@@ -112,6 +119,77 @@ export function DirectoryPhotoManager({
   useEffect(() => {
     loadPhotos();
   }, [profile.id]);
+
+  // Handle multi-file upload
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Filter to only images
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      toast({
+        title: 'No images selected',
+        description: 'Please select image files (JPG, PNG, WebP)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({ current: 0, total: imageFiles.length });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      if (!file) continue;
+
+      setUploadProgress({ current: i + 1, total: imageFiles.length });
+
+      try {
+        // First image is primary headshot if no photos exist yet
+        const isFirst = photos.length === 0 && i === 0;
+
+        await directoryService.uploadPhoto(profile.id, file, {
+          isHeadshot: true,
+          isPrimary: isFirst,
+          displayOrder: photos.length + i,
+        });
+
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to upload ${file.name}:`, error);
+        errorCount++;
+      }
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    setIsUploading(false);
+    setUploadProgress({ current: 0, total: 0 });
+
+    // Show result toast
+    if (errorCount === 0) {
+      toast({
+        title: 'Upload Complete',
+        description: `Successfully uploaded ${successCount} photo${successCount === 1 ? '' : 's'}`,
+      });
+    } else {
+      toast({
+        title: 'Upload Partially Complete',
+        description: `Uploaded ${successCount}, failed ${errorCount}`,
+        variant: 'destructive',
+      });
+    }
+
+    // Reload photos
+    loadPhotos();
+  };
 
   // Get public URL for a photo
   const getPhotoUrl = (photo: DirectoryMedia) => {
@@ -327,10 +405,39 @@ export function DirectoryPhotoManager({
       <Dialog open onOpenChange={() => onClose()}>
         <DialogContent className={cn("max-w-5xl max-h-[90vh] overflow-hidden flex flex-col", getDialogStyles())}>
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5" />
-              {profile.stage_name} - Photos ({photos.length})
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                {profile.stage_name} - Photos ({photos.length})
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {uploadProgress.current}/{uploadProgress.total}
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Upload Photos
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </DialogHeader>
 
           {/* Bulk actions toolbar */}
@@ -392,9 +499,22 @@ export function DirectoryPhotoManager({
                 <Loader2 className="h-8 w-8 animate-spin text-white/50" />
               </div>
             ) : photos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-white/50">
-                <ImageIcon className="h-12 w-12 mb-4" />
-                <p>No photos uploaded yet</p>
+              <div
+                className="flex flex-col items-center justify-center h-64 text-white/50 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const dt = e.dataTransfer;
+                  if (dt.files.length > 0 && fileInputRef.current) {
+                    fileInputRef.current.files = dt.files;
+                    handleFileSelect({ target: fileInputRef.current } as React.ChangeEvent<HTMLInputElement>);
+                  }
+                }}
+                onDragOver={(e) => e.preventDefault()}
+              >
+                <Upload className="h-12 w-12 mb-4" />
+                <p className="font-medium text-white/70">Drop photos here or click to upload</p>
+                <p className="text-sm mt-2">JPG, PNG, WebP supported</p>
               </div>
             ) : (
               <>
