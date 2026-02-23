@@ -65,97 +65,102 @@ export const useVouches = (profileId?: string) => {
     if (!query.trim() || !activeProfileId) return [];
 
     try {
-      // Search profiles by name/stage_name (without org filter to avoid INNER JOIN issues)
+      const results: UserSearchResult[] = [];
+      const seenIds = new Set<string>();
+
+      // 1. Search profiles by name
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          name,
-          stage_name,
-          avatar_url,
-          user_roles(role),
-          organization_profiles(organization_name),
-          comedians(stage_name)
-        `)
+        .select('id, name, stage_name, avatar_url')
         .neq('id', activeProfileId)
-        .or(`name.ilike.%${query}%,stage_name.ilike.%${query}%`)
+        .ilike('name', `%${query}%`)
         .limit(10);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile search error:', profileError);
+      } else {
+        for (const p of profileData || []) {
+          if (!seenIds.has(p.id)) {
+            seenIds.add(p.id);
+            // Get roles for this profile
+            const { data: roles } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', p.id);
+            results.push({
+              id: p.id,
+              name: p.name || '',
+              stage_name: p.stage_name,
+              avatar_url: p.avatar_url,
+              roles: roles?.map(r => r.role) || []
+            });
+          }
+        }
+      }
 
-      // Also search organizations separately
-      const { data: orgData, error: orgError } = await supabase
-        .from('organization_profiles')
-        .select(`
-          id,
-          organization_name,
-          profiles!inner(name, avatar_url)
-        `)
-        .neq('id', activeProfileId)
-        .ilike('organization_name', `%${query}%`)
-        .limit(5);
-
-      if (orgError) throw orgError;
-
-      // Also search comedians by stage_name
+      // 2. Search comedians by stage_name
       const { data: comedianData, error: comedianError } = await supabase
         .from('comedians')
-        .select(`
-          id,
-          stage_name,
-          headshot_url,
-          profiles!inner(id, name, avatar_url)
-        `)
+        .select('id, stage_name, headshot_url')
         .neq('id', activeProfileId)
         .ilike('stage_name', `%${query}%`)
         .limit(5);
 
-      if (comedianError) throw comedianError;
-
-      // Combine results, avoiding duplicates
-      const resultMap = new Map<string, UserSearchResult>();
-
-      // Add profile results
-      (profileData || []).forEach(profile => {
-        const comedianStageName = (profile.comedians as any)?.[0]?.stage_name;
-        resultMap.set(profile.id, {
-          id: profile.id,
-          name: profile.name || '',
-          stage_name: profile.stage_name || comedianStageName,
-          avatar_url: profile.avatar_url,
-          roles: profile.user_roles?.map((r: any) => r.role) || (profile.organization_profiles ? ['organization'] : [])
-        });
-      });
-
-      // Add organization results
-      (orgData || []).forEach(org => {
-        if (!resultMap.has(org.id)) {
-          const profile = org.profiles as any;
-          resultMap.set(org.id, {
-            id: org.id,
-            name: org.organization_name || '',
-            stage_name: org.organization_name,
-            avatar_url: profile?.avatar_url,
-            roles: ['organization']
-          });
+      if (comedianError) {
+        console.error('Comedian search error:', comedianError);
+      } else {
+        for (const c of comedianData || []) {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            // Get profile info
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('name, avatar_url')
+              .eq('id', c.id)
+              .single();
+            results.push({
+              id: c.id,
+              name: profile?.name || c.stage_name || '',
+              stage_name: c.stage_name,
+              avatar_url: c.headshot_url || profile?.avatar_url,
+              roles: ['comedian']
+            });
+          }
         }
-      });
+      }
 
-      // Add comedian results
-      (comedianData || []).forEach(comedian => {
-        const profile = comedian.profiles as any;
-        if (!resultMap.has(comedian.id)) {
-          resultMap.set(comedian.id, {
-            id: comedian.id,
-            name: profile?.name || comedian.stage_name || '',
-            stage_name: comedian.stage_name,
-            avatar_url: comedian.headshot_url || profile?.avatar_url,
-            roles: ['comedian']
-          });
+      // 3. Search organizations by name
+      const { data: orgData, error: orgError } = await supabase
+        .from('organization_profiles')
+        .select('id, organization_name')
+        .neq('id', activeProfileId)
+        .ilike('organization_name', `%${query}%`)
+        .limit(5);
+
+      if (orgError) {
+        console.error('Org search error:', orgError);
+      } else {
+        for (const o of orgData || []) {
+          if (!seenIds.has(o.id)) {
+            seenIds.add(o.id);
+            // Get profile avatar
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('avatar_url')
+              .eq('id', o.id)
+              .single();
+            results.push({
+              id: o.id,
+              name: o.organization_name || '',
+              stage_name: o.organization_name,
+              avatar_url: profile?.avatar_url,
+              roles: ['organization']
+            });
+          }
         }
-      });
+      }
 
-      return Array.from(resultMap.values()).slice(0, 10);
+      return results.slice(0, 10);
     } catch (error) {
       console.error('Error searching users:', error);
       return [];
