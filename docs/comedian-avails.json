@@ -1,0 +1,5600 @@
+[
+  {
+    "name": "Josh Khoury",
+    "email": "zipkhoury@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Kim Snow",
+    "email": "kimberleyseeto@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Jackson Stewart",
+    "email": "jssjacksonstewart@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Andrew Hastings",
+    "email": "andrew_t_hastings@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Jamal Abdul",
+    "email": "jamal@jamalabdul.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Adam",
+    "email": "adamgcampbell98@icloud.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Hughie Phillips",
+    "email": "hughphillips02@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Amelia Navascues",
+    "email": "amelia.chloe.navascues@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Jacob Perry",
+    "email": "jacobmp@live.com.au",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Marty Bright",
+    "email": "martybrightcomedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "John Glover",
+    "email": "john.glover.92@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Rory Kiely",
+    "email": "rory.kiely@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Dave Woodhead",
+    "email": "davidwoodhead84@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Roman Apollonov",
+    "email": "roman.apollonov@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Harry Shutes",
+    "email": "hshutes@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Ryan Sim",
+    "email": "ryandarcysim@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Josh Spyro",
+    "email": "josh.spy11@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Tavis Harrod",
+    "email": "tavis_harrod@hotmal.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Jarryd Prain",
+    "email": "jarryd.prain@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Riv Narak",
+    "email": "rivnarakcomedy@outlook.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Miki Weingarten",
+    "email": "mikiweingarten@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Elliot McLaren",
+    "email": "contact@elliotmclaren.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Nic Lelli",
+    "email": "niclelli01@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Yosef",
+    "email": "yosefb1@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Jordan Smith",
+    "email": "jordansmithbookings@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Fiona Cox",
+    "email": "fionacox84@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Shiro",
+    "email": "shiro.kumara@outlook.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Craig McLeod",
+    "email": "craig.mcleod79@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Easwar Krishnan",
+    "email": "easwar.vijay@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "jess fuchs",
+    "email": "jessrfuchs@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Alex Choi",
+    "email": "alexwilsonmedia@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Finbar",
+    "email": "finmartinezbennett@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Laura Coleman",
+    "email": "lalalaura@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Kurt Sterling",
+    "email": "kurtsterlingcomedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Sheng Zeng",
+    "email": "shengzeng.lmao@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Billy D’Arcy",
+    "email": "billydarcycomedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Avinaash Thanabalan",
+    "email": "avinashthanabalan@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Luca Trovato",
+    "email": "luca.trovato1@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Nathan Moss",
+    "email": "nathan.m06@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Johnson Mulia",
+    "email": "thelaughingjohnson@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Mariah Nickolas",
+    "email": "mariahnickolas1@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Guneet Kaur",
+    "email": "guneet.k42@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Freya Morton",
+    "email": "professionalfreya@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Charles Wong",
+    "email": "ch.wong87@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Tori Crisp",
+    "email": "toricrisp@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "fadey yuseef",
+    "email": "fadeyyosif9@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "fadey yuseef",
+    "email": "fadeyyosif9@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Juni",
+    "email": "juni.comedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Emmet O’Dwyer",
+    "email": "emmetdwr1@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Gereon Gatzen-O’Keefe",
+    "email": "gereon.gok@icloud.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Aussie Tayshus",
+    "email": "aussietayshus@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Steve Dowse",
+    "email": "stevehass82@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Alex white",
+    "email": "adjwhite86@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Akila",
+    "email": "88akila88@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Kiyanosh Sahebi",
+    "email": "kiyanosh.sahebi8@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Gemma Urban",
+    "email": "gemmafrances19@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Will Devine",
+    "email": "iamwilldevine@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Jordan Bryce",
+    "email": "jordandavidbryce@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Elih Jackson",
+    "email": "elihwilljackson@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Ash Chapman",
+    "email": "ashchapmancomedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Lochlann McAllister",
+    "email": "lochlannmcallister00@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Helio Borges",
+    "email": "helio.borges.au@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Rian howlett",
+    "email": "rian_howlett@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Montana Papadinjz",
+    "email": "montana.papadinis@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Dane Hiser",
+    "email": "dane.hiser@yahoo.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Gearard McGeown",
+    "email": "gearard.mcgeown@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Jessy Heath",
+    "email": "jessyheath@yahoo.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Blakeandkodi",
+    "email": "blakejacknicholas@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Eugene aka Barbie Pongteh",
+    "email": "ug3nity@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Eric Hutton",
+    "email": "erichutton13@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Vlad",
+    "email": "mycousinvlad@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Al Smith",
+    "email": "alan.rc.smith@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Dave Woodhead",
+    "email": "davidwoodhead84@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Tom Orr",
+    "email": "tomsorr@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Freddie McManus",
+    "email": "freddiemcm94@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Dave Henning",
+    "email": "davehenningham@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Alexandra Hudson",
+    "email": "alexandrahudsoncomedy@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Steph",
+    "email": "stephaniebroadbridge@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Maddie Dockrill",
+    "email": "maddie.dockrill@gmail.com",
+    "avails": [
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "luke heggie",
+    "email": "lukeheggie@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Callum Sowden",
+    "email": "callum.sowden@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Effie Tan",
+    "email": "effie.y.tan@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Luka Muller",
+    "email": "lukamuller93@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Chloe Maddren",
+    "email": "chloemaddren@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Sam kissajukian",
+    "email": "samkissajukian@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Samuel Bellwood",
+    "email": "samuel.bellwood@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      }
+    ]
+  },
+  {
+    "name": "Mark Sahin",
+    "email": "marcuss1127@gmaul.com",
+    "avails": [
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Harry Jun",
+    "email": "harryjun@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Katie Yang",
+    "email": "shumingyang@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Kiyanosh Sahebi",
+    "email": "kiyanosh.sahebi8@hotmail.com",
+    "avails": [
+      {
+        "date": "2026-02-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-04",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-28",
+        "show": "Carousel"
+      }
+    ]
+  },
+  {
+    "name": "Elih Jackson",
+    "email": "elihwilljackson@gmail.com",
+    "avails": [
+      {
+        "date": "2026-02-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-02-27",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-02-28",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-06",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-07",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-11",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-13",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-14",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-18",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-20",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-21",
+        "show": "Carousel"
+      },
+      {
+        "date": "2026-03-25",
+        "show": "Magic Mic Comedy"
+      },
+      {
+        "date": "2026-03-27",
+        "show": "Carousel"
+      }
+    ]
+  }
+]

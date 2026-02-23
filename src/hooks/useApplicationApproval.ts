@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import {
   getApplicationsByEvent,
+  getDirectoryAvailsByEvent,
   getShortlistedApplications,
   getShortlistStats,
   approveApplication,
@@ -31,7 +32,8 @@ export const applicationsKeys = {
   byEvent: (eventId: string, statusFilter?: string) =>
     [...applicationsKeys.all, 'event', eventId, statusFilter || 'all'] as const,
   shortlisted: (eventId: string) => [...applicationsKeys.all, 'shortlisted', eventId] as const,
-  shortlistStats: (eventId: string) => [...applicationsKeys.all, 'shortlist-stats', eventId] as const
+  shortlistStats: (eventId: string) => [...applicationsKeys.all, 'shortlist-stats', eventId] as const,
+  directoryAvails: (eventId: string) => [...applicationsKeys.all, 'directory-avails', eventId] as const
 };
 
 // ============================================================================
@@ -69,6 +71,22 @@ export function useApplicationsByEvent(
         });
       }
     }
+  });
+}
+
+/**
+ * Fetch directory availability entries for an event (from avails form import)
+ */
+export function useDirectoryAvailsByEvent(eventId: string | undefined) {
+  return useQuery({
+    queryKey: applicationsKeys.directoryAvails(eventId || ''),
+    queryFn: async () => {
+      if (!eventId) throw new Error('Event ID is required');
+      return getDirectoryAvailsByEvent(eventId);
+    },
+    enabled: !!eventId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

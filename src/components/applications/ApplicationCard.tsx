@@ -49,11 +49,14 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
   const { isMobile } = useMobileLayout();
 
+  const isAvail = application.is_directory_avail;
+
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     accepted: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    withdrawn: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+    withdrawn: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    available: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
   };
 
   return (
@@ -104,7 +107,7 @@ export function ApplicationCard({
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={statusColors[application.status] || statusColors.pending}>
-              {application.status}
+              {isAvail ? 'Avails' : application.status}
             </Badge>
             {application.spot_type && (
               <Badge className="professional-button">{application.spot_type}</Badge>
@@ -127,9 +130,9 @@ export function ApplicationCard({
           </p>
         )}
 
-        {/* Applied Date */}
+        {/* Applied/Submitted Date */}
         <p className="text-xs text-muted-foreground">
-          Applied {new Date(application.applied_at).toLocaleDateString()}
+          {isAvail ? 'Submitted via Avails Form' : `Applied ${new Date(application.applied_at).toLocaleDateString()}`}
         </p>
       </CardContent>
 
@@ -137,40 +140,44 @@ export function ApplicationCard({
         "flex border-t",
         isMobile ? "flex-col gap-2 pt-3" : "flex-wrap gap-2 pt-4"
       )}>
-        {/* Confirm Button */}
-        <Button
-          onClick={onApprove}
-          disabled={isLoading || application.status === 'accepted'}
-          size={isMobile ? "default" : "sm"}
-          variant="default"
-          className={cn(
-            "gap-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800",
-            isMobile && "w-full touch-target-44"
-          )}
-          aria-label="Confirm application"
-        >
-          <CheckCircle className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
-          Confirm
-        </Button>
+        {/* Confirm Button (disabled for directory avails - no auth account) */}
+        {!isAvail && (
+          <Button
+            onClick={onApprove}
+            disabled={isLoading || application.status === 'accepted'}
+            size={isMobile ? "default" : "sm"}
+            variant="default"
+            className={cn(
+              "gap-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800",
+              isMobile && "w-full touch-target-44"
+            )}
+            aria-label="Confirm application"
+          >
+            <CheckCircle className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+            Confirm
+          </Button>
+        )}
 
         {/* Mobile: Secondary Actions Grid */}
         <div className={cn(
           isMobile ? "grid grid-cols-3 gap-2 w-full" : "contents"
         )}>
-          {/* Add to Shortlist Button */}
-          <Button
-            onClick={onAddToShortlist}
-            disabled={isLoading}
-            size={isMobile ? "default" : "sm"}
-            className={cn(
-              "professional-button gap-1",
-              isMobile && "touch-target-44"
-            )}
-            aria-label="Add to shortlist"
-          >
-            <Star className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
-            {!isMobile && "Shortlist"}
-          </Button>
+          {/* Add to Shortlist Button (disabled for directory avails) */}
+          {!isAvail && (
+            <Button
+              onClick={onAddToShortlist}
+              disabled={isLoading}
+              size={isMobile ? "default" : "sm"}
+              className={cn(
+                "professional-button gap-1",
+                isMobile && "touch-target-44"
+              )}
+              aria-label="Add to shortlist"
+            >
+              <Star className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
+              {!isMobile && "Shortlist"}
+            </Button>
+          )}
 
           {/* Favourite Button (Toggle) */}
           <Button

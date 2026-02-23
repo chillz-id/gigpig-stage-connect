@@ -8,7 +8,7 @@
 import React, { useState, useMemo } from 'react';
 import { ApplicationList } from './ApplicationList';
 import { ApplicationCardContainer } from './ApplicationCardContainer';
-import { useApplicationsByEvent } from '@/hooks/useApplicationApproval';
+import { useApplicationsByEvent, useDirectoryAvailsByEvent } from '@/hooks/useApplicationApproval';
 import { useUserFavourites, useHiddenComedians } from '@/hooks/useUserPreferences';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -43,6 +43,20 @@ export function ApplicationListContainer({
     refetch
   } = useApplicationsByEvent(eventId, statusFilter);
 
+  // Fetch directory availability entries (avails form submissions)
+  const { data: directoryAvails } = useDirectoryAvailsByEvent(
+    statusFilter === 'all' || statusFilter === undefined ? eventId : undefined
+  );
+
+  // Merge applications with directory avails
+  const mergedApplications = useMemo(() => {
+    const apps = applications || [];
+    const avails = directoryAvails || [];
+    if (avails.length === 0) return apps;
+    // Append avails after regular applications
+    return [...apps, ...avails];
+  }, [applications, directoryAvails]);
+
   // Fetch favourites and hidden lists ONCE for all cards (prevents N+1 queries)
   const { data: favouritedComedianIds = [] } = useUserFavourites(userId);
   const { data: hiddenComedianIdsFromDb = [] } = useHiddenComedians(userId, eventId);
@@ -59,13 +73,13 @@ export function ApplicationListContainer({
 
   // Filter hidden applications unless showHidden is true
   const filteredApplications = useMemo(() => {
-    if (!applications) return [];
-    if (showHidden) return applications;
+    if (!mergedApplications) return [];
+    if (showHidden) return mergedApplications;
 
-    return applications.filter(
+    return mergedApplications.filter(
       (app) => !hiddenSet.has(app.comedian_id)
     );
-  }, [applications, showHidden, hiddenSet]);
+  }, [mergedApplications, showHidden, hiddenSet]);
 
   // Handle selection changes
   const handleSelectionChange = (applicationId: string, isSelected: boolean) => {

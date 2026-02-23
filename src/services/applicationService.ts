@@ -531,6 +531,63 @@ export async function getApplicationsByEvent(
 }
 
 /**
+ * Get directory availability entries for an event.
+ * These come from the Google Forms avails import (directory_availability table)
+ * and are shown alongside regular applications.
+ */
+export async function getDirectoryAvailsByEvent(eventId: string): Promise<ApplicationData[]> {
+  const { data: eventData, error: eventError } = await supabase
+    .from('events')
+    .select('id, title, venue, event_date')
+    .eq('id', eventId)
+    .single();
+
+  if (eventError) {
+    console.error('Error fetching event for avails:', eventError);
+    throw eventError;
+  }
+
+  const { data, error } = await supabase
+    .from('directory_availability')
+    .select(`
+      id,
+      directory_profile_id,
+      event_id,
+      available_date,
+      show_name,
+      notes,
+      created_at,
+      directory_profiles (
+        id,
+        stage_name,
+        primary_headshot_url,
+        slug
+      )
+    `)
+    .eq('event_id', eventId);
+
+  if (error) {
+    console.error('Error fetching directory avails:', error);
+    throw error;
+  }
+
+  return (data || []).map(avail => ({
+    id: `avail-${avail.id}`,
+    comedian_id: avail.directory_profile_id,
+    comedian_name: avail.directory_profiles?.stage_name || 'Unknown',
+    comedian_avatar: avail.directory_profiles?.primary_headshot_url ?? undefined,
+    event_id: eventId,
+    event_title: eventData?.title || 'Unknown Event',
+    event_venue: eventData?.venue || 'Unknown Venue',
+    event_date: eventData?.event_date || '',
+    applied_at: avail.created_at || '',
+    status: 'available' as const,
+    message: avail.notes || 'Submitted via Avails Form',
+    is_directory_avail: true,
+  }));
+}
+
+/**
  * Get shortlist statistics for an event
  */
 export interface ShortlistStats {

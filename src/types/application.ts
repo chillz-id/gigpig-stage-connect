@@ -2,7 +2,7 @@
  * Application related types and interfaces
  */
 
-export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'available';
 
 export type SpotType = 'MC' | 'Feature' | 'Headliner' | 'Guest';
 
@@ -33,6 +33,8 @@ export interface ApplicationData {
   requirements_acknowledged?: boolean;
   is_shortlisted?: boolean;
   shortlisted_at?: string;
+  /** True if this entry comes from directory_availability (avails form) rather than applications table */
+  is_directory_avail?: boolean;
 }
 
 export interface ApplicationInsert {
