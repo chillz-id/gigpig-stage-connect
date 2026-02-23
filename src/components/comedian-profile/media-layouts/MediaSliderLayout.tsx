@@ -328,7 +328,7 @@ export const MediaSliderLayout: React.FC<MediaSliderLayoutProps> = ({
           <div className="relative overflow-hidden">
             <Marquee
               pauseOnHover
-              className="[--gap:0.5rem] [--duration:40s]"
+              className="[--gap:0.5rem] [--duration:120s]"
               repeat={2}
             >
               {photos.map((photo, index) => (
