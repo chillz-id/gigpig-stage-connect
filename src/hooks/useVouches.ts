@@ -201,11 +201,11 @@ export const useVouches = (profileId?: string) => {
       const { data, error } = await supabase
         .from('vouches')
         .insert({
-          voucher_id: activeProfileId, // Use active profile
+          voucher_id: user.id, // Always use auth user ID (RLS requires auth.uid() = voucher_id)
           vouchee_id: formData.vouchee_id,
           message: formData.message,
           rating: formData.rating,
-          organization_id: formData.organization_id || null // When set, vouch is on behalf of org
+          organization_id: formData.organization_id || null // When set, vouch displays as org
         })
         .select()
         .single();
