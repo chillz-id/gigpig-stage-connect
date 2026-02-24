@@ -431,7 +431,7 @@ async function createEventFolder(
   driveBrand: string,
 ): Promise<void> {
   const eventDate = event.event_date.split('T')[0]; // YYYY-MM-DD
-  const shortName = getEventShortName(event.name);
+  const shortName = getEventShortName(event.name, driveBrand);
   const folderName = `${eventDate} - ${shortName}`;
 
   // Create the event folder directly under the brand
@@ -463,11 +463,22 @@ async function createGeneralFolders(
 }
 
 /**
- * Shorten event names for folder names.
- * "iD Comedy Club Friday Night Comedy" → "iD Comedy Club Fri Night"
+ * Shorten event names for folder names, stripping redundant brand prefix.
+ * "ID Comedy Club - Fri/Sat"  (brand "iD Comedy Club") → "Fri-Sat"
+ * "Rory Lowe - Lowe Key Funny (Sydney)" (brand "Rory Lowe") → "Lowe Key Funny (Sydney)"
+ * "Magic Mic Comedy - Wednesdays" (brand "Magic Mic Comedy") → "Wednesdays"
  */
-function getEventShortName(name: string): string {
-  return name
+function getEventShortName(name: string, brandName: string): string {
+  let result = name;
+
+  // Strip brand name prefix (case-insensitive) — DB may have "ID" while config has "iD"
+  const brandPattern = new RegExp(`^${escapeRegExp(brandName)}\\s*[-–—:]?\\s*`, 'i');
+  result = result.replace(brandPattern, '');
+
+  // If stripping left nothing (event name IS the brand name), keep the original
+  if (result.trim().length === 0) result = name;
+
+  return result
     .replace(/Friday/gi, 'Fri')
     .replace(/Saturday/gi, 'Sat')
     .replace(/Sunday/gi, 'Sun')
@@ -478,4 +489,8 @@ function getEventShortName(name: string): string {
     .replace(/\s+Comedy$/i, '') // Remove trailing "Comedy" if redundant
     .replace(/\//g, '-')        // Replace "/" (e.g., "Fri/Sat") to avoid path conflicts
     .trim();
+}
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
