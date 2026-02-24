@@ -90,15 +90,10 @@ export const PostSignupFlowHandler: React.FC<PostSignupFlowHandlerProps> = ({ on
 
     setIsSavingRoles(true);
     try {
-      // Insert selected roles into user_roles
-      const roleInserts = selectedRoles.map(role => ({
-        user_id: user.id,
-        role,
-      }));
-
-      const { error } = await supabase
-        .from('user_roles')
-        .insert(roleInserts);
+      // Insert selected roles via RPC (bypasses RLS which restricts inserts to admins)
+      const { error } = await supabase.rpc('set_own_roles', {
+        p_roles: selectedRoles,
+      });
 
       if (error) {
         throw error;
