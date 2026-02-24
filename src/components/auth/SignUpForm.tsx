@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mic, Users, Briefcase, Building2 } from 'lucide-react';
+import { Mic, Briefcase, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GoogleSignInButton from './GoogleSignInButton';
 
@@ -173,18 +173,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
               <Label htmlFor="is-comedian" className="text-sm cursor-pointer flex items-center gap-2">
                 <Mic className="w-4 h-4" />
                 Comedian
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is-promoter"
-                checked={selectedRoles.includes('promoter')}
-                onCheckedChange={() => handleRoleToggle('promoter')}
-                className="h-4 w-4 accent-indigo-500"
-              />
-              <Label htmlFor="is-promoter" className="text-sm cursor-pointer flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Promoter
               </Label>
             </div>
             <div className="flex items-center space-x-2">

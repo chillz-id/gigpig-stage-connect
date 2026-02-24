@@ -68,7 +68,7 @@ const Dashboard = () => {
   // Handle no active profile - redirect to profile creation
   if (!activeProfile) {
     // Automatically redirect to profile creation wizard
-    navigate('/profile-management', { replace: true });
+    navigate('/post-signup-setup', { replace: true });
 
     return (
       <div className={cn("min-h-screen flex items-center justify-center",
@@ -137,7 +137,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-6">
               Your organization profile is missing a URL slug. Please contact support or recreate your organization profile.
             </p>
-            <Button onClick={() => navigate('/profile-management')} className="w-full">
+            <Button onClick={() => navigate('/post-signup-setup')} className="w-full">
               Manage Profiles
             </Button>
           </CardContent>
@@ -177,7 +177,7 @@ const Dashboard = () => {
                     <p className="text-muted-foreground mb-6">
                       The profile type "{activeProfile}" is not recognized.
                     </p>
-                    <Button onClick={() => navigate('/profile-management')} className="w-full">
+                    <Button onClick={() => navigate('/post-signup-setup')} className="w-full">
                       Manage Profiles
                     </Button>
                   </CardContent>
