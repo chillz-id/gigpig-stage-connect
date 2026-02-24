@@ -523,3 +523,83 @@ export const METRICOOL_NETWORKS: Record<SocialPlatform, string> = {
   threads: 'THREADS',
   bluesky: 'BLUESKY',
 } as const;
+
+// ─── Google Drive Integration ───────────────────────────────────────────────
+
+export interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  size?: string;
+  createdTime?: string;
+  modifiedTime?: string;
+  thumbnailLink?: string;
+  webViewLink?: string;
+  webContentLink?: string;
+  videoMediaMetadata?: {
+    width: number;
+    height: number;
+    durationMillis: string;
+  };
+  imageMediaMetadata?: {
+    width: number;
+    height: number;
+  };
+  parents?: string[];
+}
+
+export interface DriveMediaAsset {
+  id: string;
+  drive_file_id: string;
+  brand: string;
+  file_name: string;
+  file_type: 'video' | 'image';
+  mime_type: string | null;
+  file_size: number | null;
+  folder_path: string;
+  drive_url: string | null;
+  thumbnail_url: string | null;
+  status: 'available' | 'scheduled' | 'posted' | 'archived';
+  used_count: number;
+  last_used_at: string | null;
+  first_used_at: string | null;
+  posted_platforms: string[] | null;
+  draft_ids: string[] | null;
+  duration_seconds: number | null;
+  width: number | null;
+  height: number | null;
+  tags: string[] | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DriveAction = 'list' | 'get' | 'share' | 'move' | 'scan' | 'resolve-path';
+
+export interface DriveProxyRequest {
+  action: DriveAction;
+  folderId?: string;
+  folderPath?: string;
+  fileId?: string;
+  destinationFolderId?: string;
+  brand?: string;
+  pageToken?: string;
+}
+
+export type DriveBrand = 'iD Comedy Club' | 'Rory Lowe' | 'Magic Mic Comedy';
+
+export const DRIVE_BRANDS: DriveBrand[] = ['iD Comedy Club', 'Rory Lowe', 'Magic Mic Comedy'];
+
+export const DRIVE_CONTENT_FOLDERS = {
+  RAW: 'Raw Footage',
+  READY: 'Ready to Post',
+  POSTED: 'Posted',
+} as const;
+
+export const DRIVE_FORMAT_FOLDERS = {
+  REELS: 'Reels',
+  STORIES: 'Stories',
+  FEED: 'Feed Posts',
+  SHORTS: 'Shorts',
+  TIKTOKS: 'TikToks',
+} as const;

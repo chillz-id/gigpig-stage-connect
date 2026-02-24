@@ -32,6 +32,7 @@ import { ReviewQueue } from '@/components/social/ReviewQueue';
 import { ContentCalendar } from '@/components/social/ContentCalendar';
 import { AutomationSettings } from '@/components/social/AutomationSettings';
 import { SocialAnalytics } from '@/components/social/SocialAnalytics';
+import { DriveMediaBrowser } from '@/components/social/DriveMediaBrowser';
 import { useOrganizationProfiles } from '@/hooks/useOrganizationProfiles';
 import { useToast } from '@/hooks/use-toast';
 import type { ScheduledPost, ProviderStatus } from '@/types/social';
@@ -281,6 +282,7 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
               Upcoming ({upcomingPosts.length})
             </TabsTrigger>
             <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
+            <TabsTrigger value="media" className="flex-1">Media</TabsTrigger>
             <TabsTrigger value="analytics" className="flex-1">Analytics</TabsTrigger>
             <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
           </TabsList>
@@ -582,6 +584,11 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Media Tab */}
+          <TabsContent value="media">
+            <DriveMediaBrowser />
           </TabsContent>
 
           {/* Analytics Tab */}

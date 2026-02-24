@@ -82,3 +82,6 @@ n8n-workflows/FINAL-COMPLETE-orders-tickets-sync.json
 n8n-workflows/FINAL-FIXED-complete-sync.json
 n8n-workflows/FIXED-complete-sync.json
 .worktrees/
+
+# Google service account credentials
+docs/gigpig-50ekr-*.json
