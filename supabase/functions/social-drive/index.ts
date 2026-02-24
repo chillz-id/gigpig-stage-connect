@@ -460,6 +460,26 @@ serve(async (req) => {
         break;
       }
 
+      case 'delete-folder': {
+        // Delete a folder by ID (moves to trash)
+        if (!folderId) {
+          return new Response(
+            JSON.stringify({ error: 'folderId required for delete-folder' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+        const delResp = await fetch(`${DRIVE_API}/files/${folderId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!delResp.ok) {
+          const errText = await delResp.text();
+          throw new Error(`Drive delete failed: ${delResp.status} ${errText}`);
+        }
+        result = { deleted: folderId };
+        break;
+      }
+
       case 'list-folders': {
         // List subfolders in a given folder (for checking event folders)
         const parentId = folderId ?? (folderPath ? await resolveFolderPath(rootFolderId, folderPath.split('/'), token) : rootFolderId);

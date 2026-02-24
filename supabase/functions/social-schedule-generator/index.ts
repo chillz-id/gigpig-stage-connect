@@ -431,7 +431,7 @@ async function createEventFolder(
   driveBrand: string,
 ): Promise<void> {
   const eventDate = event.event_date.split('T')[0]; // YYYY-MM-DD
-  const shortName = getEventShortName(event.name, driveBrand);
+  const shortName = getEventShortName(event.name, event.event_date);
   const folderName = `${eventDate} - ${shortName}`;
 
   // Create the event folder directly under the brand
@@ -463,34 +463,39 @@ async function createGeneralFolders(
 }
 
 /**
- * Shorten event names for folder names, stripping redundant brand prefix.
- * "ID Comedy Club - Fri/Sat"  (brand "iD Comedy Club") → "Fri-Sat"
- * "Rory Lowe - Lowe Key Funny (Sydney)" (brand "Rory Lowe") → "Lowe Key Funny (Sydney)"
- * "Magic Mic Comedy - Wednesdays" (brand "Magic Mic Comedy") → "Wednesdays"
+ * Build a clean folder name from the event name, resolving day abbreviations
+ * to the actual day of the week based on the event date.
+ *
+ * "ID Comedy Club - Fri/Sat"  (on 2026-02-27) → "ID Comedy Club - Friday"
+ * "Magic Mic Comedy - Wednesdays" (on 2026-02-25) → "Magic Mic Comedy - Wednesday"
+ * "Rory Lowe - Lowe Key Funny MICF26" → "Rory Lowe - Lowe Key Funny MICF26"
  */
-function getEventShortName(name: string, brandName: string): string {
+function getEventShortName(name: string, eventDate: string): string {
+  // Determine actual day of week from event date (dates are stored as local date)
+  const datePart = eventDate.split('T')[0]!;
+  const date = new Date(datePart + 'T12:00:00Z'); // noon UTC avoids timezone edge cases
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const actualDay = dayNames[date.getUTCDay()]!;
+
   let result = name;
 
-  // Strip brand name prefix (case-insensitive) — DB may have "ID" while config has "iD"
-  const brandPattern = new RegExp(`^${escapeRegExp(brandName)}\\s*[-–—:]?\\s*`, 'i');
-  result = result.replace(brandPattern, '');
+  // Replace combined day abbreviation patterns (e.g. "Fri/Sat") with actual day name
+  const dayAbbr = '(?:Mon(?:day)?|Tue(?:sday)?|Tues|Wed(?:nesday)?|Weds|Thu(?:rsday)?|Thurs?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)';
+  const combinedDayRe = new RegExp(`\\b${dayAbbr}\\s*[/&-]\\s*${dayAbbr}\\b`, 'gi');
+  result = result.replace(combinedDayRe, actualDay);
 
-  // If stripping left nothing (event name IS the brand name), keep the original
-  if (result.trim().length === 0) result = name;
+  // Expand remaining standalone day abbreviations/plurals to full day names
+  result = result
+    .replace(/\bFridays?\b|\bFri\b/gi, 'Friday')
+    .replace(/\bSaturdays?\b|\bSat\b/gi, 'Saturday')
+    .replace(/\bSundays?\b|\bSun\b/gi, 'Sunday')
+    .replace(/\bMondays?\b|\bMon\b/gi, 'Monday')
+    .replace(/\bTuesdays?\b|\bTues?\b/gi, 'Tuesday')
+    .replace(/\bWednesdays?\b|\bWeds?\b/gi, 'Wednesday')
+    .replace(/\bThursdays?\b|\bThurs?\b|\bThu\b/gi, 'Thursday');
 
-  return result
-    .replace(/Friday/gi, 'Fri')
-    .replace(/Saturday/gi, 'Sat')
-    .replace(/Sunday/gi, 'Sun')
-    .replace(/Monday/gi, 'Mon')
-    .replace(/Tuesday/gi, 'Tue')
-    .replace(/Wednesday/gi, 'Wed')
-    .replace(/Thursday/gi, 'Thu')
-    .replace(/\s+Comedy$/i, '') // Remove trailing "Comedy" if redundant
-    .replace(/\//g, '-')        // Replace "/" (e.g., "Fri/Sat") to avoid path conflicts
-    .trim();
-}
+  // Sanitize "/" to avoid path conflicts in Drive folder resolution
+  result = result.replace(/\//g, '-');
 
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return result.trim();
 }
