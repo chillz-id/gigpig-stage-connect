@@ -231,7 +231,7 @@ function App() {
                               <Route path="/epk" element={<ProtectedRoute><EPK /></ProtectedRoute>} />
                               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                               <Route path="/media-library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
-                              <Route path="/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
+                              <Route path="/social-media" element={<ProtectedRoute roles={['admin']}><SocialMedia /></ProtectedRoute>} />
                               <Route path="/tasks" element={<ProtectedRoute><TaskDashboard /></ProtectedRoute>} />
                               <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
                               <Route path="/bugs" element={<ProtectedRoute><BugTracker /></ProtectedRoute>} />

@@ -25,6 +25,7 @@ const OrganizationInvoices = lazy(() => import('@/pages/organization/Organizatio
 const OrganizationBookComedian = lazy(() => import('@/pages/organization/OrganizationBookComedian'));
 const CreateOrganizationEvent = lazy(() => import('@/pages/organization/CreateOrganizationEvent'));
 const OrganizationEventTours = lazy(() => import('@/pages/organization/OrganizationEventTours'));
+const OrganizationSocialMedia = lazy(() => import('@/pages/organization/OrganizationSocialMedia'));
 
 interface PublicProfileProps {
   type: 'comedian' | 'manager' | 'organization' | 'venue';
@@ -197,6 +198,7 @@ export default function PublicProfile({ type }: PublicProfileProps) {
             <Route path="media" element={<SuspenseWrapper><OrganizationMediaLibrary /></SuspenseWrapper>} />
             <Route path="invoices" element={<SuspenseWrapper><OrganizationInvoices /></SuspenseWrapper>} />
             <Route path="book-comedian" element={<SuspenseWrapper><OrganizationBookComedian /></SuspenseWrapper>} />
+            <Route path="social-media" element={<SuspenseWrapper><OrganizationSocialMedia /></SuspenseWrapper>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ErrorBoundary>

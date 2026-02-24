@@ -145,6 +145,11 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
       return `/org/${activeProfileData.slug}/events`;
     }
 
+    // If viewing an organization, transform /social-media to org-specific social media
+    if (path === '/social-media' && activeProfileData?.type === 'organization' && activeProfileData?.slug) {
+      return `/org/${activeProfileData.slug}/social-media`;
+    }
+
     // If path starts with /profile, replace with /:type/:slug/edit
     if (path.startsWith('/profile')) {
       // Special case: EPK goes to public profile view, not profile editing page

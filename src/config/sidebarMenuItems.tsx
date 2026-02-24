@@ -27,6 +27,7 @@ import {
   BookUser,
   Repeat,
   Layers,
+  Share2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -150,14 +151,15 @@ export const MENU_ITEMS: MenuItem[] = [
     section: undefined,
   },
 
-  // Social Media Manager - internal route
+  // Social Media Manager - admin only
   {
     id: 'social-media-manager',
-    label: 'Social Media Manager',
+    label: 'Social Media',
     path: '/social-media',
-    icon: ExternalLink,
-    roles: ['comedian', 'photographer', 'videographer', 'co_promoter', 'admin'],
-    section: undefined, // Standalone
+    icon: Share2,
+    roles: ['admin'],
+    section: 'admin',
+    requiresPermission: (permissions) => permissions.hasAdminAccess,
   },
 
   // Opportunities Section
