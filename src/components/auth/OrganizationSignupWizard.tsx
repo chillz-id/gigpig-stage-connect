@@ -99,20 +99,6 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
 
     setIsSubmitting(true);
     try {
-      // Generate a unique ID for the organization profile
-      const orgId = crypto.randomUUID();
-
-      // First create a base profile for the organization
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: orgId,
-          name: orgName,
-          email: `org-${orgId}@placeholder.local`, // Placeholder email, will be updated
-        });
-
-      if (profileError) throw profileError;
-
       // Map org type to organization_profiles format (array)
       const orgTypeMap: Record<string, string> = {
         'venue': 'venue',
@@ -120,16 +106,16 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
         'agency': 'artist_agency',
       };
 
-      // Create organization profile
+      // Create organization profile (id auto-generates, owner_id links to user's profile)
       const { data: newOrg, error: orgError } = await supabase
         .from('organization_profiles')
         .insert({
-          id: orgId,
           organization_name: orgName,
+          display_name: orgName,
           organization_type: [orgTypeMap[orgType] || 'event_promoter'],
-          bio: orgDescription,
+          bio: orgDescription || null,
           owner_id: userId,
-          contact_email: `org-${orgId}@placeholder.local`, // Will be updated by user
+          contact_email: `pending@gigpigs.app`,
           is_active: true,
         })
         .select()
