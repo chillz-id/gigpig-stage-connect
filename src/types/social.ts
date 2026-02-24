@@ -461,10 +461,13 @@ export interface ContentQueueItem {
 export interface ContentDraft {
   id: string;
   queue_id?: string;
+  event_id?: string;
+  window_label?: string;
   platform: SocialPlatform;
   post_type: PostType;
   caption: string;
   media_urls?: string[];
+  media_file_ids?: string[];
   media_type?: string;
   hashtags?: string[];
   scheduled_for?: string;
@@ -475,6 +478,7 @@ export interface ContentDraft {
   review_notes?: string;
   ai_model?: string;
   ai_prompt_used?: string;
+  organization_id?: string;
   created_at: string;
 }
 
@@ -570,11 +574,12 @@ export interface DriveMediaAsset {
   height: number | null;
   tags: string[] | null;
   notes: string | null;
+  event_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export type DriveAction = 'list' | 'get' | 'share' | 'move' | 'scan' | 'resolve-path';
+export type DriveAction = 'list' | 'get' | 'share' | 'move' | 'scan' | 'resolve-path' | 'create-folder' | 'list-folders';
 
 export interface DriveProxyRequest {
   action: DriveAction;
@@ -584,6 +589,8 @@ export interface DriveProxyRequest {
   destinationFolderId?: string;
   brand?: string;
   pageToken?: string;
+  folderName?: string;
+  parentFolderId?: string;
 }
 
 export type DriveBrand = 'iD Comedy Club' | 'Rory Lowe' | 'Magic Mic Comedy';
@@ -591,15 +598,14 @@ export type DriveBrand = 'iD Comedy Club' | 'Rory Lowe' | 'Magic Mic Comedy';
 export const DRIVE_BRANDS: DriveBrand[] = ['iD Comedy Club', 'Rory Lowe', 'Magic Mic Comedy'];
 
 export const DRIVE_CONTENT_FOLDERS = {
-  RAW: 'Raw Footage',
+  RAW: 'Raw Content',
   READY: 'Ready to Post',
   POSTED: 'Posted',
+  SHOW_FOOTAGE: 'Show Footage',
+  LINEUP: 'Lineup',
 } as const;
 
 export const DRIVE_FORMAT_FOLDERS = {
   REELS: 'Reels',
-  STORIES: 'Stories',
   FEED: 'Feed Posts',
-  SHORTS: 'Shorts',
-  TIKTOKS: 'TikToks',
 } as const;

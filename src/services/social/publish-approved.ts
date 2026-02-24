@@ -143,25 +143,45 @@ async function getOptimalTime(platform: SocialPlatform): Promise<Date> {
 
 /**
  * Parse Metricool best times response into slot objects.
+ *
+ * Metricool API returns: { data: [{ dayOfWeek: 0, bestTimesByHour: [{ hourOfDay: 14, value: 85 }] }] }
  */
-function parseBestTimes(
+export function parseBestTimes(
   response: unknown,
 ): { day: number; hour: number; score: number }[] {
   if (!response || typeof response !== 'object') return [];
 
-  // Metricool best times format varies — handle the common structures
+  // Handle MetricoolListResponse wrapper: { ok, data: [...] }
+  const items = Array.isArray(response)
+    ? response
+    : (response as { data?: unknown }).data;
+
+  if (!Array.isArray(items)) return [];
+
   const slots: { day: number; hour: number; score: number }[] = [];
 
-  // If it's an array of day objects with hourly scores
-  if (Array.isArray(response)) {
-    for (const entry of response) {
-      if (typeof entry === 'object' && entry !== null && 'day' in entry && 'hours' in entry) {
-        const dayEntry = entry as { day: number; hours: Record<string, number> };
-        for (const [hourStr, score] of Object.entries(dayEntry.hours)) {
-          const hour = parseInt(hourStr, 10);
-          if (!isNaN(hour) && typeof score === 'number') {
-            slots.push({ day: dayEntry.day, hour, score });
+  for (const entry of items) {
+    if (typeof entry !== 'object' || entry === null) continue;
+
+    // Metricool actual format: { dayOfWeek, bestTimesByHour: [{ hourOfDay, value }] }
+    if ('dayOfWeek' in entry && 'bestTimesByHour' in entry) {
+      const dayEntry = entry as { dayOfWeek: number; bestTimesByHour: { hourOfDay: number; value: number }[] };
+      if (Array.isArray(dayEntry.bestTimesByHour)) {
+        for (const slot of dayEntry.bestTimesByHour) {
+          if (typeof slot.hourOfDay === 'number' && typeof slot.value === 'number') {
+            slots.push({ day: dayEntry.dayOfWeek, hour: slot.hourOfDay, score: slot.value });
           }
+        }
+      }
+    }
+
+    // Legacy fallback: { day, hours: Record<string, number> }
+    if ('day' in entry && 'hours' in entry) {
+      const dayEntry = entry as { day: number; hours: Record<string, number> };
+      for (const [hourStr, score] of Object.entries(dayEntry.hours)) {
+        const hour = parseInt(hourStr, 10);
+        if (!isNaN(hour) && typeof score === 'number') {
+          slots.push({ day: dayEntry.day, hour, score });
         }
       }
     }

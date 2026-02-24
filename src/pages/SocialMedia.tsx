@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Check,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useScheduledPosts, useCreatePost, useDeletePost } from '@/hooks/social/useScheduledPosts';
@@ -34,6 +35,7 @@ import { AutomationSettings } from '@/components/social/AutomationSettings';
 import { SocialAnalytics } from '@/components/social/SocialAnalytics';
 import { DriveMediaBrowser } from '@/components/social/DriveMediaBrowser';
 import { useOrganizationProfiles } from '@/hooks/useOrganizationProfiles';
+import { useScheduleGenerator } from '@/hooks/social/useScheduleGenerator';
 import { useToast } from '@/hooks/use-toast';
 import type { ScheduledPost, ProviderStatus } from '@/types/social';
 import { METRICOOL_NETWORKS } from '@/types/social';
@@ -91,6 +93,7 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
 
   const { data: draftCounts } = useDraftCounts(activeOrgId);
   const pendingCount = draftCounts?.draft ?? 0;
+  const { generateSchedule: triggerGenerate, isGenerating } = useScheduleGenerator();
 
   // Date range for fetching posts: current month ±1 month
   const now = new Date();
@@ -452,7 +455,24 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
           </TabsContent>
 
           {/* Review Queue Tab */}
-          <TabsContent value="review">
+          <TabsContent value="review" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Auto-generated drafts for upcoming events appear here for review before publishing.
+              </p>
+              <Button
+                onClick={() => triggerGenerate(undefined)}
+                disabled={isGenerating}
+                size="sm"
+              >
+                {isGenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {isGenerating ? 'Generating...' : 'Generate Schedule'}
+              </Button>
+            </div>
             <ReviewQueue organizationId={activeOrgId} />
           </TabsContent>
 

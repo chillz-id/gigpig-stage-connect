@@ -98,6 +98,31 @@ export async function scanBrandMedia(
   return driveRequest({ action: 'scan', brand });
 }
 
+/**
+ * Create a folder in Google Drive.
+ * Returns the folder ID (creates if missing, returns existing if found).
+ */
+export async function createDriveFolder(
+  folderName: string,
+  parentPath?: string,
+): Promise<{ folderId: string; name: string; created: boolean }> {
+  return driveRequest({
+    action: 'create-folder',
+    folderName,
+    folderPath: parentPath,
+  });
+}
+
+/**
+ * List subfolders in a Drive folder.
+ */
+export async function listDriveFolders(
+  folderPath?: string,
+  folderId?: string,
+): Promise<{ folders: { id: string; name: string; createdTime?: string }[] }> {
+  return driveRequest({ action: 'list-folders', folderPath, folderId });
+}
+
 // ─── Asset Database Operations ──────────────────────────────────────────────
 
 /**
@@ -208,36 +233,36 @@ export async function markAssetUsed(
 }
 
 /**
- * Mark an asset as posted and move the file to the Posted folder.
+ * Mark an asset as posted and move the file to the event's Posted folder.
+ * Uses the asset's folder_path to derive the sibling Posted folder.
+ * e.g., "iD Comedy Club/2026-03-06 - Fri Night/Ready to Post" → "iD Comedy Club/2026-03-06 - Fri Night/Posted"
  */
 export async function markAssetPosted(assetId: string, brand: DriveBrand): Promise<void> {
-  // Get the asset to find the Drive file ID
+  // Get the asset to find the Drive file ID and folder path
   const { data: asset } = await supabase
     .from('social_media_assets')
-    .select('drive_file_id')
+    .select('drive_file_id, folder_path')
     .eq('id', assetId)
     .single();
 
   if (!asset) throw new DriveServiceError('Asset not found');
 
-  // Resolve the Posted folder path
-  const now = new Date();
-  const monthFolder = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const typedAsset = asset as { drive_file_id: string; folder_path: string | null };
 
   try {
-    const { folderId: postedFolderId } = await resolveDrivePath(`${brand}/Posted`);
-
-    // Try to find or create month subfolder
-    let monthFolderId: string;
-    try {
-      const resolved = await resolveDrivePath(`${brand}/Posted/${monthFolder}`);
-      monthFolderId = resolved.folderId;
-    } catch {
-      // Month folder doesn't exist — just use the Posted folder directly
-      monthFolderId = postedFolderId;
+    // Derive the Posted folder from the asset's current folder path
+    // folder_path could be "Brand/2026-03-06 - Fri Night/Ready to Post" or "Brand/General/Reels"
+    let postedPath: string;
+    if (typedAsset.folder_path?.includes('/Ready to Post')) {
+      // Replace "Ready to Post" with "Posted" in the path
+      postedPath = typedAsset.folder_path.replace('/Ready to Post', '/Posted');
+    } else {
+      // Fallback: use brand-level path (for General content or legacy paths)
+      postedPath = `${brand}/Posted`;
     }
 
-    await moveDriveFile((asset as { drive_file_id: string }).drive_file_id, monthFolderId);
+    const { folderId: postedFolderId } = await resolveDrivePath(postedPath);
+    await moveDriveFile(typedAsset.drive_file_id, postedFolderId);
   } catch (e) {
     console.error('Failed to move file to Posted folder:', e);
     // Don't throw — the status update is more important than the move
