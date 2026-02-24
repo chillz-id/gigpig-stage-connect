@@ -107,7 +107,7 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
         .from('profiles')
         .insert({
           id: orgId,
-          full_name: orgName,
+          name: orgName,
           email: `org-${orgId}@placeholder.local`, // Placeholder email, will be updated
         });
 
