@@ -22,11 +22,19 @@ function base64url(data: Uint8Array | string): string {
 }
 
 function pemToDer(pem: string): ArrayBuffer {
+  // Handle both literal \n characters (from JSON/env) and actual newlines
   const b64 = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\\n/g, '')
-    .replace(/\s/g, '');
+    .replace(/-----BEGIN [A-Z ]+-----/g, '')
+    .replace(/-----END [A-Z ]+-----/g, '')
+    .replace(/\\n/g, '')  // literal \n from JSON strings
+    .replace(/\r?\n/g, '') // actual newlines
+    .replace(/\s/g, '')
+    .trim();
+
+  if (!b64) {
+    throw new Error('Private key is empty after parsing PEM header/footer');
+  }
+
   const binary = atob(b64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -45,6 +53,42 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
   );
 }
 
+interface ServiceAccountCredentials {
+  client_email: string;
+  private_key: string;
+}
+
+let cachedCredentials: ServiceAccountCredentials | null = null;
+
+function getServiceAccountCredentials(): ServiceAccountCredentials {
+  if (cachedCredentials) return cachedCredentials;
+
+  // Prefer GOOGLE_SERVICE_ACCOUNT_JSON (whole JSON file as one secret — most reliable)
+  const jsonStr = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (!parsed.client_email || !parsed.private_key) {
+        throw new Error('Service account JSON missing client_email or private_key');
+      }
+      cachedCredentials = { client_email: parsed.client_email, private_key: parsed.private_key };
+      return cachedCredentials;
+    } catch (e) {
+      throw new Error(`Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+
+  // Fallback to separate env vars
+  const email = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+  const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY');
+  if (email && privateKey) {
+    cachedCredentials = { client_email: email, private_key: privateKey };
+    return cachedCredentials;
+  }
+
+  throw new Error('Google service account not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON secret (preferred) or GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY.');
+}
+
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string> {
@@ -53,12 +97,7 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const email = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-  const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY');
-
-  if (!email || !privateKey) {
-    throw new Error('Google service account not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY secrets.');
-  }
+  const { client_email: email, private_key: privateKey } = getServiceAccountCredentials();
 
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
@@ -379,10 +418,13 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
-    console.error('Social Drive proxy error:', error);
+    const message = error instanceof Error ? error.message : 'Internal error';
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error('Social Drive proxy error:', message, stack);
+    // Return 200 with ok:false so the Supabase client can read the error details
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ ok: false, error: message }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });
