@@ -20,7 +20,7 @@ interface PostSignupFlowHandlerProps {
 const ROLE_OPTIONS = [
   { value: 'comedian', label: 'Comedian', icon: Mic, description: 'Perform at shows and events' },
   { value: 'manager', label: 'Manager', icon: Briefcase, description: 'Manage comedians or organizations' },
-  { value: 'organization', label: 'Organization', icon: Building2, description: 'Run a venue or production company' },
+  { value: 'organization', label: 'Organization', icon: Building2, description: 'Agency, brand, production company, venue, etc.' },
 ] as const;
 
 /**
