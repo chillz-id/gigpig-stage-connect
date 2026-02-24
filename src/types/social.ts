@@ -402,6 +402,7 @@ export interface SocialApiProxyRequest {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   queryParams?: Record<string, string>;
+  blogId?: string;
 }
 
 // ─── GigPigs Automation Types ────────────────────────────────────────────────

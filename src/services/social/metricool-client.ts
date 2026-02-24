@@ -61,8 +61,9 @@ export const metricoolClient = {
   async get<T = unknown>(
     endpoint: string,
     queryParams?: Record<string, string>,
+    blogId?: string,
   ): Promise<T> {
-    return proxyRequest<T>({ endpoint, method: 'GET', queryParams });
+    return proxyRequest<T>({ endpoint, method: 'GET', queryParams, blogId });
   },
 
   /**
@@ -72,8 +73,9 @@ export const metricoolClient = {
     endpoint: string,
     body?: unknown,
     queryParams?: Record<string, string>,
+    blogId?: string,
   ): Promise<T> {
-    return proxyRequest<T>({ endpoint, method: 'POST', body, queryParams });
+    return proxyRequest<T>({ endpoint, method: 'POST', body, queryParams, blogId });
   },
 
   /**
@@ -83,8 +85,9 @@ export const metricoolClient = {
     endpoint: string,
     body?: unknown,
     queryParams?: Record<string, string>,
+    blogId?: string,
   ): Promise<T> {
-    return proxyRequest<T>({ endpoint, method: 'PUT', body, queryParams });
+    return proxyRequest<T>({ endpoint, method: 'PUT', body, queryParams, blogId });
   },
 
   /**
@@ -94,8 +97,9 @@ export const metricoolClient = {
     endpoint: string,
     body?: unknown,
     queryParams?: Record<string, string>,
+    blogId?: string,
   ): Promise<T> {
-    return proxyRequest<T>({ endpoint, method: 'PATCH', body, queryParams });
+    return proxyRequest<T>({ endpoint, method: 'PATCH', body, queryParams, blogId });
   },
 
   /**
@@ -104,7 +108,8 @@ export const metricoolClient = {
   async delete<T = unknown>(
     endpoint: string,
     queryParams?: Record<string, string>,
+    blogId?: string,
   ): Promise<T> {
-    return proxyRequest<T>({ endpoint, method: 'DELETE', queryParams });
+    return proxyRequest<T>({ endpoint, method: 'DELETE', queryParams, blogId });
   },
 };

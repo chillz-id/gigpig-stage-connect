@@ -3,7 +3,7 @@
  * Social media scheduling interface powered by Metricool
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useScheduledPosts, useCreatePost, useDeletePost } from '@/hooks/social/useScheduledPosts';
 import { useDraftCounts } from '@/hooks/social/useReviewQueue';
+import { useMetricoolBrands } from '@/hooks/social/useMetricoolBrands';
 import { ReviewQueue } from '@/components/social/ReviewQueue';
 import { ContentCalendar } from '@/components/social/ContentCalendar';
 import { AutomationSettings } from '@/components/social/AutomationSettings';
@@ -70,12 +71,22 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
   const { toast } = useToast();
   const { data: orgMap } = useOrganizationProfiles();
 
-  // Organization selection for review queue
+  // Organization selection for content pipeline (drafts, automation rules)
   const orgList = useMemo(() => Object.values(orgMap ?? {}), [orgMap]);
   const [selectedOrgId, setSelectedOrgId] = useState<string | undefined>(undefined);
-
-  // Use prop if provided (org context), otherwise fall back to selector
   const activeOrgId = organizationId ?? selectedOrgId ?? (orgList.length === 1 ? orgList[0]?.id : undefined);
+
+  // Metricool brand selection (separate from org — brands can be for comedians, orgs, etc.)
+  const { data: brands } = useMetricoolBrands();
+  const [selectedBrandId, setSelectedBrandId] = useState<string | undefined>(undefined);
+  const activeBlogId = selectedBrandId ?? (brands?.length === 1 ? String(brands[0]?.id) : undefined);
+
+  // Auto-select first brand when brands load
+  useEffect(() => {
+    if (!selectedBrandId && brands && brands.length > 0 && brands[0]) {
+      setSelectedBrandId(String(brands[0].id));
+    }
+  }, [brands, selectedBrandId]);
 
   const { data: draftCounts } = useDraftCounts(activeOrgId);
   const pendingCount = draftCounts?.draft ?? 0;
@@ -85,9 +96,9 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
   const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 19);
   const end = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 19);
 
-  const { data: postsResponse, isLoading, error } = useScheduledPosts(start, end);
-  const createPostMutation = useCreatePost();
-  const deletePostMutation = useDeletePost();
+  const { data: postsResponse, isLoading, error } = useScheduledPosts(start, end, activeBlogId);
+  const createPostMutation = useCreatePost(activeBlogId);
+  const deletePostMutation = useDeletePost(activeBlogId);
 
   // Schedule form state
   const [caption, setCaption] = useState('');
@@ -213,24 +224,46 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
           </div>
         </div>
 
-        {/* Organization selector (shown if user has multiple orgs and no org prop) */}
-        {!organizationId && orgList.length > 1 && (
-          <div className="flex items-center gap-2">
-            <Label className="text-sm whitespace-nowrap">Organization:</Label>
-            <Select value={activeOrgId ?? ''} onValueChange={setSelectedOrgId}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select organization" />
-              </SelectTrigger>
-              <SelectContent>
-                {orgList.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.organization_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {/* Brand & org selectors */}
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Metricool brand selector (for scheduling/analytics — not org-locked) */}
+          {brands && brands.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm whitespace-nowrap">Brand:</Label>
+              <Select value={activeBlogId ?? ''} onValueChange={setSelectedBrandId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={String(brand.id)}>
+                      {brand.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Organization selector (for content pipeline — drafts, rules) */}
+          {!organizationId && orgList.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm whitespace-nowrap">Content for:</Label>
+              <Select value={activeOrgId ?? ''} onValueChange={setSelectedOrgId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {orgList.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.organization_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto">
@@ -423,7 +456,7 @@ export default function SocialMedia({ organizationId }: SocialMediaProps) {
 
           {/* Calendar Tab */}
           <TabsContent value="calendar">
-            <ContentCalendar organizationId={activeOrgId} />
+            <ContentCalendar organizationId={activeOrgId} blogId={activeBlogId} />
           </TabsContent>
 
           {/* Upcoming Posts Tab */}

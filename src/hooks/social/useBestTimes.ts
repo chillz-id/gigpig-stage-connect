@@ -11,11 +11,12 @@ import type { BestTimesProvider } from '@/types/social';
  */
 export function useBestTimes(
   provider: BestTimesProvider,
+  blogId?: string,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: ['metricool-best-times', provider],
-    queryFn: () => getBestTimes(provider),
+    queryKey: ['metricool-best-times', provider, blogId],
+    queryFn: () => getBestTimes(provider, undefined, undefined, 'Australia/Sydney', blogId),
     enabled,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours — best times don't change often
   });

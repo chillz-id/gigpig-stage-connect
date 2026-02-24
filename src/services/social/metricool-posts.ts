@@ -22,8 +22,9 @@ import type {
  */
 export async function createPost(
   post: ScheduledPost,
+  blogId?: string,
 ): Promise<MetricoolApiResponse<ScheduledPost>> {
-  return metricoolClient.post('/v2/scheduler/posts', post);
+  return metricoolClient.post('/v2/scheduler/posts', post, undefined, blogId);
 }
 
 /**
@@ -33,12 +34,13 @@ export async function getPosts(
   start: string,
   end: string,
   timezone = 'Australia/Sydney',
+  blogId?: string,
 ): Promise<MetricoolListResponse<ScheduledPost>> {
   return metricoolClient.get('/v2/scheduler/posts', {
     start,
     end,
     timezone,
-  });
+  }, blogId);
 }
 
 /**
@@ -46,8 +48,9 @@ export async function getPosts(
  */
 export async function getPost(
   id: number,
+  blogId?: string,
 ): Promise<MetricoolApiResponse<ScheduledPost>> {
-  return metricoolClient.get(`/v2/scheduler/posts/${id}`);
+  return metricoolClient.get(`/v2/scheduler/posts/${id}`, undefined, blogId);
 }
 
 /**
@@ -56,8 +59,9 @@ export async function getPost(
 export async function updatePost(
   id: number,
   post: ScheduledPost,
+  blogId?: string,
 ): Promise<MetricoolApiResponse<ScheduledPost>> {
-  return metricoolClient.put(`/v2/scheduler/posts/${id}`, post);
+  return metricoolClient.put(`/v2/scheduler/posts/${id}`, post, undefined, blogId);
 }
 
 /**
@@ -67,10 +71,11 @@ export async function patchPost(
   id: number,
   fields: string[],
   post: Partial<ScheduledPost>,
+  blogId?: string,
 ): Promise<MetricoolApiResponse<boolean>> {
   return metricoolClient.patch(`/v2/scheduler/posts/${id}`, post, {
     fields: fields.join(','),
-  });
+  }, blogId);
 }
 
 /**
@@ -79,8 +84,9 @@ export async function patchPost(
  */
 export async function deletePost(
   id: number,
+  blogId?: string,
 ): Promise<MetricoolApiResponse<boolean>> {
-  return metricoolClient.delete(`/v2/scheduler/posts/${id}`);
+  return metricoolClient.delete(`/v2/scheduler/posts/${id}`, undefined, blogId);
 }
 
 // ─── Approval Workflow ───────────────────────────────────────────────────────
@@ -121,11 +127,12 @@ export async function getBestTimes(
   start?: string,
   end?: string,
   timezone = 'Australia/Sydney',
+  blogId?: string,
 ): Promise<MetricoolListResponse<BestTimes>> {
   const params: Record<string, string> = { timezone };
   if (start) params.start = start;
   if (end) params.end = end;
-  return metricoolClient.get(`/v2/scheduler/besttimes/${provider}`, params);
+  return metricoolClient.get(`/v2/scheduler/besttimes/${provider}`, params, blogId);
 }
 
 // ─── Instagram Properties ────────────────────────────────────────────────────

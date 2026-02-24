@@ -30,6 +30,7 @@ export interface OrganizationProfile {
   twitter_url?: string;
   tiktok_url?: string;
   url_slug?: string;
+  metricool_blog_id?: string | null;
 }
 
 /**
@@ -102,6 +103,7 @@ export function useOrganizationProfiles() {
           twitter_url: profile.twitter_url,
           tiktok_url: profile.tiktok_url,
           url_slug: profile.url_slug,
+          metricool_blog_id: profile.metricool_blog_id,
         };
       });
 

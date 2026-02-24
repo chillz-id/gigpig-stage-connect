@@ -40,9 +40,10 @@ interface CalendarDay {
 
 interface ContentCalendarProps {
   organizationId: string | undefined;
+  blogId?: string;
 }
 
-export function ContentCalendar({ organizationId }: ContentCalendarProps) {
+export function ContentCalendar({ organizationId, blogId }: ContentCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
 
@@ -52,7 +53,7 @@ export function ContentCalendar({ organizationId }: ContentCalendarProps) {
   // Fetch Metricool posts for the visible month range
   const start = new Date(year, month - 1, 1).toISOString().slice(0, 19);
   const end = new Date(year, month + 2, 0).toISOString().slice(0, 19);
-  const { data: postsResponse, isLoading: postsLoading } = useScheduledPosts(start, end);
+  const { data: postsResponse, isLoading: postsLoading } = useScheduledPosts(start, end, blogId);
 
   // Fetch drafts for the organization
   const { data: drafts, isLoading: draftsLoading } = useReviewQueue(organizationId);

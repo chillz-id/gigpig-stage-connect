@@ -2514,6 +2514,74 @@ export type Database = {
           },
         ]
       }
+      customer_email_engagement: {
+        Row: {
+          campaign_name: string | null
+          created_at: string | null
+          customer_id: string | null
+          email_subject: string | null
+          event_type: string
+          id: string
+          link_url: string | null
+          mautic_email_id: string | null
+          occurred_at: string
+          raw_payload: Json | null
+        }
+        Insert: {
+          campaign_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          email_subject?: string | null
+          event_type: string
+          id?: string
+          link_url?: string | null
+          mautic_email_id?: string | null
+          occurred_at: string
+          raw_payload?: Json | null
+        }
+        Update: {
+          campaign_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          email_subject?: string | null
+          event_type?: string
+          id?: string
+          link_url?: string | null
+          mautic_email_id?: string | null
+          occurred_at?: string
+          raw_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_email_engagement_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_marketing_export"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_email_engagement_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_email_engagement_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_crm_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_email_engagement_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_flat_v"
+            referencedColumns: ["customer_id"]
+          },
+        ]
+      }
       customer_emails: {
         Row: {
           customer_id: string
@@ -2521,6 +2589,7 @@ export type Database = {
           first_seen_at: string
           id: string
           is_primary: boolean | null
+          is_valid: boolean | null
           last_seen_at: string
           metadata: Json | null
           source: string
@@ -2533,6 +2602,7 @@ export type Database = {
           first_seen_at?: string
           id?: string
           is_primary?: boolean | null
+          is_valid?: boolean | null
           last_seen_at?: string
           metadata?: Json | null
           source: string
@@ -2545,6 +2615,7 @@ export type Database = {
           first_seen_at?: string
           id?: string
           is_primary?: boolean | null
+          is_valid?: boolean | null
           last_seen_at?: string
           metadata?: Json | null
           source?: string
@@ -2975,9 +3046,10 @@ export type Database = {
           address_line2: string | null
           age_band: string | null
           au_state_code: string | null
-          mautic_contact_id: number | null
-          mautic_last_sync: string | null
-          mautic_sync_status: string | null
+          brevo_contact_id: string | null
+          brevo_last_sync: string | null
+          brevo_sync_error: string | null
+          brevo_sync_status: string | null
           city: string | null
           company: string | null
           country: string | null
@@ -3013,9 +3085,10 @@ export type Database = {
           address_line2?: string | null
           age_band?: string | null
           au_state_code?: string | null
-          mautic_contact_id?: number | null
-          mautic_last_sync?: string | null
-          mautic_sync_status?: string | null
+          brevo_contact_id?: string | null
+          brevo_last_sync?: string | null
+          brevo_sync_error?: string | null
+          brevo_sync_status?: string | null
           city?: string | null
           company?: string | null
           country?: string | null
@@ -3051,9 +3124,10 @@ export type Database = {
           address_line2?: string | null
           age_band?: string | null
           au_state_code?: string | null
-          mautic_contact_id?: number | null
-          mautic_last_sync?: string | null
-          mautic_sync_status?: string | null
+          brevo_contact_id?: string | null
+          brevo_last_sync?: string | null
+          brevo_sync_error?: string | null
+          brevo_sync_status?: string | null
           city?: string | null
           company?: string | null
           country?: string | null
@@ -3526,6 +3600,99 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "event_deals"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      directory_availability: {
+        Row: {
+          available_date: string
+          created_at: string | null
+          directory_profile_id: string
+          event_id: string | null
+          id: string
+          notes: string | null
+          show_name: string
+          source: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          available_date: string
+          created_at?: string | null
+          directory_profile_id: string
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          show_name: string
+          source?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          available_date?: string
+          created_at?: string | null
+          directory_profile_id?: string
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          show_name?: string
+          source?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directory_availability_directory_profile_id_fkey"
+            columns: ["directory_profile_id"]
+            isOneToOne: false
+            referencedRelation: "directory_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_performance_metrics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_ticket_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organization_events_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "session_lineups_v"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_sales_analytics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "directory_availability_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_upcoming_sessions"
+            referencedColumns: ["event_id"]
           },
         ]
       }
@@ -4535,6 +4702,7 @@ export type Database = {
           created_at: string
           currency: string
           declined_at: string | null
+          directory_profile_id: string | null
           duration_minutes: number | null
           event_id: string
           extra_type: string | null
@@ -4574,6 +4742,7 @@ export type Database = {
           created_at?: string
           currency?: string
           declined_at?: string | null
+          directory_profile_id?: string | null
           duration_minutes?: number | null
           event_id: string
           extra_type?: string | null
@@ -4613,6 +4782,7 @@ export type Database = {
           created_at?: string
           currency?: string
           declined_at?: string | null
+          directory_profile_id?: string | null
           duration_minutes?: number | null
           event_id?: string
           extra_type?: string | null
@@ -4645,6 +4815,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "event_spots_directory_profile_id_fkey"
+            columns: ["directory_profile_id"]
+            isOneToOne: false
+            referencedRelation: "directory_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_event_spots_event"
             columns: ["event_id"]
@@ -4999,6 +5176,7 @@ export type Database = {
           currency: string | null
           description: string | null
           details: string | null
+          discount_code: string | null
           dress_code: string | null
           duration: string | null
           duration_minutes: number | null
@@ -5055,6 +5233,7 @@ export type Database = {
           total_gross_sales: number | null
           total_revenue: number | null
           total_tickets_sold: number | null
+          tour_id: string | null
           type: string | null
           updated_at: string | null
           venue: string | null
@@ -5078,6 +5257,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           details?: string | null
+          discount_code?: string | null
           dress_code?: string | null
           duration?: string | null
           duration_minutes?: number | null
@@ -5134,6 +5314,7 @@ export type Database = {
           total_gross_sales?: number | null
           total_revenue?: number | null
           total_tickets_sold?: number | null
+          tour_id?: string | null
           type?: string | null
           updated_at?: string | null
           venue?: string | null
@@ -5157,6 +5338,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           details?: string | null
+          discount_code?: string | null
           dress_code?: string | null
           duration?: string | null
           duration_minutes?: number | null
@@ -5213,6 +5395,7 @@ export type Database = {
           total_gross_sales?: number | null
           total_revenue?: number | null
           total_tickets_sold?: number | null
+          tour_id?: string | null
           type?: string | null
           updated_at?: string | null
           venue?: string | null
@@ -5231,6 +5414,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organization_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
             referencedColumns: ["id"]
           },
           {
@@ -6065,6 +6262,340 @@ export type Database = {
           },
         ]
       }
+      framer_cms_sync: {
+        Row: {
+          canonical_session_source_id: string
+          created_at: string
+          framer_slug: string
+          id: string
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          canonical_session_source_id: string
+          created_at?: string
+          framer_slug: string
+          id?: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          canonical_session_source_id?: string
+          created_at?: string
+          framer_slug?: string
+          id?: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gyg_bookings: {
+        Row: {
+          addon_items: Json | null
+          booking_items: Json | null
+          booking_reference: string
+          cancelled_at: string | null
+          comment: string | null
+          created_at: string | null
+          currency: string | null
+          date_time: string
+          event_id: string
+          gyg_booking_reference: string
+          gyg_product_id: string
+          id: string
+          language: string | null
+          reservation_reference: string | null
+          status: string
+          ticket_codes: Json | null
+          total_revenue: number | null
+          total_tickets: number
+          traveler_hotel: string | null
+          travelers: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          addon_items?: Json | null
+          booking_items?: Json | null
+          booking_reference: string
+          cancelled_at?: string | null
+          comment?: string | null
+          created_at?: string | null
+          currency?: string | null
+          date_time: string
+          event_id: string
+          gyg_booking_reference: string
+          gyg_product_id: string
+          id?: string
+          language?: string | null
+          reservation_reference?: string | null
+          status?: string
+          ticket_codes?: Json | null
+          total_revenue?: number | null
+          total_tickets?: number
+          traveler_hotel?: string | null
+          travelers?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          addon_items?: Json | null
+          booking_items?: Json | null
+          booking_reference?: string
+          cancelled_at?: string | null
+          comment?: string | null
+          created_at?: string | null
+          currency?: string | null
+          date_time?: string
+          event_id?: string
+          gyg_booking_reference?: string
+          gyg_product_id?: string
+          id?: string
+          language?: string | null
+          reservation_reference?: string | null
+          status?: string
+          ticket_codes?: Json | null
+          total_revenue?: number | null
+          total_tickets?: number
+          traveler_hotel?: string | null
+          travelers?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_performance_metrics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_ticket_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organization_events_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "session_lineups_v"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_sales_analytics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_upcoming_sessions"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_bookings_gyg_product_id_fkey"
+            columns: ["gyg_product_id"]
+            isOneToOne: false
+            referencedRelation: "gyg_products"
+            referencedColumns: ["gyg_product_id"]
+          },
+        ]
+      }
+      gyg_notification_log: {
+        Row: {
+          created_at: string | null
+          gyg_product_id: string | null
+          id: string
+          notification_type: string | null
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          gyg_product_id?: string | null
+          id?: string
+          notification_type?: string | null
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          gyg_product_id?: string | null
+          id?: string
+          notification_type?: string | null
+          payload?: Json | null
+        }
+        Relationships: []
+      }
+      gyg_products: {
+        Row: {
+          addons: Json | null
+          availability_type: string | null
+          capacity_per_slot: number | null
+          created_at: string | null
+          cutoff_seconds: number | null
+          default_currency: string | null
+          event_id: string | null
+          event_name_match: string | null
+          gyg_option_id: string | null
+          gyg_product_id: string
+          id: string
+          is_active: boolean | null
+          pricing_categories: Json | null
+          product_title: string | null
+          updated_at: string | null
+          vacancy_type: string | null
+        }
+        Insert: {
+          addons?: Json | null
+          availability_type?: string | null
+          capacity_per_slot?: number | null
+          created_at?: string | null
+          cutoff_seconds?: number | null
+          default_currency?: string | null
+          event_id?: string | null
+          event_name_match?: string | null
+          gyg_option_id?: string | null
+          gyg_product_id: string
+          id?: string
+          is_active?: boolean | null
+          pricing_categories?: Json | null
+          product_title?: string | null
+          updated_at?: string | null
+          vacancy_type?: string | null
+        }
+        Update: {
+          addons?: Json | null
+          availability_type?: string | null
+          capacity_per_slot?: number | null
+          created_at?: string | null
+          cutoff_seconds?: number | null
+          default_currency?: string | null
+          event_id?: string | null
+          event_name_match?: string | null
+          gyg_option_id?: string | null
+          gyg_product_id?: string
+          id?: string
+          is_active?: boolean | null
+          pricing_categories?: Json | null
+          product_title?: string | null
+          updated_at?: string | null
+          vacancy_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_performance_metrics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_ticket_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organization_events_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "session_lineups_v"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_sales_analytics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "gyg_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_upcoming_sessions"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      gyg_reservations: {
+        Row: {
+          booking_items: Json | null
+          created_at: string | null
+          date_time: string
+          expires_at: string
+          gyg_booking_reference: string
+          gyg_product_id: string
+          id: string
+          reservation_reference: string
+          status: string
+          total_tickets: number
+        }
+        Insert: {
+          booking_items?: Json | null
+          created_at?: string | null
+          date_time: string
+          expires_at: string
+          gyg_booking_reference: string
+          gyg_product_id: string
+          id?: string
+          reservation_reference: string
+          status?: string
+          total_tickets?: number
+        }
+        Update: {
+          booking_items?: Json | null
+          created_at?: string | null
+          date_time?: string
+          expires_at?: string
+          gyg_booking_reference?: string
+          gyg_product_id?: string
+          id?: string
+          reservation_reference?: string
+          status?: string
+          total_tickets?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gyg_reservations_gyg_product_id_fkey"
+            columns: ["gyg_product_id"]
+            isOneToOne: false
+            referencedRelation: "gyg_products"
+            referencedColumns: ["gyg_product_id"]
+          },
+        ]
+      }
       import_logs: {
         Row: {
           completed_at: string | null
@@ -6404,20 +6935,6 @@ export type Database = {
           recipient_type?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_invoice_recipients_invoice"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_invoice_recipients_invoice"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices_normalized"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "invoice_recipients_invoice_id_fkey"
             columns: ["invoice_id"]
@@ -7173,6 +7690,7 @@ export type Database = {
           start_datetime: string
           ticket_link: string | null
           title: string
+          type: string | null
           updated_at: string | null
           user_id: string
           venue_address: string | null
@@ -7196,6 +7714,7 @@ export type Database = {
           start_datetime: string
           ticket_link?: string | null
           title: string
+          type?: string | null
           updated_at?: string | null
           user_id: string
           venue_address?: string | null
@@ -7219,6 +7738,7 @@ export type Database = {
           start_datetime?: string
           ticket_link?: string | null
           title?: string
+          type?: string | null
           updated_at?: string | null
           user_id?: string
           venue_address?: string | null
@@ -7338,6 +7858,114 @@ export type Database = {
           },
         ]
       }
+      manual_ticket_entries: {
+        Row: {
+          commission_amount: number | null
+          commission_rate: number
+          created_at: string | null
+          created_by: string | null
+          entry_date: string
+          event_id: string | null
+          gross_revenue: number
+          id: string
+          net_revenue: number | null
+          notes: string | null
+          partner_id: string | null
+          reference_id: string | null
+          ticket_count: number
+          updated_at: string | null
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_rate: number
+          created_at?: string | null
+          created_by?: string | null
+          entry_date?: string
+          event_id?: string | null
+          gross_revenue: number
+          id?: string
+          net_revenue?: number | null
+          notes?: string | null
+          partner_id?: string | null
+          reference_id?: string | null
+          ticket_count: number
+          updated_at?: string | null
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_rate?: number
+          created_at?: string | null
+          created_by?: string | null
+          entry_date?: string
+          event_id?: string | null
+          gross_revenue?: number
+          id?: string
+          net_revenue?: number | null
+          notes?: string | null
+          partner_id?: string | null
+          reference_id?: string | null
+          ticket_count?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_performance_metrics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_ticket_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organization_events_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "session_lineups_v"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_sales_analytics"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_upcoming_sessions"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "manual_ticket_entries_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "ticketing_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_costs: {
         Row: {
           amount: number
@@ -7433,6 +8061,151 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_upcoming_sessions"
             referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      mautic_sync_logs: {
+        Row: {
+          contacts_created: number | null
+          contacts_failed: number | null
+          contacts_synced: number | null
+          contacts_updated: number | null
+          created_at: string | null
+          error_details: Json | null
+          id: string
+          run_finished_at: string | null
+          run_started_at: string
+          segments_synced: number | null
+        }
+        Insert: {
+          contacts_created?: number | null
+          contacts_failed?: number | null
+          contacts_synced?: number | null
+          contacts_updated?: number | null
+          created_at?: string | null
+          error_details?: Json | null
+          id?: string
+          run_finished_at?: string | null
+          run_started_at: string
+          segments_synced?: number | null
+        }
+        Update: {
+          contacts_created?: number | null
+          contacts_failed?: number | null
+          contacts_synced?: number | null
+          contacts_updated?: number | null
+          created_at?: string | null
+          error_details?: Json | null
+          id?: string
+          run_finished_at?: string | null
+          run_started_at?: string
+          segments_synced?: number | null
+        }
+        Relationships: []
+      }
+      mautic_sync_queue: {
+        Row: {
+          customer_id: string
+          queued_at: string | null
+        }
+        Insert: {
+          customer_id: string
+          queued_at?: string | null
+        }
+        Update: {
+          customer_id?: string
+          queued_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mautic_sync_queue_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_marketing_export"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_queue_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_queue_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_crm_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_queue_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_flat_v"
+            referencedColumns: ["customer_id"]
+          },
+        ]
+      }
+      mautic_sync_status: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          last_synced_at: string | null
+          mautic_contact_id: number | null
+          previous_segments: string[] | null
+          sync_error: string | null
+          sync_hash: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          last_synced_at?: string | null
+          mautic_contact_id?: number | null
+          previous_segments?: string[] | null
+          sync_error?: string | null
+          sync_hash?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          last_synced_at?: string | null
+          mautic_contact_id?: number | null
+          previous_segments?: string[] | null
+          sync_error?: string | null
+          sync_hash?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mautic_sync_status_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_marketing_export"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_status_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_status_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_crm_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mautic_sync_status_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_flat_v"
+            referencedColumns: ["customer_id"]
           },
         ]
       }
@@ -8283,6 +9056,7 @@ export type Database = {
           action_url: string | null
           created_at: string | null
           data: Json | null
+          display_after: string | null
           id: string
           is_read: boolean | null
           message: string
@@ -8297,6 +9071,7 @@ export type Database = {
           action_url?: string | null
           created_at?: string | null
           data?: Json | null
+          display_after?: string | null
           id?: string
           is_read?: boolean | null
           message: string
@@ -8311,6 +9086,7 @@ export type Database = {
           action_url?: string | null
           created_at?: string | null
           data?: Json | null
+          display_after?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
@@ -9384,6 +10160,7 @@ export type Database = {
           entity_state_code: string | null
           entity_type: string | null
           facebook_url: string | null
+          google_review_url: string | null
           gst_effective_date: string | null
           gst_registered: boolean | null
           id: string
@@ -9394,6 +10171,7 @@ export type Database = {
           linkedin_url: string | null
           logo_url: string | null
           media_layout: string | null
+          metricool_blog_id: string | null
           organization_name: string
           organization_type: string[] | null
           owner_id: string
@@ -9438,6 +10216,7 @@ export type Database = {
           entity_state_code?: string | null
           entity_type?: string | null
           facebook_url?: string | null
+          google_review_url?: string | null
           gst_effective_date?: string | null
           gst_registered?: boolean | null
           id?: string
@@ -9448,6 +10227,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           media_layout?: string | null
+          metricool_blog_id?: string | null
           organization_name: string
           organization_type?: string[] | null
           owner_id: string
@@ -9492,6 +10272,7 @@ export type Database = {
           entity_state_code?: string | null
           entity_type?: string | null
           facebook_url?: string | null
+          google_review_url?: string | null
           gst_effective_date?: string | null
           gst_registered?: boolean | null
           id?: string
@@ -9502,6 +10283,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           media_layout?: string | null
+          metricool_blog_id?: string | null
           organization_name?: string
           organization_type?: string[] | null
           owner_id?: string
@@ -9811,6 +10593,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           description: string | null
+          google_review_url: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -9830,6 +10613,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           description?: string | null
+          google_review_url?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -9849,6 +10633,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           description?: string | null
+          google_review_url?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -10410,6 +11195,30 @@ export type Database = {
           },
         ]
       }
+      post_event_emails_sent: {
+        Row: {
+          emails_failed: number | null
+          emails_sent: number | null
+          id: string
+          sent_at: string | null
+          session_source_id: string
+        }
+        Insert: {
+          emails_failed?: number | null
+          emails_sent?: number | null
+          id?: string
+          sent_at?: string | null
+          session_source_id: string
+        }
+        Update: {
+          emails_failed?: number | null
+          emails_sent?: number | null
+          id?: string
+          sent_at?: string | null
+          session_source_id?: string
+        }
+        Relationships: []
+      }
       press_reviews: {
         Row: {
           created_at: string
@@ -10504,6 +11313,7 @@ export type Database = {
           banner_url: string | null
           bio: string | null
           bsb: string | null
+          country: string | null
           created_at: string | null
           custom_show_types: string[] | null
           display_name: string | null
@@ -10533,6 +11343,7 @@ export type Database = {
           show_org_in_personal_view: boolean | null
           stage_name: string | null
           tiktok_url: string | null
+          timezone: string | null
           twitter_url: string | null
           updated_at: string | null
           url_slug_last_changed: string | null
@@ -10549,6 +11360,7 @@ export type Database = {
           banner_url?: string | null
           bio?: string | null
           bsb?: string | null
+          country?: string | null
           created_at?: string | null
           custom_show_types?: string[] | null
           display_name?: string | null
@@ -10578,6 +11390,7 @@ export type Database = {
           show_org_in_personal_view?: boolean | null
           stage_name?: string | null
           tiktok_url?: string | null
+          timezone?: string | null
           twitter_url?: string | null
           updated_at?: string | null
           url_slug_last_changed?: string | null
@@ -10594,6 +11407,7 @@ export type Database = {
           banner_url?: string | null
           bio?: string | null
           bsb?: string | null
+          country?: string | null
           created_at?: string | null
           custom_show_types?: string[] | null
           display_name?: string | null
@@ -10623,6 +11437,7 @@ export type Database = {
           show_org_in_personal_view?: boolean | null
           stage_name?: string | null
           tiktok_url?: string | null
+          timezone?: string | null
           twitter_url?: string | null
           updated_at?: string | null
           url_slug_last_changed?: string | null
@@ -10762,6 +11577,51 @@ export type Database = {
           },
         ]
       }
+      recurring_series: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          default_end_time: string | null
+          default_start_time: string | null
+          default_ticket_price: number | null
+          default_venue: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          default_end_time?: string | null
+          default_start_time?: string | null
+          default_ticket_price?: number | null
+          default_venue?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          default_end_time?: string | null
+          default_start_time?: string | null
+          default_ticket_price?: number | null
+          default_venue?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       segments: {
         Row: {
           color: string | null
@@ -10800,6 +11660,115 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      series_deals: {
+        Row: {
+          apply_to_all_events: boolean | null
+          apply_to_future_only: boolean | null
+          created_at: string | null
+          created_by: string | null
+          deal_type: string | null
+          id: string
+          series_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          apply_to_all_events?: boolean | null
+          apply_to_future_only?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_type?: string | null
+          id?: string
+          series_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          apply_to_all_events?: boolean | null
+          apply_to_future_only?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_type?: string | null
+          id?: string
+          series_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_deals_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series_partners: {
+        Row: {
+          added_by: string | null
+          can_edit_event: boolean | null
+          can_manage_financials: boolean | null
+          can_receive_crm_data: boolean | null
+          can_view_details: boolean | null
+          can_view_financials: boolean | null
+          created_at: string | null
+          id: string
+          invited_email: string | null
+          is_admin: boolean | null
+          partner_profile_id: string | null
+          partner_type: string | null
+          series_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          can_edit_event?: boolean | null
+          can_manage_financials?: boolean | null
+          can_receive_crm_data?: boolean | null
+          can_view_details?: boolean | null
+          can_view_financials?: boolean | null
+          created_at?: string | null
+          id?: string
+          invited_email?: string | null
+          is_admin?: boolean | null
+          partner_profile_id?: string | null
+          partner_type?: string | null
+          series_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          can_edit_event?: boolean | null
+          can_manage_financials?: boolean | null
+          can_receive_crm_data?: boolean | null
+          can_view_details?: boolean | null
+          can_view_financials?: boolean | null
+          created_at?: string | null
+          id?: string
+          invited_email?: string | null
+          is_admin?: boolean | null
+          partner_profile_id?: string | null
+          partner_type?: string | null
+          series_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_partners_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       session_financials_agg: {
         Row: {
@@ -11077,6 +12046,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_upcoming_sessions"
             referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      session_series: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          canonical_session_source_id: string
+          series_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          canonical_session_source_id: string
+          series_id: string
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          canonical_session_source_id?: string
+          series_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_series_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -11366,6 +12364,7 @@ export type Database = {
       }
       sidebar_preferences: {
         Row: {
+          collapsed_sections: string[] | null
           created_at: string | null
           hidden_items: string[] | null
           id: string
@@ -11376,6 +12375,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          collapsed_sections?: string[] | null
           created_at?: string | null
           hidden_items?: string[] | null
           id?: string
@@ -11386,6 +12386,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          collapsed_sections?: string[] | null
           created_at?: string | null
           hidden_items?: string[] | null
           id?: string
@@ -11439,6 +12440,56 @@ export type Database = {
         }
         Relationships: []
       }
+      social_automation_rules: {
+        Row: {
+          created_at: string | null
+          custom_schedule: Json | null
+          id: string
+          is_active: boolean | null
+          organization_id: string | null
+          platforms: string[]
+          post_types: string[] | null
+          scheduling_strategy: string | null
+          template_prompt: string | null
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_schedule?: Json | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string | null
+          platforms: string[]
+          post_types?: string[] | null
+          scheduling_strategy?: string | null
+          template_prompt?: string | null
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_schedule?: Json | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string | null
+          platforms?: string[]
+          post_types?: string[] | null
+          scheduling_strategy?: string | null
+          template_prompt?: string | null
+          trigger_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_automation_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_channels: {
         Row: {
           channel_handle: string | null
@@ -11480,6 +12531,196 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      social_content_drafts: {
+        Row: {
+          ai_model: string | null
+          ai_prompt_used: string | null
+          caption: string
+          created_at: string | null
+          hashtags: string[] | null
+          id: string
+          media_file_ids: string[] | null
+          media_type: string | null
+          media_urls: string[] | null
+          metricool_post_id: number | null
+          organization_id: string | null
+          platform: string
+          post_type: string
+          queue_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          scheduled_for: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_prompt_used?: string | null
+          caption: string
+          created_at?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_file_ids?: string[] | null
+          media_type?: string | null
+          media_urls?: string[] | null
+          metricool_post_id?: number | null
+          organization_id?: string | null
+          platform: string
+          post_type?: string
+          queue_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_for?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          ai_prompt_used?: string | null
+          caption?: string
+          created_at?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_file_ids?: string[] | null
+          media_type?: string | null
+          media_urls?: string[] | null
+          metricool_post_id?: number | null
+          organization_id?: string | null
+          platform?: string
+          post_type?: string
+          queue_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_for?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_content_drafts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_content_drafts_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "social_content_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_content_performance: {
+        Row: {
+          clicks: number | null
+          collected_at: string | null
+          comments: number | null
+          draft_id: string | null
+          engagement: number | null
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          likes: number | null
+          platform: string
+          raw_data: Json | null
+          reach: number | null
+          saves: number | null
+          shares: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          collected_at?: string | null
+          comments?: number | null
+          draft_id?: string | null
+          engagement?: number | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          platform: string
+          raw_data?: Json | null
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          collected_at?: string | null
+          comments?: number | null
+          draft_id?: string | null
+          engagement?: number | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          platform?: string
+          raw_data?: Json | null
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_content_performance_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "social_content_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_content_queue: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          organization_id: string | null
+          priority: number | null
+          processed_at: string | null
+          status: string | null
+          trigger_data: Json | null
+          trigger_entity_id: string | null
+          trigger_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          status?: string | null
+          trigger_data?: Json | null
+          trigger_entity_id?: string | null
+          trigger_type: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          status?: string | null
+          trigger_data?: Json | null
+          trigger_entity_id?: string | null
+          trigger_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_content_queue_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_post_analytics: {
         Row: {
@@ -12741,6 +13982,48 @@ export type Database = {
           processed?: boolean | null
           signature?: string | null
           timestamp?: string | null
+        }
+        Relationships: []
+      }
+      ticketing_partners: {
+        Row: {
+          commission_rate: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          slug: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          commission_rate: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          slug: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          slug?: string
+          updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -15922,7 +17205,7 @@ export type Database = {
       customer_analytics: {
         Row: {
           address: string | null
-          mautic_sync_status: string | null
+          brevo_sync_status: string | null
           company: string | null
           customer_segment: string | null
           customer_since: string | null
@@ -15941,7 +17224,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          mautic_sync_status?: string | null
+          brevo_sync_status?: string | null
           company?: string | null
           customer_segment?: string | null
           customer_since?: string | null
@@ -15960,7 +17243,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          mautic_sync_status?: string | null
+          brevo_sync_status?: string | null
           company?: string | null
           customer_segment?: string | null
           customer_since?: string | null
@@ -16056,20 +17339,23 @@ export type Database = {
       }
       customers_crm_v: {
         Row: {
+          address: string | null
           address_line1: string | null
           address_line2: string | null
+          age_band: string | null
+          canonical_full_name: string | null
           city: string | null
+          company: string | null
           country: string | null
           created_at: string | null
           customer_segment: string | null
           customer_segments: string[] | null
           customer_since: string | null
           date_of_birth: string | null
-          do_not_contact: boolean | null
           email: string | null
           first_name: string | null
-          first_seen_at: string | null
           id: string | null
+          landline: string | null
           last_event_id: string | null
           last_event_name: string | null
           last_name: string | null
@@ -16078,11 +17364,13 @@ export type Database = {
           lead_score: number | null
           location: string | null
           marketing_opt_in: boolean | null
+          mautic_contact_id: number | null
+          mautic_last_sync: string | null
+          mautic_sync_status: string | null
           mobile: string | null
-          name: string | null
-          notes: string | null
+          phone: string | null
           postcode: string | null
-          preferred_venue_id: string | null
+          preferred_venue: string | null
           rfm_frequency: number | null
           rfm_monetary: number | null
           rfm_recency: number | null
@@ -16092,7 +17380,6 @@ export type Database = {
           total_orders: number | null
           total_spent: number | null
           updated_at: string | null
-          vip: boolean | null
         }
         Relationships: []
       }
@@ -16537,6 +17824,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_events_parent"
             columns: ["parent_event_id"]
             isOneToOne: false
@@ -16653,6 +17947,77 @@ export type Database = {
         Relationships: []
       }
       session_complete: {
+        Row: {
+          banner_image_url: string | null
+          calendar_group: string | null
+          canonical_session_source_id: string | null
+          canonical_source: string | null
+          capacity: number | null
+          created_at: string | null
+          days_until: number | null
+          description: string | null
+          display_mode: string | null
+          event_name: string | null
+          event_source_id: string | null
+          eventbrite_fees_dollars: number | null
+          eventbrite_gross_dollars: number | null
+          eventbrite_last_order_at: string | null
+          eventbrite_net_dollars: number | null
+          eventbrite_order_count: number | null
+          eventbrite_tax_dollars: number | null
+          eventbrite_ticket_count: number | null
+          festival_end: string | null
+          festival_name: string | null
+          festival_start: string | null
+          fever_ticket_count: number | null
+          humanitix_fees_complete_dollars: number | null
+          humanitix_fees_dollars: number | null
+          humanitix_gross_dollars: number | null
+          humanitix_last_order_at: string | null
+          humanitix_net_dollars: number | null
+          humanitix_order_count: number | null
+          humanitix_payout_dollars: number | null
+          humanitix_rebate_dollars: number | null
+          humanitix_tax_dollars: number | null
+          humanitix_ticket_count: number | null
+          ingested_at: string | null
+          is_past: boolean | null
+          last_order_at: string | null
+          latitude: string | null
+          longitude: string | null
+          merged_sources: string[] | null
+          promotix_ticket_count: number | null
+          public: boolean | null
+          published: boolean | null
+          session_name: string | null
+          session_start: string | null
+          session_start_local: string | null
+          show_type: string | null
+          slug: string | null
+          status: string | null
+          tags: string[] | null
+          timezone: string | null
+          total_fees_complete_dollars: number | null
+          total_fees_dollars: number | null
+          total_gross_dollars: number | null
+          total_net_dollars: number | null
+          total_order_count: number | null
+          total_payout_dollars: number | null
+          total_rebate_dollars: number | null
+          total_tax_dollars: number | null
+          total_ticket_count: number | null
+          updated_at: string | null
+          url: string | null
+          url_tickets_popup: string | null
+          venue_address: string | null
+          venue_city: string | null
+          venue_country: string | null
+          venue_lat_lng: Json | null
+          venue_name: string | null
+        }
+        Relationships: []
+      }
+      session_complete_live: {
         Row: {
           banner_image_url: string | null
           calendar_group: string | null
@@ -17567,6 +18932,23 @@ export type Database = {
           voucher_profile: Json
         }[]
       }
+      gyg_get_availabilities: {
+        Args: { p_from_date: string; p_product_id: string; p_to_date: string }
+        Returns: Json
+      }
+      gyg_try_reserve: {
+        Args: {
+          p_booking_items: Json
+          p_date_time: string
+          p_expires_at: string
+          p_gyg_booking_reference: string
+          p_product_id: string
+          p_reservation_reference: string
+          p_target_date: string
+          p_total_tickets: number
+        }
+        Returns: Json
+      }
       has_agency_permission: {
         Args: { _agency_id: string; _required_role?: string; _user_id: string }
         Returns: boolean
@@ -17622,6 +19004,18 @@ export type Database = {
         Args: { org_id: string; user_id: string }
         Returns: boolean
       }
+      is_series_admin: {
+        Args: { p_series_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_series_creator: {
+        Args: { p_series_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_series_partner: {
+        Args: { p_series_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_venue_claimed: { Args: { p_venue_id: string }; Returns: boolean }
       link_media_to_entity: {
         Args: {
@@ -17675,6 +19069,13 @@ export type Database = {
           similarity: number
         }[]
       }
+      merge_synced_into_org_events: {
+        Args: never
+        Returns: {
+          deleted: number
+          merged: number
+        }[]
+      }
       normalize_phone_e164: { Args: { phone: string }; Returns: string }
       populate_meta_audience_customers: {
         Args: never
@@ -17705,6 +19106,7 @@ export type Database = {
         }
         Returns: Json
       }
+      process_overdue_invoices: { Args: never; Returns: undefined }
       process_webhook_attendees: {
         Args: {
           p_attendees: Json
@@ -17722,7 +19124,7 @@ export type Database = {
           notifications_sent: number
         }[]
       }
-      queue_mautic_sync: {
+      queue_brevo_sync: {
         Args: never
         Returns: {
           customer_id: string
@@ -17734,6 +19136,10 @@ export type Database = {
       refresh_customer_contact_data: { Args: never; Returns: undefined }
       refresh_customer_data: { Args: never; Returns: undefined }
       refresh_customer_engagement_metrics: { Args: never; Returns: undefined }
+      refresh_customer_engagement_metrics_single: {
+        Args: { p_customer_id: string }
+        Returns: undefined
+      }
       refresh_customer_marketing_export: { Args: never; Returns: undefined }
       refresh_customer_stats: {
         Args: never
@@ -17788,12 +19194,22 @@ export type Database = {
         }
         Returns: string
       }
+      set_own_roles: { Args: { p_roles: string[] }; Returns: undefined }
       set_profile_video: {
         Args: { p_file_id: string; p_user_id: string }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { text_input: string }; Returns: string }
       sync_orders_to_customers: { Args: never; Returns: undefined }
+      sync_recently_updated_sessions: {
+        Args: { minutes_ago?: number }
+        Returns: {
+          result: string
+          session_id: string
+        }[]
+      }
       sync_session_to_events: {
         Args: { p_canonical_session_source_id?: string }
         Returns: {
@@ -17860,6 +19276,7 @@ export type Database = {
         Args: { p_tag: string; p_user_id: string }
         Returns: undefined
       }
+      user_has_org_access: { Args: { org_id: string }; Returns: boolean }
     }
     Enums: {
       agency_status:

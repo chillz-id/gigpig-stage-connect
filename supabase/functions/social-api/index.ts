@@ -50,11 +50,12 @@ serve(async (req) => {
     }
 
     // Parse proxy request
-    const { endpoint, method, body, queryParams } = await req.json() as {
+    const { endpoint, method, body, queryParams, blogId: requestBlogId } = await req.json() as {
       endpoint: string;
       method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       body?: unknown;
       queryParams?: Record<string, string>;
+      blogId?: string;
     };
 
     if (!endpoint || !method) {
@@ -65,10 +66,12 @@ serve(async (req) => {
     }
 
     // Build URL with auth params and optional query params
+    // Use blogId from request body if provided (multi-brand support), else fall back to env var
+    const activeBlogId = requestBlogId ?? blogId;
     const url = new URL(`${METRICOOL_BASE_URL}${endpoint}`);
     url.searchParams.set('userToken', userToken);
     url.searchParams.set('userId', userId);
-    url.searchParams.set('blogId', blogId);
+    url.searchParams.set('blogId', activeBlogId);
 
     if (queryParams) {
       for (const [key, value] of Object.entries(queryParams)) {

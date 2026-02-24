@@ -16,10 +16,10 @@ const POSTS_QUERY_KEY = 'metricool-posts';
 /**
  * Fetch scheduled posts for a date range.
  */
-export function useScheduledPosts(start: string, end: string, enabled = true) {
+export function useScheduledPosts(start: string, end: string, blogId?: string, enabled = true) {
   return useQuery({
-    queryKey: [POSTS_QUERY_KEY, start, end],
-    queryFn: () => getPosts(start, end),
+    queryKey: [POSTS_QUERY_KEY, start, end, blogId],
+    queryFn: () => getPosts(start, end, 'Australia/Sydney', blogId),
     enabled: enabled && !!start && !!end,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -28,11 +28,11 @@ export function useScheduledPosts(start: string, end: string, enabled = true) {
 /**
  * Create a new scheduled post.
  */
-export function useCreatePost() {
+export function useCreatePost(blogId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (post: ScheduledPost) => createPost(post),
+    mutationFn: (post: ScheduledPost) => createPost(post, blogId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [POSTS_QUERY_KEY] });
     },
@@ -42,12 +42,12 @@ export function useCreatePost() {
 /**
  * Update an existing scheduled post.
  */
-export function useUpdatePost() {
+export function useUpdatePost(blogId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, post }: { id: number; post: ScheduledPost }) =>
-      updatePost(id, post),
+      updatePost(id, post, blogId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [POSTS_QUERY_KEY] });
     },
@@ -57,11 +57,11 @@ export function useUpdatePost() {
 /**
  * Delete a scheduled post.
  */
-export function useDeletePost() {
+export function useDeletePost(blogId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deletePost(id),
+    mutationFn: (id: number) => deletePost(id, blogId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [POSTS_QUERY_KEY] });
     },
