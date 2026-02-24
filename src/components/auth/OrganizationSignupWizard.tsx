@@ -303,13 +303,13 @@ export const OrganizationSignupWizard: React.FC<OrganizationSignupWizardProps> =
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="production" id="type-production" />
                 <Label htmlFor="type-production" className="font-normal cursor-pointer">
-                  Production Company - Event production, tour management
+                  Production Company - Event production
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="agency" id="type-agency" />
                 <Label htmlFor="type-agency" className="font-normal cursor-pointer">
-                  Agency - Talent booking, representation
+                  Agency - Representation, tour management
                 </Label>
               </div>
             </RadioGroup>
