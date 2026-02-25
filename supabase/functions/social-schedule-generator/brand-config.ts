@@ -15,6 +15,8 @@ export interface BrandConfig {
   eventNameMatch: string[];
   /** Drive folder brand name (under Social Media Organizer/) */
   driveBrand: string;
+  /** Metricool blog ID for this brand's social accounts */
+  metricoolBlogId: string;
   /** If this brand posts to another brand's accounts */
   postsAsBrand?: string;
   /** Tag to include in captions (e.g. @magicmiccomedy) */
@@ -31,6 +33,7 @@ export const BRAND_CONFIG: Record<string, BrandConfig> = {
     orgNameMatch: ['iD Comedy Club', 'iD Comedy'],
     eventNameMatch: ['iD Comedy'],
     driveBrand: 'iD Comedy Club',
+    metricoolBlogId: '4442774',
     platforms: ['instagram', 'facebook', 'tiktok', 'twitter'],
     defaultHashtags: ['#iDComedyClub', '#StandUpSydney', '#SydneyComedy'],
   },
@@ -39,6 +42,7 @@ export const BRAND_CONFIG: Record<string, BrandConfig> = {
     orgNameMatch: ['Rory Lowe'],
     eventNameMatch: ['Rory Lowe', 'Lowe Key'],
     driveBrand: 'Rory Lowe',
+    metricoolBlogId: '4827835',
     platforms: ['instagram', 'facebook', 'tiktok', 'twitter'],
     defaultHashtags: ['#RoryLowe', '#StandUpComedy'],
   },
@@ -47,6 +51,7 @@ export const BRAND_CONFIG: Record<string, BrandConfig> = {
     orgNameMatch: ['Magic Mic'],
     eventNameMatch: ['Magic Mic'],
     driveBrand: 'Magic Mic Comedy',
+    metricoolBlogId: '4442774',
     postsAsBrand: 'iD Comedy Club',
     tagInCaption: '@magicmiccomedy',
     platforms: ['instagram', 'facebook', 'tiktok', 'twitter'],
