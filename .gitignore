@@ -43,8 +43,10 @@ SUPABASE_ACCESS_TOKEN_SETUP.md
 *_SECRET_*.md
 *_CREDENTIAL*.md
 
-# Local configuration
-.claude/
+# Local configuration (allow commands/ and voices/ for skill tracking)
+.claude/*
+!.claude/commands/
+!.claude/voices/
 .claude-agents/
 .worktrees/
 
