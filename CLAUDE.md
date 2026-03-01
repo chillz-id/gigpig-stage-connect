@@ -12,9 +12,11 @@ npm install --legacy-peer-deps
 npm run dev                           # Dev server (port 8080 via vite.config.ts)
 npm run build                         # Production build (includes TypeScript checks)
 npm run lint                          # ESLint + TypeScript (must pass before commits)
+npm run validate                      # Run lint + build + test together
 
 # Testing
 npm run test                          # All Jest unit tests
+npm run test:watch                    # Watch mode for TDD workflow
 npm run test -- path/to/file.test.ts  # Single test file
 npm run test -- --testNamePattern="pattern"  # Filter by test name
 npm run test:coverage                 # Coverage report
@@ -113,7 +115,7 @@ Strict mode enabled in `tsconfig.json` (composite config):
 - `exactOptionalPropertyTypes: true` - Strict optional properties
 - `noUnusedLocals: true`, `noUnusedParameters: true`
 
-Note: `tsconfig.app.json` relaxes some rules for build compatibility, but IDE tooling uses the strict composite config.
+Note: `tsconfig.app.json` (used by Vite builds) sets `strict: false`, `noImplicitAny: false`, `noUnusedLocals: false`, so builds succeed even with strict violations. Only IDE tooling uses the strict root config.
 
 ## Design System Rules
 
@@ -128,6 +130,13 @@ Note: `tsconfig.app.json` relaxes some rules for build compatibility, but IDE to
 <Button variant="ghost">Click me</Button>
 ```
 
+## ESLint Notes
+
+Key rules that are **off** or relaxed (so don't manually fix these unless asked):
+- `@typescript-eslint/no-unused-vars`: **off** — unused vars won't fail lint
+- `@typescript-eslint/no-explicit-any`: **off** — `any` is allowed
+- `react-hooks/rules-of-hooks`: **warn** (not error) — won't block commits
+
 ## Coding Conventions
 
 - **Imports**: Always use `@/` aliases (e.g., `@/components/ui/button`), never relative paths for shared modules
@@ -135,7 +144,7 @@ Note: `tsconfig.app.json` relaxes some rules for build compatibility, but IDE to
 - **Hooks/Services**: camelCase with descriptive prefixes (`useInvoiceSync`, `invoiceService`)
 - **Indentation**: 2 spaces
 - **Tailwind**: Order classes layout → spacing → color
-- **Tests**: `.test.ts`/`.test.tsx` files colocated with their source
+- **Tests**: `.test.ts`/`.test.tsx` files in the `tests/` directory (not colocated with source — see `jest.config.cjs` `roots`)
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`)
 
 ## Common Patterns
@@ -193,7 +202,7 @@ Optional integrations: `RESEND_API_KEY`, `META_ACCESS_TOKEN` (see `.env.example`
 - Rollback plan (required)
 - Type of change and testing steps
 
-**Pre-commit**: Run `npm run lint` and `npm run test`
+**Pre-commit**: Runs `npx lint-staged`, which executes `eslint --fix` on staged `*.{ts,tsx}` files only. No tests are run by the hook.
 
 ### Atomic Commits (REQUIRED)
 
