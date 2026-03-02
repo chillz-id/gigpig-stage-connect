@@ -82,3 +82,6 @@ verify_jwt = false
 
 [functions.post-show-email]
 verify_jwt = false
+
+[functions.meta-audience-sync]
+verify_jwt = false
