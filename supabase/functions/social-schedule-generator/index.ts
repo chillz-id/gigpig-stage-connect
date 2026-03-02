@@ -313,6 +313,7 @@ serve(async (req) => {
               hashtags: brand.defaultHashtags.map((h) => h.replace('#', '')),
               mediaUrls,
               organizationId: draftOrgId,
+              brand: brand.name,
             });
           }
         }
@@ -332,6 +333,35 @@ serve(async (req) => {
       .map((d) => d.scheduled_for ? new Date(d.scheduled_for) : null)
       .filter((d): d is Date => d !== null);
 
+    // Also fetch Metricool calendar for gap enforcement against already-scheduled posts
+    if (metricoolToken && metricoolUserId && metricoolBlogId) {
+      try {
+        const mcCalUrl = new URL(`${METRICOOL_BASE_URL}/v2/scheduler/posts`);
+        mcCalUrl.searchParams.set('userToken', metricoolToken);
+        mcCalUrl.searchParams.set('userId', metricoolUserId);
+        mcCalUrl.searchParams.set('blogId', metricoolBlogId);
+        mcCalUrl.searchParams.set('start', todayStr);
+        mcCalUrl.searchParams.set('end', lookahead.toISOString().split('T')[0]!);
+        mcCalUrl.searchParams.set('timezone', 'Australia/Sydney');
+
+        const mcCalResp = await fetch(mcCalUrl.toString(), {
+          headers: { 'X-Mc-Auth': metricoolToken },
+        });
+        if (mcCalResp.ok) {
+          const mcCalData = await mcCalResp.json();
+          const mcPosts = Array.isArray(mcCalData?.data) ? mcCalData.data : [];
+          for (const post of mcPosts) {
+            if (post.publicationDate?.dateTime) {
+              existingTimes.push(new Date(post.publicationDate.dateTime));
+            }
+          }
+          console.log(`Fetched ${mcPosts.length} Metricool posts for gap enforcement`);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch Metricool calendar for gap enforcement:', e);
+      }
+    }
+
     const optimized = optimizeSchedule(allDraftSlots, bestTimesCache, existingTimes);
 
     // ─── Step 8: Bulk insert drafts ─────────────────────────────────────────
@@ -347,6 +377,7 @@ serve(async (req) => {
         hashtags: slot.hashtags,
         media_urls: slot.mediaUrls.length > 0 ? slot.mediaUrls : null,
         scheduled_for: slot.scheduledFor.toISOString(),
+        brand: slot.brand || null,
         status: 'draft',
         ai_model: 'schedule-generator',
         ai_prompt_used: `Auto-generated: ${slot.windowLabel} for ${slot.eventName}`,

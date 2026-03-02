@@ -19,6 +19,8 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { resolveConflict } from './conflict-resolver.ts';
+import type { OccupiedSlot, BestTimeSlot } from './conflict-resolver.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -158,8 +160,8 @@ serve(async (req) => {
 
         for (const draft of drafts) {
           try {
-            // For cron, we auto-publish approved drafts (they were already reviewed)
-            const blogId = defaultBlogId ?? Object.values(BRAND_BLOG_IDS)[0];
+            // Resolve blogId per draft: draft.brand > default
+            const blogId = resolveBlogId(draft.brand as string | undefined) ?? defaultBlogId ?? Object.values(BRAND_BLOG_IDS)[0];
             if (!blogId) {
               results.failed++;
               results.errors.push(`${draft.id}: No blogId configured`);
@@ -328,8 +330,40 @@ async function publishDraftToMetricool(
     }
   }
 
-  const scheduledFor = (draft.scheduled_for as string)
+  let scheduledFor = (draft.scheduled_for as string)
     ?? new Date(Date.now() + 60 * 60_000).toISOString(); // default 1h from now
+  const originalScheduledFor = scheduledFor;
+
+  // ─── Conflict Detection & Rescheduling ─────────────────────────────────
+  let rescheduled = false;
+  let rescheduleReason: string | undefined;
+
+  try {
+    const targetTime = new Date(scheduledFor);
+    const occupiedSlots = await gatherOccupiedSlots(supabase, targetTime, creds, draft.id as string);
+
+    // Fetch best times for this platform (best-effort)
+    const bestTimeSlots = await fetchBestTimesForPlatform(
+      draft.platform as string, creds,
+    );
+
+    const conflictResult = resolveConflict({
+      scheduledFor: targetTime,
+      occupiedSlots,
+      bestTimeSlots,
+    });
+
+    if (conflictResult.hasConflict && conflictResult.resolvedTime) {
+      scheduledFor = conflictResult.resolvedTime.toISOString();
+      rescheduled = true;
+      rescheduleReason = conflictResult.reason;
+      console.log(
+        `Rescheduled draft ${draft.id}: ${originalScheduledFor} → ${scheduledFor} (${rescheduleReason})`,
+      );
+    }
+  } catch (e) {
+    console.warn('Conflict check failed, publishing at original time:', e);
+  }
 
   const mcPost = buildMetricoolPost({
     caption: draft.caption as string,
@@ -343,13 +377,14 @@ async function publishDraftToMetricool(
   const mcResult = await callMetricoolCreate(mcPost, creds);
   const mcPostId = extractPostId(mcResult);
 
-  // Update draft status
+  // Update draft status (with potentially rescheduled time)
   const newStatus = autoPublish ? 'scheduled' : 'draft'; // keep 'draft' if it's a Metricool draft
   await supabase
     .from('social_content_drafts')
     .update({
       status: newStatus,
       metricool_post_id: mcPostId,
+      scheduled_for: scheduledFor,
       updated_at: new Date().toISOString(),
     })
     .eq('id', draft.id);
@@ -361,6 +396,9 @@ async function publishDraftToMetricool(
     metricoolDraft: !autoPublish,
     platform: draft.platform,
     scheduledFor,
+    originalScheduledFor: rescheduled ? originalScheduledFor : undefined,
+    rescheduled,
+    rescheduleReason,
     metricoolResponse: mcResult,
   };
 }
@@ -522,6 +560,124 @@ async function callMetricoolCreate(
   }
 
   return data;
+}
+
+// ─── Conflict Detection Helpers ──────────────────────────────────────────────
+
+/**
+ * Gather occupied time slots from Metricool calendar + our DB drafts.
+ * Used for pre-publish conflict detection.
+ */
+async function gatherOccupiedSlots(
+  supabase: ReturnType<typeof createClient>,
+  targetTime: Date,
+  creds: MetricoolCreds,
+  excludeDraftId?: string,
+): Promise<OccupiedSlot[]> {
+  const slots: OccupiedSlot[] = [];
+
+  // Query range: ±2 days around target
+  const rangeStart = new Date(targetTime);
+  rangeStart.setDate(rangeStart.getDate() - 2);
+  const rangeEnd = new Date(targetTime);
+  rangeEnd.setDate(rangeEnd.getDate() + 2);
+  const startStr = rangeStart.toISOString().split('T')[0];
+  const endStr = rangeEnd.toISOString().split('T')[0];
+
+  // 1. Fetch Metricool calendar
+  try {
+    const mcUrl = new URL(`${METRICOOL_BASE_URL}/v2/scheduler/posts`);
+    mcUrl.searchParams.set('userToken', creds.token);
+    mcUrl.searchParams.set('userId', creds.userId);
+    mcUrl.searchParams.set('blogId', creds.blogId);
+    mcUrl.searchParams.set('start', startStr!);
+    mcUrl.searchParams.set('end', endStr!);
+    mcUrl.searchParams.set('timezone', 'Australia/Sydney');
+
+    const resp = await fetch(mcUrl.toString(), {
+      headers: { 'X-Mc-Auth': creds.token },
+    });
+    if (resp.ok) {
+      const mcData = await resp.json();
+      const posts = Array.isArray(mcData?.data) ? mcData.data : [];
+      for (const post of posts) {
+        if (post.publicationDate?.dateTime) {
+          slots.push({
+            time: new Date(post.publicationDate.dateTime),
+            source: 'metricool',
+            id: post.id,
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch Metricool calendar for conflict check:', e);
+  }
+
+  // 2. Fetch our DB drafts (approved/scheduled, excluding self)
+  let query = supabase
+    .from('social_content_drafts')
+    .select('id, scheduled_for')
+    .not('scheduled_for', 'is', null)
+    .in('status', ['approved', 'scheduled'])
+    .gte('scheduled_for', rangeStart.toISOString())
+    .lte('scheduled_for', rangeEnd.toISOString());
+
+  if (excludeDraftId) {
+    query = query.neq('id', excludeDraftId);
+  }
+
+  const { data: drafts } = await query;
+  for (const d of drafts ?? []) {
+    if (d.scheduled_for) {
+      slots.push({ time: new Date(d.scheduled_for), source: 'draft', id: d.id });
+    }
+  }
+
+  return slots;
+}
+
+/**
+ * Fetch Metricool best times for a platform (for conflict resolution rescheduling).
+ */
+async function fetchBestTimesForPlatform(
+  platform: string,
+  creds: MetricoolCreds,
+): Promise<BestTimeSlot[]> {
+  const provider = ['instagram', 'facebook', 'tiktok', 'twitter', 'linkedin', 'youtube']
+    .find((p) => p === platform);
+  if (!provider) return [];
+
+  try {
+    const btUrl = new URL(`${METRICOOL_BASE_URL}/v2/scheduler/besttimes/${provider}`);
+    btUrl.searchParams.set('userToken', creds.token);
+    btUrl.searchParams.set('userId', creds.userId);
+    btUrl.searchParams.set('blogId', creds.blogId);
+    btUrl.searchParams.set('timezone', 'Australia/Sydney');
+
+    const resp = await fetch(btUrl.toString(), {
+      headers: { 'X-Mc-Auth': creds.token },
+    });
+    if (!resp.ok) return [];
+
+    const data = await resp.json();
+    const items = Array.isArray(data?.data) ? data.data : [];
+    const slots: BestTimeSlot[] = [];
+
+    for (const entry of items) {
+      if (entry?.dayOfWeek != null && Array.isArray(entry.bestTimesByHour)) {
+        for (const slot of entry.bestTimesByHour) {
+          if (typeof slot.hourOfDay === 'number' && typeof slot.value === 'number') {
+            slots.push({ day: entry.dayOfWeek, hour: slot.hourOfDay, score: slot.value });
+          }
+        }
+      }
+    }
+
+    return slots;
+  } catch {
+    return [];
+  }
 }
 
 /** Generic Metricool GET helper */

@@ -25,6 +25,7 @@ export interface DraftSlot {
   hashtags: string[];
   mediaUrls: string[];
   organizationId: string;
+  brand?: string;
 }
 
 export interface ScheduledSlot extends DraftSlot {

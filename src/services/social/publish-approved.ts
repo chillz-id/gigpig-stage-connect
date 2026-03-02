@@ -3,11 +3,15 @@
  *
  * Converts approved ContentDraft → Metricool ScheduledPost
  * and schedules it for auto-publishing.
+ *
+ * Includes pre-publish conflict detection: checks Metricool calendar
+ * and pending drafts for scheduling conflicts, auto-rescheduling if needed.
  */
 
 import { createPost, getBestTimes } from '@/services/social/metricool-posts';
 import { markDraftScheduled } from '@/services/social/content-pipeline';
 import { snapToOptimalTime } from '@/services/social/content-strategy';
+import { gatherOccupiedSlots, resolveConflict } from '@/services/social/conflict-resolver';
 import { METRICOOL_NETWORKS } from '@/types/social';
 import type {
   ContentDraft,
@@ -27,11 +31,19 @@ const BEST_TIMES_PROVIDERS: Partial<Record<SocialPlatform, BestTimesProvider>> =
   youtube: 'youtube',
 };
 
+export interface PublishResult {
+  metricoolPostId: number;
+  rescheduled: boolean;
+  originalTime?: Date;
+  newTime?: Date;
+  reason?: string;
+}
+
 /**
  * Publish a single approved draft to Metricool.
- * Fetches best posting times, creates the Metricool post, and updates the draft status.
+ * Checks for scheduling conflicts and auto-reschedules if needed.
  */
-export async function publishDraft(draft: ContentDraft): Promise<{ metricoolPostId: number }> {
+export async function publishDraft(draft: ContentDraft): Promise<PublishResult> {
   if (draft.status !== 'approved') {
     throw new Error(`Draft ${draft.id} is not approved (status: ${draft.status})`);
   }
@@ -47,8 +59,35 @@ export async function publishDraft(draft: ContentDraft): Promise<{ metricoolPost
   if (draft.scheduled_for) {
     publishAt = new Date(draft.scheduled_for);
   } else {
-    // Try to use optimal posting times from Metricool
     publishAt = await getOptimalTime(platform);
+  }
+
+  // ─── Conflict Detection ──────────────────────────────────────────────
+  let rescheduled = false;
+  let originalTime: Date | undefined;
+  let rescheduleReason: string | undefined;
+
+  try {
+    const occupiedSlots = await gatherOccupiedSlots(publishAt, undefined, draft.id);
+    const bestTimeSlots = await getBestTimeSlotsForConflict(platform);
+
+    const conflictResult = resolveConflict({
+      scheduledFor: publishAt,
+      occupiedSlots,
+      bestTimeSlots,
+    });
+
+    if (conflictResult.hasConflict && conflictResult.resolvedTime) {
+      originalTime = publishAt;
+      publishAt = conflictResult.resolvedTime;
+      rescheduled = true;
+      rescheduleReason = conflictResult.reason;
+      console.log(
+        `[Smart Reschedule] Draft ${draft.id} moved from ${originalTime.toISOString()} to ${publishAt.toISOString()}: ${rescheduleReason}`,
+      );
+    }
+  } catch (err) {
+    console.warn('Conflict check failed, publishing at original time:', err);
   }
 
   // Build the caption with hashtags appended
@@ -91,7 +130,13 @@ export async function publishDraft(draft: ContentDraft): Promise<{ metricoolPost
   // Update the draft status in our DB
   await markDraftScheduled(draft.id, metricoolPostId);
 
-  return { metricoolPostId };
+  return {
+    metricoolPostId,
+    rescheduled,
+    originalTime: rescheduled ? originalTime : undefined,
+    newTime: rescheduled ? publishAt : undefined,
+    reason: rescheduleReason,
+  };
 }
 
 /**
@@ -132,12 +177,28 @@ async function getOptimalTime(platform: SocialPlatform): Promise<Date> {
     const bestTimesResponse = await getBestTimes(provider);
     if (!bestTimesResponse) return fallback;
 
-    // Parse best times response into a structured format
-    // Metricool returns best times as a grid — we extract the highest-scored slots
     const bestTimeSlots = parseBestTimes(bestTimesResponse);
     return snapToOptimalTime(fallback, bestTimeSlots);
   } catch {
     return fallback;
+  }
+}
+
+/**
+ * Get best time slots for conflict resolution rescheduling.
+ */
+async function getBestTimeSlotsForConflict(
+  platform: SocialPlatform,
+): Promise<{ day: number; hour: number; score: number }[]> {
+  const provider = BEST_TIMES_PROVIDERS[platform];
+  if (!provider) return [];
+
+  try {
+    const response = await getBestTimes(provider);
+    if (!response) return [];
+    return parseBestTimes(response);
+  } catch {
+    return [];
   }
 }
 
