@@ -319,13 +319,36 @@ async function publishDraftToMetricool(
   }
 
   // Share Drive files if media_file_ids are present
-  if (Array.isArray(draft.media_file_ids)) {
-    for (const fileId of draft.media_file_ids) {
+  // media_file_ids are social_media_assets.id UUIDs — resolve to drive_file_id first
+  if (Array.isArray(draft.media_file_ids) && draft.media_file_ids.length > 0) {
+    const { data: assets } = await supabase
+      .from('social_media_assets')
+      .select('id, drive_file_id')
+      .in('id', draft.media_file_ids.map(String));
+
+    const driveFileMap = new Map<string, string>();
+    for (const a of assets ?? []) {
+      driveFileMap.set(String(a.id), String(a.drive_file_id));
+    }
+
+    for (const assetId of draft.media_file_ids) {
+      const driveFileId = driveFileMap.get(String(assetId));
+      if (!driveFileId) {
+        console.warn(`No drive_file_id found for asset ${assetId}, trying as raw Drive ID`);
+        // Fallback: treat as raw Drive file ID for backward compatibility
+        try {
+          const url = await shareDriveFile(supabaseUrl, serviceKey, String(assetId));
+          mediaUrls.push(url);
+        } catch (e) {
+          console.error(`Failed to share file ${assetId}:`, e);
+        }
+        continue;
+      }
       try {
-        const url = await shareDriveFile(supabaseUrl, serviceKey, String(fileId));
+        const url = await shareDriveFile(supabaseUrl, serviceKey, driveFileId);
         mediaUrls.push(url);
       } catch (e) {
-        console.error(`Failed to share Drive file ${fileId}:`, e);
+        console.error(`Failed to share Drive file ${driveFileId} (asset ${assetId}):`, e);
       }
     }
   }

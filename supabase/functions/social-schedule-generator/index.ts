@@ -25,6 +25,8 @@ import type { EventData } from './strategy.ts';
 import { renderCaption } from './templates.ts';
 import { optimizeSchedule, parseBestTimesResponse } from './optimizer.ts';
 import type { DraftSlot, BestTimeSlot } from './optimizer.ts';
+import { scanAndSyncBrandAssets, selectMedia } from './media-selector.ts';
+import type { AssetCandidate } from './media-selector.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -188,6 +190,21 @@ serve(async (req) => {
       ),
     );
 
+    // ─── Step 3c: Scan Drive + sync media assets per brand ─────────────────
+
+    const brandAssetCache = new Map<string, AssetCandidate[]>();
+    for (const brandName of uniqueBrandsForFolders) {
+      try {
+        const { scanned, synced, assets } = await scanAndSyncBrandAssets(
+          supabase, supabaseUrl, supabaseServiceKey, brandName,
+        );
+        brandAssetCache.set(brandName, assets);
+        console.log(`[Media] Brand "${brandName}": scanned ${scanned} files, synced ${synced}, ${assets.length} available`);
+      } catch (e) {
+        console.warn(`[Media] Failed to scan brand "${brandName}":`, e);
+      }
+    }
+
     // ─── Step 4: Continue with draft generation for 8-week window ───────────
 
     if (!events || events.length === 0) {
@@ -296,10 +313,17 @@ serve(async (req) => {
             // Render caption
             const caption = renderCaption(window.label, eventData, brand, platform);
 
-            // Select media (event banner as default)
-            const mediaUrls: string[] = [];
-            if (event.hero_image_url) mediaUrls.push(event.hero_image_url);
-            else if (event.banner_url) mediaUrls.push(event.banner_url);
+            // Select media — prefer Drive assets, fall back to event banner
+            const brandCandidates = brandAssetCache.get(brand.driveBrand) ?? [];
+            const eventDateStr = event.event_date.split('T')[0];
+            const shortName = getEventShortName(eventName, event.event_date);
+            const eventFolderPrefix = `${brand.driveBrand}/${eventDateStr} - ${shortName}`;
+            const fallbackBanner = event.hero_image_url ?? event.banner_url ?? null;
+
+            const media = selectMedia(
+              brandCandidates, event.id, platform, postType,
+              eventFolderPrefix, fallbackBanner,
+            );
 
             allDraftSlots.push({
               eventId: event.id,
@@ -311,7 +335,9 @@ serve(async (req) => {
               targetDate: window.targetDate,
               caption,
               hashtags: brand.defaultHashtags.map((h) => h.replace('#', '')),
-              mediaUrls,
+              mediaUrls: media.mediaUrls,
+              mediaFileIds: media.mediaFileIds,
+              mediaType: media.mediaType,
               organizationId: draftOrgId,
               brand: brand.name,
             });
@@ -376,6 +402,8 @@ serve(async (req) => {
         caption: slot.caption,
         hashtags: slot.hashtags,
         media_urls: slot.mediaUrls.length > 0 ? slot.mediaUrls : null,
+        media_file_ids: slot.mediaFileIds.length > 0 ? slot.mediaFileIds : null,
+        media_type: slot.mediaType,
         scheduled_for: slot.scheduledFor.toISOString(),
         brand: slot.brand || null,
         status: 'draft',
@@ -397,6 +425,31 @@ serve(async (req) => {
           results.draftsCreated += batch.length;
         }
       }
+    }
+
+    // ─── Step 9: Mark used media assets ─────────────────────────────────────
+
+    const usedAssetIds = new Set<string>();
+    for (const slot of optimized) {
+      for (const assetId of slot.mediaFileIds) {
+        usedAssetIds.add(assetId);
+      }
+    }
+
+    if (usedAssetIds.size > 0) {
+      for (const assetId of usedAssetIds) {
+        try {
+          await supabase.rpc('increment_asset_used_count', { asset_id: assetId });
+        } catch (e) {
+          // Fallback: direct update if RPC doesn't exist yet
+          await supabase
+            .from('social_media_assets')
+            .update({ used_count: 1, status: 'scheduled' })
+            .eq('id', assetId);
+          console.warn(`RPC fallback for asset ${assetId}:`, e);
+        }
+      }
+      console.log(`[Media] Marked ${usedAssetIds.size} assets as used`);
     }
 
     return jsonResponse({

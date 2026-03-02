@@ -24,6 +24,8 @@ export interface DraftSlot {
   caption: string;
   hashtags: string[];
   mediaUrls: string[];
+  mediaFileIds: string[];
+  mediaType: string | null;
   organizationId: string;
   brand?: string;
 }
