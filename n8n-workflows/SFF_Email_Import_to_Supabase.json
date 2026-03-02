@@ -1,0 +1,426 @@
+{
+  "name": "SFF Email Import to Supabase",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "options": {
+          "customEmailConfig": {
+            "allowUnauthorizedCerts": false
+          }
+        }
+      },
+      "id": "imap-trigger",
+      "name": "Watch SFF Emails",
+      "type": "n8n-nodes-base.imapEmail",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_WITH_IMAP_CREDENTIAL_ID",
+          "name": "SFF Email IMAP"
+        }
+      },
+      "notes": "Configure IMAP credentials for the inbox that receives SFF emails. Set polling interval as needed (e.g. every 5 minutes). Filter by sender: noreply@showfilmfirst.com or similar."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-sff",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "showfilmfirst",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-sff-emails",
+      "name": "Filter SFF Emails",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Excel attachment from the email\n// The IMAP node puts attachments in binary data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Check for binary attachments\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  for (const key of binaryKeys) {\n    const binary = item.binary[key];\n    const fileName = binary.fileName || '';\n    \n    // Only process Excel files\n    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || \n        binary.mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||\n        binary.mimeType === 'application/vnd.ms-excel') {\n      results.push({\n        json: {\n          fileName: fileName,\n          subject: item.json.subject || '',\n          from: item.json.from || '',\n          date: item.json.date || '',\n          binaryKey: key\n        },\n        binary: {\n          data: binary\n        }\n      });\n    }\n  }\n}\n\nif (results.length === 0) {\n  throw new Error('No Excel attachment found in email');\n}\n\nreturn results;"
+      },
+      "id": "extract-attachment",
+      "name": "Extract Excel Attachment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the password-protected Excel file\n// Uses SheetJS (xlsx) which is available in n8n\nconst xlsx = require('xlsx');\n\nconst items = $input.all();\nconst allRows = [];\n\n// SFF Excel password - store in n8n credentials/env var in production\nconst SFF_PASSWORD = $env.SFF_EXCEL_PASSWORD || 'REPLACE_WITH_PASSWORD';\n\nfor (const item of items) {\n  const binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  let workbook;\n  try {\n    workbook = xlsx.read(binaryData, {\n      type: 'buffer',\n      password: SFF_PASSWORD\n    });\n  } catch (err) {\n    // Try without password in case it's not protected\n    try {\n      workbook = xlsx.read(binaryData, { type: 'buffer' });\n    } catch (err2) {\n      throw new Error(`Failed to read Excel file: ${err.message}`);\n    }\n  }\n  \n  const sheetName = workbook.SheetNames[0];\n  const sheet = workbook.Sheets[sheetName];\n  const jsonData = xlsx.utils.sheet_to_json(sheet, { defval: '' });\n  \n  for (const row of jsonData) {\n    // Map SFF column names to our fields\n    // SFF columns: Event Name, Location, FirstName, LastName, Email, No.Tickets, Booking ID, Event Date, Event Time\n    const eventName = (row['Event Name'] || row['event_name'] || '').toString().trim();\n    const firstName = (row['FirstName'] || row['First Name'] || row['first_name'] || '').toString().trim();\n    const lastName = (row['LastName'] || row['Last Name'] || row['last_name'] || '').toString().trim();\n    const email = (row['Email'] || row['email'] || '').toString().trim().toLowerCase();\n    const ticketCount = parseInt(row['No.Tickets'] || row['No. Tickets'] || row['Tickets'] || row['ticket_count'] || '1', 10);\n    const bookingId = (row['Booking ID'] || row['BookingID'] || row['booking_id'] || '').toString().trim();\n    const eventDate = (row['Event Date'] || row['event_date'] || '').toString().trim();\n    const eventTime = (row['Event Time'] || row['event_time'] || '').toString().trim();\n    const location = (row['Location'] || row['location'] || '').toString().trim();\n    \n    // Skip rows without essential data\n    if (!email || !eventName) continue;\n    \n    // Parse date from DD/MM/YYYY to YYYY-MM-DD\n    let parsedDate = eventDate;\n    if (eventDate.includes('/')) {\n      const parts = eventDate.split('/');\n      if (parts.length === 3) {\n        parsedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;\n      }\n    }\n    \n    allRows.push({\n      json: {\n        event_name: eventName,\n        location: location,\n        first_name: firstName,\n        last_name: lastName,\n        email: email,\n        ticket_count: isNaN(ticketCount) ? 1 : ticketCount,\n        booking_reference: bookingId,\n        event_date: parsedDate,\n        event_time: eventTime,\n        source_email_subject: item.json.subject || '',\n        source_email_date: item.json.date || ''\n      }\n    });\n  }\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Excel file');\n}\n\nreturn allRows;"
+      },
+      "id": "parse-excel",
+      "name": "Parse SFF Excel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "notes": "Set SFF_EXCEL_PASSWORD as an n8n environment variable. The Code node parses the password-protected Excel, maps SFF columns, converts DD/MM/YYYY dates to ISO format, and outputs one item per attendee row."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/rpc/match_event_session",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_event_name\": \"{{ $json.event_name }}\",\n  \"p_event_date\": \"{{ $json.event_date }}\"\n}"
+      },
+      "id": "match-event-session",
+      "name": "Match Event & Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300],
+      "notes": "Calls a Supabase RPC function to find the matching event_id and session_id by event name and date. The RPC function needs to be created (see migration). Falls back to a direct query if RPC doesn't exist."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge the parsed attendee data with the matched event/session\nconst attendee = $('Parse SFF Excel').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  // Log warning but don't fail - store with null event_id for manual review\n  return {\n    json: {\n      ...attendee,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${attendee.event_name} on ${attendee.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...attendee,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
+      },
+      "id": "merge-match-data",
+      "name": "Merge Match Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.email }}\",\n  \"first_name\": \"{{ $json.first_name }}\",\n  \"last_name\": \"{{ $json.last_name }}\",\n  \"source\": \"show_film_first\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "upsert-customer",
+      "name": "Upsert Customer to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300],
+      "notes": "Upserts the attendee into the customers CRM table. Uses Prefer: resolution=merge-duplicates to match on the email unique constraint. Source is only set on insert (won't overwrite existing source for returning customers)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare the final payload for manual_ticket_entries\nconst attendee = $('Merge Match Data').item.json;\nconst customerResult = $input.item.json;\n\n// Get customer_id from upsert result\nconst customer = Array.isArray(customerResult) ? customerResult[0] : customerResult;\nconst customerId = customer?.id || null;\n\n// SFF Partner ID\nconst SFF_PARTNER_ID = '4dec01e6-63a5-4b90-9202-bec0713d1de9';\n\nreturn {\n  json: {\n    event_id: attendee.event_id,\n    session_id: attendee.session_id,\n    partner_id: SFF_PARTNER_ID,\n    ticket_count: attendee.ticket_count,\n    gross_revenue: 0,\n    commission_rate: 0,\n    entry_date: attendee.event_date || new Date().toISOString().split('T')[0],\n    first_name: attendee.first_name,\n    last_name: attendee.last_name,\n    email: attendee.email,\n    booking_reference: attendee.booking_reference,\n    customer_id: customerId,\n    source: 'n8n',\n    notes: `SFF import: ${attendee.event_name}`,\n    reference_id: attendee.booking_reference\n  }\n};"
+      },
+      "id": "prepare-ticket-entry",
+      "name": "Prepare Ticket Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "insert-ticket-entry",
+      "name": "Insert Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 300],
+      "notes": "Inserts the ticket entry. The unique index on booking_reference will reject duplicates (409 Conflict), which is expected and handled by the error handler."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle results - log success/failure counts\nconst items = $input.all();\nlet inserted = 0;\nlet duplicates = 0;\nlet errors = 0;\n\nfor (const item of items) {\n  const statusCode = item.json.statusCode || item.json?.headers?.status;\n  if (statusCode === 201 || statusCode === 200) {\n    inserted++;\n  } else if (statusCode === 409) {\n    duplicates++;\n  } else {\n    errors++;\n  }\n}\n\nreturn {\n  json: {\n    summary: `SFF Import Complete`,\n    inserted: inserted,\n    duplicates_skipped: duplicates,\n    errors: errors,\n    total_processed: items.length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "summary",
+      "name": "Import Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-errors",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-errors",
+      "name": "Any Errors?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {},
+      "id": "success-end",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2660, 400]
+    },
+    {
+      "parameters": {},
+      "id": "error-end",
+      "name": "Errors - Review Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2660, 200],
+      "notes": "Add a Slack or email notification here to alert when SFF imports have errors."
+    }
+  ],
+  "connections": {
+    "Watch SFF Emails": {
+      "main": [
+        [
+          {
+            "node": "Filter SFF Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter SFF Emails": {
+      "main": [
+        [
+          {
+            "node": "Extract Excel Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Excel Attachment": {
+      "main": [
+        [
+          {
+            "node": "Parse SFF Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SFF Excel": {
+      "main": [
+        [
+          {
+            "node": "Match Event & Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Event & Session": {
+      "main": [
+        [
+          {
+            "node": "Merge Match Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Match Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customer to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customer to CRM": {
+      "main": [
+        [
+          {
+            "node": "Prepare Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Insert Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import Summary": {
+      "main": [
+        [
+          {
+            "node": "Any Errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Errors?": {
+      "main": [
+        [
+          {
+            "node": "Errors - Review Needed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Sydney",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ticketing"
+    },
+    {
+      "name": "SFF"
+    },
+    {
+      "name": "email-import"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+}
