@@ -1,0 +1,616 @@
+{
+  "name": "FEVER Email Import to Supabase",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "options": {
+          "customEmailConfig": {
+            "allowUnauthorizedCerts": false
+          }
+        }
+      },
+      "id": "imap-trigger",
+      "name": "Watch FEVER Emails",
+      "type": "n8n-nodes-base.imapEmail",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_WITH_IMAP_CREDENTIAL_ID",
+          "name": "FEVER Email IMAP"
+        }
+      },
+      "notes": "Configure IMAP credentials for the inbox that receives FEVER notification emails. Sender: partners@feverup.com. Subject patterns: 'New purchase with Fever for your event {EVENT_NAME}' (bookings) and cancellation/refund notifications."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-fever-from",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "feverup",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "filter-fever-subject",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Fever",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-fever-emails",
+      "name": "Filter FEVER Emails",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route email by type based on subject line\n// - New bookings: subject contains \"New purchase\"\n// - Cancellations/refunds: subject contains \"cancel\" or \"refund\"\n// - Unknown: anything else from feverup that mentions Fever\n\nconst subject = ($json.subject || '').trim().toLowerCase();\n\nlet emailType = 'unknown';\n\nif (subject.includes('new purchase')) {\n  emailType = 'new_booking';\n} else if (subject.includes('cancel') || subject.includes('refund')) {\n  emailType = 'cancellation';\n}\n\nreturn {\n  json: {\n    ...$json,\n    email_type: emailType\n  }\n};"
+      },
+      "id": "route-by-type",
+      "name": "Route by Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "notes": "Classifies the FEVER email as 'new_booking', 'cancellation', or 'unknown' based on subject line keywords. Unknown emails are dropped (not processed)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-new-booking",
+              "leftValue": "={{ $json.email_type }}",
+              "rightValue": "new_booking",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-booking-or-cancel",
+      "name": "New Booking?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "notes": "TRUE output → new booking path. FALSE output → check if cancellation."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-cancellation",
+              "leftValue": "={{ $json.email_type }}",
+              "rightValue": "cancellation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-cancellation",
+      "name": "Is Cancellation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 500],
+      "notes": "TRUE output → cancellation path. FALSE output → unknown email type, skip processing."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse FEVER email to extract purchase data\n// Subject format: \"New purchase with Fever for your event {EVENT_NAME}\"\n// Email body/summary contains: \"{Name} x {qty} {DD/M/YYYY} {time} {price} AUD\"\n// Hidden preview span contains: \"{qty} tickets | {DD/M/YYYY}\"\n//\n// Examples:\n//   Subject: \"New purchase with Fever for your event iD Comedy Club - Friday & Saturday Nights\"\n//   Body text: \"Mia Tran x 2 26/6/2026 7:00 pm 70.0 AUD\"\n//   Body text: \"Kathy May x 1 21/2/2026 7:00 pm 35.0 AUD\"\n//   Body text: \"Carmen Dom x 2 18/3/2026 7:00 pm 60.0 AUD\"\n\nconst subject = ($json.subject || '').trim();\nconst htmlBody = ($json.html || $json.textHtml || '').toString();\nconst textBody = ($json.text || $json.textPlain || '').toString();\n\n// 1. Extract event name from subject\nconst eventNameMatch = subject.match(/for your event\\s+(.+)$/i);\nconst eventName = eventNameMatch ? eventNameMatch[1].trim() : subject;\n\n// 2. Parse the purchase data from body text\n// Try multiple sources: plain text body, HTML body stripped of tags, summary text\n// The pattern is: {Name} x {qty} {DD/M/YYYY} {H:MM am/pm} {price} AUD\nconst bodyText = textBody || htmlBody.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\\s+/g, ' ');\n\n// Regex: Name (words/spaces) x qty date time price AUD\n// Name can contain letters, spaces, hyphens, apostrophes\n// Date is DD/M/YYYY (day and month may or may not be zero-padded)\n// Time is H:MM am/pm (with possible space before am/pm)\n// Price is a decimal number\nconst purchaseRegex = /([A-Za-z][A-Za-z '.\\-]+?)\\s+x\\s+(\\d+)\\s+(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\s+(\\d{1,2}:\\d{2}\\s*[ap]m)\\s+([\\d.]+)\\s*AUD/i;\nconst purchaseMatch = bodyText.match(purchaseRegex);\n\nif (!purchaseMatch) {\n  throw new Error(`Could not parse FEVER purchase data from email body. Subject: ${subject}. Body preview: ${bodyText.substring(0, 300)}`);\n}\n\nconst customerFullName = purchaseMatch[1].trim();\nconst ticketCount = parseInt(purchaseMatch[2], 10);\nconst rawDate = purchaseMatch[3];       // DD/M/YYYY\nconst rawTime = purchaseMatch[4].trim(); // H:MM pm\nconst grossRevenue = parseFloat(purchaseMatch[5]);\n\n// 3. Split customer name into first/last\nconst nameParts = customerFullName.split(/\\s+/);\nconst firstName = nameParts[0] || '';\nconst lastName = nameParts.slice(1).join(' ') || '';\n\n// 4. Convert date DD/M/YYYY → YYYY-MM-DD\nconst dateParts = rawDate.split('/');\nlet eventDate = rawDate;\nif (dateParts.length === 3) {\n  const day = dateParts[0].padStart(2, '0');\n  const month = dateParts[1].padStart(2, '0');\n  const year = dateParts[2];\n  eventDate = `${year}-${month}-${day}`;\n}\n\n// 5. Generate synthetic booking reference for dedup\n// Format: FEVER-{firstnamelastname}-{YYYY-MM-DD}\nconst nameSlug = (firstName + lastName).toLowerCase().replace(/[^a-z0-9]/g, '');\nconst bookingReference = `FEVER-${nameSlug}-${eventDate}`;\n\n// 6. Generate synthetic email for CRM (FEVER doesn't provide customer email)\nconst syntheticEmail = `fever.${firstName.toLowerCase().replace(/[^a-z]/g, '')}.${lastName.toLowerCase().replace(/[^a-z]/g, '')}@placeholder.local`;\n\nreturn {\n  json: {\n    event_name: eventName,\n    first_name: firstName,\n    last_name: lastName,\n    email: syntheticEmail,\n    ticket_count: isNaN(ticketCount) ? 1 : ticketCount,\n    event_date: eventDate,\n    event_time: rawTime,\n    gross_revenue: isNaN(grossRevenue) ? 0 : grossRevenue,\n    booking_reference: bookingReference,\n    source_email_subject: subject,\n    source_email_date: $json.date || ''\n  }\n};"
+      },
+      "id": "parse-fever-email",
+      "name": "Parse FEVER Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200],
+      "notes": "Parses the FEVER purchase notification email. Extracts event name from subject, then parses '{Name} x {qty} {DD/M/YYYY} {time} {price} AUD' from the body text. FEVER does NOT provide customer email or booking reference — both are synthetically generated for dedup and CRM purposes."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/rpc/match_event_session",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_event_name\": \"{{ $json.event_name }}\",\n  \"p_event_date\": \"{{ $json.event_date }}\"\n}"
+      },
+      "id": "match-event-session",
+      "name": "Match Event & Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200],
+      "notes": "Calls the match_event_session RPC to find the matching event_id and session_id. Uses the same RPC function as the SFF and Promotix workflows."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge the parsed FEVER data with the matched event/session\nconst parsed = $('Parse FEVER Email Body').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  return {\n    json: {\n      ...parsed,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${parsed.event_name} on ${parsed.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...parsed,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
+      },
+      "id": "merge-match-data",
+      "name": "Merge Match Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.email }}\",\n  \"first_name\": \"{{ $json.first_name }}\",\n  \"last_name\": \"{{ $json.last_name }}\",\n  \"source\": \"fever\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "upsert-customer",
+      "name": "Upsert Customer to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 200],
+      "notes": "Upserts the customer into the CRM table using a synthetic placeholder email (fever.{first}.{last}@placeholder.local) since FEVER does not provide real customer emails. Source set to 'fever'."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare the final payload for manual_ticket_entries\nconst attendee = $('Merge Match Data').item.json;\nconst customerResult = $input.item.json;\n\n// Get customer_id from upsert result\nconst customer = Array.isArray(customerResult) ? customerResult[0] : customerResult;\nconst customerId = customer?.id || null;\n\n// FEVER Partner ID\nconst FEVER_PARTNER_ID = '155dfe4f-7132-4f23-8179-1389a667b0dd';\n\nreturn {\n  json: {\n    event_id: attendee.event_id,\n    session_id: attendee.session_id,\n    partner_id: FEVER_PARTNER_ID,\n    ticket_count: attendee.ticket_count,\n    gross_revenue: attendee.gross_revenue,\n    commission_rate: 20,\n    entry_date: attendee.event_date || new Date().toISOString().split('T')[0],\n    first_name: attendee.first_name,\n    last_name: attendee.last_name,\n    email: attendee.email,\n    booking_reference: attendee.booking_reference,\n    customer_id: customerId,\n    source: 'n8n',\n    status: 'confirmed',\n    notes: `FEVER import: ${attendee.event_name}`,\n    reference_id: attendee.booking_reference\n  }\n};"
+      },
+      "id": "prepare-ticket-entry",
+      "name": "Prepare Ticket Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 200],
+      "notes": "Builds the insert payload. commission_rate is 20% for FEVER. gross_revenue comes from the parsed email price. status is set to 'confirmed' for new bookings. Does NOT include commission_amount or net_revenue as those are generated columns."
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "insert-ticket-entry",
+      "name": "Insert Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 200],
+      "notes": "Inserts the ticket entry with status='confirmed'. The unique index on booking_reference prevents duplicates (409 Conflict). The synthetic FEVER-{namehash}-{date} reference ensures one entry per customer per event date."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse FEVER cancellation/refund email to extract customer + event info\n// We need to reconstruct the synthetic booking reference: FEVER-{firstlast}-{YYYY-MM-DD}\n// to look up and cancel the matching entry.\n//\n// Cancellation emails may vary in format. We attempt to extract:\n// - Customer name\n// - Event name\n// - Event date\n// from the email body.\n\nconst subject = ($json.subject || '').trim();\nconst htmlBody = ($json.html || $json.textHtml || '').toString();\nconst textBody = ($json.text || $json.textPlain || '').toString();\n\nconst bodyText = textBody || htmlBody.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\\s+/g, ' ');\n\n// Try to extract event name from subject (same pattern as purchase emails)\nconst eventNameMatch = subject.match(/for your event\\s+(.+)$/i);\nconst eventName = eventNameMatch ? eventNameMatch[1].trim() : '';\n\n// Try to extract customer name and date from body\n// Pattern: \"{Name} x {qty} {DD/M/YYYY}\" or similar\nconst cancelRegex = /([A-Za-z][A-Za-z '.\\-]+?)\\s+x\\s+\\d+\\s+(\\d{1,2}\\/\\d{1,2}\\/\\d{4})/i;\nconst cancelMatch = bodyText.match(cancelRegex);\n\nlet firstName = '';\nlet lastName = '';\nlet eventDate = '';\nlet bookingReference = '';\n\nif (cancelMatch) {\n  const customerFullName = cancelMatch[1].trim();\n  const nameParts = customerFullName.split(/\\s+/);\n  firstName = nameParts[0] || '';\n  lastName = nameParts.slice(1).join(' ') || '';\n\n  // Convert date DD/M/YYYY → YYYY-MM-DD\n  const rawDate = cancelMatch[2];\n  const dateParts = rawDate.split('/');\n  if (dateParts.length === 3) {\n    const day = dateParts[0].padStart(2, '0');\n    const month = dateParts[1].padStart(2, '0');\n    const year = dateParts[2];\n    eventDate = `${year}-${month}-${day}`;\n  } else {\n    eventDate = rawDate;\n  }\n\n  // Reconstruct the synthetic booking reference\n  const nameSlug = (firstName + lastName).toLowerCase().replace(/[^a-z0-9]/g, '');\n  bookingReference = `FEVER-${nameSlug}-${eventDate}`;\n}\n\nif (!bookingReference) {\n  throw new Error(`Could not parse FEVER cancellation data from email. Subject: ${subject}. Body preview: ${bodyText.substring(0, 300)}`);\n}\n\nreturn {\n  json: {\n    booking_reference: bookingReference,\n    first_name: firstName,\n    last_name: lastName,\n    event_date: eventDate,\n    event_name: eventName,\n    source_email_subject: subject,\n    source_email_date: $json.date || ''\n  }\n};"
+      },
+      "id": "parse-cancellation-email",
+      "name": "Parse Cancellation Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 500],
+      "notes": "Parses the FEVER cancellation/refund email to extract customer name and event date. Reconstructs the synthetic booking reference (FEVER-{firstlast}-{YYYY-MM-DD}) used during the original import, so we can look up and cancel the matching entry."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries?booking_reference=eq.{{ $json.booking_reference }}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"cancelled\",\n  \"notes\": \"Cancelled via FEVER email: {{ $json.source_email_subject }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "patch-cancel-entry",
+      "name": "Cancel Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 500],
+      "notes": "PATCHes the matching manual_ticket_entries row to set status='cancelled'. Matches by the reconstructed synthetic booking reference (e.g. FEVER-miatran-2026-06-26). If no matching row exists, the PATCH returns an empty array (no error)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle results - log success/failure counts for both bookings and cancellations\nconst items = $input.all();\nlet inserted = 0;\nlet cancelled = 0;\nlet duplicates = 0;\nlet notFound = 0;\nlet errors = 0;\n\nfor (const item of items) {\n  const statusCode = item.json.statusCode || item.json?.headers?.status;\n  const body = item.json.body || item.json;\n\n  if (statusCode === 201) {\n    inserted++;\n  } else if (statusCode === 200) {\n    // PATCH returns 200 - check if any rows were actually updated\n    const resultArray = Array.isArray(body) ? body : [];\n    if (resultArray.length > 0) {\n      cancelled++;\n    } else {\n      notFound++;\n    }\n  } else if (statusCode === 409) {\n    duplicates++;\n  } else {\n    errors++;\n  }\n}\n\nreturn {\n  json: {\n    summary: 'FEVER Import Complete',\n    inserted: inserted,\n    cancelled: cancelled,\n    duplicates_skipped: duplicates,\n    cancellation_not_found: notFound,\n    errors: errors,\n    total_processed: items.length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "summary",
+      "name": "Import Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 350]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-errors",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-errors",
+      "name": "Any Errors?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2660, 350]
+    },
+    {
+      "parameters": {},
+      "id": "success-end",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 450]
+    },
+    {
+      "parameters": {},
+      "id": "error-end",
+      "name": "Errors - Review Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 250],
+      "notes": "Add a Slack or email notification here to alert when FEVER imports have errors."
+    },
+    {
+      "parameters": {},
+      "id": "unknown-skip",
+      "name": "Skip Unknown Email",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 700],
+      "notes": "Unknown email type from feverup - neither a new purchase nor a cancellation/refund. No action taken."
+    }
+  ],
+  "connections": {
+    "Watch FEVER Emails": {
+      "main": [
+        [
+          {
+            "node": "Filter FEVER Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter FEVER Emails": {
+      "main": [
+        [
+          {
+            "node": "Route by Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Type": {
+      "main": [
+        [
+          {
+            "node": "New Booking?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Booking?": {
+      "main": [
+        [
+          {
+            "node": "Parse FEVER Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Cancellation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Cancellation?": {
+      "main": [
+        [
+          {
+            "node": "Parse Cancellation Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Unknown Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse FEVER Email Body": {
+      "main": [
+        [
+          {
+            "node": "Match Event & Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Event & Session": {
+      "main": [
+        [
+          {
+            "node": "Merge Match Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Match Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customer to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customer to CRM": {
+      "main": [
+        [
+          {
+            "node": "Prepare Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Insert Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Cancellation Email": {
+      "main": [
+        [
+          {
+            "node": "Cancel Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import Summary": {
+      "main": [
+        [
+          {
+            "node": "Any Errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Errors?": {
+      "main": [
+        [
+          {
+            "node": "Errors - Review Needed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Sydney",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ticketing"
+    },
+    {
+      "name": "fever"
+    },
+    {
+      "name": "email-import"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "2"
+}

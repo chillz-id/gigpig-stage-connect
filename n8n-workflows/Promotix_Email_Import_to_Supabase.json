@@ -1,0 +1,455 @@
+{
+  "name": "Promotix Email Import to Supabase",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "options": {
+          "customEmailConfig": {
+            "allowUnauthorizedCerts": false
+          }
+        }
+      },
+      "id": "imap-trigger",
+      "name": "Watch Promotix Emails",
+      "type": "n8n-nodes-base.imapEmail",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_WITH_IMAP_CREDENTIAL_ID",
+          "name": "Promotix Email IMAP"
+        }
+      },
+      "notes": "Configure IMAP credentials for the inbox that receives Promotix guestlist emails. Sender: no-reply@mg.promotix.com.au. Subject pattern: 'Guestlist for {EVENT}, {VENUE}, {STATE}, {DATE} {TIME}'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-promotix-from",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "promotix",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "filter-promotix-subject",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Guestlist for",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-promotix-emails",
+      "name": "Filter Promotix Emails",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse event metadata from the Promotix email subject line\n// Subject format: \"Guestlist for {EVENT_NAME}, {VENUE}, {STATE}, {DD} {Mon} {YY} {TIME}\"\n// Examples:\n//   \"Guestlist for ID COMEDY CLUB - FRI/SAT, Carousel, NSW, 27 Feb 26 7:00pm\"\n//   \"Guestlist for MAGIC MIC COMEDY - Wednesdays, Potts Point Hotel, NSW, 25 Feb 26 7:30pm\"\n\nconst subject = $json.subject || '';\n\n// Remove the \"Guestlist for \" prefix\nconst afterPrefix = subject.replace(/^Guestlist for\\s+/i, '');\n\n// Parse from the END - the date/time pattern is always at the end\n// Pattern: DD Mon YY H:MMam/pm\nconst dateTimeRegex = /(\\d{1,2})\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+(\\d{2})\\s+(\\d{1,2}:\\d{2}(?:am|pm))$/i;\nconst dateMatch = afterPrefix.match(dateTimeRegex);\n\nlet eventName = '';\nlet venue = '';\nlet state = '';\nlet eventDate = '';\nlet eventTime = '';\n\nif (dateMatch) {\n  const day = dateMatch[1].padStart(2, '0');\n  const monthStr = dateMatch[2];\n  const year = '20' + dateMatch[3];\n  eventTime = dateMatch[4];\n\n  // Convert month name to number\n  const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',\n                    Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };\n  const month = months[monthStr.charAt(0).toUpperCase() + monthStr.slice(1).toLowerCase()] || '01';\n  eventDate = `${year}-${month}-${day}`;\n\n  // Everything before the date match is \"EVENT_NAME, VENUE, STATE, \"\n  const beforeDate = afterPrefix.substring(0, dateMatch.index).replace(/,\\s*$/, '');\n  \n  // Split by comma - last part is state, second-to-last is venue, rest is event name\n  const parts = beforeDate.split(',').map(p => p.trim());\n  \n  if (parts.length >= 3) {\n    state = parts[parts.length - 1];\n    venue = parts[parts.length - 2];\n    eventName = parts.slice(0, parts.length - 2).join(', ');\n  } else if (parts.length === 2) {\n    venue = parts[1];\n    eventName = parts[0];\n  } else {\n    eventName = parts[0] || afterPrefix;\n  }\n} else {\n  // Fallback: can't parse date, use the whole thing as event name\n  eventName = afterPrefix;\n}\n\nreturn {\n  json: {\n    ...$json,\n    parsed_event_name: eventName,\n    parsed_venue: venue,\n    parsed_state: state,\n    parsed_event_date: eventDate,\n    parsed_event_time: eventTime\n  }\n};"
+      },
+      "id": "parse-subject",
+      "name": "Parse Subject Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "notes": "Extracts event name, venue, state, date, and time from the Promotix email subject line. The CSV attachment doesn't contain this metadata so we must parse it from the subject."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract CSV attachment from the email\n// Promotix sends a single CSV file with attendee data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  for (const key of binaryKeys) {\n    const binary = item.binary[key];\n    const fileName = binary.fileName || '';\n    \n    // Only process CSV files\n    if (fileName.endsWith('.csv') || \n        binary.mimeType === 'text/csv' ||\n        binary.mimeType === 'application/csv') {\n      results.push({\n        json: {\n          ...item.json,\n          fileName: fileName,\n          binaryKey: key\n        },\n        binary: {\n          data: binary\n        }\n      });\n    }\n  }\n}\n\nif (results.length === 0) {\n  throw new Error('No CSV attachment found in Promotix email');\n}\n\nreturn results;"
+      },
+      "id": "extract-csv-attachment",
+      "name": "Extract CSV Attachment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the Promotix CSV attachment\n// CSV columns: Order Number, Quantity, First Name, Surname, Email\n// Quantity format: \"2 General Admission\" - extract the leading number\n\nconst binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst csvText = binaryData.toString('utf-8');\n\n// Parse CSV manually (simple format, no need for external lib)\nconst lines = csvText.split('\\n').map(l => l.trim()).filter(l => l.length > 0);\n\nif (lines.length < 2) {\n  throw new Error('CSV file is empty or has no data rows');\n}\n\n// Parse header\nconst header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));\nconst orderIdx = header.findIndex(h => /order\\s*number/i.test(h));\nconst qtyIdx = header.findIndex(h => /quantity/i.test(h));\nconst firstIdx = header.findIndex(h => /first\\s*name/i.test(h));\nconst surnameIdx = header.findIndex(h => /surname|last\\s*name/i.test(h));\nconst emailIdx = header.findIndex(h => /email/i.test(h));\n\n// Get metadata from the parsed subject\nconst meta = $input.item.json;\n\nconst allRows = [];\n\nfor (let i = 1; i < lines.length; i++) {\n  // Parse CSV line - handle quoted fields\n  const fields = [];\n  let current = '';\n  let inQuotes = false;\n  \n  for (const char of lines[i]) {\n    if (char === '\"') {\n      inQuotes = !inQuotes;\n    } else if (char === ',' && !inQuotes) {\n      fields.push(current.trim());\n      current = '';\n    } else {\n      current += char;\n    }\n  }\n  fields.push(current.trim());\n  \n  const orderNumber = orderIdx >= 0 ? (fields[orderIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const quantityRaw = qtyIdx >= 0 ? (fields[qtyIdx] || '').replace(/^\"|\"$/g, '') : '1';\n  const firstName = firstIdx >= 0 ? (fields[firstIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const surname = surnameIdx >= 0 ? (fields[surnameIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const email = emailIdx >= 0 ? (fields[emailIdx] || '').replace(/^\"|\"$/g, '').toLowerCase() : '';\n  \n  // Parse ticket count from quantity string like \"2 General Admission\"\n  const qtyMatch = quantityRaw.match(/^(\\d+)/);\n  const ticketCount = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;\n  \n  // Skip rows without essential data\n  if (!email) continue;\n  \n  allRows.push({\n    json: {\n      event_name: meta.parsed_event_name,\n      venue: meta.parsed_venue,\n      state: meta.parsed_state,\n      event_date: meta.parsed_event_date,\n      event_time: meta.parsed_event_time,\n      first_name: firstName,\n      last_name: surname,\n      email: email,\n      ticket_count: ticketCount,\n      booking_reference: orderNumber,\n      source_email_subject: meta.subject || '',\n      source_email_date: meta.date || ''\n    }\n  });\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Promotix CSV');\n}\n\nreturn allRows;"
+      },
+      "id": "parse-csv",
+      "name": "Parse Promotix CSV",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "notes": "Parses the CSV attachment. Handles the Quantity format ('2 General Admission' → 2). Event metadata (name, date, time) comes from the subject parser, not the CSV."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/rpc/match_event_session",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_event_name\": \"{{ $json.event_name }}\",\n  \"p_event_date\": \"{{ $json.event_date }}\"\n}"
+      },
+      "id": "match-event-session",
+      "name": "Match Event & Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "notes": "Calls the match_event_session RPC to find the matching event_id and session_id. Uses the same RPC function as the SFF workflow."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge the parsed attendee data with the matched event/session\nconst attendee = $('Parse Promotix CSV').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  return {\n    json: {\n      ...attendee,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${attendee.event_name} on ${attendee.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...attendee,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
+      },
+      "id": "merge-match-data",
+      "name": "Merge Match Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.email }}\",\n  \"first_name\": \"{{ $json.first_name }}\",\n  \"last_name\": \"{{ $json.last_name }}\",\n  \"source\": \"promotix\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "upsert-customer",
+      "name": "Upsert Customer to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 300],
+      "notes": "Upserts the attendee into the customers CRM table. Uses Prefer: resolution=merge-duplicates to match on email. Source set to 'promotix' for new customers."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare the final payload for manual_ticket_entries\nconst attendee = $('Merge Match Data').item.json;\nconst customerResult = $input.item.json;\n\n// Get customer_id from upsert result\nconst customer = Array.isArray(customerResult) ? customerResult[0] : customerResult;\nconst customerId = customer?.id || null;\n\n// Promotix Partner ID\nconst PROMOTIX_PARTNER_ID = '8a668f71-6282-46f5-822d-377ce92f8c58';\n\nreturn {\n  json: {\n    event_id: attendee.event_id,\n    session_id: attendee.session_id,\n    partner_id: PROMOTIX_PARTNER_ID,\n    ticket_count: attendee.ticket_count,\n    gross_revenue: 0,\n    commission_rate: 0,\n    entry_date: attendee.event_date || new Date().toISOString().split('T')[0],\n    first_name: attendee.first_name,\n    last_name: attendee.last_name,\n    email: attendee.email,\n    booking_reference: attendee.booking_reference,\n    customer_id: customerId,\n    source: 'n8n',\n    status: 'confirmed',\n    notes: `Promotix import: ${attendee.event_name}`,\n    reference_id: attendee.booking_reference\n  }\n};"
+      },
+      "id": "prepare-ticket-entry",
+      "name": "Prepare Ticket Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "insert-ticket-entry",
+      "name": "Insert Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 300],
+      "notes": "Inserts the ticket entry. Unique index on booking_reference prevents duplicates (409 Conflict)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle results - log success/failure counts\nconst items = $input.all();\nlet inserted = 0;\nlet duplicates = 0;\nlet errors = 0;\n\nfor (const item of items) {\n  const statusCode = item.json.statusCode || item.json?.headers?.status;\n  if (statusCode === 201 || statusCode === 200) {\n    inserted++;\n  } else if (statusCode === 409) {\n    duplicates++;\n  } else {\n    errors++;\n  }\n}\n\nreturn {\n  json: {\n    summary: 'Promotix Import Complete',\n    inserted: inserted,\n    duplicates_skipped: duplicates,\n    errors: errors,\n    total_processed: items.length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "summary",
+      "name": "Import Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-errors",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-errors",
+      "name": "Any Errors?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2660, 300]
+    },
+    {
+      "parameters": {},
+      "id": "success-end",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 400]
+    },
+    {
+      "parameters": {},
+      "id": "error-end",
+      "name": "Errors - Review Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 200],
+      "notes": "Add a Slack or email notification here to alert when Promotix imports have errors."
+    }
+  ],
+  "connections": {
+    "Watch Promotix Emails": {
+      "main": [
+        [
+          {
+            "node": "Filter Promotix Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Promotix Emails": {
+      "main": [
+        [
+          {
+            "node": "Parse Subject Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Subject Metadata": {
+      "main": [
+        [
+          {
+            "node": "Extract CSV Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract CSV Attachment": {
+      "main": [
+        [
+          {
+            "node": "Parse Promotix CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Promotix CSV": {
+      "main": [
+        [
+          {
+            "node": "Match Event & Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Event & Session": {
+      "main": [
+        [
+          {
+            "node": "Merge Match Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Match Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customer to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customer to CRM": {
+      "main": [
+        [
+          {
+            "node": "Prepare Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Insert Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import Summary": {
+      "main": [
+        [
+          {
+            "node": "Any Errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Errors?": {
+      "main": [
+        [
+          {
+            "node": "Errors - Review Needed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Sydney",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ticketing"
+    },
+    {
+      "name": "promotix"
+    },
+    {
+      "name": "email-import"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+}

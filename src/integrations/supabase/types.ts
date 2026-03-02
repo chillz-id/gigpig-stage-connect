@@ -7879,6 +7879,8 @@ export type Database = {
           reference_id: string | null
           session_id: string | null
           source: string | null
+          status: string
+          cancelled_at: string | null
           ticket_count: number
           updated_at: string | null
         }
@@ -7902,6 +7904,8 @@ export type Database = {
           reference_id?: string | null
           session_id?: string | null
           source?: string | null
+          status?: string
+          cancelled_at?: string | null
           ticket_count: number
           updated_at?: string | null
         }
@@ -7925,6 +7929,8 @@ export type Database = {
           reference_id?: string | null
           session_id?: string | null
           source?: string | null
+          status?: string
+          cancelled_at?: string | null
           ticket_count?: number
           updated_at?: string | null
         }

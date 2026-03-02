@@ -1,0 +1,559 @@
+{
+  "name": "Groupon Email Import to Supabase",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "options": {
+          "customEmailConfig": {
+            "allowUnauthorizedCerts": false
+          }
+        }
+      },
+      "id": "imap-trigger",
+      "name": "Watch Groupon Emails",
+      "type": "n8n-nodes-base.imapEmail",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_WITH_IMAP_CREDENTIAL_ID",
+          "name": "Groupon Email IMAP"
+        }
+      },
+      "notes": "Configure IMAP credentials for the inbox that receives Groupon booking emails. Sender: notify@r.grouponmail.com.au. Subject patterns: 'Groupon Booking Tool - Groupon Customer Booking Confirmation', 'Groupon Booking Tool - Groupon Customer Cancellation Notification', 'Groupon Booking Tool - Groupon Booking Modification Notification'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-groupon-from",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "grouponmail",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "filter-groupon-subject",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Groupon Booking Tool",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-groupon-emails",
+      "name": "Filter Groupon Emails",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route Groupon emails by type based on subject line\n// Subject patterns:\n//   - \"Groupon Booking Tool - Groupon Customer Booking Confirmation\" → new_booking\n//   - \"Groupon Booking Tool - Groupon Customer Cancellation Notification\" → cancellation\n//   - \"Groupon Booking Tool - Groupon Booking Modification Notification\" → modification\n\nconst subject = ($json.subject || '').trim();\n\nlet emailType = 'unknown';\n\nif (/Confirmation/i.test(subject)) {\n  emailType = 'new_booking';\n} else if (/Cancellation/i.test(subject)) {\n  emailType = 'cancellation';\n} else if (/Modification/i.test(subject)) {\n  emailType = 'modification';\n}\n\nreturn {\n  json: {\n    ...$json,\n    email_type: emailType\n  }\n};"
+      },
+      "id": "route-by-type",
+      "name": "Route by Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "notes": "Checks the subject line to determine whether this is a new booking, cancellation, or modification email. Adds email_type field for downstream branching."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-new-booking",
+              "leftValue": "={{ $json.email_type }}",
+              "rightValue": "new_booking",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-new-booking",
+      "name": "New Booking?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "notes": "Routes new bookings (true/output 0) to the full parsing + insert path. Cancellations and modifications (false/output 1) go to the cancel/modify path."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Groupon booking confirmation email HTML body\n// The HTML body contains plain text with <strong> labels:\n//   <strong>Service</strong>: $20 for Magic Mic Comedy Wednesday show ticket - two people\n//   <strong>Agenda Name</strong>: (may be empty)\n//   <strong>Booking Date & Time</strong>: 2026-03-04, 19:30\n//   <strong>Customer Name</strong>: Alex Doyle\n//   <strong>Customer Phone Number</strong>: 0477 572 222\n//   <strong>Customer Groupon Code</strong>: VS-MCCM-MXNX-FBSJ-7F2Z\n//   <strong>Customer Comment</strong>: (may be empty)\n// Sidebar section has: Date, Number of participants, Service description\n// Customer section has mailto: link with real email\n\nconst html = ($json.html || $json.textHtml || $json.body || '').toString();\nconst text = ($json.text || $json.textPlain || '').toString();\nconst subject = ($json.subject || '').trim();\n\n// Strip HTML tags for regex matching on the plain-ish text\nconst stripped = html\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  .replace(/<\\/?(p|div|td|tr|li)[^>]*>/gi, '\\n')\n  .replace(/<[^>]+>/g, '')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/&amp;/g, '&')\n  .replace(/&#39;/g, \"'\")\n  .replace(/&quot;/g, '\"')\n  .replace(/\\r\\n/g, '\\n')\n  .replace(/\\r/g, '\\n');\n\n// --- Service description ---\n// Pattern: \"Service: $20 for Magic Mic Comedy Wednesday show ticket - two people\"\nlet serviceDescription = '';\nconst serviceMatch = stripped.match(/Service\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Service\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (serviceMatch) {\n  serviceDescription = serviceMatch[1].replace(/<[^>]+>/g, '').trim();\n}\n\n// --- Booking Date & Time ---\n// Pattern: \"Booking Date & Time: 2026-03-04, 19:30\"\nlet eventDate = '';\nlet eventTime = '';\nconst dateTimeMatch = stripped.match(/Booking Date\\s*(?:&|and)\\s*Time\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Booking Date\\s*(?:&amp;|&|and)\\s*Time\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (dateTimeMatch) {\n  const raw = dateTimeMatch[1].replace(/<[^>]+>/g, '').trim();\n  // Format: \"YYYY-MM-DD, HH:MM\" or \"YYYY-MM-DD HH:MM\"\n  const dtParts = raw.match(/(\\d{4}-\\d{2}-\\d{2})[,\\s]+([\\d:]+)/);\n  if (dtParts) {\n    eventDate = dtParts[1];\n    eventTime = dtParts[2];\n    // Ensure time has seconds\n    if (eventTime && !eventTime.includes(':00', eventTime.length - 3) && eventTime.split(':').length === 2) {\n      eventTime = eventTime + ':00';\n    }\n  }\n}\n\n// --- Customer Name ---\nlet firstName = '';\nlet lastName = '';\nconst nameMatch = stripped.match(/Customer Name\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Customer Name\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (nameMatch) {\n  const fullName = nameMatch[1].replace(/<[^>]+>/g, '').trim();\n  const nameParts = fullName.split(/\\s+/);\n  firstName = nameParts[0] || '';\n  lastName = nameParts.slice(1).join(' ') || '';\n}\n\n// --- Customer Phone Number ---\nlet customerPhone = '';\nconst phoneMatch = stripped.match(/Customer Phone Number\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Customer Phone Number\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (phoneMatch) {\n  customerPhone = phoneMatch[1].replace(/<[^>]+>/g, '').trim();\n}\n\n// --- Customer Groupon Code (booking reference) ---\nlet grouponCode = '';\nconst codeMatch = stripped.match(/Customer Groupon Code\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Customer Groupon Code\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (codeMatch) {\n  grouponCode = codeMatch[1].replace(/<[^>]+>/g, '').trim();\n}\n\n// --- Customer Email (from mailto: link) ---\nlet customerEmail = '';\nconst emailMatch = html.match(/mailto:([^\"'\\s>]+@[^\"'\\s>]+)/i);\nif (emailMatch) {\n  customerEmail = emailMatch[1].trim().toLowerCase();\n}\n\n// --- Number of participants (from sidebar section) ---\nlet ticketCount = 1;\nconst participantsMatch = stripped.match(/Number of participants\\s*:?\\s*(\\d+)/i) ||\n  html.match(/Number of participants\\s*(?:<[^>]*>\\s*)*:?\\s*(?:<[^>]*>)*(\\d+)/i);\nif (participantsMatch) {\n  ticketCount = parseInt(participantsMatch[1], 10);\n}\nif (isNaN(ticketCount) || ticketCount < 1) ticketCount = 1;\n\n// --- Parse price from service description ---\n// Format: \"$20 for Magic Mic Comedy...\" → extract $20\nlet grossRevenue = 0;\nconst priceMatch = serviceDescription.match(/\\$\\s*([\\d,.]+)/);\nif (priceMatch) {\n  grossRevenue = parseFloat(priceMatch[1].replace(/,/g, ''));\n}\nif (isNaN(grossRevenue)) grossRevenue = 0;\n\n// --- Parse event name from service description ---\n// Strip the \"$XX for \" prefix and ticket type suffix\n// \"$20 for Magic Mic Comedy Wednesday show ticket - two people\" → \"Magic Mic Comedy Wednesday show\"\nlet eventName = serviceDescription;\nif (eventName) {\n  // Remove price prefix: \"$20 for \"\n  eventName = eventName.replace(/^\\$[\\d,.]+\\s+for\\s+/i, '');\n  // Remove trailing ticket type: \" ticket - two people\", \" ticket - one person\", \" tickets\"\n  eventName = eventName.replace(/\\s+tickets?\\s*[-–].*$/i, '');\n  eventName = eventName.replace(/\\s+tickets?\\s*$/i, '');\n  eventName = eventName.trim();\n}\n\nreturn {\n  json: {\n    event_name: eventName,\n    service_description: serviceDescription,\n    event_date: eventDate,\n    event_time: eventTime,\n    first_name: firstName,\n    last_name: lastName,\n    customer_phone: customerPhone,\n    customer_email: customerEmail,\n    groupon_code: grouponCode,\n    ticket_count: ticketCount,\n    gross_revenue: grossRevenue,\n    source_email_subject: subject,\n    source_email_date: $json.date || ''\n  }\n};"
+      },
+      "id": "parse-groupon-booking",
+      "name": "Parse Groupon Booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200],
+      "notes": "Parses the Groupon booking confirmation HTML email body using regex. Extracts: service description, booking date/time (YYYY-MM-DD, HH:MM), customer name/phone/email, Groupon code (booking reference), participant count, price from service text, and event name (service description with price prefix and ticket suffix stripped)."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/rpc/match_event_session",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_event_name\": \"{{ $json.event_name }}\",\n  \"p_event_date\": \"{{ $json.event_date }}\"\n}"
+      },
+      "id": "match-event-session",
+      "name": "Match Event & Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200],
+      "notes": "Calls the match_event_session RPC to find the matching event_id and session_id by event name and date. Uses the same RPC function as the SFF, Promotix, FEVER, and GYG workflows."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge the parsed Groupon booking data with the matched event/session\nconst booking = $('Parse Groupon Booking').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  return {\n    json: {\n      ...booking,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${booking.event_name} on ${booking.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...booking,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
+      },
+      "id": "merge-match-data",
+      "name": "Merge Match Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/customers",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.customer_email }}\",\n  \"first_name\": \"{{ $json.first_name }}\",\n  \"last_name\": \"{{ $json.last_name }}\",\n  \"phone\": \"{{ $json.customer_phone }}\",\n  \"source\": \"groupon\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "upsert-customer",
+      "name": "Upsert Customer to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 200],
+      "notes": "Upserts the customer into the customers CRM table using their real email address. Uses Prefer: resolution=merge-duplicates to match on the email unique constraint. Source set to 'groupon'. Also stores phone number."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare the final payload for manual_ticket_entries\nconst booking = $('Merge Match Data').item.json;\nconst customerResult = $input.item.json;\n\n// Get customer_id from upsert result\nconst customer = Array.isArray(customerResult) ? customerResult[0] : customerResult;\nconst customerId = customer?.id || null;\n\n// Groupon Partner ID\nconst GROUPON_PARTNER_ID = '37c101f1-31c1-41fd-9375-20813b89b194';\n\n// Commission rate: 32%\nconst COMMISSION_RATE = 32;\n\nreturn {\n  json: {\n    event_id: booking.event_id,\n    session_id: booking.session_id,\n    partner_id: GROUPON_PARTNER_ID,\n    ticket_count: booking.ticket_count,\n    gross_revenue: booking.gross_revenue,\n    commission_rate: COMMISSION_RATE,\n    status: 'confirmed',\n    entry_date: booking.event_date || new Date().toISOString().split('T')[0],\n    first_name: booking.first_name,\n    last_name: booking.last_name,\n    email: booking.customer_email,\n    booking_reference: booking.groupon_code,\n    customer_id: customerId,\n    source: 'n8n',\n    notes: `Groupon import: ${booking.event_name}`,\n    reference_id: booking.groupon_code\n  }\n};"
+      },
+      "id": "prepare-ticket-entry",
+      "name": "Prepare Ticket Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 200],
+      "notes": "Builds the manual_ticket_entries insert payload. partner_id: 37c101f1-31c1-41fd-9375-20813b89b194 (Groupon), commission_rate: 32%, status: 'confirmed'. Does NOT include commission_amount or net_revenue as those are generated columns in the database."
+    },
+    {
+      "parameters": {
+        "url": "https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "insert-ticket-entry",
+      "name": "Insert Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 200],
+      "notes": "Inserts the ticket entry. The unique index on booking_reference (Groupon code) will reject duplicates (409 Conflict), which is expected and handled by the summary node."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the Groupon cancellation or modification email to extract the Groupon code\n// The HTML body contains the same <strong> label structure as booking confirmations\n// We need the Customer Groupon Code to match the existing ticket entry\n\nconst html = ($json.html || $json.textHtml || $json.body || '').toString();\nconst emailType = $json.email_type || 'cancellation';\n\n// Strip HTML tags for regex matching\nconst stripped = html\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  .replace(/<\\/?(p|div|td|tr|li)[^>]*>/gi, '\\n')\n  .replace(/<[^>]+>/g, '')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/&amp;/g, '&')\n  .replace(/&#39;/g, \"'\")\n  .replace(/&quot;/g, '\"')\n  .replace(/\\r\\n/g, '\\n')\n  .replace(/\\r/g, '\\n');\n\n// --- Customer Groupon Code ---\nlet grouponCode = '';\nconst codeMatch = stripped.match(/Customer Groupon Code\\s*:\\s*(.+?)(?:\\n|$)/i) ||\n  html.match(/<strong>\\s*Customer Groupon Code\\s*<\\/strong>\\s*:?\\s*(.+?)(?:<br|<\\/|\\n)/i);\nif (codeMatch) {\n  grouponCode = codeMatch[1].replace(/<[^>]+>/g, '').trim();\n}\n\nif (!grouponCode) {\n  // Fallback: look for the Groupon code pattern anywhere (e.g. VS-XXXX-XXXX-XXXX-XXXX)\n  const fallbackMatch = stripped.match(/\\b(VS-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})\\b/i);\n  if (fallbackMatch) {\n    grouponCode = fallbackMatch[1].trim();\n  }\n}\n\nif (!grouponCode) {\n  throw new Error(`Could not extract Groupon code from ${emailType} email. Subject: ${$json.subject}`);\n}\n\n// Determine the target status\nconst targetStatus = emailType === 'modification' ? 'modified' : 'cancelled';\n\nreturn {\n  json: {\n    groupon_code: grouponCode,\n    email_type: emailType,\n    target_status: targetStatus,\n    source_email_subject: $json.subject || '',\n    source_email_date: $json.date || ''\n  }\n};"
+      },
+      "id": "parse-cancellation",
+      "name": "Parse Cancellation/Modification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 440],
+      "notes": "Extracts the Customer Groupon Code from cancellation or modification emails. Sets target_status to 'cancelled' or 'modified' based on email_type. The Groupon code is used to find and update the matching ticket entry."
+    },
+    {
+      "parameters": {
+        "url": "=https://pdikjpfulhhpqpxzpgtu.supabase.co/rest/v1/manual_ticket_entries?booking_reference=eq.{{ $json.groupon_code }}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"{{ $json.target_status }}\",\n  \"cancelled_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "cancel-ticket-entry",
+      "name": "Cancel/Modify Ticket Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 440],
+      "notes": "Updates the existing ticket entry matching the Groupon code. Sets status to 'cancelled' or 'modified' and records the cancelled_at timestamp. Uses PATCH with query filter on booking_reference."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect results from both paths and generate import summary\n// This node receives items from either the new booking insert or the cancel/modify update\nconst items = $input.all();\nlet inserted = 0;\nlet updated = 0;\nlet duplicates = 0;\nlet errors = 0;\n\nfor (const item of items) {\n  const statusCode = item.json.statusCode || item.json?.headers?.status;\n  if (statusCode === 201) {\n    inserted++;\n  } else if (statusCode === 200) {\n    updated++;\n  } else if (statusCode === 409) {\n    duplicates++;\n  } else {\n    errors++;\n  }\n}\n\nreturn {\n  json: {\n    summary: 'Groupon Import Complete',\n    inserted: inserted,\n    updated: updated,\n    duplicates_skipped: duplicates,\n    errors: errors,\n    total_processed: items.length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "summary",
+      "name": "Import Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-errors",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-errors",
+      "name": "Any Errors?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2660, 300]
+    },
+    {
+      "parameters": {},
+      "id": "success-end",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 400]
+    },
+    {
+      "parameters": {},
+      "id": "error-end",
+      "name": "Errors - Review Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2880, 200],
+      "notes": "Add a Slack or email notification here to alert when Groupon imports have errors."
+    }
+  ],
+  "connections": {
+    "Watch Groupon Emails": {
+      "main": [
+        [
+          {
+            "node": "Filter Groupon Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Groupon Emails": {
+      "main": [
+        [
+          {
+            "node": "Route by Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Type": {
+      "main": [
+        [
+          {
+            "node": "New Booking?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Booking?": {
+      "main": [
+        [
+          {
+            "node": "Parse Groupon Booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Cancellation/Modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Groupon Booking": {
+      "main": [
+        [
+          {
+            "node": "Match Event & Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Event & Session": {
+      "main": [
+        [
+          {
+            "node": "Merge Match Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Match Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customer to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customer to CRM": {
+      "main": [
+        [
+          {
+            "node": "Prepare Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Insert Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Cancellation/Modification": {
+      "main": [
+        [
+          {
+            "node": "Cancel/Modify Ticket Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel/Modify Ticket Entry": {
+      "main": [
+        [
+          {
+            "node": "Import Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import Summary": {
+      "main": [
+        [
+          {
+            "node": "Any Errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Errors?": {
+      "main": [
+        [
+          {
+            "node": "Errors - Review Needed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Sydney",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ticketing"
+    },
+    {
+      "name": "groupon"
+    },
+    {
+      "name": "email-import"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+}

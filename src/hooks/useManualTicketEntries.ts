@@ -22,6 +22,8 @@ export interface ManualTicketEntry {
   booking_reference: string | null;
   customer_id: string | null;
   source: string | null;
+  status: string;
+  cancelled_at: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -60,6 +62,8 @@ export interface ManualTicketEntryUpdate {
   booking_reference?: string | null;
   customer_id?: string | null;
   source?: string | null;
+  status?: string;
+  cancelled_at?: string | null;
 }
 
 export const useManualTicketEntries = (eventId: string) => {
