@@ -6,6 +6,7 @@ import type { TicketingPartner } from './useTicketingPartners';
 export interface ManualTicketEntry {
   id: string;
   event_id: string;
+  session_id: string | null;
   partner_id: string;
   ticket_count: number;
   gross_revenue: number;
@@ -15,6 +16,12 @@ export interface ManualTicketEntry {
   entry_date: string;
   notes: string | null;
   reference_id: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  booking_reference: string | null;
+  customer_id: string | null;
+  source: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -24,6 +31,7 @@ export interface ManualTicketEntry {
 
 export interface ManualTicketEntryInsert {
   event_id: string;
+  session_id?: string | null;
   partner_id: string;
   ticket_count: number;
   gross_revenue: number;
@@ -31,6 +39,12 @@ export interface ManualTicketEntryInsert {
   entry_date?: string;
   notes?: string | null;
   reference_id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  booking_reference?: string | null;
+  customer_id?: string | null;
+  source?: string | null;
 }
 
 export interface ManualTicketEntryUpdate {
@@ -40,6 +54,12 @@ export interface ManualTicketEntryUpdate {
   entry_date?: string;
   notes?: string | null;
   reference_id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  booking_reference?: string | null;
+  customer_id?: string | null;
+  source?: string | null;
 }
 
 export const useManualTicketEntries = (eventId: string) => {

@@ -474,6 +474,7 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left font-medium p-3">Date</th>
+                    <th className="text-left font-medium p-3">Attendee</th>
                     <th className="text-left font-medium p-3">Partner</th>
                     <th className="text-left font-medium p-3">Tickets</th>
                     <th className="text-left font-medium p-3">Gross</th>
@@ -490,7 +491,26 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
                         {format(new Date(entry.entry_date), 'MMM d, yyyy')}
                       </td>
                       <td className="p-3">
+                        {entry.first_name || entry.last_name ? (
+                          <div>
+                            <div className="font-medium text-sm">
+                              {[entry.first_name, entry.last_name].filter(Boolean).join(' ')}
+                            </div>
+                            {entry.email && (
+                              <div className="text-xs text-muted-foreground">{entry.email}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="p-3">
                         <Badge variant="secondary">{entry.partner?.name || 'Unknown'}</Badge>
+                        {entry.source && entry.source !== 'manual' && (
+                          <Badge variant="secondary" className="ml-1 text-xs opacity-60">
+                            {entry.source}
+                          </Badge>
+                        )}
                       </td>
                       <td className="p-3">{entry.ticket_count}</td>
                       <td className="p-3">{formatCurrency(entry.gross_revenue)}</td>
@@ -501,7 +521,7 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
                         {formatCurrency(entry.net_revenue)}
                       </td>
                       <td className="p-3 text-sm text-muted-foreground">
-                        {entry.reference_id || '-'}
+                        {entry.booking_reference || entry.reference_id || '-'}
                       </td>
                       <td className="p-3 text-right">
                         <Button
@@ -525,10 +545,10 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
       <Alert>
         <AlertDescription>
           <strong>Ticket Management:</strong> Platform sales are automatically synced from connected
-          ticketing platforms (Humanitix, Eventbrite). Partner sales from third-party ticketing
-          partners (FEVER, GetYourGuide, etc.) should be added manually using the "Add Manual Sale"
-          button. Commission rates are pulled from the partner settings configured in Admin
-          Settings.
+          ticketing platforms (Humanitix, Eventbrite). Partner sales from Show Film First, Promotix,
+          and FEVER are imported automatically from email. Other partner sales can be added manually
+          using the "Add Manual Sale" button. Commission rates are pulled from the partner settings
+          configured in Admin Settings.
           <br />
           <span className="text-muted-foreground text-sm">
             Note: Net revenue is calculated after platform fees and tax. Numbers may differ slightly from

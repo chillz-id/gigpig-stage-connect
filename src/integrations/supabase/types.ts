@@ -7860,50 +7860,71 @@ export type Database = {
       }
       manual_ticket_entries: {
         Row: {
+          booking_reference: string | null
           commission_amount: number | null
           commission_rate: number
           created_at: string | null
           created_by: string | null
+          customer_id: string | null
+          email: string | null
           entry_date: string
           event_id: string | null
+          first_name: string | null
           gross_revenue: number
           id: string
+          last_name: string | null
           net_revenue: number | null
           notes: string | null
           partner_id: string | null
           reference_id: string | null
+          session_id: string | null
+          source: string | null
           ticket_count: number
           updated_at: string | null
         }
         Insert: {
+          booking_reference?: string | null
           commission_amount?: number | null
           commission_rate: number
           created_at?: string | null
           created_by?: string | null
+          customer_id?: string | null
+          email?: string | null
           entry_date?: string
           event_id?: string | null
+          first_name?: string | null
           gross_revenue: number
           id?: string
+          last_name?: string | null
           net_revenue?: number | null
           notes?: string | null
           partner_id?: string | null
           reference_id?: string | null
+          session_id?: string | null
+          source?: string | null
           ticket_count: number
           updated_at?: string | null
         }
         Update: {
+          booking_reference?: string | null
           commission_amount?: number | null
           commission_rate?: number
           created_at?: string | null
           created_by?: string | null
+          customer_id?: string | null
+          email?: string | null
           entry_date?: string
           event_id?: string | null
+          first_name?: string | null
           gross_revenue?: number
           id?: string
+          last_name?: string | null
           net_revenue?: number | null
           notes?: string | null
           partner_id?: string | null
           reference_id?: string | null
+          session_id?: string | null
+          source?: string | null
           ticket_count?: number
           updated_at?: string | null
         }
