@@ -7,8 +7,8 @@
 
 export const colors = {
   brand: {
-    primary: '#635BFF',      // Indigo — buttons, links, accents only
-    primaryDark: '#5851DB',  // Hover/dark mode variant
+    primary: '#1A1A2E',      // Near-black charcoal — buttons, links, accents
+    primaryDark: '#12121F',  // Darker variant for hover/dark mode
   },
   status: {
     success: '#16A34A',
@@ -37,9 +37,11 @@ export const fonts = {
 } as const;
 
 export const businessInfo = {
-  companyName: 'Stand Up Sydney',
+  companyName: 'GigPigs',
   abn: '33 614 240 328',
-  contactEmail: 'hello@standupsydney.com',
-  websiteUrl: 'https://standupsydney.com',
-  privacyUrl: 'https://standupsydney.com/privacy',
+  contactEmail: 'team@gigpigs.app',
+  websiteUrl: 'https://gigpigs.app',
+  privacyUrl: 'https://gigpigs.app/privacy',
+  logoBlack: 'https://mautic.gigpigs.app/media/images/gigpigs_logo_black_text.png',
+  logoWhite: 'https://mautic.gigpigs.app/media/images/gigpigs_logo_white_text.png',
 } as const;

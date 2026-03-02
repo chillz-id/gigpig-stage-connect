@@ -88,7 +88,8 @@ const previewProps: InvoiceReminderData = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InvoiceReminder(data: InvoiceReminderData = previewProps) {
+export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
+  const data = { ...previewProps, ...props };
   const urgencyLabel = data.isUrgent
     ? 'Overdue'
     : data.isFirstReminder

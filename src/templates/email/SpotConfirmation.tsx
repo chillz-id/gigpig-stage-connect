@@ -82,7 +82,8 @@ const previewProps: SpotConfirmationEmailData = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function SpotConfirmation(data: SpotConfirmationEmailData = previewProps) {
+export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps) {
+  const data = { ...previewProps, ...props };
   const isPromoter = data.isPromoterEmail === true;
 
   if (!isPromoter) {

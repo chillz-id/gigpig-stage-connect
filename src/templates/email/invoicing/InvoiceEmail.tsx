@@ -106,7 +106,8 @@ const previewProps: InvoiceEmailData = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InvoiceEmail(data: InvoiceEmailData = previewProps) {
+export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
+  const data = { ...previewProps, ...props };
   const previewText = `Invoice ${data.invoiceNumber} — ${formatCurrency(data.totalAmount, data.currency)} due ${formatDate(data.dueDate)}`;
 
   return (

@@ -4,39 +4,49 @@ import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-mautic-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, webhook-signature',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 const WEBHOOK_SECRET = Deno.env.get('MAUTIC_WEBHOOK_SECRET') ?? '';
 const MAX_BOUNCES = 3;
 
+// Mautic 7 wraps each event as { stat: { ... }, timestamp }
 interface MauticWebhookPayload {
-  'mautic.email_on_open'?: MauticEmailEvent[];
-  'mautic.email_on_click'?: MauticEmailClickEvent[];
-  'mautic.email_on_unsubscribe'?: MauticEmailEvent[];
-  'mautic.email_on_bounce'?: MauticEmailEvent[];
+  'mautic.email_on_open'?: MauticWrappedEvent[];
+  'mautic.email_on_click'?: MauticWrappedEvent[];
+  'mautic.email_on_unsubscribe'?: MauticWrappedEvent[];
+  'mautic.email_on_bounce'?: MauticWrappedEvent[];
+  timestamp?: string;
+}
+
+interface MauticWrappedEvent {
+  stat: MauticStat;
   timestamp: string;
 }
 
-interface MauticEmailEvent {
+interface MauticStat {
   id: number;
+  emailAddress: string;
+  dateSent?: string;
+  dateRead?: string;
+  isRead?: boolean;
+  isFailed?: boolean;
   lead: {
     id: number;
-    email: string;
+    points?: number;
+    color?: string;
     fields?: Record<string, unknown>;
   };
   email: {
     id: number;
     name: string;
     subject: string;
+    language?: string;
+    category?: unknown;
   };
-  dateSent?: string;
-  dateRead?: string;
-}
-
-interface MauticEmailClickEvent extends MauticEmailEvent {
-  url: string;
+  // Click events include the URL at the stat level or as a separate field
+  url?: string;
 }
 
 function validateSignature(body: string, signature: string | null): boolean {
@@ -46,7 +56,7 @@ function validateSignature(body: string, signature: string | null): boolean {
   try {
     const hmac = createHmac('sha256', WEBHOOK_SECRET);
     hmac.update(body);
-    const expected = hmac.digest('hex');
+    const expected = hmac.digest('base64');
     return signature === expected;
   } catch (error) {
     console.error('Signature validation error:', error);
@@ -73,7 +83,7 @@ serve(async (req) => {
     );
 
     const body = await req.text();
-    const signature = req.headers.get('x-mautic-signature');
+    const signature = req.headers.get('webhook-signature');
 
     if (!validateSignature(body, signature)) {
       console.error('Invalid Mautic webhook signature');
@@ -85,24 +95,23 @@ serve(async (req) => {
 
     const payload: MauticWebhookPayload = JSON.parse(body);
     let eventsProcessed = 0;
+    let eventsSkipped = 0;
 
-    // Process each event type
-    for (const [eventKey, events] of Object.entries(payload)) {
-      if (eventKey === 'timestamp' || !Array.isArray(events)) continue;
+    for (const [eventKey, wrappedEvents] of Object.entries(payload)) {
+      if (eventKey === 'timestamp' || !Array.isArray(wrappedEvents)) continue;
 
       const eventType = eventKey.replace('mautic.email_on_', '');
       const validEventTypes = ['open', 'click', 'unsubscribe', 'bounce'];
-      if (!validEventTypes.includes(eventType)) {
-        console.warn(`Unknown event type: ${eventKey} -> ${eventType}`);
-        continue;
-      }
+      if (!validEventTypes.includes(eventType)) continue;
 
-      for (const event of events) {
-        const mauticEmail = event.lead?.email;
-        if (!mauticEmail) continue;
+      for (const wrapped of wrappedEvents) {
+        // Mautic 7: data is inside wrapped.stat
+        const stat = wrapped.stat ?? wrapped;
+        const mauticEmail = stat.emailAddress ?? stat.lead?.email;
+        if (!mauticEmail) { eventsSkipped++; continue; }
 
-        // Find the customer by their Mautic contact ID
-        const mauticContactId = event.lead?.id;
+        // Find customer by Mautic contact ID
+        const mauticContactId = stat.lead?.id;
         let customerId: string | null = null;
 
         if (mauticContactId) {
@@ -127,7 +136,7 @@ serve(async (req) => {
         }
 
         if (!customerId) {
-          console.warn(`No customer found for Mautic contact ${mauticContactId} (${mauticEmail})`);
+          eventsSkipped++;
           continue;
         }
 
@@ -135,12 +144,12 @@ serve(async (req) => {
         await supabase.from('customer_email_engagement').insert({
           customer_id: customerId,
           event_type: eventType,
-          campaign_name: event.email?.name ?? null,
-          email_subject: event.email?.subject ?? null,
-          link_url: (event as MauticEmailClickEvent).url ?? null,
-          occurred_at: event.dateRead || event.dateSent || new Date().toISOString(),
-          mautic_email_id: String(event.email?.id),
-          raw_payload: event,
+          campaign_name: stat.email?.name ?? null,
+          email_subject: stat.email?.subject ?? null,
+          link_url: stat.url ?? null,
+          occurred_at: stat.dateRead || stat.dateSent || new Date().toISOString(),
+          mautic_email_id: String(stat.email?.id),
+          raw_payload: stat,
         });
 
         // Side effects
@@ -149,12 +158,9 @@ serve(async (req) => {
             .from('customer_profiles')
             .update({ marketing_opt_in: false, updated_at: new Date().toISOString() })
             .eq('id', customerId);
-
-          console.log(`Unsubscribed customer ${customerId} (${mauticEmail})`);
         }
 
         if (eventType === 'bounce') {
-          // Count bounces for this customer
           const { count } = await supabase
             .from('customer_email_engagement')
             .select('id', { count: 'exact', head: true })
@@ -167,8 +173,6 @@ serve(async (req) => {
               .update({ is_valid: false })
               .eq('customer_id', customerId)
               .eq('email', mauticEmail);
-
-            console.log(`Flagged email as invalid for customer ${customerId} after ${count} bounces`);
           }
         }
 
@@ -176,10 +180,8 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Mautic webhook processed: ${eventsProcessed} events`);
-
     return new Response(
-      JSON.stringify({ success: true, events_processed: eventsProcessed }),
+      JSON.stringify({ success: true, events_processed: eventsProcessed, events_skipped: eventsSkipped }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

@@ -73,3 +73,12 @@ verify_jwt = false
 
 [functions.gyg-supplier-api]
 verify_jwt = false
+
+[functions.mautic-webhook]
+verify_jwt = false
+
+[functions.mautic-sync]
+verify_jwt = false
+
+[functions.post-show-email]
+verify_jwt = false

@@ -91,7 +91,8 @@ const previewProps: SpotDeadlineEmailData = {
   promoterEmail: 'dave@standupsydney.com',
 };
 
-export function SpotDeadline(data: SpotDeadlineEmailData = previewProps) {
+export function SpotDeadline(props: SpotDeadlineEmailData = previewProps) {
+  const data = { ...previewProps, ...props };
   const urgency = getUrgency(data.hoursRemaining);
   const previewText = `${data.hoursRemaining}h left to confirm your spot at ${data.eventTitle}`;
 

@@ -89,7 +89,6 @@ interface LineupAct {
   spot_order: number;
   spot_name: string;
   stage_name: string;
-  bio: string | null;
   headshot_url: string | null;
   instagram_url: string | null;
   tiktok_url: string | null;
@@ -118,13 +117,6 @@ function encodeImageUrl(url: string): string {
   } catch {
     return url.replace(/ /g, '%20');
   }
-}
-
-function truncateBio(bio: string | null): string {
-  if (!bio) return '';
-  const sentences = bio.match(/[^.!?]+[.!?]+/g) || [];
-  if (sentences.length <= 2) return bio.trim();
-  return sentences.slice(0, 2).join('').trim();
 }
 
 const ICON_BASE = 'https://pdikjpfulhhpqpxzpgtu.supabase.co/storage/v1/object/public/directory-media/social-icons';
@@ -158,9 +150,9 @@ function generateLineupHTML(lineup: LineupAct[]): string {
       ? `<img src="${encodedHeadshotUrl}" alt="${act.stage_name}" width="80" height="80" style="border-radius:50%;width:80px;height:80px;display:block;object-fit:cover;" />`
       : `<div style="width:80px;height:80px;border-radius:50%;background-color:#E5E7EB;display:block;"></div>`;
 
-    const truncatedBio = truncateBio(act.bio);
     const socialLinks = generateSocialLinksHTML(act);
-    const profileUrl = act.slug ? `${PUBLIC_COMEDIAN_BASE_URL}/${act.slug}` : null;
+    // Link priority: website first, Instagram fallback, hidden if neither
+    const profileUrl = act.website || act.instagram_url || null;
 
     const divider = index < lineup.length - 1
       ? '<tr><td colspan="2" style="padding:16px 0;"><hr style="border:none;border-top:1px solid #E5E7EB;margin:0;"></td></tr>'
@@ -178,9 +170,8 @@ function generateLineupHTML(lineup: LineupAct[]): string {
                 <div style="font-size:18px;font-weight:bold;color:#111827;margin-bottom:4px;">
                   ${act.stage_name}
                 </div>
-                ${truncatedBio ? `<div style="font-size:14px;color:#4B5563;margin-bottom:8px;line-height:1.5;">${truncatedBio}</div>` : ''}
                 ${socialLinks}
-                ${profileUrl ? `<div style="margin-top:12px;"><a href="${profileUrl}" style="color:#3B82F6;text-decoration:none;font-size:14px;">See upcoming shows &rarr;</a></div>` : ''}
+                ${profileUrl ? `<div style="margin-top:8px;"><a href="${profileUrl}" style="color:#3B82F6;text-decoration:none;font-size:14px;">See upcoming shows &rarr;</a></div>` : ''}
               </td>
             </tr>
           </table>
@@ -250,10 +241,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 1. Fetch event
+    // 1. Fetch event (including lineup_published_at)
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, title, name, venue, event_date, organization_id, discount_code')
+      .select('id, title, name, venue, event_date, organization_id, discount_code, lineup_published_at')
       .eq('id', event_id)
       .single();
 
@@ -262,6 +253,17 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Event not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Block sending if lineup hasn't been published in gigpigs
+    if (!event.lineup_published_at) {
+      return new Response(
+        JSON.stringify({
+          error: 'Lineup has not been published yet. Publish the lineup in gigpigs before sending post-show emails.',
+          event_id,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -300,8 +302,6 @@ serve(async (req) => {
         directory_profiles:directory_profile_id (
           stage_name,
           slug,
-          short_bio,
-          long_bio,
           primary_headshot_url,
           instagram_url,
           tiktok_url,
@@ -327,8 +327,6 @@ serve(async (req) => {
         const dp = spot.directory_profiles as {
           stage_name: string;
           slug: string | null;
-          short_bio: string | null;
-          long_bio: string | null;
           primary_headshot_url: string | null;
           instagram_url: string | null;
           tiktok_url: string | null;
@@ -341,7 +339,6 @@ serve(async (req) => {
           spot_order: spot.spot_order as number,
           spot_name: spot.spot_name as string,
           stage_name: dp.stage_name,
-          bio: dp.short_bio || dp.long_bio || null,
           headshot_url: dp.primary_headshot_url,
           instagram_url: dp.instagram_url,
           tiktok_url: dp.tiktok_url,

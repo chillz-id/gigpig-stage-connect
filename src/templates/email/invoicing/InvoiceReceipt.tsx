@@ -44,7 +44,8 @@ const previewProps: InvoicePaymentReceiptData = {
   currency: 'AUD',
 };
 
-export function PaymentReceipt(data: InvoicePaymentReceiptData = previewProps) {
+export function PaymentReceipt(props: InvoicePaymentReceiptData = previewProps) {
+  const data = { ...previewProps, ...props };
   return (
     <EmailLayout previewText={`Payment received — Invoice ${data.invoiceNumber}`}>
       <BrandHeader

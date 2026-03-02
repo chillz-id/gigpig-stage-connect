@@ -5,7 +5,6 @@ import {
   BrandHeader,
   BrandFooter,
   PrimaryButton,
-  SecondaryButton,
   DetailRow,
   ContentCard,
   AlertBox,
@@ -25,28 +24,11 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-AU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatDeadline(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Data interface
 // ---------------------------------------------------------------------------
 
-export interface SpotAssignmentEmailData {
+export interface LineupPublishedEmailData {
   comedianName: string;
   comedianEmail: string;
   eventTitle: string;
@@ -55,20 +37,17 @@ export interface SpotAssignmentEmailData {
   venue: string;
   address: string;
   spotType: string;
-  confirmationDeadline: string;
-  confirmationUrl: string;
-  eventUrl: string;
+  performanceOrder?: number;
   promoterName: string;
   promoterEmail: string;
-  performanceDuration?: string;
-  specialInstructions?: string;
+  eventUrl: string;
 }
 
 // ---------------------------------------------------------------------------
 // Preview props
 // ---------------------------------------------------------------------------
 
-const previewProps: SpotAssignmentEmailData = {
+const previewProps: LineupPublishedEmailData = {
   comedianName: 'Jane Smith',
   comedianEmail: 'jane@example.com',
   eventTitle: 'Friday Night Comedy at ID Comedy Club',
@@ -77,37 +56,54 @@ const previewProps: SpotAssignmentEmailData = {
   venue: 'ID Comedy Club',
   address: '88 Foveaux St, Surry Hills NSW 2010',
   spotType: '10-minute Set',
-  confirmationDeadline: '2026-03-04T17:00:00',
-  confirmationUrl: 'https://gigpigs.app/confirm/abc123',
-  eventUrl: 'https://gigpigs.app/events/friday-night-comedy',
+  performanceOrder: 3,
   promoterName: 'Dave Johnson',
   promoterEmail: 'dave@gigpigs.app',
-  performanceDuration: '10 minutes',
-  specialInstructions: 'Please arrive by 6:30 PM for sound check. Clean material only.',
+  eventUrl: 'https://gigpigs.app/events/friday-night-comedy',
 };
+
+// ---------------------------------------------------------------------------
+// Ordinal helper
+// ---------------------------------------------------------------------------
+
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0] ?? 'th');
+}
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
+export function LineupPublished(props: LineupPublishedEmailData = previewProps) {
   const data = { ...previewProps, ...props };
   return (
     <EmailLayout
-      previewText={`You've got a spot! ${data.spotType} at ${data.eventTitle}`}
+      previewText={`The lineup is live for ${data.eventTitle} — you're on the bill!`}
     >
       <BrandHeader
-        title="You've Got a Spot!"
-        subtitle={`${data.spotType} \u2022 ${data.eventTitle}`}
+        title="The Lineup is Live!"
+        subtitle={`${data.eventTitle}`}
       />
+
+      <AlertBox variant="success">
+        You're on the bill. The official lineup for{' '}
+        <strong>{data.eventTitle}</strong> has been published.
+        {data.performanceOrder !== undefined && data.performanceOrder !== null ? (
+          <> You're performing <strong>{ordinal(data.performanceOrder)}</strong> on the night.</>
+        ) : null}
+      </AlertBox>
+
+      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 12px 0' }}>
           Hey {data.comedianName},
         </Text>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          You've been assigned a <strong>{data.spotType}</strong> spot at{' '}
-          <strong>{data.eventTitle}</strong>. Confirm below.
+          The lineup is locked in and published. Review the details below and
+          make sure you arrive early — doors and sound checks won't wait.
         </Text>
       </ContentCard>
 
@@ -116,42 +112,33 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
         <DetailRow label="Date" value={formatDate(data.eventDate)} />
-        <DetailRow label="Time" value={formatTime(data.eventDate)} />
+        <DetailRow label="Showtime" value={data.eventTime} />
         <DetailRow label="Venue" value={data.venue} />
         <DetailRow label="Address" value={data.address} />
         <DetailRow label="Your Spot" value={data.spotType} highlight />
-        {data.performanceDuration ? (
-          <DetailRow label="Duration" value={data.performanceDuration} />
+        {data.performanceOrder !== undefined && data.performanceOrder !== null ? (
+          <DetailRow label="Performance Order" value={ordinal(data.performanceOrder)} highlight />
         ) : null}
         <DetailRow label="Promoter" value={data.promoterName} />
       </ContentCard>
 
       <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
-      <AlertBox variant="warning">
-        Confirm by {formatDeadline(data.confirmationDeadline)} — your spot will be released if not confirmed.
-      </AlertBox>
-
-      <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
-        Confirm My Spot
-      </PrimaryButton>
-      <SecondaryButton href={data.eventUrl}>view event details</SecondaryButton>
+      <ContentCard>
+        <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
+          Arrival Reminder
+        </Text>
+        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+          Plan to arrive at least <strong>45 minutes before showtime</strong> to
+          allow time for sign-in and any last-minute changes to the running order.
+        </Text>
+      </ContentCard>
 
       <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
-      {data.specialInstructions ? (
-        <>
-          <ContentCard>
-            <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
-              Note
-            </Text>
-            <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-              {data.specialInstructions}
-            </Text>
-          </ContentCard>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
-        </>
-      ) : null}
+      <PrimaryButton href={data.eventUrl}>
+        View Full Lineup
+      </PrimaryButton>
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
@@ -174,12 +161,12 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
 // Render helpers
 // ---------------------------------------------------------------------------
 
-export async function renderHtml(data: SpotAssignmentEmailData): Promise<string> {
-  return await render(<SpotAssignment {...data} />);
+export async function renderHtml(data: LineupPublishedEmailData): Promise<string> {
+  return await render(<LineupPublished {...data} />);
 }
 
-export async function renderText(data: SpotAssignmentEmailData): Promise<string> {
-  return await render(<SpotAssignment {...data} />, { plainText: true });
+export async function renderText(data: LineupPublishedEmailData): Promise<string> {
+  return await render(<LineupPublished {...data} />, { plainText: true });
 }
 
-export default SpotAssignment;
+export default LineupPublished;

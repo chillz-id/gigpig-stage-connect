@@ -35,6 +35,36 @@ import type { InvoiceEmailData } from './invoicing/InvoiceEmail';
 import type { InvoiceReminderData } from './invoicing/InvoiceReminder';
 import type { InvoicePaymentReceiptData } from './invoicing/InvoiceReceipt';
 
+import {
+  renderHtml as renderWelcomeHtml,
+  renderText as renderWelcomeText,
+} from './Welcome';
+import type { WelcomeEmailData } from './Welcome';
+
+import {
+  renderHtml as renderSpotDeclinedHtml,
+  renderText as renderSpotDeclinedText,
+} from './SpotDeclined';
+import type { SpotDeclinedEmailData } from './SpotDeclined';
+
+import {
+  renderHtml as renderSpotCancelledHtml,
+  renderText as renderSpotCancelledText,
+} from './SpotCancelled';
+import type { SpotCancelledEmailData } from './SpotCancelled';
+
+import {
+  renderHtml as renderApplicationAcceptedHtml,
+  renderText as renderApplicationAcceptedText,
+} from './ApplicationAccepted';
+import type { ApplicationAcceptedEmailData } from './ApplicationAccepted';
+
+import {
+  renderHtml as renderLineupPublishedHtml,
+  renderText as renderLineupPublishedText,
+} from './LineupPublished';
+import type { LineupPublishedEmailData } from './LineupPublished';
+
 // Re-export data interfaces for consumers
 export type { SpotAssignmentEmailData } from './SpotAssignment';
 export type { SpotDeadlineEmailData } from './SpotDeadline';
@@ -43,6 +73,11 @@ export type { DeadlineReminderEmailData } from './DeadlineReminder';
 export type { InvoiceEmailData } from './invoicing/InvoiceEmail';
 export type { InvoiceReminderData } from './invoicing/InvoiceReminder';
 export type { InvoicePaymentReceiptData } from './invoicing/InvoiceReceipt';
+export type { WelcomeEmailData } from './Welcome';
+export type { SpotDeclinedEmailData } from './SpotDeclined';
+export type { SpotCancelledEmailData } from './SpotCancelled';
+export type { ApplicationAcceptedEmailData } from './ApplicationAccepted';
+export type { LineupPublishedEmailData } from './LineupPublished';
 
 // Re-export React components for preview/testing
 export { SpotAssignment } from './SpotAssignment';
@@ -57,6 +92,11 @@ export {
 export { InvoiceEmail } from './invoicing/InvoiceEmail';
 export { InvoiceReminder } from './invoicing/InvoiceReminder';
 export { PaymentReceipt } from './invoicing/InvoiceReceipt';
+export { Welcome } from './Welcome';
+export { SpotDeclined } from './SpotDeclined';
+export { SpotCancelled } from './SpotCancelled';
+export { ApplicationAccepted } from './ApplicationAccepted';
+export { LineupPublished } from './LineupPublished';
 
 // ---------------------------------------------------------------------------
 // EmailTemplateData — the shape sent to the send-email edge function
@@ -187,6 +227,86 @@ export async function createPaymentReceiptEmail(
   };
 }
 
+export async function createWelcomeEmail(
+  data: WelcomeEmailData,
+): Promise<EmailTemplateData> {
+  const [html, text] = await Promise.all([
+    renderWelcomeHtml(data),
+    renderWelcomeText(data),
+  ]);
+
+  return {
+    to: data.userEmail,
+    subject: `Welcome to GigPigs, ${data.userName}!`,
+    html,
+    text,
+  };
+}
+
+export async function createSpotDeclinedEmail(
+  data: SpotDeclinedEmailData,
+): Promise<EmailTemplateData> {
+  const [html, text] = await Promise.all([
+    renderSpotDeclinedHtml(data),
+    renderSpotDeclinedText(data),
+  ]);
+
+  return {
+    to: data.promoterEmail,
+    subject: `Spot Declined: ${data.comedianName} - ${data.eventTitle}`,
+    html,
+    text,
+  };
+}
+
+export async function createSpotCancelledEmail(
+  data: SpotCancelledEmailData,
+): Promise<EmailTemplateData> {
+  const [html, text] = await Promise.all([
+    renderSpotCancelledHtml(data),
+    renderSpotCancelledText(data),
+  ]);
+
+  return {
+    to: data.comedianEmail,
+    subject: `Spot Cancelled: ${data.eventTitle}`,
+    html,
+    text,
+  };
+}
+
+export async function createApplicationAcceptedEmail(
+  data: ApplicationAcceptedEmailData,
+): Promise<EmailTemplateData> {
+  const [html, text] = await Promise.all([
+    renderApplicationAcceptedHtml(data),
+    renderApplicationAcceptedText(data),
+  ]);
+
+  return {
+    to: data.comedianEmail,
+    subject: `Application Accepted: ${data.eventTitle}`,
+    html,
+    text,
+  };
+}
+
+export async function createLineupPublishedEmail(
+  data: LineupPublishedEmailData,
+): Promise<EmailTemplateData> {
+  const [html, text] = await Promise.all([
+    renderLineupPublishedHtml(data),
+    renderLineupPublishedText(data),
+  ]);
+
+  return {
+    to: data.comedianEmail,
+    subject: `Lineup Published: ${data.eventTitle}`,
+    html,
+    text,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Email priority & metadata (unchanged)
 // ---------------------------------------------------------------------------
@@ -203,6 +323,11 @@ export interface EmailTemplateMetadata {
     | 'spot_assigned'
     | 'spot_deadline'
     | 'spot_confirmed'
+    | 'spot_declined'
+    | 'spot_cancelled'
+    | 'welcome'
+    | 'application_accepted'
+    | 'lineup_published'
     | 'invoice'
     | 'invoice_reminder'
     | 'payment_receipt';
@@ -247,6 +372,46 @@ export function getEmailTemplateMetadata(
         type: 'spot_confirmed',
         priority: EmailPriority.MEDIUM,
         category: 'confirmation',
+        requiresAction: false,
+      };
+
+    case 'spot_declined':
+      return {
+        type: 'spot_declined',
+        priority: EmailPriority.HIGH,
+        category: 'notification',
+        requiresAction: true,
+      };
+
+    case 'spot_cancelled':
+      return {
+        type: 'spot_cancelled',
+        priority: EmailPriority.HIGH,
+        category: 'notification',
+        requiresAction: false,
+      };
+
+    case 'welcome':
+      return {
+        type: 'welcome',
+        priority: EmailPriority.MEDIUM,
+        category: 'notification',
+        requiresAction: false,
+      };
+
+    case 'application_accepted':
+      return {
+        type: 'application_accepted',
+        priority: EmailPriority.HIGH,
+        category: 'notification',
+        requiresAction: true,
+      };
+
+    case 'lineup_published':
+      return {
+        type: 'lineup_published',
+        priority: EmailPriority.MEDIUM,
+        category: 'notification',
         requiresAction: false,
       };
 

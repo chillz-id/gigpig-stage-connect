@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Section, Heading, Text, Hr, Img } from '@react-email/components';
-import { colors, fonts } from '../tokens';
+import { colors, fonts, businessInfo } from '../tokens';
 
 interface BrandHeaderProps {
   title: string;
@@ -24,19 +24,14 @@ export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
       />
 
       <Section style={{ padding: '32px 48px 0 48px' }}>
-        {/* Brand name */}
-        <Text
-          style={{
-            fontFamily: fonts.body,
-            fontSize: '13px',
-            fontWeight: 600,
-            color: colors.neutral.muted,
-            margin: '0 0 24px 0',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Stand Up Sydney
-        </Text>
+        {/* Brand logo */}
+        <Img
+          src={businessInfo.logoBlack}
+          width="100"
+          height="100"
+          alt="GigPigs"
+          style={{ margin: '0 0 16px 0' }}
+        />
 
         {/* Title */}
         <Heading

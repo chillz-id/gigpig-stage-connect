@@ -60,7 +60,8 @@ const previewProps: DeadlineReminderEmailData = {
 // 24-hour reminder
 // ---------------------------------------------------------------------------
 
-export function DeadlineReminder24Hour(data: DeadlineReminderEmailData = previewProps) {
+export function DeadlineReminder24Hour(props: DeadlineReminderEmailData = previewProps) {
+  const data = { ...previewProps, ...props };
   return (
     <EmailLayout previewText={`24 hours to confirm your ${data.spotType} spot at ${data.eventName}`}>
       <BrandHeader
@@ -108,7 +109,8 @@ export function DeadlineReminder24Hour(data: DeadlineReminderEmailData = preview
 // 6-hour reminder (urgent)
 // ---------------------------------------------------------------------------
 
-export function DeadlineReminder6Hour(data: DeadlineReminderEmailData = { ...previewProps, hoursRemaining: 6 }) {
+export function DeadlineReminder6Hour(props: DeadlineReminderEmailData = { ...previewProps, hoursRemaining: 6 }) {
+  const data = { ...previewProps, hoursRemaining: 6, ...props };
   return (
     <EmailLayout previewText={`URGENT: Only ${data.hoursRemaining} hours left to confirm — ${data.eventName}`}>
       <BrandHeader
@@ -145,7 +147,8 @@ export function DeadlineReminder6Hour(data: DeadlineReminderEmailData = { ...pre
 // 1-hour reminder (final notice)
 // ---------------------------------------------------------------------------
 
-export function DeadlineReminder1Hour(data: DeadlineReminderEmailData = { ...previewProps, hoursRemaining: 1 }) {
+export function DeadlineReminder1Hour(props: DeadlineReminderEmailData = { ...previewProps, hoursRemaining: 1 }) {
+  const data = { ...previewProps, hoursRemaining: 1, ...props };
   return (
     <EmailLayout previewText={`FINAL NOTICE: Last chance to confirm your spot at ${data.eventName}`}>
       <BrandHeader
@@ -182,7 +185,8 @@ export function DeadlineReminder1Hour(data: DeadlineReminderEmailData = { ...pre
 // Extended deadline (positive)
 // ---------------------------------------------------------------------------
 
-export function DeadlineReminderExtended(data: DeadlineReminderEmailData = previewProps) {
+export function DeadlineReminderExtended(props: DeadlineReminderEmailData = previewProps) {
+  const data = { ...previewProps, ...props };
   return (
     <EmailLayout previewText={`Good news: Your confirmation deadline has been extended for ${data.eventName}`}>
       <BrandHeader
