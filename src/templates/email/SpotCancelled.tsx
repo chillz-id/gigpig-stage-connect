@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -9,6 +9,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -86,7 +87,7 @@ export function SpotCancelled(props: SpotCancelledEmailData = previewProps) {
         <strong>{data.eventTitle}</strong> has been cancelled by the promoter.
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -99,7 +100,7 @@ export function SpotCancelled(props: SpotCancelledEmailData = previewProps) {
 
       {data.cancellationReason ? (
         <>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <Divider />
           <ContentCard>
             <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
               Reason
@@ -111,7 +112,7 @@ export function SpotCancelled(props: SpotCancelledEmailData = previewProps) {
         </>
       ) : null}
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
@@ -125,7 +126,7 @@ export function SpotCancelled(props: SpotCancelledEmailData = previewProps) {
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <PrimaryButton href={data.browseShowsUrl}>
         Browse Other Shows

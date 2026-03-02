@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Hr, render } from '@react-email/components';
+import { render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -8,6 +8,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -85,10 +86,10 @@ const previewProps: SpotDeadlineEmailData = {
   address: '88 Foveaux St, Surry Hills NSW 2010',
   spotType: '10-minute Set',
   hoursRemaining: 2,
-  confirmationUrl: 'https://standupsydney.com/confirm/abc123',
-  eventUrl: 'https://standupsydney.com/events/friday-night-comedy',
+  confirmationUrl: 'https://gigpigs.app/confirm/abc123',
+  eventUrl: 'https://gigpigs.app/events/friday-night-comedy',
   promoterName: 'Dave Johnson',
-  promoterEmail: 'dave@standupsydney.com',
+  promoterEmail: 'dave@gigpigs.app',
 };
 
 export function SpotDeadline(props: SpotDeadlineEmailData = previewProps) {
@@ -107,11 +108,11 @@ export function SpotDeadline(props: SpotDeadlineEmailData = previewProps) {
         <strong>{data.hoursRemaining} hours remaining</strong> to confirm your{' '}
         <strong>{data.spotType}</strong> spot at {data.eventTitle}.
         {data.hoursRemaining <= 2 && (
-          <> Your spot will be released if not confirmed.</>
+          <><br />Your spot will be released if not confirmed.</>
         )}
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />

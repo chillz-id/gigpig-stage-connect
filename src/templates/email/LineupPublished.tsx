@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -8,6 +8,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -88,14 +89,14 @@ export function LineupPublished(props: LineupPublishedEmailData = previewProps) 
       />
 
       <AlertBox variant="success">
-        You're on the bill. The official lineup for{' '}
+        You're on the bill! The official lineup for{' '}
         <strong>{data.eventTitle}</strong> has been published.
         {data.performanceOrder !== undefined && data.performanceOrder !== null ? (
-          <> You're performing <strong>{ordinal(data.performanceOrder)}</strong> on the night.</>
+          <><br />You're performing <strong>{ordinal(data.performanceOrder)}</strong> on the night.</>
         ) : null}
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 12px 0' }}>
@@ -107,7 +108,7 @@ export function LineupPublished(props: LineupPublishedEmailData = previewProps) 
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -122,7 +123,7 @@ export function LineupPublished(props: LineupPublishedEmailData = previewProps) 
         <DetailRow label="Promoter" value={data.promoterName} />
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
@@ -134,7 +135,7 @@ export function LineupPublished(props: LineupPublishedEmailData = previewProps) 
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <PrimaryButton href={data.eventUrl}>
         View Full Lineup

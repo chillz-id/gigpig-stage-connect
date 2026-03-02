@@ -7,8 +7,8 @@
 
 export const colors = {
   brand: {
-    primary: '#1A1A2E',      // Near-black charcoal — buttons, links, accents
-    primaryDark: '#12121F',  // Darker variant for hover/dark mode
+    primary: '#E84855',      // Warm coral-red — CTA buttons, links, accents
+    primaryDark: '#D03A47',  // Darker variant for hover states
   },
   status: {
     success: '#16A34A',

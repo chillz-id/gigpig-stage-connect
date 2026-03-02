@@ -6,3 +6,4 @@ export { SecondaryButton } from './SecondaryButton';
 export { DetailRow } from './DetailRow';
 export { ContentCard } from './ContentCard';
 export { AlertBox } from './AlertBox';
+export { Divider } from './Divider';

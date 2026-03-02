@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Section, Heading, Text, Hr, Img } from '@react-email/components';
+import { Section, Heading, Text, Img } from '@react-email/components';
+import { Divider } from './Divider';
 import { colors, fonts, businessInfo } from '../tokens';
 
 interface BrandHeaderProps {
@@ -18,19 +19,19 @@ export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
       <Section
         style={{
           height: '4px',
-          backgroundColor: colors.brand.primary,
+          backgroundColor: colors.neutral.heading,
           borderRadius: '8px 8px 0 0',
         }}
       />
 
-      <Section style={{ padding: '32px 48px 0 48px' }}>
-        {/* Brand logo */}
+      <Section style={{ padding: '32px 48px 0 48px', textAlign: 'center' as const }}>
+        {/* Brand logo — centered */}
         <Img
           src={businessInfo.logoBlack}
-          width="100"
-          height="100"
+          width="72"
+          height="72"
           alt="GigPigs"
-          style={{ margin: '0 0 16px 0' }}
+          style={{ margin: '0 auto 20px auto' }}
         />
 
         {/* Title */}
@@ -44,6 +45,7 @@ export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
             margin: '0',
             padding: '0',
             lineHeight: '1.35',
+            textAlign: 'center' as const,
           }}
         >
           {title}
@@ -54,10 +56,11 @@ export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
             style={{
               fontFamily: fonts.body,
               fontSize: '15px',
-              color: colors.neutral.body,
-              marginTop: '8px',
+              color: colors.neutral.muted,
+              marginTop: '6px',
               marginBottom: '0',
               lineHeight: '1.5',
+              textAlign: 'center' as const,
             }}
           >
             {subtitle}
@@ -65,7 +68,7 @@ export function BrandHeader({ title, subtitle }: BrandHeaderProps) {
         )}
       </Section>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '24px 48px' }} />
+      <Divider spacing="24px" />
     </>
   );
 }

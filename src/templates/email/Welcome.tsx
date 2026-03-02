@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -8,6 +8,7 @@ import {
   SecondaryButton,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -99,54 +100,57 @@ export function Welcome(props: WelcomeEmailData = previewProps) {
         subtitle="The comedy industry platform"
       />
 
-      <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 12px 0' }}>
+      <ContentCard padding="20px 48px">
+        <Text style={{ fontSize: '16px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 16px 0', fontWeight: 500 }}>
           Hey {data.userName},
         </Text>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          You're in. GigPigs connects comedians, promoters, photographers, and
-          the wider comedy industry in one place — making it easier to find
-          gigs, manage bookings, and grow your career.
+        <Text style={{ fontSize: '15px', lineHeight: '1.7', color: colors.neutral.body, margin: '0' }}>
+          You're in! GigPigs connects comedians, promoters, photographers,
+          and the wider comedy industry in one place.
+        </Text>
+        <Text style={{ fontSize: '15px', lineHeight: '1.7', color: colors.neutral.body, margin: '12px 0 0 0' }}>
+          Find gigs, manage bookings, and grow your career — all from
+          one platform.
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <AlertBox variant="info">
-        You've joined as a <strong>{roleLabel}</strong>. Here's how to get started:
+        You've joined as a <strong>{roleLabel}</strong>.
       </AlertBox>
 
-      <ContentCard>
+      <ContentCard padding="16px 48px">
+        <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 12px 0', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
+          Getting Started
+        </Text>
         {steps.map((step, index) => (
           <Text
             key={index}
-            style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 10px 0' }}
+            style={{ fontSize: '15px', lineHeight: '1.7', color: colors.neutral.body, margin: '0 0 12px 0' }}
           >
-            <span style={{ fontWeight: 600, color: colors.brand.primary }}>{index + 1}.</span>{' '}
+            <span style={{ display: 'inline-block', width: '24px', fontWeight: 700, color: colors.brand.primary }}>{index + 1}.</span>
             {step}
           </Text>
         ))}
       </ContentCard>
-
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
 
       <PrimaryButton href={data.dashboardUrl}>
         Go to My Dashboard
       </PrimaryButton>
       <SecondaryButton href={data.profileUrl}>View My Profile</SecondaryButton>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
-      <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          Questions or feedback? Reach out to us at{' '}
+      <ContentCard padding="20px 48px 24px 48px">
+        <Text style={{ fontSize: '14px', lineHeight: '1.6', color: colors.neutral.muted, margin: '0', textAlign: 'center' as const }}>
+          Questions? Reach out at{' '}
           <Link
             href="mailto:team@gigpigs.app"
             style={{ color: colors.brand.primary, textDecoration: 'none' }}
           >
             team@gigpigs.app
           </Link>
-          {' '}— we'd love to hear from you.
         </Text>
       </ContentCard>
 

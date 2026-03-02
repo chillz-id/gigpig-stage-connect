@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
   BrandFooter,
   DetailRow,
   ContentCard,
+  Divider,
 } from '../components';
 import { colors, fonts } from '../tokens';
 
@@ -83,8 +84,8 @@ const tdStyle: React.CSSProperties = {
 
 const previewProps: InvoiceEmailData = {
   invoiceNumber: 'INV-2026-0042',
-  senderName: 'Stand Up Sydney',
-  senderEmail: 'accounts@standupsydney.com',
+  senderName: 'GigPigs',
+  senderEmail: 'team@gigpigs.app',
   recipientName: 'ID Comedy Club',
   recipientEmail: 'billing@example.com',
   issueDate: '2026-02-17',
@@ -97,7 +98,7 @@ const previewProps: InvoiceEmailData = {
   ],
   notes: 'Payment via bank transfer preferred.',
   paymentInstructions: 'BSB: 062-000, Account: 1234 5678. Reference: INV-2026-0042',
-  companyName: 'Stand Up Sydney Pty Ltd',
+  companyName: 'GigPigs Pty Ltd',
   companyAddress: '88 Foveaux St, Surry Hills NSW 2010',
   companyABN: '33 614 240 328',
 };
@@ -114,7 +115,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
     <EmailLayout previewText={previewText}>
       <BrandHeader
         title={`Invoice ${data.invoiceNumber}`}
-        subtitle={data.companyName || 'Stand Up Sydney'}
+        subtitle={data.companyName || 'GigPigs'}
       />
 
       <ContentCard>
@@ -127,7 +128,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
@@ -135,7 +136,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
         <DetailRow label="Due" value={formatDate(data.dueDate)} highlight />
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       {/* Line items table */}
       <ContentCard padding="0">
@@ -190,7 +191,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
         </table>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       {/* Payment instructions */}
       <ContentCard>
@@ -208,7 +209,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
 
       {data.notes ? (
         <>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <Divider />
           <ContentCard>
             <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
               {data.notes}
@@ -219,7 +220,7 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
 
       {(data.companyAddress || data.companyABN) ? (
         <>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <Divider />
           <ContentCard>
             {data.companyAddress ? (
               <DetailRow label="Address" value={data.companyAddress} />

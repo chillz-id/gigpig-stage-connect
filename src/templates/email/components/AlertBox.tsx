@@ -21,19 +21,26 @@ const variantStyles: Record<AlertVariant, { background: string; border: string }
  * No emoji icons — just content. Clean and professional.
  */
 export function AlertBox({ variant, children }: AlertBoxProps) {
-  const style = variantStyles[variant];
+  const vs = variantStyles[variant];
 
   return (
-    <Section
-      style={{
-        backgroundColor: style.background,
-        borderLeft: `3px solid ${style.border}`,
-        padding: '16px 24px',
-        margin: '0 48px 4px 48px',
-        borderRadius: '4px',
-      }}
-    >
-      {children}
+    <Section style={{ padding: '0 48px 4px 48px' }}>
+      <table role="presentation" width="100%" cellPadding="0" cellSpacing="0">
+        <tbody>
+          <tr>
+            <td
+              style={{
+                backgroundColor: vs.background,
+                borderLeft: `3px solid ${vs.border}`,
+                padding: '16px 24px',
+                borderRadius: '4px',
+              }}
+            >
+              {children}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </Section>
   );
 }

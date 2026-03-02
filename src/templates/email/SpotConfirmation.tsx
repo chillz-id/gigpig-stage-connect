@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -8,6 +8,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -63,15 +64,15 @@ const previewProps: SpotConfirmationEmailData = {
   comedianName: 'Jane Smith',
   comedianEmail: 'jane@example.com',
   promoterName: 'Dave Johnson',
-  promoterEmail: 'dave@standupsydney.com',
+  promoterEmail: 'dave@gigpigs.app',
   eventTitle: 'Friday Night Comedy at ID Comedy Club',
   eventDate: '2026-03-06T19:30:00',
   eventTime: '7:30 PM',
   venue: 'ID Comedy Club',
   address: '88 Foveaux St, Surry Hills NSW 2010',
   spotType: '10-minute Set',
-  eventUrl: 'https://standupsydney.com/events/friday-night-comedy',
-  lineupUrl: 'https://standupsydney.com/events/friday-night-comedy/lineup',
+  eventUrl: 'https://gigpigs.app/events/friday-night-comedy',
+  lineupUrl: 'https://gigpigs.app/events/friday-night-comedy/lineup',
   performanceDuration: '10 minutes',
   arrivalTime: '6:30 PM',
   soundCheckTime: '6:45 PM',
@@ -100,7 +101,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
           <strong>{data.eventTitle}</strong> is confirmed.
         </AlertBox>
 
-        <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+        <Divider />
 
         <ContentCard>
           <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -117,7 +118,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
 
         {data.arrivalTime || data.soundCheckTime ? (
           <>
-            <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+            <Divider />
             <ContentCard>
               <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
                 Arrival
@@ -134,7 +135,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
 
         {data.additionalInfo ? (
           <>
-            <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+            <Divider />
             <ContentCard>
               <Text style={{ fontSize: '13px', fontWeight: 600, color: colors.neutral.muted, margin: '0 0 8px 0' }}>
                 Note
@@ -146,7 +147,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
           </>
         ) : null}
 
-        <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+        <Divider />
 
         <PrimaryButton href={data.eventUrl}>View Event</PrimaryButton>
 
@@ -180,7 +181,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
         <strong>{data.spotType}</strong> spot at <strong>{data.eventTitle}</strong>.
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -194,7 +195,7 @@ export function SpotConfirmation(props: SpotConfirmationEmailData = previewProps
         ) : null}
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <PrimaryButton href={data.lineupUrl}>View Lineup</PrimaryButton>
 

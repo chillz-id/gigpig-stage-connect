@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -7,6 +7,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from '../components';
 import { colors } from '../tokens';
 
@@ -66,8 +67,8 @@ export interface InvoiceReminderData {
 
 const previewProps: InvoiceReminderData = {
   invoiceNumber: 'INV-2026-0042',
-  senderName: 'Stand Up Sydney',
-  senderEmail: 'accounts@standupsydney.com',
+  senderName: 'GigPigs',
+  senderEmail: 'team@gigpigs.app',
   recipientName: 'ID Comedy Club',
   recipientEmail: 'billing@example.com',
   issueDate: '2026-02-17',
@@ -120,7 +121,7 @@ export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
         </Text>
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
@@ -136,7 +137,7 @@ export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
@@ -149,7 +150,7 @@ export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
         />
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>

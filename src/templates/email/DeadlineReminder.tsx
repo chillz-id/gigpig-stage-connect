@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Hr } from '@react-email/components';
+import { Text } from '@react-email/components';
 import { render } from '@react-email/components';
 import {
   EmailLayout,
@@ -9,6 +9,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -50,7 +51,7 @@ const previewProps: DeadlineReminderEmailData = {
   eventTime: '7:30 PM',
   venue: 'ID Comedy Club',
   hoursRemaining: 24,
-  confirmationUrl: 'https://standupsydney.com/confirm/abc123',
+  confirmationUrl: 'https://gigpigs.app/confirm/abc123',
   deadline: '2026-03-04T17:00:00',
   newDeadline: '2026-03-05T17:00:00',
   reason: 'Scheduling conflict resolved.',
@@ -79,7 +80,7 @@ export function DeadlineReminder24Hour(props: DeadlineReminderEmailData = previe
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <AlertBox variant="info">
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
@@ -87,7 +88,7 @@ export function DeadlineReminder24Hour(props: DeadlineReminderEmailData = previe
         </Text>
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventName} highlight />
@@ -121,11 +122,11 @@ export function DeadlineReminder6Hour(props: DeadlineReminderEmailData = { ...pr
       <AlertBox variant="warning">
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           <strong>Only {data.hoursRemaining} hours remaining</strong> to confirm your{' '}
-          {data.spotType} spot. Act now to avoid losing it.
+          {data.spotType} spot.<br />Act now to avoid losing it.
         </Text>
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventName} highlight />
@@ -158,12 +159,12 @@ export function DeadlineReminder1Hour(props: DeadlineReminderEmailData = { ...pr
 
       <AlertBox variant="urgent">
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          <strong>This is your final notice.</strong> Your {data.spotType} spot will be
+          <strong>This is your final notice.</strong><br />Your {data.spotType} spot will be
           automatically released if you do not confirm immediately.
         </Text>
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventName} highlight />
@@ -203,7 +204,7 @@ export function DeadlineReminderExtended(props: DeadlineReminderEmailData = prev
 
       {data.reason ? (
         <>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <Divider />
           <ContentCard>
             <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
               {data.reason}
@@ -212,7 +213,7 @@ export function DeadlineReminderExtended(props: DeadlineReminderEmailData = prev
         </>
       ) : null}
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventName} highlight />

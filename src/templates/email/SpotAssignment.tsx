@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -9,6 +9,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -107,11 +108,11 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
         </Text>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           You've been assigned a <strong>{data.spotType}</strong> spot at{' '}
-          <strong>{data.eventTitle}</strong>. Confirm below.
+          <strong>{data.eventTitle}</strong>.<br />Confirm below.
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -126,10 +127,10 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
         <DetailRow label="Promoter" value={data.promoterName} />
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <AlertBox variant="warning">
-        Confirm by {formatDeadline(data.confirmationDeadline)} — your spot will be released if not confirmed.
+        Confirm by {formatDeadline(data.confirmationDeadline)}.<br />Your spot will be released if not confirmed.
       </AlertBox>
 
       <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
@@ -137,7 +138,7 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
       </PrimaryButton>
       <SecondaryButton href={data.eventUrl}>view event details</SecondaryButton>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       {data.specialInstructions ? (
         <>
@@ -149,7 +150,7 @@ export function SpotAssignment(props: SpotAssignmentEmailData = previewProps) {
               {data.specialInstructions}
             </Text>
           </ContentCard>
-          <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+          <Divider />
         </>
       ) : null}
 

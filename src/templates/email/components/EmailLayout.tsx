@@ -18,13 +18,9 @@ export function EmailLayout({ previewText, children }: EmailLayoutProps) {
   return (
     <Html lang="en">
       <Head>
-        <meta name="color-scheme" content="light dark" />
-        <meta name="supported-color-schemes" content="light dark" />
+        <meta name="color-scheme" content="light only" />
+        <meta name="supported-color-schemes" content="light only" />
         <style>{`
-          @media (prefers-color-scheme: dark) {
-            body { background-color: #1a1a2e !important; }
-            .email-container { background-color: #2d2d44 !important; border-color: #404060 !important; }
-          }
           @media only screen and (max-width: 620px) {
             .email-container { width: 100% !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; }
           }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Hr } from '@react-email/components';
+import { Text } from '@react-email/components';
 import { render } from '@react-email/components';
 import {
   EmailLayout,
@@ -8,6 +8,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from '../components';
 import { colors } from '../tokens';
 
@@ -37,7 +38,7 @@ const previewProps: InvoicePaymentReceiptData = {
   paymentAmount: 850.00,
   paymentDate: '2026-03-15',
   paymentMethod: 'Bank Transfer',
-  senderName: 'Stand Up Sydney',
+  senderName: 'GigPigs',
   recipientName: 'ID Comedy Club',
   recipientEmail: 'billing@example.com',
   remainingBalance: 0,
@@ -59,7 +60,7 @@ export function PaymentReceipt(props: InvoicePaymentReceiptData = previewProps) 
         </Text>
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
@@ -70,7 +71,7 @@ export function PaymentReceipt(props: InvoicePaymentReceiptData = previewProps) 
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Invoice" value={data.invoiceNumber} highlight />

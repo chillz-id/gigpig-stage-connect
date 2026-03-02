@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Section, Text, Link, Hr } from '@react-email/components';
+import { Section, Text, Link } from '@react-email/components';
+import { Divider } from './Divider';
 import { colors, fonts, businessInfo } from '../tokens';
 
 interface BrandFooterProps {
@@ -13,9 +14,9 @@ interface BrandFooterProps {
 export function BrandFooter({ unsubscribeUrl }: BrandFooterProps) {
   return (
     <>
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
-      <Section style={{ padding: '24px 48px 32px 48px' }}>
+      <Section style={{ padding: '24px 48px 32px 48px', textAlign: 'center' as const }}>
         <Text
           style={{
             fontFamily: fonts.body,

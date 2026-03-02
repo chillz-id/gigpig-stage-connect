@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, Hr, render } from '@react-email/components';
+import { Text, Link, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -9,6 +9,7 @@ import {
   DetailRow,
   ContentCard,
   AlertBox,
+  Divider,
 } from './components';
 import { colors } from './tokens';
 
@@ -80,11 +81,11 @@ export function ApplicationAccepted(props: ApplicationAcceptedEmailData = previe
 
       <AlertBox variant="success">
         Your application for a <strong>{data.spotType}</strong> spot at{' '}
-        <strong>{data.eventTitle}</strong> has been accepted. Confirm your spot
+        <strong>{data.eventTitle}</strong> has been accepted.<br />Confirm your spot
         below before it expires.
       </AlertBox>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.heading, margin: '0 0 12px 0' }}>
@@ -96,7 +97,7 @@ export function ApplicationAccepted(props: ApplicationAcceptedEmailData = previe
         </Text>
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <DetailRow label="Event" value={data.eventTitle} highlight />
@@ -108,14 +109,14 @@ export function ApplicationAccepted(props: ApplicationAcceptedEmailData = previe
         <DetailRow label="Promoter" value={data.promoterName} />
       </ContentCard>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <PrimaryButton href={data.confirmationUrl} color={colors.status.success}>
         Confirm My Spot
       </PrimaryButton>
       <SecondaryButton href={data.eventUrl}>view event details</SecondaryButton>
 
-      <Hr style={{ borderColor: colors.neutral.border, margin: '0 48px' }} />
+      <Divider />
 
       <ContentCard>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
