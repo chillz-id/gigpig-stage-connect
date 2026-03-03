@@ -188,7 +188,15 @@ export function DirectoryProfileEditor({
       let profileId: string;
 
       if (isCreateMode) {
-        const slug = directoryService.generateSlug(values.stage_name);
+        // Generate a unique slug, appending a suffix if it already exists
+        let slug = directoryService.generateSlug(values.stage_name);
+        let existing = await directoryService.getProfileBySlug(slug);
+        let suffix = 2;
+        while (existing) {
+          slug = `${directoryService.generateSlug(values.stage_name)}-${String(suffix)}`;
+          existing = await directoryService.getProfileBySlug(slug);
+          suffix++;
+        }
         const created = await directoryService.createProfile({
           ...profileFields,
           slug,
