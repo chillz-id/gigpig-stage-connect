@@ -74,10 +74,10 @@ export const loadTemplateData = (
       showLevel: data.showLevel || '',
       showType: data.showType || '',
       customShowType: data.customShowType || '',
-      ticketingType: data.ticketingType || 'gigpigs',
+      ticketingType: (data.ticketingType || 'gigpigs') as 'internal' | 'external',
       externalTicketUrl: data.externalTicketUrl || '',
       tickets: Array.isArray(data.tickets) ? data.tickets : [],
-      feeHandling: data.feeHandling || 'absorb',
+      feeHandling: (data.feeHandling || 'absorb') as 'absorb' | 'pass_to_customer',
       capacity: data.capacity || 0,
     });
   

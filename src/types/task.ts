@@ -1,6 +1,6 @@
 // TypeScript types for the task management system
 
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskStatus = 'pending' | 'in_progress' | 'review' | 'completed' | 'cancelled';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskCategory = 
   | 'event_planning' 
@@ -217,6 +217,7 @@ export interface TaskFilters {
   priority?: TaskPriority[];
   category?: TaskCategory[];
   assignee_id?: string[];
+  assignee_is_null?: boolean;
   creator_id?: string[];
   tags?: string[];
   due_date_range?: {

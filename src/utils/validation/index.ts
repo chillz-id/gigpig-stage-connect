@@ -67,7 +67,7 @@ export const paginationSchema = z.object({
 // Generic search schema
 export const searchSchema = z.object({
   query: z.string().max(200, 'Search query too long').optional(),
-  filters: z.record(z.unknown()).optional(),
+  filters: z.record(z.string(), z.unknown()).optional(),
 }).merge(paginationSchema);
 
 // Safe parse with error formatting
@@ -76,44 +76,44 @@ export function safeParse<T>(
   data: unknown
 ): { success: true; data: T } | { success: false; errors: Record<string, string> } {
   const result = schema.safeParse(data);
-  
+
   if (result.success) {
     return { success: true, data: result.data };
   }
-  
+
   // Format errors for easy display
   const errors: Record<string, string> = {};
-  result.error.errors.forEach(error => {
-    const path = error.path.join('.');
-    errors[path] = error.message;
+  result.error.issues.forEach(issue => {
+    const path = issue.path.join('.');
+    errors[path] = issue.message;
   });
-  
+
   return { success: false, errors };
 }
 
 // Validate and throw with formatted error
 export function validateOrThrow<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = safeParse(schema, data);
-  
+
   if (!result.success) {
     const errorMessage = Object.entries(result.errors)
       .map(([field, message]) => `${field}: ${message}`)
       .join(', ');
     throw new Error(`Validation failed: ${errorMessage}`);
   }
-  
+
   return result.data;
 }
 
 // React Hook Form resolver
-export function zodResolver<T extends z.ZodSchema>(schema: T) {
+export function zodResolver(schema: z.ZodSchema) {
   return async (data: unknown) => {
     const result = safeParse(schema, data);
-    
+
     if (result.success) {
       return { values: result.data, errors: {} };
     }
-    
+
     return {
       values: {},
       errors: Object.entries(result.errors).reduce((acc, [path, message]) => {

@@ -46,6 +46,12 @@ export interface ProfileLabels {
   primaryName?: string;     // "First Name" | "Organization Name"
   secondaryName?: string;   // "Stage Name" | "Legal Name"
   bio?: string;             // "Biography" | "Company Description"
+
+  // Organization-specific labels
+  highlightsButton?: string;
+  highlightsEmpty?: string;
+  publicContact?: string;
+  platformContact?: string;
 }
 
 /**
@@ -68,6 +74,9 @@ export interface ProfileFields {
   hasFinancial: boolean;           // Show financial information section
   hasRates: boolean;               // Show rates & availability (photographers/videographers)
   hasMedia?: boolean;              // Show media portfolio section
+  hasLastName?: boolean;           // Hide last name for organizations
+  hasLinkedIn?: boolean;           // Show LinkedIn field
+  hasStateDropdown?: boolean;      // Use Australian states dropdown instead of text input
 }
 
 /**

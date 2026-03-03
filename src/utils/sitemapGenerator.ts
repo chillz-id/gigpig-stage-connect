@@ -99,9 +99,8 @@ export class SitemapGenerator {
     try {
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name, stage_name, profile_url, updated_at')
-        .eq('role', 'comedian')
-        .eq('is_public', true)
+        .select('id, name, stage_name, profile_slug, updated_at')
+        .eq('profile_visible', true)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -109,8 +108,8 @@ export class SitemapGenerator {
       const entries: SitemapEntry[] = [];
 
       for (const profile of profiles || []) {
-        // Use profile_url if available, otherwise use ID
-        const slug = profile.profile_url || profile.id;
+        // Use profile_slug if available, otherwise use ID
+        const slug = profile.profile_slug || profile.id;
         
         entries.push({
           loc: `${this.baseUrl}/comedian/${slug}`,
@@ -134,10 +133,10 @@ export class SitemapGenerator {
     try {
       const { data: events, error } = await supabase
         .from('events')
-        .select('id, name, date, updated_at')
+        .select('id, name, event_date, updated_at')
         .eq('status', 'published')
-        .gte('date', new Date().toISOString())
-        .order('date', { ascending: true });
+        .gte('event_date', new Date().toISOString())
+        .order('event_date', { ascending: true });
 
       if (error) throw error;
 
@@ -309,8 +308,7 @@ export async function shouldRegenerateSitemap(): Promise<boolean> {
     const { count: profileCount } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('role', 'comedian')
-      .eq('is_public', true)
+      .eq('profile_visible', true)
       .gte('updated_at', oneHourAgo);
     
     const { count: eventCount } = await supabase
