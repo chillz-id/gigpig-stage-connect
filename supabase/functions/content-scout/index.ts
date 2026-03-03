@@ -5,9 +5,12 @@
  * content URLs, and triggers downloads to Google Drive.
  *
  * Actions:
- *   check-needs    — Who needs content? (single comedian or full event lineup)
- *   register-urls  — Save discovered content URLs (dedup via UNIQUE source_url)
- *   download-to-drive — Download a registered item to Drive and link as asset
+ *   check-needs            — Who needs content? (single comedian or full event lineup)
+ *   register-urls          — Save discovered content URLs (dedup via UNIQUE source_url)
+ *   download-to-drive      — Download a registered item to Drive and link as asset
+ *   check-already-posted   — Check if content was posted in lookback period
+ *   create-spotlight-drafts — Create social drafts for comedian spotlights
+ *   auto-spotlight          — Auto-create or cancel spotlight drafts on lineup change
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -322,7 +325,8 @@ async function handleCheckAlreadyPosted(
 // ─── create-spotlight-drafts ─────────────────────────────────────────────────
 
 interface SpotlightItem {
-  comedianId: string;
+  comedianId?: string;
+  directoryProfileId?: string;
   comedianName: string;
   comedianHandle?: string;
   contentId?: string;
@@ -375,16 +379,23 @@ async function handleCreateSpotlightDrafts(
     for (const platform of platforms) {
       const windowLabel = `Comedian Spotlight: ${item.comedianName}`;
 
-      // Check for existing draft with same window label + event + platform (dedup)
-      const { data: existing } = await supabase
+      // Check for existing draft with same comedian/directory profile + event + platform (dedup)
+      let dedupQuery = supabase
         .from('social_content_drafts')
         .select('id')
         .eq('platform', platform)
-        .eq('comedian_id', item.comedianId)
         .eq('organization_id', event.organization_id)
         .ilike('caption', `%${item.comedianName}%`)
         .in('status', ['draft', 'pending', 'scheduled'])
         .limit(1);
+
+      if (item.directoryProfileId) {
+        dedupQuery = dedupQuery.eq('directory_profile_id', item.directoryProfileId);
+      } else if (item.comedianId) {
+        dedupQuery = dedupQuery.eq('comedian_id', item.comedianId);
+      }
+
+      const { data: existing } = await dedupQuery;
 
       if (existing && existing.length > 0) {
         skippedDuplicates++;
@@ -423,7 +434,8 @@ async function handleCreateSpotlightDrafts(
           media_file_ids: mediaFileIds.length > 0 ? mediaFileIds : null,
           media_type: mediaType,
           organization_id: event.organization_id,
-          comedian_id: item.comedianId,
+          comedian_id: item.comedianId ?? null,
+          directory_profile_id: item.directoryProfileId ?? null,
           scheduled_for: targetDate.toISOString(),
           status: 'draft',
         })
@@ -439,6 +451,308 @@ async function handleCreateSpotlightDrafts(
   }
 
   return { createdDraftIds, skippedDuplicates };
+}
+
+// ─── auto-spotlight ──────────────────────────────────────────────────────────
+
+interface AutoSpotlightResult {
+  changeType: 'added' | 'removed';
+  comedianId?: string;
+  directoryProfileId?: string;
+  eventId: string;
+  draftsCreated?: number;
+  draftsCreatedIds?: string[];
+  cancelled?: number;
+  needsDiscovery?: boolean;
+  missingSocials?: boolean;
+  skippedDuplicates?: number;
+}
+
+// Helper: extract Instagram handle from a URL
+function extractInstagramHandle(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  const match = url.match(/instagram\.com\/([^/?]+)/i);
+  return match?.[1] ? `@${match[1]}` : undefined;
+}
+
+async function handleAutoSpotlight(
+  supabase: ReturnType<typeof createClient>,
+  body: { eventId: string; comedianId?: string; directoryProfileId?: string; changeType: 'added' | 'removed' },
+): Promise<AutoSpotlightResult> {
+  if (!body.eventId) throw new Error('eventId is required');
+  if (!body.comedianId && !body.directoryProfileId) throw new Error('comedianId or directoryProfileId is required');
+  if (!body.changeType) throw new Error('changeType is required');
+
+  const result: AutoSpotlightResult = {
+    changeType: body.changeType,
+    comedianId: body.comedianId,
+    directoryProfileId: body.directoryProfileId,
+    eventId: body.eventId,
+  };
+
+  // ── Directory profile path ──────────────────────────────────────────────
+  if (body.directoryProfileId) {
+    if (body.changeType === 'removed') {
+      const { data: cancelled, error: cancelErr } = await supabase
+        .from('social_content_drafts')
+        .update({ status: 'cancelled' })
+        .eq('directory_profile_id', body.directoryProfileId)
+        .eq('event_id', body.eventId)
+        .in('status', ['draft', 'pending', 'scheduled'])
+        .select('id');
+
+      if (cancelErr) {
+        console.warn(`Failed to cancel drafts for directory profile ${body.directoryProfileId}: ${cancelErr.message}`);
+      }
+      result.cancelled = cancelled?.length ?? 0;
+      return result;
+    }
+
+    // changeType === 'added' — look up directory profile info
+    const { data: dirProfile } = await supabase
+      .from('directory_profiles')
+      .select('id, stage_name, instagram_url')
+      .eq('id', body.directoryProfileId)
+      .single();
+
+    if (!dirProfile) {
+      throw new Error(`Directory profile not found: ${body.directoryProfileId}`);
+    }
+
+    const comedianHandle = extractInstagramHandle(dirProfile.instagram_url);
+    if (!dirProfile.instagram_url) {
+      result.missingSocials = true;
+      return result;
+    }
+
+    // Directory profiles won't have content in comedian_content_library — skip that check
+    // Create spotlight drafts directly
+    const spotlightResult = await handleCreateSpotlightDrafts(supabase, {
+      eventId: body.eventId,
+      brand: 'iD Comedy Club',
+      platforms: ['instagram', 'facebook', 'tiktok'],
+      items: [
+        {
+          directoryProfileId: body.directoryProfileId,
+          comedianName: dirProfile.stage_name ?? 'Unknown',
+          comedianHandle,
+        },
+      ],
+    });
+
+    result.draftsCreated = spotlightResult.createdDraftIds.length;
+    result.draftsCreatedIds = spotlightResult.createdDraftIds;
+    result.skippedDuplicates = spotlightResult.skippedDuplicates;
+    return result;
+  }
+
+  // ── Regular comedian (profiles) path ────────────────────────────────────
+  if (body.changeType === 'removed') {
+    // Cancel pending/draft spotlight posts for this comedian + event
+    const { data: cancelled, error: cancelErr } = await supabase
+      .from('social_content_drafts')
+      .update({ status: 'cancelled' })
+      .eq('comedian_id', body.comedianId!)
+      .eq('event_id', body.eventId)
+      .in('status', ['draft', 'pending', 'scheduled'])
+      .select('id');
+
+    if (cancelErr) {
+      console.warn(`Failed to cancel drafts for comedian ${body.comedianId}: ${cancelErr.message}`);
+    }
+
+    result.cancelled = cancelled?.length ?? 0;
+    return result;
+  }
+
+  // changeType === 'added' — check content library, then create drafts or flag for discovery
+  const { data: contentItems, error: contentErr } = await supabase
+    .from('comedian_content_library')
+    .select('id, content_type, source_url, asset_id, status')
+    .eq('comedian_id', body.comedianId!)
+    .eq('status', 'available')
+    .order('view_count', { ascending: false })
+    .limit(5);
+
+  if (contentErr) {
+    console.warn(`Failed to check content library: ${contentErr.message}`);
+  }
+
+  if (!contentItems || contentItems.length === 0) {
+    // No content available — check if they even have social URLs for discovery
+    const { data: socialCheck } = await supabase
+      .from('profiles')
+      .select('instagram_url, tiktok_url')
+      .eq('id', body.comedianId!)
+      .single();
+
+    const hasInstagram = !!socialCheck?.instagram_url;
+    const hasTiktok = !!socialCheck?.tiktok_url;
+
+    if (!hasInstagram && !hasTiktok) {
+      // No social URLs — can't auto-discover, needs manual content addition
+      result.missingSocials = true;
+      return result;
+    }
+
+    // Has socials but no content yet — flag for discovery pipeline
+    result.needsDiscovery = true;
+    return result;
+  }
+
+  // Content exists — get comedian profile and create spotlight drafts
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, display_name, instagram_url')
+    .eq('id', body.comedianId!)
+    .single();
+
+  if (!profile) {
+    throw new Error(`Comedian profile not found: ${body.comedianId}`);
+  }
+
+  const comedianHandle = extractInstagramHandle(profile.instagram_url);
+
+  // Pick the best content item (first available with asset_id, or just first)
+  const bestContent = contentItems.find((c) => c.asset_id) ?? contentItems[0]!;
+
+  // Delegate to create-spotlight-drafts for this single comedian
+  const spotlightResult = await handleCreateSpotlightDrafts(supabase, {
+    eventId: body.eventId,
+    brand: 'iD Comedy Club', // Default brand
+    platforms: ['instagram', 'facebook', 'tiktok'],
+    items: [
+      {
+        comedianId: body.comedianId,
+        comedianName: profile.display_name ?? 'Unknown',
+        comedianHandle,
+        contentId: bestContent.id,
+        assetId: bestContent.asset_id ?? undefined,
+      },
+    ],
+  });
+
+  result.draftsCreated = spotlightResult.createdDraftIds.length;
+  result.draftsCreatedIds = spotlightResult.createdDraftIds;
+  result.skippedDuplicates = spotlightResult.skippedDuplicates;
+
+  return result;
+}
+
+// ─── auto-spotlight-lineup ────────────────────────────────────────────────────
+
+interface LineupSpotlightResult {
+  eventId: string;
+  totalPerformers: number;
+  draftsCreated: number;
+  needsDiscovery: { comedianId?: string; directoryProfileId?: string; name: string }[];
+  missingSocials: { comedianId?: string; directoryProfileId?: string; name: string }[];
+  results: AutoSpotlightResult[];
+}
+
+async function handleAutoSpotlightLineup(
+  supabase: ReturnType<typeof createClient>,
+  body: { eventId: string; brand?: string },
+): Promise<LineupSpotlightResult> {
+  if (!body.eventId) throw new Error('eventId is required');
+
+  // Get all spots in the lineup — both comedian_id and directory_profile_id
+  const { data: spots, error: spotsErr } = await supabase
+    .from('event_spots')
+    .select('comedian_id, directory_profile_id')
+    .eq('event_id', body.eventId);
+
+  if (spotsErr) throw new Error(`Failed to fetch lineup: ${spotsErr.message}`);
+
+  // Deduplicate comedian IDs
+  const comedianIds = [...new Set(
+    (spots ?? []).map((s) => s.comedian_id as string).filter(Boolean),
+  )];
+
+  // Deduplicate directory profile IDs (exclude spots that already have a comedian_id)
+  const directoryProfileIds = [...new Set(
+    (spots ?? [])
+      .filter((s) => s.directory_profile_id && !s.comedian_id)
+      .map((s) => s.directory_profile_id as string),
+  )];
+
+  const result: LineupSpotlightResult = {
+    eventId: body.eventId,
+    totalPerformers: comedianIds.length + directoryProfileIds.length,
+    draftsCreated: 0,
+    needsDiscovery: [],
+    missingSocials: [],
+    results: [],
+  };
+
+  if (result.totalPerformers === 0) return result;
+
+  // Process regular comedians (profiles)
+  for (const comedianId of comedianIds) {
+    try {
+      const spotlight = await handleAutoSpotlight(supabase, {
+        eventId: body.eventId,
+        comedianId,
+        changeType: 'added',
+      });
+
+      result.results.push(spotlight);
+      result.draftsCreated += spotlight.draftsCreated ?? 0;
+
+      if (spotlight.needsDiscovery || spotlight.missingSocials) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', comedianId)
+          .single();
+
+        const entry = {
+          comedianId,
+          name: profile?.display_name ?? 'Unknown',
+        };
+
+        if (spotlight.missingSocials) {
+          result.missingSocials.push(entry);
+        } else {
+          result.needsDiscovery.push(entry);
+        }
+      }
+    } catch (err) {
+      console.warn(`auto-spotlight failed for comedian ${comedianId}:`, err);
+    }
+  }
+
+  // Process directory profiles
+  for (const directoryProfileId of directoryProfileIds) {
+    try {
+      const spotlight = await handleAutoSpotlight(supabase, {
+        eventId: body.eventId,
+        directoryProfileId,
+        changeType: 'added',
+      });
+
+      result.results.push(spotlight);
+      result.draftsCreated += spotlight.draftsCreated ?? 0;
+
+      if (spotlight.missingSocials) {
+        // Look up name for the notification
+        const { data: dirProfile } = await supabase
+          .from('directory_profiles')
+          .select('stage_name')
+          .eq('id', directoryProfileId)
+          .single();
+
+        result.missingSocials.push({
+          directoryProfileId,
+          name: dirProfile?.stage_name ?? 'Unknown',
+        });
+      }
+    } catch (err) {
+      console.warn(`auto-spotlight failed for directory profile ${directoryProfileId}:`, err);
+    }
+  }
+
+  return result;
 }
 
 // ─── Main Handler ───────────────────────────────────────────────────────────
@@ -489,9 +803,19 @@ serve(async (req) => {
         return jsonResponse({ ok: true, data: result });
       }
 
+      case 'auto-spotlight': {
+        const result = await handleAutoSpotlight(supabase, params);
+        return jsonResponse({ ok: true, data: result });
+      }
+
+      case 'auto-spotlight-lineup': {
+        const result = await handleAutoSpotlightLineup(supabase, params);
+        return jsonResponse({ ok: true, data: result });
+      }
+
       default:
         return jsonResponse(
-          { error: `Unknown action: ${action}. Valid: check-needs, register-urls, download-to-drive, check-already-posted, create-spotlight-drafts` },
+          { error: `Unknown action: ${action}. Valid: check-needs, register-urls, download-to-drive, check-already-posted, create-spotlight-drafts, auto-spotlight, auto-spotlight-lineup` },
           400,
         );
     }
