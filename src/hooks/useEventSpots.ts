@@ -231,6 +231,39 @@ export const useAssignComedianToSpot = () => {
         updateData.payment_gst_type = 'addition';
       }
 
+      // Check if this is an MC spot — if so, fill ALL unfilled MC spots
+      const { data: targetSpot } = await supabase
+        .from('event_spots')
+        .select('spot_name')
+        .eq('id', spotId)
+        .single();
+
+      if (targetSpot?.spot_name === 'MC') {
+        // Find all unfilled MC spots for this event
+        const { data: mcSpots } = await supabase
+          .from('event_spots')
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('spot_name', 'MC')
+          .eq('is_filled', false);
+
+        const mcSpotIds = (mcSpots ?? []).map(s => s.id);
+        // Ensure the target spot is included
+        if (!mcSpotIds.includes(spotId)) {
+          mcSpotIds.push(spotId);
+        }
+
+        // Assign comedian to all MC spots
+        const { data, error } = await supabase
+          .from('event_spots')
+          .update(updateData)
+          .in('id', mcSpotIds)
+          .select();
+
+        if (error) throw error;
+        return { data, mcCount: mcSpotIds.length };
+      }
+
       const { data, error } = await supabase
         .from('event_spots')
         .update(updateData)
@@ -239,14 +272,16 @@ export const useAssignComedianToSpot = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, mcCount: 0 };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['event-spots', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['lineup-stats', variables.eventId] });
       toast({
         title: 'Comedian assigned',
-        description: 'Comedian has been assigned to the spot'
+        description: result.mcCount > 1
+          ? `Comedian assigned to all ${result.mcCount} MC spots`
+          : 'Comedian has been assigned to the spot'
       });
     },
     onError: (error) => {
@@ -664,28 +699,62 @@ export const useAssignDirectoryProfileToSpot = () => {
       directoryProfileId: string;
       eventId: string;
     }) => {
+      const updateData = {
+        directory_profile_id: directoryProfileId,
+        comedian_id: null as string | null, // Clear comedian_id (mutually exclusive)
+        is_filled: true,
+        confirmation_status: 'confirmed',
+        confirmed_at: new Date().toISOString()
+      };
+
+      // Check if this is an MC spot — if so, fill ALL unfilled MC spots
+      const { data: targetSpot } = await supabase
+        .from('event_spots')
+        .select('spot_name')
+        .eq('id', spotId)
+        .single();
+
+      if (targetSpot?.spot_name === 'MC') {
+        const { data: mcSpots } = await supabase
+          .from('event_spots')
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('spot_name', 'MC')
+          .eq('is_filled', false);
+
+        const mcSpotIds = (mcSpots ?? []).map(s => s.id);
+        if (!mcSpotIds.includes(spotId)) {
+          mcSpotIds.push(spotId);
+        }
+
+        const { data, error } = await supabase
+          .from('event_spots')
+          .update(updateData)
+          .in('id', mcSpotIds)
+          .select();
+
+        if (error) throw error;
+        return { data, mcCount: mcSpotIds.length };
+      }
+
       const { data, error } = await supabase
         .from('event_spots')
-        .update({
-          directory_profile_id: directoryProfileId,
-          comedian_id: null, // Clear comedian_id (mutually exclusive)
-          is_filled: true,
-          confirmation_status: 'confirmed',
-          confirmed_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', spotId)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, mcCount: 0 };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['event-spots', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['lineup-stats', variables.eventId] });
       toast({
         title: 'Profile assigned',
-        description: 'Directory profile has been assigned to the spot'
+        description: result.mcCount > 1
+          ? `Profile assigned to all ${result.mcCount} MC spots`
+          : 'Directory profile has been assigned to the spot'
       });
     },
     onError: (error) => {
