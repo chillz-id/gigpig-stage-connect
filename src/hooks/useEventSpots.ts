@@ -239,19 +239,14 @@ export const useAssignComedianToSpot = () => {
         .single();
 
       if (targetSpot?.spot_name === 'MC') {
-        // Find all unfilled MC spots for this event
+        // Find ALL MC spots for this event (including already-filled ones for reassignment)
         const { data: mcSpots } = await supabase
           .from('event_spots')
           .select('id')
           .eq('event_id', eventId)
-          .eq('spot_name', 'MC')
-          .eq('is_filled', false);
+          .eq('spot_name', 'MC');
 
         const mcSpotIds = (mcSpots ?? []).map(s => s.id);
-        // Ensure the target spot is included
-        if (!mcSpotIds.includes(spotId)) {
-          mcSpotIds.push(spotId);
-        }
 
         // Assign comedian to all MC spots
         const { data, error } = await supabase
@@ -719,13 +714,9 @@ export const useAssignDirectoryProfileToSpot = () => {
           .from('event_spots')
           .select('id')
           .eq('event_id', eventId)
-          .eq('spot_name', 'MC')
-          .eq('is_filled', false);
+          .eq('spot_name', 'MC');
 
         const mcSpotIds = (mcSpots ?? []).map(s => s.id);
-        if (!mcSpotIds.includes(spotId)) {
-          mcSpotIds.push(spotId);
-        }
 
         const { data, error } = await supabase
           .from('event_spots')
