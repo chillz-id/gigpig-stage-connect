@@ -211,7 +211,7 @@ export const FinancialInformation: React.FC<FinancialInformationProps> = ({
     // Debounce the lookup
     const timeoutId = setTimeout(performLookup, 500);
     return () => clearTimeout(timeoutId);
-  }, [financialInfo.abn]);
+  }, [financialInfo.abn, financialInfo.accountName, profileId, tableName, toast]);
 
   // Hide entire section for profile types without financial information (e.g., managers)
   // This check MUST be after all hooks to comply with React Rules of Hooks

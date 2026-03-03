@@ -4,7 +4,7 @@
  * Shows pending photo tags for a profile to review and approve/reject.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -62,7 +62,7 @@ export function PendingPhotoTags({ profile, onClose }: PendingPhotoTagsProps) {
   };
 
   // Load pending tags
-  const loadPendingTags = async () => {
+  const loadPendingTags = useCallback(async () => {
     setIsLoading(true);
     try {
       const tags = await directoryService.getPendingTagsForProfile(profile.id);
@@ -77,11 +77,11 @@ export function PendingPhotoTags({ profile, onClose }: PendingPhotoTagsProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profile.id, toast]);
 
   useEffect(() => {
     loadPendingTags();
-  }, [profile.id]);
+  }, [loadPendingTags]);
 
   // Get photo URL
   const getPhotoUrl = (media: DirectoryMedia) => {

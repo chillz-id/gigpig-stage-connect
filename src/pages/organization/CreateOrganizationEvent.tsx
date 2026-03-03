@@ -104,14 +104,7 @@ export default function CreateOrganizationEvent() {
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(draftId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Load draft if editing
-  useEffect(() => {
-    if (draftId && organization?.id) {
-      loadDraft(draftId);
-    }
-  }, [draftId, organization?.id]);
-
-  const loadDraft = async (id: string) => {
+  const loadDraft = useCallback(async (id: string) => {
     try {
       const { data, error } = await supabase
         .from('events')
@@ -160,20 +153,43 @@ export default function CreateOrganizationEvent() {
         variant: 'destructive',
       });
     }
-  };
+  }, [organization?.id, toast]);
 
-  // Auto-save functionality
+  // Load draft if editing
   useEffect(() => {
-    if (!organization?.id || !hasUnsavedChanges) return;
+    if (draftId && organization?.id) {
+      loadDraft(draftId);
+    }
+  }, [draftId, organization?.id, loadDraft]);
 
-    const timer = setTimeout(() => {
-      autoSave();
-    }, 3000);
+  const buildEventData = useCallback(() => {
+    // Build event date with time
+    let eventDate = null;
+    if (formData.start_date) {
+      eventDate = new Date(`${formData.start_date}T${formData.start_time}:00`).toISOString();
+    }
 
-    return () => clearTimeout(timer);
-  }, [formData, hasUnsavedChanges, organization?.id]);
+    return {
+      title: formData.title.trim() || null,
+      type: formData.type || null,
+      venue: formData.venue_name.trim() || null,
+      address: formData.venue_address.trim() || null,
+      city: formData.city || null,
+      state: formData.state || null,
+      country: formData.country || 'Australia',
+      event_date: eventDate,
+      start_time: formData.start_time || null,
+      end_time: formData.end_time || null,
+      description: formData.description.trim() || null,
+      ticket_url: formData.ticket_link.trim() || null,
+      banner_url: formData.banner_url || null,
+      is_recurring: formData.is_recurring,
+      recurrence_pattern: formData.is_recurring ? formData.recurrence_pattern : null,
+      recurrence_end_date: formData.recurrence_end_date?.toISOString() || null,
+    };
+  }, [formData]);
 
-  const autoSave = async () => {
+  const autoSave = useCallback(async () => {
     if (!organization?.id) return;
 
     // Don't auto-save if form is empty
@@ -222,34 +238,18 @@ export default function CreateOrganizationEvent() {
       console.error('Auto-save error:', error);
       setAutoSaveStatus('idle');
     }
-  };
+  }, [organization?.id, formData, currentDraftId, user?.id, buildEventData]);
 
-  const buildEventData = () => {
-    // Build event date with time
-    let eventDate = null;
-    if (formData.start_date) {
-      eventDate = new Date(`${formData.start_date}T${formData.start_time}:00`).toISOString();
-    }
+  // Auto-save functionality
+  useEffect(() => {
+    if (!organization?.id || !hasUnsavedChanges) return;
 
-    return {
-      title: formData.title.trim() || null,
-      type: formData.type || null,
-      venue: formData.venue_name.trim() || null,
-      address: formData.venue_address.trim() || null,
-      city: formData.city || null,
-      state: formData.state || null,
-      country: formData.country || 'Australia',
-      event_date: eventDate,
-      start_time: formData.start_time || null,
-      end_time: formData.end_time || null,
-      description: formData.description.trim() || null,
-      ticket_url: formData.ticket_link.trim() || null,
-      banner_url: formData.banner_url || null,
-      is_recurring: formData.is_recurring,
-      recurrence_pattern: formData.is_recurring ? formData.recurrence_pattern : null,
-      recurrence_end_date: formData.recurrence_end_date?.toISOString() || null,
-    };
-  };
+    const timer = setTimeout(() => {
+      autoSave();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [formData, hasUnsavedChanges, organization?.id, autoSave]);
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));

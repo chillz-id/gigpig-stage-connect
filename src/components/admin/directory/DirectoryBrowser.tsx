@@ -4,7 +4,7 @@
  * Browse, search, and manage directory profiles.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -92,7 +92,7 @@ export function DirectoryBrowser() {
   };
 
   // Load profiles
-  const loadProfiles = async () => {
+  const loadProfiles = useCallback(async () => {
     setIsLoading(true);
     try {
       const filters: DirectoryProfileFilters = {
@@ -119,11 +119,11 @@ export function DirectoryBrowser() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [search, profileType, unclaimedOnly, page, toast]);
 
   useEffect(() => {
     loadProfiles();
-  }, [search, profileType, unclaimedOnly, page]);
+  }, [loadProfiles]);
 
   // Handle search with debounce
   const [searchInput, setSearchInput] = useState('');

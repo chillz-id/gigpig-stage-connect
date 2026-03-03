@@ -117,7 +117,7 @@ export function PhotoTagger({ media, onClose, onSaved }: PhotoTaggerProps) {
       }
     };
     load();
-  }, [media.id]);
+  }, [media.id, toast]);
 
   // Filter profiles by search
   const filteredProfiles = useMemo(() => {

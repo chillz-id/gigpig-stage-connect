@@ -5,7 +5,7 @@
  * set primary headshot, delete photos.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -99,7 +99,7 @@ export function DirectoryPhotoManager({
   };
 
   // Load photos
-  const loadPhotos = async () => {
+  const loadPhotos = useCallback(async () => {
     setIsLoading(true);
     try {
       const media = await directoryService.getMedia(profile.id);
@@ -114,11 +114,11 @@ export function DirectoryPhotoManager({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profile.id, toast]);
 
   useEffect(() => {
     loadPhotos();
-  }, [profile.id]);
+  }, [loadPhotos]);
 
   // Handle multi-file upload
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

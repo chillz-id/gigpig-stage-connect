@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -34,8 +34,10 @@ function getSidebarItemsForRole(role: UserRole | undefined): SidebarItem[] {
 
 export function SidebarCustomization() {
   const { profile, roles } = useAuth();
-  const { preferences, isItemHidden, getItemOrder, hideItem, showItem, setItemOrder } =
+  const { preferences, isItemHidden, getItemOrder: getItemOrderRaw, hideItem, showItem, setItemOrder } =
     useSidebarPreferences();
+
+  const getItemOrder = useCallback(() => getItemOrderRaw(), [getItemOrderRaw]);
   const { toast } = useToast();
 
   // Get items available to the user's role(s)
@@ -72,7 +74,7 @@ export function SidebarCustomization() {
     } else {
       setItems(availableItems);
     }
-  }, [availableItems]); // Only depend on memoized availableItems
+  }, [availableItems, getItemOrder]); // Depend on memoized availableItems and stable getItemOrder
 
   const handleToggleVisibility = async (itemId: string, isRequired: boolean) => {
     if (isRequired) {

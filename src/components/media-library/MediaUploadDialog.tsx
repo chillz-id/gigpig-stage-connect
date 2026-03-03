@@ -148,6 +148,28 @@ export function MediaUploadDialog({
     return 'bg-gray-900 border-gray-700 text-gray-100';
   };
 
+  // Load folders when org selection changes
+  const loadFolders = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: userFolders } = await supabase
+        .from('media_folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
+
+      let orgFolders: MediaFolder[] = [];
+      if (selectedOrgId) {
+        orgFolders = await mediaLinkingService.getOrganizationFolders(selectedOrgId);
+      }
+
+      setFolders([...(userFolders || []), ...orgFolders] as MediaFolder[]);
+    } catch (error) {
+      console.error('Failed to load folders:', error);
+    }
+  }, [user?.id, selectedOrgId]);
+
   // Load data on mount
   useEffect(() => {
     if (!open) return;
@@ -221,29 +243,7 @@ export function MediaUploadDialog({
     };
 
     loadData();
-  }, [open, user?.id]);
-
-  // Load folders when org selection changes
-  const loadFolders = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data: userFolders } = await supabase
-        .from('media_folders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name');
-
-      let orgFolders: MediaFolder[] = [];
-      if (selectedOrgId) {
-        orgFolders = await mediaLinkingService.getOrganizationFolders(selectedOrgId);
-      }
-
-      setFolders([...(userFolders || []), ...orgFolders] as MediaFolder[]);
-    } catch (error) {
-      console.error('Failed to load folders:', error);
-    }
-  }, [user?.id, selectedOrgId]);
+  }, [open, user?.id, loadFolders]);
 
   useEffect(() => {
     if (open) {

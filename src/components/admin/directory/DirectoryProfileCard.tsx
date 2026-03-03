@@ -4,7 +4,7 @@
  * Display detailed view of a directory profile with photos.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -71,21 +71,16 @@ export function DirectoryProfileCard({
   const [showPendingTags, setShowPendingTags] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
-  useEffect(() => {
-    loadMedia();
-    loadPendingTagCount();
-  }, [profile.id]);
-
-  const loadPendingTagCount = async () => {
+  const loadPendingTagCount = useCallback(async () => {
     try {
       const count = await directoryService.getPendingTagCount(profile.id);
       setPendingTagCount(count);
     } catch (error) {
       console.error('Failed to load pending tag count:', error);
     }
-  };
+  }, [profile.id]);
 
-  const loadMedia = async () => {
+  const loadMedia = useCallback(async () => {
     setIsLoadingMedia(true);
     try {
       const mediaItems = await directoryService.getMedia(profile.id);
@@ -95,7 +90,12 @@ export function DirectoryProfileCard({
     } finally {
       setIsLoadingMedia(false);
     }
-  };
+  }, [profile.id]);
+
+  useEffect(() => {
+    loadMedia();
+    loadPendingTagCount();
+  }, [loadMedia, loadPendingTagCount]);
 
   // Set primary headshot (profile avatar)
   const handleSetPrimary = async (photo: DirectoryMedia) => {

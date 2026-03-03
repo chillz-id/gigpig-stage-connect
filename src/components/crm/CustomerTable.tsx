@@ -83,14 +83,12 @@ export const CustomerTable = ({
 
   const virtualizationEnabled = enableVirtualization && !isMobile;
 
-  const rowVirtualizer = virtualizationEnabled
-    ? useVirtualizer({
-        count: customers.length,
-        getScrollElement: () => scrollParentRef.current,
-        estimateSize: () => 64,
-        overscan: 8,
-      })
-    : null;
+  const rowVirtualizer = useVirtualizer({
+    count: virtualizationEnabled ? customers.length : 0,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => 64,
+    overscan: 8,
+  });
 
   const visibleColumns = useMemo(() => columns.filter((column) => column.visible !== false), [columns]);
 
@@ -123,6 +121,64 @@ export const CustomerTable = ({
       isScrollingRef.current = false;
     });
   }, []);
+
+  // Column resizing handlers
+  const handleResizeStart = useCallback((
+    e: React.MouseEvent,
+    columnId: string,
+    currentWidth: number,
+    minWidth: number
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizing(columnId);
+    startXRef.current = e.clientX;
+    startWidthRef.current = currentWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!onColumnResize) return;
+      const delta = moveEvent.clientX - startXRef.current;
+      const newWidth = Math.max(minWidth, startWidthRef.current + delta);
+      onColumnResize(columnId, newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [onColumnResize]);
+
+  // Auto-fit column to content width on double-click
+  const handleAutoFit = useCallback((columnId: string, minWidth: number) => {
+    if (!onColumnResize) return;
+
+    // Measure the max content width for this column
+    const cells = document.querySelectorAll(`[data-column-id="${columnId}"]`);
+    let maxWidth = minWidth;
+
+    cells.forEach((cell) => {
+      // Create a temporary span to measure text width
+      const content = cell.textContent || '';
+      const span = document.createElement('span');
+      span.style.visibility = 'hidden';
+      span.style.position = 'absolute';
+      span.style.whiteSpace = 'nowrap';
+      span.style.font = window.getComputedStyle(cell).font;
+      span.textContent = content;
+      document.body.appendChild(span);
+      const width = span.offsetWidth + 32; // Add padding
+      document.body.removeChild(span);
+      maxWidth = Math.max(maxWidth, width);
+    });
+
+    // Cap at reasonable max width
+    const finalWidth = Math.min(maxWidth, 400);
+    onColumnResize(columnId, finalWidth);
+  }, [onColumnResize]);
 
   if (isMobile) {
     if (isLoading) {
@@ -186,64 +242,6 @@ export const CustomerTable = ({
       <ArrowDown className="ml-2 h-4 w-4" />
     );
   };
-
-  // Column resizing handlers
-  const handleResizeStart = useCallback((
-    e: React.MouseEvent,
-    columnId: string,
-    currentWidth: number,
-    minWidth: number
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setResizing(columnId);
-    startXRef.current = e.clientX;
-    startWidthRef.current = currentWidth;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!onColumnResize) return;
-      const delta = moveEvent.clientX - startXRef.current;
-      const newWidth = Math.max(minWidth, startWidthRef.current + delta);
-      onColumnResize(columnId, newWidth);
-    };
-
-    const handleMouseUp = () => {
-      setResizing(null);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [onColumnResize]);
-
-  // Auto-fit column to content width on double-click
-  const handleAutoFit = useCallback((columnId: string, minWidth: number) => {
-    if (!onColumnResize) return;
-
-    // Measure the max content width for this column
-    const cells = document.querySelectorAll(`[data-column-id="${columnId}"]`);
-    let maxWidth = minWidth;
-
-    cells.forEach((cell) => {
-      // Create a temporary span to measure text width
-      const content = cell.textContent || '';
-      const span = document.createElement('span');
-      span.style.visibility = 'hidden';
-      span.style.position = 'absolute';
-      span.style.whiteSpace = 'nowrap';
-      span.style.font = window.getComputedStyle(cell).font;
-      span.textContent = content;
-      document.body.appendChild(span);
-      const width = span.offsetWidth + 32; // Add padding
-      document.body.removeChild(span);
-      maxWidth = Math.max(maxWidth, width);
-    });
-
-    // Cap at reasonable max width
-    const finalWidth = Math.min(maxWidth, 400);
-    onColumnResize(columnId, finalWidth);
-  }, [onColumnResize]);
 
   // Render cell content based on column type
   const renderCellContent = (column: CustomerTableColumn, customer: Customer) => {
@@ -473,7 +471,7 @@ export const CustomerTable = ({
     </thead>
   );
 
-  const tableBody = virtualizationEnabled && rowVirtualizer
+  const tableBody = virtualizationEnabled
     ? (
         <TableBody
           style={{

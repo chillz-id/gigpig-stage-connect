@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
 
   const { toast } = useToast();
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     setIsLoading(true);
     try {
       const [orgReqs, mgrReqs] = await Promise.all([
@@ -48,11 +48,11 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ userId
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, toast]);
 
   useEffect(() => {
     loadRequests();
-  }, [userId]);
+  }, [loadRequests]);
 
   const handleApproveOrgRequest = async (requestId: string) => {
     setProcessingId(requestId);

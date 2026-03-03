@@ -239,7 +239,7 @@ export function PhotoUploadDialog({
       const date = new Date(selectedEvent.event_date);
       setSessionDate(date.toISOString().split('T')[0]);
     }
-  }, [selectedEventId]);
+  }, [selectedEventId, manualVenueName, selectedEvent?.event_date, selectedEvent?.venue, selectedVenueId, sessionDate]);
 
   // Format date
   const formatDate = (dateStr: string) => {

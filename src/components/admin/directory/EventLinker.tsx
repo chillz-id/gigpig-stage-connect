@@ -165,7 +165,7 @@ export function EventLinker({ media, onClose, onSaved }: EventLinkerProps) {
       }
     };
     load();
-  }, [media.id]);
+  }, [media.id, media.event_date, toast]);
 
   // Filter events
   const filteredEvents = useMemo(() => {
@@ -193,9 +193,9 @@ export function EventLinker({ media, onClose, onSaved }: EventLinkerProps) {
   // When event is selected, auto-set venue if available
   useEffect(() => {
     if (selectedEvent?.venue_id && !selectedVenueId) {
-      setSelectedVenueId(selectedEvent.venue_id);
+      setSelectedVenueId(selectedEvent?.venue_id);
     }
-  }, [selectedEventId]);
+  }, [selectedEventId, selectedEvent?.venue_id, selectedVenueId]);
 
   // Save link
   const handleSave = async () => {

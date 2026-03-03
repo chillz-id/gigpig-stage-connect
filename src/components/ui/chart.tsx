@@ -70,10 +70,6 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     ([_, config]) => config.theme || config.color
   )
 
-  if (!colorConfig.length) {
-    return null
-  }
-
   // Generate CSS custom properties using React's style attribute (XSS-safe)
   const lightThemeVars = React.useMemo(() => {
     const vars: Record<string, string> = {}
@@ -96,6 +92,10 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     })
     return vars
   }, [colorConfig])
+
+  if (!colorConfig.length) {
+    return null
+  }
 
   return (
     <>

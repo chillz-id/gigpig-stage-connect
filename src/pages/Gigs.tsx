@@ -137,7 +137,7 @@ const Gigs = () => {
         description: `First available events for ${selectedCity === 'melbourne' ? 'Melbourne' : 'Sydney'}`,
       });
     }
-  }, [selectedCity, firstEventMonth, cityHasEvents, isLoadingFirstEvent]);
+  }, [selectedCity, firstEventMonth, cityHasEvents, isLoadingFirstEvent, toast]);
 
   // Format a Date as yyyy-mm-dd using local time (not UTC) to avoid
   // timezone shifts where e.g. Jan 31 00:00 AEDT becomes Jan 30 in UTC.
@@ -327,7 +327,7 @@ const Gigs = () => {
           return dateA - dateB;
       }
     });
-  }, [events, locationFilter, sortBy, useAdvancedFilters, searchTerm]);
+  }, [events, locationFilter, sortBy, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');

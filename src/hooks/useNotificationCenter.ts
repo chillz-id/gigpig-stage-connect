@@ -182,7 +182,7 @@ export const useNotificationCenter = () => {
     staleTime: 300000,
   });
 
-  const notifications = notificationsData || [];
+  const notifications = useMemo(() => notificationsData || [], [notificationsData]);
   const preferences = preferencesData || defaultPreferences;
   const loading = notificationsLoading || preferencesLoading;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -305,7 +305,12 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
     organizationId: organizationId,
   });
 
-  const { fetchOGData, isLoading: isFetchingOG } = useOGFetch();
+  const { fetchOGData: fetchOGDataRaw, isLoading: isFetchingOG } = useOGFetch();
+
+  const fetchOGData = useCallback(
+    (url: string) => fetchOGDataRaw(url),
+    [fetchOGDataRaw]
+  );
 
   const [linkForm, setLinkForm] = useState({
     title: '',
@@ -333,7 +338,7 @@ export const CustomLinksManager: React.FC<TableAwareProps> = ({
         }
       });
     }
-  }, [debouncedUrl, editingLink]);
+  }, [debouncedUrl, editingLink, fetchOGData, linkForm.title]);
 
   // Group links by section
   const groupedLinks: Record<string, CustomLink[]> = {};

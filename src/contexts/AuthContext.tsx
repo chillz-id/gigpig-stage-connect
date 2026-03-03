@@ -211,17 +211,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [fetchProfile, fetchRoles]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     // Processing sign in
     return await authSignIn(email, password);
-  };
+  }, [authSignIn]);
 
-  const signUp = async (email: string, password: string, userData?: any) => {
+  const signUp = useCallback(async (email: string, password: string, userData?: any) => {
     // Processing sign up
     return await authSignUp(email, password, userData);
-  };
+  }, [authSignUp]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     // Processing sign out
     await authSignOut();
     setProfile(null);
@@ -229,16 +229,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsFirstLogin(false);
     localStorage.removeItem('isFirstLogin');
     localStorage.removeItem('lastLogin');
-  };
+  }, [authSignOut]);
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
-    
+
     const result = await updateUserProfile(user, updates);
     if (!result.error) {
       // Update local profile state immediately
       setProfile(prev => prev ? { ...prev, ...updates } : null);
-      
+
       // Also refetch profile to ensure we have the latest data
       const latestProfile = await fetchProfile(user.id);
       if (latestProfile) {
@@ -246,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     return result;
-  };
+  }, [user, updateUserProfile, fetchProfile]);
 
   const hasRole = useCallback((role: 'member' | 'comedian' | 'comedian_lite' | 'co_promoter' | 'admin' | 'photographer' | 'videographer') => {
     const hasTheRole = roles.some(userRole => userRole.role === role);

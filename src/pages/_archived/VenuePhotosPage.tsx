@@ -114,7 +114,7 @@ export default function VenuePhotosPage() {
       }
     };
     load();
-  }, [venueId, user]);
+  }, [venueId, user, navigate, toast]);
 
   // Load more photos when page changes
   useEffect(() => {
@@ -133,7 +133,7 @@ export default function VenuePhotosPage() {
       }
     };
     loadPage();
-  }, [page]);
+  }, [page, canAccessPhotos, venueId]);
 
   // Filter photos
   const filteredPhotos = photos.filter(photo => {

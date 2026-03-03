@@ -126,12 +126,12 @@ export const UnifiedSidebar = ({ activeProfile }: UnifiedSidebarProps) => {
   const hasManagerAccess = hasRole('admin');
   const hasAgencyAccess = hasRole('admin');
 
-  const permissions = {
+  const permissions = useMemo(() => ({
     hasAdminAccess,
     hasCRMAccess,
     hasManagerAccess,
     hasAgencyAccess,
-  };
+  }), [hasAdminAccess, hasCRMAccess, hasManagerAccess, hasAgencyAccess]);
 
   // Helper function to transform profile paths to use active profile type and slug
   const getItemPath = (path: string): string => {
