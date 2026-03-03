@@ -91,8 +91,9 @@ export function AddSpotDialog({
   const [activeTab, setActiveTab] = useState<'comedian' | 'extra'>('comedian');
 
   // Comedian form state
-  const [spotName, setSpotName] = useState<SpotType>('Feature');
-  const [duration, setDuration] = useState(DEFAULT_DURATIONS.Feature);
+  const [spotName, setSpotName] = useState<SpotType>('Spot');
+  const [duration, setDuration] = useState(DEFAULT_DURATIONS.Spot);
+  const [quantity, setQuantity] = useState(1);
   const [isPaid, setIsPaid] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [notes, setNotes] = useState('');
@@ -116,8 +117,9 @@ export function AddSpotDialog({
     if (isOpen) {
       // Reset comedian form
       setActiveTab('comedian');
-      setSpotName('Feature');
-      setDuration(DEFAULT_DURATIONS.Feature);
+      setSpotName('Spot');
+      setDuration(DEFAULT_DURATIONS.Spot);
+      setQuantity(1);
       setIsPaid(false);
       setPaymentAmount('');
       setNotes('');
@@ -166,28 +168,27 @@ export function AddSpotDialog({
       }
 
       if (activeTab === 'comedian') {
-        // Create comedian spot
-        const spotData = {
+        // Create comedian spot(s)
+        const spotsToInsert = Array.from({ length: quantity }, (_, i) => ({
           event_id: eventId,
           spot_name: spotName,
           duration_minutes: duration,
-          spot_order: spotOrder,
+          spot_order: spotOrder + i,
           is_paid: isPaid,
           payment_amount: isPaid && paymentAmount ? parseFloat(paymentAmount) : null,
           is_filled: false,
           confirmation_status: 'pending',
           spot_type: 'act' as const,
           spot_category: 'act' as const,
-        };
+        }));
 
         const { data, error } = await supabase
           .from('event_spots')
-          .insert(spotData)
-          .select()
-          .single();
+          .insert(spotsToInsert)
+          .select();
 
         if (error) throw error;
-        return { data, type: 'comedian', label: spotName };
+        return { data, type: 'comedian', label: spotName, count: quantity };
       } else {
         // Create extra/production staff spot
         const totalHours = extraHours + extraMinutes / 60;
@@ -247,13 +248,18 @@ export function AddSpotDialog({
           .single();
 
         if (error) throw error;
-        return { data, type: 'extra', label: EXTRA_TYPE_LABELS[extraType] };
+        return { data, type: 'extra', label: EXTRA_TYPE_LABELS[extraType], count: 1 };
       }
     },
     onSuccess: (result) => {
+      const count = result.count ?? 1;
       toast({
-        title: result.type === 'comedian' ? 'Spot Created' : 'Extra Added',
-        description: `${result.label} has been added to the lineup.`,
+        title: result.type === 'comedian'
+          ? count > 1 ? `${count} Spots Created` : 'Spot Created'
+          : 'Extra Added',
+        description: count > 1
+          ? `${count}x ${result.label} spots added to the lineup.`
+          : `${result.label} has been added to the lineup.`,
       });
       queryClient.invalidateQueries({ queryKey: ['lineup-stats', eventId] });
       queryClient.invalidateQueries({ queryKey: ['event-spots', eventId] });
@@ -299,21 +305,35 @@ export function AddSpotDialog({
 
             {/* Comedian Tab */}
             <TabsContent value="comedian" className="space-y-4 mt-4">
-              {/* Spot Type */}
+              {/* Spot Type + Quantity */}
               <div className="grid gap-2">
                 <Label htmlFor="spotType">Spot Type</Label>
-                <Select value={spotName} onValueChange={(v) => handleSpotTypeChange(v as SpotType)}>
-                  <SelectTrigger id="spotType">
-                    <SelectValue placeholder="Select spot type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SPOT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={spotName} onValueChange={(v) => handleSpotTypeChange(v as SpotType)}>
+                    <SelectTrigger id="spotType" className="flex-1">
+                      <SelectValue placeholder="Select spot type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SPOT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor="quantity" className="text-xs text-muted-foreground whitespace-nowrap">Qty</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                      className="w-16"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Duration */}
