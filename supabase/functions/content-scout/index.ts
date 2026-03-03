@@ -433,6 +433,7 @@ async function handleCreateSpotlightDrafts(
           media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           media_file_ids: mediaFileIds.length > 0 ? mediaFileIds : null,
           media_type: mediaType,
+          event_id: body.eventId,
           organization_id: event.organization_id,
           comedian_id: item.comedianId ?? null,
           directory_profile_id: item.directoryProfileId ?? null,
