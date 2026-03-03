@@ -67,6 +67,11 @@ export function useLineupPublishStatus(eventId: string) {
 
 interface ExtendedPublishResult extends PublishResult {
   auto_confirmed_count: number;
+  spotlight: {
+    draftsCreated: number;
+    needsDiscovery: { comedianName: string }[];
+    missingSocials: { comedianName: string }[];
+  } | null;
 }
 
 /**
@@ -204,6 +209,7 @@ export function usePublishLineup() {
       }
 
       // Queue content scouting for the published lineup (non-blocking)
+      let spotlightResult: { draftsCreated: number; needsDiscovery: { comedianName: string }[] } | null = null;
       try {
         const { data: eventForOrg } = await supabase
           .from('events').select('organization_id').eq('id', eventId).single();
@@ -217,6 +223,22 @@ export function usePublishLineup() {
             },
           });
         }
+
+        // Auto-create spotlight drafts for comedians who already have content
+        const { data: spotlightData } = await supabase.functions.invoke('content-scout', {
+          body: {
+            action: 'auto-spotlight-lineup',
+            eventId,
+          },
+        });
+
+        if (spotlightData?.ok && spotlightData.data) {
+          spotlightResult = {
+            draftsCreated: spotlightData.data.draftsCreated ?? 0,
+            needsDiscovery: spotlightData.data.needsDiscovery ?? [],
+            missingSocials: spotlightData.data.missingSocials ?? [],
+          };
+        }
       } catch (scoutError) {
         console.error('[usePublishLineup] Failed to queue content scouting:', scoutError);
       }
@@ -224,13 +246,13 @@ export function usePublishLineup() {
       return {
         ...publishResult,
         auto_confirmed_count: autoConfirmedCount,
+        spotlight: spotlightResult,
       };
     },
     onSuccess: (result, eventId) => {
-      // Invalidate related queries
+      // Invalidate related queries (not ['event'] — lineup_published_at is tracked by publish-status)
       queryClient.invalidateQueries({ queryKey: ['lineup-publish-status', eventId] });
       queryClient.invalidateQueries({ queryKey: ['event-spots', eventId] });
-      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
 
       // Show success toast with auto-confirm info
       const notificationMsg = result.notifications_sent > 0
@@ -241,9 +263,25 @@ export function usePublishLineup() {
         ? `, ${result.auto_confirmed_count} auto-confirmed`
         : '';
 
+      // Spotlight draft info
+      let spotlightMsg = '';
+      if (result.spotlight) {
+        if (result.spotlight.draftsCreated > 0) {
+          spotlightMsg += ` ${result.spotlight.draftsCreated} spotlight draft${result.spotlight.draftsCreated === 1 ? '' : 's'} created.`;
+        }
+        if (result.spotlight.needsDiscovery.length > 0) {
+          const names = result.spotlight.needsDiscovery.map(c => c.comedianName).join(', ');
+          spotlightMsg += ` Needs content: ${names}.`;
+        }
+        if (result.spotlight.missingSocials.length > 0) {
+          const names = result.spotlight.missingSocials.map(c => c.comedianName).join(', ');
+          spotlightMsg += ` Missing socials: ${names}.`;
+        }
+      }
+
       toast({
         title: 'Lineup Published',
-        description: `${notificationMsg}${autoConfirmMsg}.`,
+        description: `${notificationMsg}${autoConfirmMsg}.${spotlightMsg}`,
       });
     },
     onError: (error: Error) => {
