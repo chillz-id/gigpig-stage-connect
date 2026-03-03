@@ -95,15 +95,31 @@ The laughs were incredible and the energy was 🔥
 Stay tuned for our next show — you won't want to miss it!
 
 {{hashtags}}`,
+
+  'Comedian Spotlight': `🔥 Check out {{comedian_name}} — performing at {{event_name}}!
+
+📅 {{event_date}}
+📍 {{venue_name}}
+
+Grab your tickets and see them live 👇
+🎟️ {{ticket_link}}
+
+{{hashtags}}`,
 };
 
 // ─── Template Rendering ────────────────────────────────────────────────────────
+
+interface ComedianContext {
+  comedianName?: string;
+  comedianHandle?: string;
+}
 
 export function renderCaption(
   windowLabel: string,
   event: EventData,
   brand: BrandConfig,
   platform: string,
+  comedian?: ComedianContext,
 ): string {
   const template = WINDOW_TEMPLATES[windowLabel] ?? WINDOW_TEMPLATES['Initial Announcement']!;
 
@@ -133,7 +149,9 @@ export function renderCaption(
     .replace(/\{\{start_time\}\}/g, timeStr)
     .replace(/\{\{lineup_section\}\}/g, lineupSection)
     .replace(/\{\{lineup_list\}\}/g, event.lineup?.join(', ') ?? 'TBA')
-    .replace(/\{\{hashtags\}\}/g, hashtags);
+    .replace(/\{\{hashtags\}\}/g, hashtags)
+    .replace(/\{\{comedian_name\}\}/g, comedian?.comedianName ?? '')
+    .replace(/\{\{comedian_handle\}\}/g, comedian?.comedianHandle ? `@${comedian.comedianHandle}` : '');
 
   // Add brand tag if needed (Magic Mic posts to iD accounts)
   if (brand.tagInCaption) {

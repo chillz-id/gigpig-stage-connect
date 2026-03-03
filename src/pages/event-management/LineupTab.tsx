@@ -14,8 +14,9 @@ import {
   Download,
   List,
   Clock,
+  Scan,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   DndContext,
   DragOverlay,
@@ -69,6 +70,7 @@ import {
   useCreateAndAssignDirectoryProfile,
 } from '@/hooks/useEventSpots';
 import { formatCurrency } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import type { SpotCategory } from '@/types/spot';
 
 interface LineupTabProps {
@@ -141,6 +143,38 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
   // Publish lineup hooks
   const { data: publishStatus } = useLineupPublishStatus(eventId);
   const publishLineup = usePublishLineup();
+  const { toast } = useToast();
+
+  // Scout & schedule content mutation
+  const scoutContent = useMutation({
+    mutationFn: async () => {
+      const { data: eventForOrg } = await supabase
+        .from('events').select('organization_id').eq('id', eventId).single();
+      if (!eventForOrg?.organization_id) throw new Error('No organization found');
+      const { error } = await supabase.functions.invoke('social-content-trigger', {
+        body: {
+          trigger_type: 'lineup_published',
+          entity_id: eventId,
+          organization_id: eventForOrg.organization_id,
+          priority: 3,
+        },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Content Scout Queued',
+        description: 'Run /content-scout-pipeline to process.',
+      });
+    },
+    onError: (err: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to queue content scout',
+        description: err.message,
+      });
+    },
+  });
 
   // DnD sensors - require 8px movement to start drag (prevents accidental drags)
   const sensors = useSensors(
@@ -381,6 +415,17 @@ export default function LineupTab({ eventId, userId }: LineupTabProps) {
                   ? 'Republish'
                   : 'Publish Lineup'}
             </Button>
+            {publishStatus?.lineupPublishedAt && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => scoutContent.mutate()}
+                disabled={scoutContent.isPending}
+              >
+                <Scan className="mr-2 h-4 w-4" />
+                {scoutContent.isPending ? 'Queuing...' : 'Scout Content'}
+              </Button>
+            )}
           </div>
 
           {/* Template Menu */}

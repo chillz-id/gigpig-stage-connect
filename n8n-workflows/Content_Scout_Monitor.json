@@ -1,0 +1,315 @@
+{
+  "name": "Content Scout - Weekly Content Needs Monitor",
+  "active": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Weekly Check (Monday 9am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "webhook-trigger",
+      "name": "On-Demand Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 500],
+      "parameters": {
+        "path": "content-scout-check",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "get-upcoming-events",
+      "name": "Get Upcoming Events (next 4 weeks)",
+      "type": "n8n-nodes-base.supabase",
+      "position": [500, 400],
+      "parameters": {
+        "operation": "getAll",
+        "tableName": "events",
+        "returnAll": false,
+        "limit": 50,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "event_date",
+              "keyValue": "={{ $now.toISO().split('T')[0] }}",
+              "condition": "gte"
+            }
+          ]
+        },
+        "additionalFields": {
+          "orderByUi": {
+            "values": [
+              {
+                "column": "event_date",
+                "direction": "asc"
+              }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "supabaseApi": "supabase-credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "filter-next-4-weeks",
+      "name": "Filter to Next 4 Weeks",
+      "type": "n8n-nodes-base.filter",
+      "position": [720, 400],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "={{ $json.event_date }}",
+            "rightValue": "={{ $now.plus({ weeks: 4 }).toISO().split('T')[0] }}",
+            "operation": "lte"
+          }
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "check-needs-per-event",
+      "name": "Check Content Needs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [940, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/content-scout",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'check-needs', eventId: $json.id }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Supabase Service Role",
+          "id": "supabase-service-role"
+        }
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "extract-needs",
+      "name": "Extract Comedians Needing Content",
+      "type": "n8n-nodes-base.code",
+      "position": [1160, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allNeeds = [];\n\nfor (const item of $input.all()) {\n  const response = item.json;\n  const eventData = item.json;\n  \n  if (!response.ok || !response.data) continue;\n  \n  for (const need of response.data) {\n    if (need.needsReels || need.needsImages) {\n      allNeeds.push({\n        json: {\n          comedianName: need.name,\n          comedianId: need.comedianId,\n          instagramUrl: need.instagramUrl,\n          tiktokUrl: need.tiktokUrl,\n          needsReels: need.needsReels,\n          needsImages: need.needsImages,\n          currentReels: need.currentReels,\n          currentImages: need.currentImages,\n          reelsNeeded: Math.max(0, 3 - need.currentReels),\n          imagesNeeded: Math.max(0, 2 - need.currentImages),\n          instagramHandle: need.instagramUrl\n            ? need.instagramUrl.replace(/https?:\\/\\/(www\\.)?instagram\\.com\\//i, '').replace(/\\/$/, '')\n            : null,\n        }\n      });\n    }\n  }\n}\n\n// Deduplicate by comedianId\nconst seen = new Set();\nconst unique = allNeeds.filter(n => {\n  if (seen.has(n.json.comedianId)) return false;\n  seen.add(n.json.comedianId);\n  return true;\n});\n\nreturn unique.length > 0 ? unique : [{ json: { _empty: true, message: 'All comedians have enough content!' } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "check-if-any-needs",
+      "name": "Anyone Need Content?",
+      "type": "n8n-nodes-base.if",
+      "position": [1380, 400],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "={{ $json._empty }}",
+            "rightValue": true,
+            "operation": "notEqual"
+          }
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "format-summary",
+      "name": "Format Notification Summary",
+      "type": "n8n-nodes-base.code",
+      "position": [1600, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const comedians = $input.all().map(i => i.json);\n\nlet summary = `🎭 **Content Scout Report** — ${new Date().toLocaleDateString('en-AU')}\n\n${comedians.length} comedian(s) need content for upcoming shows:\n\n`;\n\nfor (const c of comedians) {\n  const handle = c.instagramHandle ? `@${c.instagramHandle}` : 'no IG';\n  const needs = [];\n  if (c.needsReels) needs.push(`${c.reelsNeeded} reels`);\n  if (c.needsImages) needs.push(`${c.imagesNeeded} images`);\n  summary += `• **${c.comedianName}** (${handle}) — needs ${needs.join(' + ')}\\n`;\n}\n\nsummary += `\\nRun \\`/content-scout\\` in Claude Code to discover and download content.`;\n\nreturn [{ json: { summary, comedianCount: comedians.length } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "send-slack",
+      "name": "Notify via Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [1820, 300],
+      "parameters": {
+        "channel": "#content-pipeline",
+        "text": "={{ $json.summary }}",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": "slack-credentials"
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1820, 500],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, summary: $json.summary, comedianCount: $json.comedianCount }) }}"
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "check-lineup-queue",
+      "name": "Check Lineup Published Queue",
+      "type": "n8n-nodes-base.supabase",
+      "position": [500, 600],
+      "parameters": {
+        "operation": "getAll",
+        "tableName": "social_content_queue",
+        "returnAll": false,
+        "limit": 20,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "trigger_type",
+              "keyValue": "lineup_published",
+              "condition": "eq"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "pending",
+              "condition": "eq"
+            }
+          ]
+        },
+        "additionalFields": {
+          "orderByUi": {
+            "values": [
+              {
+                "column": "created_at",
+                "direction": "desc"
+              }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "supabaseApi": "supabase-credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "format-lineup-queue",
+      "name": "Format Lineup Queue Alerts",
+      "type": "n8n-nodes-base.code",
+      "position": [720, 600],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all().map(i => i.json);\n\nif (!items.length || !items[0].id) {\n  return [{ json: { lineupSummary: '', lineupCount: 0 } }];\n}\n\nlet summary = '';\nfor (const q of items) {\n  const data = q.trigger_data || {};\n  const eventName = data.title || data.name || 'Unknown Event';\n  const created = new Date(q.created_at);\n  const ago = Math.round((Date.now() - created.getTime()) / (1000 * 60 * 60));\n  const agoStr = ago < 1 ? 'just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`;\n  summary += `\\n🎭 New lineup published: \"${eventName}\" (${agoStr})\\n→ Run: \\`/content-scout-pipeline \"${eventName}\"\\`\\n`;\n}\n\nreturn [{ json: { lineupSummary: summary, lineupCount: items.length } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "merge-summaries",
+      "name": "Merge Content + Lineup Summaries",
+      "type": "n8n-nodes-base.code",
+      "position": [1600, 450],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all().map(i => i.json);\n\n// Items come from two branches — content needs and lineup queue\nlet contentSummary = '';\nlet lineupSummary = '';\nlet comedianCount = 0;\nlet lineupCount = 0;\n\nfor (const item of items) {\n  if (item.summary) {\n    contentSummary = item.summary;\n    comedianCount = item.comedianCount || 0;\n  }\n  if (item.lineupSummary) {\n    lineupSummary = item.lineupSummary;\n    lineupCount = item.lineupCount || 0;\n  }\n}\n\nlet combined = contentSummary || '';\n\nif (lineupSummary) {\n  combined += (combined ? '\\n\\n---\\n\\n' : '') + `📋 **Pending Lineup Pipelines** (${lineupCount}):\\n` + lineupSummary;\n}\n\nif (!combined) {\n  combined = '✅ All clear — no content needs and no pending lineups.';\n}\n\nreturn [{ json: { summary: combined, comedianCount, lineupCount } }];"
+      },
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Weekly Check (Monday 9am)": {
+      "main": [
+        [
+          { "node": "Get Upcoming Events (next 4 weeks)", "type": "main", "index": 0 },
+          { "node": "Check Lineup Published Queue", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "On-Demand Webhook": {
+      "main": [
+        [
+          { "node": "Get Upcoming Events (next 4 weeks)", "type": "main", "index": 0 },
+          { "node": "Check Lineup Published Queue", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Get Upcoming Events (next 4 weeks)": {
+      "main": [
+        [{ "node": "Filter to Next 4 Weeks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter to Next 4 Weeks": {
+      "main": [
+        [{ "node": "Check Content Needs", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Content Needs": {
+      "main": [
+        [{ "node": "Extract Comedians Needing Content", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Comedians Needing Content": {
+      "main": [
+        [{ "node": "Anyone Need Content?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Anyone Need Content?": {
+      "main": [
+        [{ "node": "Format Notification Summary", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Check Lineup Published Queue": {
+      "main": [
+        [{ "node": "Format Lineup Queue Alerts", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Notification Summary": {
+      "main": [
+        [{ "node": "Merge Content + Lineup Summaries", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Lineup Queue Alerts": {
+      "main": [
+        [{ "node": "Merge Content + Lineup Summaries", "type": "main", "index": 0 }]
+      ]
+    },
+    "Merge Content + Lineup Summaries": {
+      "main": [
+        [
+          { "node": "Notify via Slack", "type": "main", "index": 0 },
+          { "node": "Webhook Response", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "content-scout" },
+    { "name": "monitoring" }
+  ]
+}

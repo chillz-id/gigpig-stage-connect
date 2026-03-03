@@ -203,6 +203,24 @@ export function usePublishLineup() {
         // Don't throw - the publish succeeded, auto-confirm is a bonus
       }
 
+      // Queue content scouting for the published lineup (non-blocking)
+      try {
+        const { data: eventForOrg } = await supabase
+          .from('events').select('organization_id').eq('id', eventId).single();
+        if (eventForOrg?.organization_id) {
+          await supabase.functions.invoke('social-content-trigger', {
+            body: {
+              trigger_type: 'lineup_published',
+              entity_id: eventId,
+              organization_id: eventForOrg.organization_id,
+              priority: 3,
+            },
+          });
+        }
+      } catch (scoutError) {
+        console.error('[usePublishLineup] Failed to queue content scouting:', scoutError);
+      }
+
       return {
         ...publishResult,
         auto_confirmed_count: autoConfirmedCount,

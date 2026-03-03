@@ -18,7 +18,7 @@ const corsHeaders = {
 };
 
 interface TriggerPayload {
-  trigger_type: 'event_created' | 'lineup_changed' | 'ticket_milestone' | 'manual';
+  trigger_type: 'event_created' | 'lineup_changed' | 'lineup_published' | 'ticket_milestone' | 'manual';
   entity_id?: string;       // Event ID
   organization_id: string;
   data?: Record<string, unknown>;
