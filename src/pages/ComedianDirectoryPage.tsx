@@ -11,14 +11,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DirectoryBrowser } from '@/components/admin/directory/DirectoryBrowser';
 import { DirectoryImportWizard } from '@/components/admin/directory/DirectoryImportWizard';
+import { DirectoryProfileEditor } from '@/components/admin/directory/DirectoryProfileEditor';
 
 export function ComedianDirectoryPage() {
   const { user, hasRole } = useAuth();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('browse');
+  const [isCreating, setIsCreating] = useState(false);
 
   // Check if user is admin
   if (!user || !hasRole('admin')) {
@@ -42,19 +46,30 @@ export function ComedianDirectoryPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={cn(
-            "grid w-full max-w-md grid-cols-2",
-            theme === 'pleasure'
-              ? 'bg-white/[0.08] border-white/[0.15]'
-              : 'bg-gray-800 border-gray-600'
-          )}>
-            <TabsTrigger value="browse" className="text-white">
-              Browse Directory
-            </TabsTrigger>
-            <TabsTrigger value="import" className="text-white">
-              Import
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center gap-3">
+            <TabsList className={cn(
+              "grid w-full max-w-md grid-cols-2",
+              theme === 'pleasure'
+                ? 'bg-white/[0.08] border-white/[0.15]'
+                : 'bg-gray-800 border-gray-600'
+            )}>
+              <TabsTrigger value="browse" className="text-white">
+                Browse Directory
+              </TabsTrigger>
+              <TabsTrigger value="import" className="text-white">
+                Import
+              </TabsTrigger>
+            </TabsList>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsCreating(true)}
+              className="whitespace-nowrap"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Profile
+            </Button>
+          </div>
 
           <TabsContent value="browse" className="space-y-6">
             <DirectoryBrowser />
@@ -69,6 +84,16 @@ export function ComedianDirectoryPage() {
             />
           </TabsContent>
         </Tabs>
+
+        {isCreating && (
+          <DirectoryProfileEditor
+            onClose={() => setIsCreating(false)}
+            onSave={() => {
+              setIsCreating(false);
+              setActiveTab('browse');
+            }}
+          />
+        )}
       </div>
     </div>
   );

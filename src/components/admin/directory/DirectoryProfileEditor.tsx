@@ -52,7 +52,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface DirectoryProfileEditorProps {
-  profile: DirectoryProfile;
+  profile?: DirectoryProfile;
   onClose: () => void;
   onSave: () => void;
 }
@@ -62,14 +62,15 @@ export function DirectoryProfileEditor({
   onClose,
   onSave,
 }: DirectoryProfileEditorProps) {
+  const isCreateMode = !profile;
   const { theme } = useTheme();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [tags, setTags] = useState<string[]>(profile.tags);
+  const [tags, setTags] = useState<string[]>(profile?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [headshotPreview, setHeadshotPreview] = useState<string | null>(
-    profile.primary_headshot_url
+    profile?.primary_headshot_url ?? null
   );
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -79,17 +80,17 @@ export function DirectoryProfileEditor({
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      stage_name: profile.stage_name,
-      email: profile.email ?? '',
-      booking_email: profile.booking_email ?? '',
-      short_bio: profile.short_bio ?? '',
-      origin_city: profile.origin_city ?? '',
-      website: profile.website ?? '',
-      instagram_url: profile.instagram_url ?? '',
-      youtube_url: profile.youtube_url ?? '',
-      tiktok_url: profile.tiktok_url ?? '',
-      twitter_url: profile.twitter_url ?? '',
-      facebook_url: profile.facebook_url ?? '',
+      stage_name: profile?.stage_name ?? '',
+      email: profile?.email ?? '',
+      booking_email: profile?.booking_email ?? '',
+      short_bio: profile?.short_bio ?? '',
+      origin_city: profile?.origin_city ?? '',
+      website: profile?.website ?? '',
+      instagram_url: profile?.instagram_url ?? '',
+      youtube_url: profile?.youtube_url ?? '',
+      tiktok_url: profile?.tiktok_url ?? '',
+      twitter_url: profile?.twitter_url ?? '',
+      facebook_url: profile?.facebook_url ?? '',
     },
   });
 
@@ -169,27 +170,7 @@ export function DirectoryProfileEditor({
   const onSubmit = async (values: ProfileFormValues) => {
     setIsSaving(true);
     try {
-      // Upload headshot first if a new one was selected
-      if (headshotFile) {
-        setIsUploading(true);
-        try {
-          await directoryService.uploadPhoto(profile.id, headshotFile, {
-            isHeadshot: true,
-            isPrimary: true,
-          });
-        } catch (uploadError) {
-          console.error('Failed to upload headshot:', uploadError);
-          toast({
-            title: 'Upload Error',
-            description: 'Failed to upload headshot, but profile will still be saved',
-            variant: 'destructive',
-          });
-        } finally {
-          setIsUploading(false);
-        }
-      }
-
-      await directoryService.updateProfile(profile.id, {
+      const profileFields = {
         stage_name: values.stage_name,
         email: values.email || null,
         booking_email: values.booking_email || null,
@@ -202,19 +183,54 @@ export function DirectoryProfileEditor({
         twitter_url: values.twitter_url || null,
         facebook_url: values.facebook_url || null,
         tags,
-      });
+      };
+
+      let profileId: string;
+
+      if (isCreateMode) {
+        const slug = directoryService.generateSlug(values.stage_name);
+        const created = await directoryService.createProfile({
+          ...profileFields,
+          slug,
+          source: 'manual',
+        });
+        profileId = created.id;
+      } else {
+        await directoryService.updateProfile(profile.id, profileFields);
+        profileId = profile.id;
+      }
+
+      // Upload headshot if a new one was selected
+      if (headshotFile) {
+        setIsUploading(true);
+        try {
+          await directoryService.uploadPhoto(profileId, headshotFile, {
+            isHeadshot: true,
+            isPrimary: true,
+          });
+        } catch (uploadError) {
+          console.error('Failed to upload headshot:', uploadError);
+          toast({
+            title: 'Upload Error',
+            description: `Failed to upload headshot, but profile was ${isCreateMode ? 'created' : 'saved'}`,
+            variant: 'destructive',
+          });
+        } finally {
+          setIsUploading(false);
+        }
+      }
 
       toast({
-        title: 'Profile Updated',
-        description: `${values.stage_name}'s profile has been saved`,
+        title: isCreateMode ? 'Profile Created' : 'Profile Updated',
+        description: `${values.stage_name}'s profile has been ${isCreateMode ? 'created' : 'saved'}`,
       });
 
       onSave();
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error(`Failed to ${isCreateMode ? 'create' : 'update'} profile:`, error);
       toast({
         title: 'Error',
-        description: 'Failed to save profile changes',
+        description: `Failed to ${isCreateMode ? 'create' : 'save'} profile`,
         variant: 'destructive',
       });
     } finally {
@@ -227,7 +243,7 @@ export function DirectoryProfileEditor({
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className={cn("max-w-lg max-h-[90vh] overflow-y-auto", getDialogStyles())}>
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogTitle>{isCreateMode ? 'Add Profile' : 'Edit Profile'}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -243,7 +259,7 @@ export function DirectoryProfileEditor({
                   {headshotPreview ? (
                     <img
                       src={headshotPreview}
-                      alt={profile.stage_name}
+                      alt={profile?.stage_name ?? 'New profile'}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -514,7 +530,7 @@ export function DirectoryProfileEditor({
               </Button>
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isUploading ? 'Uploading...' : 'Save Changes'}
+                {isUploading ? 'Uploading...' : isCreateMode ? 'Create Profile' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>
