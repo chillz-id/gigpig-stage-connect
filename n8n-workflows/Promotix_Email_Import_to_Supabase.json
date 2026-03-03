@@ -76,24 +76,14 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract CSV attachment from the email\n// Promotix sends a single CSV file with attendee data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  for (const key of binaryKeys) {\n    const binary = item.binary[key];\n    const fileName = binary.fileName || '';\n    \n    // Only process CSV files\n    if (fileName.endsWith('.csv') || \n        binary.mimeType === 'text/csv' ||\n        binary.mimeType === 'application/csv') {\n      results.push({\n        json: {\n          ...item.json,\n          fileName: fileName,\n          binaryKey: key\n        },\n        binary: {\n          data: binary\n        }\n      });\n    }\n  }\n}\n\nif (results.length === 0) {\n  throw new Error('No CSV attachment found in Promotix email');\n}\n\nreturn results;"
-      },
-      "id": "extract-csv-attachment",
-      "name": "Extract CSV Attachment",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [900, 300]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse the Promotix CSV attachment\n// CSV columns: Order Number, Quantity, First Name, Surname, Email\n// Quantity format: \"2 General Admission\" - extract the leading number\n\nconst binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst csvText = binaryData.toString('utf-8');\n\n// Parse CSV manually (simple format, no need for external lib)\nconst lines = csvText.split('\\n').map(l => l.trim()).filter(l => l.length > 0);\n\nif (lines.length < 2) {\n  throw new Error('CSV file is empty or has no data rows');\n}\n\n// Parse header\nconst header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));\nconst orderIdx = header.findIndex(h => /order\\s*number/i.test(h));\nconst qtyIdx = header.findIndex(h => /quantity/i.test(h));\nconst firstIdx = header.findIndex(h => /first\\s*name/i.test(h));\nconst surnameIdx = header.findIndex(h => /surname|last\\s*name/i.test(h));\nconst emailIdx = header.findIndex(h => /email/i.test(h));\n\n// Get metadata from the parsed subject\nconst meta = $input.item.json;\n\nconst allRows = [];\n\nfor (let i = 1; i < lines.length; i++) {\n  // Parse CSV line - handle quoted fields\n  const fields = [];\n  let current = '';\n  let inQuotes = false;\n  \n  for (const char of lines[i]) {\n    if (char === '\"') {\n      inQuotes = !inQuotes;\n    } else if (char === ',' && !inQuotes) {\n      fields.push(current.trim());\n      current = '';\n    } else {\n      current += char;\n    }\n  }\n  fields.push(current.trim());\n  \n  const orderNumber = orderIdx >= 0 ? (fields[orderIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const quantityRaw = qtyIdx >= 0 ? (fields[qtyIdx] || '').replace(/^\"|\"$/g, '') : '1';\n  const firstName = firstIdx >= 0 ? (fields[firstIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const surname = surnameIdx >= 0 ? (fields[surnameIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const email = emailIdx >= 0 ? (fields[emailIdx] || '').replace(/^\"|\"$/g, '').toLowerCase() : '';\n  \n  // Parse ticket count from quantity string like \"2 General Admission\"\n  const qtyMatch = quantityRaw.match(/^(\\d+)/);\n  const ticketCount = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;\n  \n  // Skip rows without essential data\n  if (!email) continue;\n  \n  allRows.push({\n    json: {\n      event_name: meta.parsed_event_name,\n      venue: meta.parsed_venue,\n      state: meta.parsed_state,\n      event_date: meta.parsed_event_date,\n      event_time: meta.parsed_event_time,\n      first_name: firstName,\n      last_name: surname,\n      email: email,\n      ticket_count: ticketCount,\n      booking_reference: orderNumber,\n      source_email_subject: meta.subject || '',\n      source_email_date: meta.date || ''\n    }\n  });\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Promotix CSV');\n}\n\nreturn allRows;"
+        "jsCode": "// Parse the Promotix CSV attachment directly using helpers\n// CSV columns: Order Number, Quantity, First Name, Surname, Email\n// Quantity format: \"2 General Admission\" - extract the leading number\n//\n// Uses this.helpers.getBinaryDataBuffer() to access binary data\n// (item.binary is not available in n8n Code node v2 task runner)\n\n// Try common binary key names used by the IMAP trigger\nlet csvText = '';\nconst binaryKeys = ['attachment_0', 'attachment', 'data', 'attachment_1'];\n\nfor (const key of binaryKeys) {\n  try {\n    const buf = await this.helpers.getBinaryDataBuffer(0, key);\n    if (buf && buf.length > 0) {\n      csvText = buf.toString('utf-8');\n      break;\n    }\n  } catch (e) {\n    // Key not found, try next\n  }\n}\n\nif (!csvText) {\n  throw new Error('No CSV attachment found in Promotix email (tried keys: ' + binaryKeys.join(', ') + ')');\n}\n\n// Parse CSV\nconst lines = csvText.split('\\n').map(l => l.trim()).filter(l => l.length > 0);\n\nif (lines.length < 2) {\n  throw new Error('CSV file is empty or has no data rows');\n}\n\n// Parse header\nconst header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));\nconst orderIdx = header.findIndex(h => /order\\s*number/i.test(h));\nconst qtyIdx = header.findIndex(h => /quantity/i.test(h));\nconst firstIdx = header.findIndex(h => /first\\s*name/i.test(h));\nconst surnameIdx = header.findIndex(h => /surname|last\\s*name/i.test(h));\nconst emailIdx = header.findIndex(h => /email/i.test(h));\n\n// Get metadata from the parsed subject\nconst meta = $input.item.json;\n\nconst allRows = [];\n\nfor (let i = 1; i < lines.length; i++) {\n  // Parse CSV line - handle quoted fields\n  const fields = [];\n  let current = '';\n  let inQuotes = false;\n  \n  for (const char of lines[i]) {\n    if (char === '\"') {\n      inQuotes = !inQuotes;\n    } else if (char === ',' && !inQuotes) {\n      fields.push(current.trim());\n      current = '';\n    } else {\n      current += char;\n    }\n  }\n  fields.push(current.trim());\n  \n  const orderNumber = orderIdx >= 0 ? (fields[orderIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const quantityRaw = qtyIdx >= 0 ? (fields[qtyIdx] || '').replace(/^\"|\"$/g, '') : '1';\n  const firstName = firstIdx >= 0 ? (fields[firstIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const surname = surnameIdx >= 0 ? (fields[surnameIdx] || '').replace(/^\"|\"$/g, '') : '';\n  const email = emailIdx >= 0 ? (fields[emailIdx] || '').replace(/^\"|\"$/g, '').toLowerCase() : '';\n  \n  // Parse ticket count from quantity string like \"2 General Admission\"\n  const qtyMatch = quantityRaw.match(/^(\\d+)/);\n  const ticketCount = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;\n  \n  // Skip rows without essential data\n  if (!email) continue;\n  \n  allRows.push({\n    json: {\n      event_name: meta.parsed_event_name,\n      venue: meta.parsed_venue,\n      state: meta.parsed_state,\n      event_date: meta.parsed_event_date,\n      event_time: meta.parsed_event_time,\n      first_name: firstName,\n      last_name: surname,\n      email: email,\n      ticket_count: ticketCount,\n      booking_reference: orderNumber,\n      source_email_subject: meta.subject || '',\n      source_email_date: meta.date || ''\n    }\n  });\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Promotix CSV');\n}\n\nreturn allRows;"
       },
       "id": "parse-csv",
       "name": "Parse Promotix CSV",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 300],
-      "notes": "Parses the CSV attachment. Handles the Quantity format ('2 General Admission' → 2). Event metadata (name, date, time) comes from the subject parser, not the CSV."
+      "position": [900, 300],
+      "notes": "Reads and parses the CSV attachment using this.helpers.getBinaryDataBuffer(). Handles the Quantity format ('2 General Admission' → 2). Event metadata (name, date, time) comes from the subject parser, not the CSV."
     },
     {
       "parameters": {
@@ -314,17 +304,6 @@
       ]
     },
     "Parse Subject Metadata": {
-      "main": [
-        [
-          {
-            "node": "Extract CSV Attachment",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract CSV Attachment": {
       "main": [
         [
           {

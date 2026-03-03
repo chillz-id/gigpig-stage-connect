@@ -66,14 +66,27 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse the password-protected Excel file\n// Uses SheetJS (xlsx) which is available in n8n\nconst xlsx = require('xlsx');\n\nconst items = $input.all();\nconst allRows = [];\n\n// SFF Excel password - store in n8n credentials/env var in production\nconst SFF_PASSWORD = $env.SFF_EXCEL_PASSWORD || 'REPLACE_WITH_PASSWORD';\n\nfor (const item of items) {\n  const binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  let workbook;\n  try {\n    workbook = xlsx.read(binaryData, {\n      type: 'buffer',\n      password: SFF_PASSWORD\n    });\n  } catch (err) {\n    // Try without password in case it's not protected\n    try {\n      workbook = xlsx.read(binaryData, { type: 'buffer' });\n    } catch (err2) {\n      throw new Error(`Failed to read Excel file: ${err.message}`);\n    }\n  }\n  \n  const sheetName = workbook.SheetNames[0];\n  const sheet = workbook.Sheets[sheetName];\n  const jsonData = xlsx.utils.sheet_to_json(sheet, { defval: '' });\n  \n  for (const row of jsonData) {\n    // Map SFF column names to our fields\n    // SFF columns: Event Name, Location, FirstName, LastName, Email, No.Tickets, Booking ID, Event Date, Event Time\n    const eventName = (row['Event Name'] || row['event_name'] || '').toString().trim();\n    const firstName = (row['FirstName'] || row['First Name'] || row['first_name'] || '').toString().trim();\n    const lastName = (row['LastName'] || row['Last Name'] || row['last_name'] || '').toString().trim();\n    const email = (row['Email'] || row['email'] || '').toString().trim().toLowerCase();\n    const ticketCount = parseInt(row['No.Tickets'] || row['No. Tickets'] || row['Tickets'] || row['ticket_count'] || '1', 10);\n    const bookingId = (row['Booking ID'] || row['BookingID'] || row['booking_id'] || '').toString().trim();\n    const eventDate = (row['Event Date'] || row['event_date'] || '').toString().trim();\n    const eventTime = (row['Event Time'] || row['event_time'] || '').toString().trim();\n    const location = (row['Location'] || row['location'] || '').toString().trim();\n    \n    // Skip rows without essential data\n    if (!email || !eventName) continue;\n    \n    // Parse date from DD/MM/YYYY to YYYY-MM-DD\n    let parsedDate = eventDate;\n    if (eventDate.includes('/')) {\n      const parts = eventDate.split('/');\n      if (parts.length === 3) {\n        parsedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;\n      }\n    }\n    \n    allRows.push({\n      json: {\n        event_name: eventName,\n        location: location,\n        first_name: firstName,\n        last_name: lastName,\n        email: email,\n        ticket_count: isNaN(ticketCount) ? 1 : ticketCount,\n        booking_reference: bookingId,\n        event_date: parsedDate,\n        event_time: eventTime,\n        source_email_subject: item.json.subject || '',\n        source_email_date: item.json.date || ''\n      }\n    });\n  }\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Excel file');\n}\n\nreturn allRows;"
+        "operation": "fromFile",
+        "binaryPropertyName": "data",
+        "options": {}
       },
-      "id": "parse-excel",
-      "name": "Parse SFF Excel",
-      "type": "n8n-nodes-base.code",
+      "id": "spreadsheet-file",
+      "name": "Read Excel File",
+      "type": "n8n-nodes-base.spreadsheetFile",
       "typeVersion": 2,
       "position": [900, 300],
-      "notes": "Set SFF_EXCEL_PASSWORD as an n8n environment variable. The Code node parses the password-protected Excel, maps SFF columns, converts DD/MM/YYYY dates to ISO format, and outputs one item per attendee row."
+      "notes": "Reads the Excel attachment binary and converts each row to a JSON item. If files are password-protected, the n8n server needs xlsx module allowed via N8N_RUNNERS_ALLOWED_MODULES=xlsx."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map SFF Excel columns to our standard fields\n// SFF columns: Event Name, Location, FirstName, LastName, Email, No.Tickets, Booking ID, Event Date, Event Time\nconst items = $input.all();\nconst emailMeta = $('Extract Excel Attachment').first().json;\nconst allRows = [];\n\nfor (const item of items) {\n  const row = item.json;\n  const eventName = (row['Event Name'] || row['event_name'] || '').toString().trim();\n  const firstName = (row['FirstName'] || row['First Name'] || row['first_name'] || '').toString().trim();\n  const lastName = (row['LastName'] || row['Last Name'] || row['last_name'] || '').toString().trim();\n  const email = (row['Email'] || row['email'] || '').toString().trim().toLowerCase();\n  const ticketCount = parseInt(row['No.Tickets'] || row['No. Tickets'] || row['Tickets'] || row['ticket_count'] || '1', 10);\n  const bookingId = (row['Booking ID'] || row['BookingID'] || row['booking_id'] || '').toString().trim();\n  const eventDate = (row['Event Date'] || row['event_date'] || '').toString().trim();\n  const eventTime = (row['Event Time'] || row['event_time'] || '').toString().trim();\n  const location = (row['Location'] || row['location'] || '').toString().trim();\n\n  if (!email || !eventName) continue;\n\n  let parsedDate = eventDate;\n  if (eventDate.includes('/')) {\n    const parts = eventDate.split('/');\n    if (parts.length === 3) {\n      parsedDate = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');\n    }\n  }\n\n  allRows.push({\n    json: {\n      event_name: eventName,\n      location: location,\n      first_name: firstName,\n      last_name: lastName,\n      email: email,\n      ticket_count: isNaN(ticketCount) ? 1 : ticketCount,\n      booking_reference: bookingId,\n      event_date: parsedDate,\n      event_time: eventTime,\n      source_email_subject: emailMeta.subject || '',\n      source_email_date: emailMeta.date || ''\n    }\n  });\n}\n\nif (allRows.length === 0) {\n  throw new Error('No valid attendee rows found in Excel file');\n}\n\nreturn allRows;"
+      },
+      "id": "parse-excel",
+      "name": "Map SFF Columns",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1010, 300],
+      "notes": "Maps SFF Excel column names to standard attendee fields, converts DD/MM/YYYY dates to ISO format."
     },
     {
       "parameters": {
@@ -111,7 +124,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge the parsed attendee data with the matched event/session\nconst attendee = $('Parse SFF Excel').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  // Log warning but don't fail - store with null event_id for manual review\n  return {\n    json: {\n      ...attendee,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${attendee.event_name} on ${attendee.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...attendee,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
+        "jsCode": "// Merge the parsed attendee data with the matched event/session\nconst attendee = $('Map SFF Columns').item.json;\nconst matchResult = $input.item.json;\n\n// The RPC returns an array - take the first match\nconst match = Array.isArray(matchResult) ? matchResult[0] : matchResult;\n\nif (!match || !match.event_id) {\n  // Log warning but don't fail - store with null event_id for manual review\n  return {\n    json: {\n      ...attendee,\n      event_id: null,\n      session_id: null,\n      match_status: 'no_match',\n      match_message: `No event found matching: ${attendee.event_name} on ${attendee.event_date}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...attendee,\n    event_id: match.event_id,\n    session_id: match.session_id || null,\n    match_status: 'matched',\n    match_message: `Matched to event: ${match.event_name || match.event_id}`\n  }\n};"
       },
       "id": "merge-match-data",
       "name": "Merge Match Data",
@@ -299,14 +312,25 @@
       "main": [
         [
           {
-            "node": "Parse SFF Excel",
+            "node": "Read Excel File",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse SFF Excel": {
+    "Read Excel File": {
+      "main": [
+        [
+          {
+            "node": "Map SFF Columns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map SFF Columns": {
       "main": [
         [
           {
