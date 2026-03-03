@@ -1,17 +1,17 @@
 /**
- * ImageEditor - Toast UI Image Editor wrapper component
+ * ImageEditor - Filerobot Image Editor wrapper component
  *
  * Full-featured image editor with crop, rotate, flip, filters, annotations, and more.
- * Uses the core tui-image-editor library directly for React 19 compatibility.
+ * Wraps react-filerobot-image-editor while preserving the same external API
+ * used by all consumer components.
  */
 
-import React, { useCallback, useRef, useEffect, useState } from 'react';
-import TuiImageEditor from 'tui-image-editor';
-import 'tui-image-editor/dist/tui-image-editor.css';
+import React, { useCallback, useRef, useState } from 'react';
+import FilerobotImageEditor, { TABS, TOOLS } from 'react-filerobot-image-editor';
+import type { getCurrentImgDataFunction } from 'react-filerobot-image-editor';
 
-// Type definitions for Toast UI Image Editor output
+// Type definitions matching the original API
 interface DesignState {
-  // Toast UI design state - can be saved and restored
   [key: string]: unknown;
 }
 
@@ -50,154 +50,101 @@ interface ImageEditorProps {
   format?: 'jpeg' | 'png' | 'webp';
 }
 
-// Dark theme matching the app's design
-const darkTheme = {
-  'common.bi.image': '',
-  'common.bisize.width': '0',
-  'common.bisize.height': '0',
-  'common.backgroundImage': 'none',
-  'common.backgroundColor': '#1e1e2e',
-  'common.border': '0px',
+// Get max dimensions for output based on aspect ratio type
+function getMaxDimensions(aspectRatio: string) {
+  switch (aspectRatio) {
+    case 'avatar':
+      return { width: 400, height: 400 };
+    case 'banner':
+      return { width: 1920, height: 1080 };
+    default:
+      return { width: 1920, height: 1080 };
+  }
+}
 
-  // Header
-  'header.backgroundImage': 'none',
-  'header.backgroundColor': '#1e1e2e',
-  'header.border': '0px',
+// Resize image via canvas if it exceeds max dimensions
+function resizeIfNeeded(
+  base64: string,
+  currentWidth: number,
+  currentHeight: number,
+  maxDims: { width: number; height: number },
+  mimeType: string,
+  quality: number,
+): Promise<{ base64: string; width: number; height: number }> {
+  const needsResize = currentWidth > maxDims.width || currentHeight > maxDims.height;
 
-  // Load button
-  'loadButton.backgroundColor': '#9333ea',
-  'loadButton.border': '1px solid #9333ea',
-  'loadButton.color': '#fff',
-  'loadButton.fontFamily': 'Inter, system-ui, sans-serif',
-  'loadButton.fontSize': '14px',
+  if (!needsResize) {
+    return Promise.resolve({ base64, width: currentWidth, height: currentHeight });
+  }
 
-  // Download button
-  'downloadButton.backgroundColor': '#9333ea',
-  'downloadButton.border': '1px solid #9333ea',
-  'downloadButton.color': '#fff',
-  'downloadButton.fontFamily': 'Inter, system-ui, sans-serif',
-  'downloadButton.fontSize': '14px',
+  const scale = Math.min(maxDims.width / currentWidth, maxDims.height / currentHeight);
+  const newWidth = Math.round(currentWidth * scale);
+  const newHeight = Math.round(currentHeight * scale);
 
-  // Menu
-  'menu.normalIcon.color': '#a6adc8',
-  'menu.activeIcon.color': '#9333ea',
-  'menu.disabledIcon.color': '#45475a',
-  'menu.hoverIcon.color': '#cdd6f4',
-  'menu.iconSize.width': '24px',
-  'menu.iconSize.height': '24px',
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+        resolve({
+          base64: canvas.toDataURL(mimeType, quality),
+          width: newWidth,
+          height: newHeight,
+        });
+      } else {
+        resolve({ base64, width: currentWidth, height: currentHeight });
+      }
+    };
+    img.onerror = () => {
+      resolve({ base64, width: currentWidth, height: currentHeight });
+    };
+    img.src = base64;
+  });
+}
 
-  // Submenu
-  'submenu.backgroundColor': '#181825',
-  'submenu.partition.color': '#45475a',
+// Map old defaultTab values to Filerobot tab IDs
+function mapDefaultTab(tab: string): typeof TABS[keyof typeof TABS] | undefined {
+  switch (tab) {
+    case 'crop':
+    case 'flip':
+    case 'rotate':
+      return TABS.ADJUST;
+    case 'draw':
+    case 'shape':
+    case 'text':
+      return TABS.ANNOTATE;
+    case 'filter':
+      return TABS.FILTERS;
+    default:
+      return undefined;
+  }
+}
 
-  'submenu.normalIcon.color': '#a6adc8',
-  'submenu.activeIcon.color': '#9333ea',
-  'submenu.iconSize.width': '32px',
-  'submenu.iconSize.height': '32px',
-
-  'submenu.normalLabel.color': '#a6adc8',
-  'submenu.normalLabel.fontWeight': 'normal',
-  'submenu.activeLabel.color': '#cdd6f4',
-  'submenu.activeLabel.fontWeight': 'normal',
-
-  // Checkbox
-  'checkbox.border': '1px solid #45475a',
-  'checkbox.backgroundColor': '#181825',
-
-  // Range
-  'range.pointer.color': '#9333ea',
-  'range.bar.color': '#45475a',
-  'range.subbar.color': '#9333ea',
-
-  'range.disabledPointer.color': '#45475a',
-  'range.disabledBar.color': '#313244',
-  'range.disabledSubbar.color': '#45475a',
-
-  'range.value.color': '#cdd6f4',
-  'range.value.fontWeight': 'normal',
-  'range.value.fontSize': '11px',
-  'range.value.border': '1px solid #45475a',
-  'range.value.backgroundColor': '#181825',
-  'range.title.color': '#a6adc8',
-  'range.title.fontWeight': 'lighter',
-
-  // Colorpicker
-  'colorpicker.button.border': '1px solid #45475a',
-  'colorpicker.title.color': '#a6adc8',
-};
-
-// Custom locale for better UX
-const customLocale = {
-  ZoomIn: 'Zoom in',
-  ZoomOut: 'Zoom out',
-  Hand: 'Hand',
-  History: 'History',
-  Resize: 'Resize',
-  Crop: 'Crop',
-  DeleteAll: 'Delete all',
-  Delete: 'Delete',
-  Undo: 'Undo',
-  Redo: 'Redo',
-  Reset: 'Reset',
-  Flip: 'Flip',
-  Rotate: 'Rotate',
-  Draw: 'Draw',
-  Shape: 'Shape',
-  Icon: 'Icon',
-  Text: 'Text',
-  Mask: 'Mask',
-  Filter: 'Filter',
-  Bold: 'Bold',
-  Italic: 'Italic',
-  Underline: 'Underline',
-  Left: 'Left',
-  Center: 'Center',
-  Right: 'Right',
-  Color: 'Color',
-  'Text size': 'Text size',
-  Custom: 'Custom',
-  Square: 'Square',
-  Apply: 'Apply',
-  Cancel: 'Cancel',
-  'Flip X': 'Flip X',
-  'Flip Y': 'Flip Y',
-  Range: 'Range',
-  Stroke: 'Stroke',
-  Fill: 'Fill',
-  Circle: 'Circle',
-  Triangle: 'Triangle',
-  Rectangle: 'Rectangle',
-  Free: 'Free',
-  Straight: 'Straight',
-  Arrow: 'Arrow',
-  'Arrow-2': 'Arrow-2',
-  'Arrow-3': 'Arrow-3',
-  'Star-1': 'Star-1',
-  'Star-2': 'Star-2',
-  Polygon: 'Polygon',
-  Location: 'Location',
-  Heart: 'Heart',
-  Bubble: 'Bubble',
-  'Custom icon': 'Custom icon',
-  'Load Mask Image': 'Load Mask Image',
-  Grayscale: 'Grayscale',
-  Blur: 'Blur',
-  Sharpen: 'Sharpen',
-  Emboss: 'Emboss',
-  'Remove White': 'Remove White',
-  Distance: 'Distance',
-  Brightness: 'Brightness',
-  Noise: 'Noise',
-  'Color Filter': 'Color Filter',
-  Sepia: 'Sepia',
-  Sepia2: 'Sepia2',
-  Invert: 'Invert',
-  Pixelate: 'Pixelate',
-  Threshold: 'Threshold',
-  Tint: 'Tint',
-  Multiply: 'Multiply',
-  Blend: 'Blend',
-};
+// Map old defaultTab to Filerobot tool ID
+function mapDefaultTool(tab: string): typeof TOOLS[keyof typeof TOOLS] | undefined {
+  switch (tab) {
+    case 'crop':
+      return TOOLS.CROP;
+    case 'flip':
+      return TOOLS.FLIP_X;
+    case 'rotate':
+      return TOOLS.ROTATE;
+    case 'draw':
+      return TOOLS.PEN;
+    case 'shape':
+      return TOOLS.RECT;
+    case 'text':
+      return TOOLS.TEXT;
+    default:
+      return undefined;
+  }
+}
 
 export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
   source,
@@ -209,219 +156,204 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
   quality = 0.92,
   format = 'jpeg',
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorInstanceRef = useRef<TuiImageEditor | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const getCurrentImgDataRef = useRef<getCurrentImgDataFunction | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Get aspect ratio value
-  const getAspectRatio = useCallback(() => {
-    switch (aspectRatio) {
-      case 'avatar':
-        return 1;
-      case 'banner':
-        return 16 / 9; // 16:9 ratio - standard widescreen banner
-      default:
-        return NaN; // Free ratio
-    }
-  }, [aspectRatio]);
+  const heightValue = typeof height === 'number' ? `${height}px` : height;
+  const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+  const maxDims = getMaxDimensions(aspectRatio);
 
-  // Get max dimensions for output based on aspect ratio type
-  const getMaxDimensions = useCallback(() => {
-    switch (aspectRatio) {
-      case 'avatar':
-        return { width: 400, height: 400 };
-      case 'banner':
-        return { width: 1920, height: 1080 }; // 16:9 ratio (Full HD)
-      default:
-        return { width: 1920, height: 1080 }; // Default max
-    }
-  }, [aspectRatio]);
+  // Build crop config
+  const cropConfig = {
+    presetsItems: [
+      { titleKey: 'Avatar (1:1)', ratio: 1, icon: undefined as undefined },
+      { titleKey: 'Banner (16:9)', ratio: 16 / 9, icon: undefined as undefined },
+      { titleKey: 'Landscape (4:3)', ratio: 4 / 3, icon: undefined as undefined },
+      { titleKey: 'Portrait (3:4)', ratio: 3 / 4, icon: undefined as undefined },
+    ],
+    ratio: aspectRatio === 'avatar' ? 1 : aspectRatio === 'banner' ? 16 / 9 : ('custom' as const),
+    autoResize: false,
+  };
 
-  // Handle save with resize
-  const handleSave = useCallback(async () => {
-    const editorInstance = editorInstanceRef.current;
-    if (!editorInstance) return;
+  // Intercept Filerobot's save to apply our resize logic
+  const handleBeforeSave = useCallback(() => {
+    // Return false to prevent Filerobot's built-in save dialog
+    return false;
+  }, []);
 
-    const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
-    const extension = format;
+  // Handle save via Filerobot's onSave callback
+  const handleFilerobotSave = useCallback(
+    async (
+      savedData: { imageBase64?: string; imageCanvas?: HTMLCanvasElement; width?: number; height?: number; fullName?: string },
+      designState: Record<string, unknown>,
+    ) => {
+      setIsProcessing(true);
+      try {
+        const extension = format;
+        let imageBase64 = savedData.imageBase64 || '';
+        let imgWidth = savedData.width || 0;
+        let imgHeight = savedData.height || 0;
 
-    // Auto-apply any pending crop before exporting
-    // getCropzoneRect returns the crop zone if one is active
-    try {
-      const cropRect = editorInstance.getCropzoneRect();
-      if (cropRect && cropRect.width > 0 && cropRect.height > 0) {
-        // Apply the crop
-        await editorInstance.crop(cropRect);
-      }
-    } catch {
-      // No crop zone active, that's fine - continue with current state
-    }
-
-    // Get the edited image as base64 at current size
-    const originalBase64 = editorInstance.toDataURL({
-      format: format === 'jpeg' ? 'jpeg' : format,
-      quality,
-    });
-
-    // Get image dimensions
-    const canvasSize = editorInstance.getCanvasSize();
-    const maxDims = getMaxDimensions();
-
-    // Check if we need to resize
-    const needsResize = canvasSize.width > maxDims.width || canvasSize.height > maxDims.height;
-
-    if (needsResize) {
-      // Calculate new dimensions maintaining aspect ratio
-      const scale = Math.min(maxDims.width / canvasSize.width, maxDims.height / canvasSize.height);
-      const newWidth = Math.round(canvasSize.width * scale);
-      const newHeight = Math.round(canvasSize.height * scale);
-
-      // Create a canvas to resize
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          // Use high-quality scaling
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-          const resizedBase64 = canvas.toDataURL(mimeType, quality);
-
-          const savedImageData: SavedImageData = {
-            name: 'edited-image',
-            extension,
-            mimeType,
-            fullName: `edited-image.${extension}`,
-            height: newHeight,
-            width: newWidth,
-            imageBase64: resizedBase64,
-            quality,
-          };
-
-          onSave(savedImageData, {});
+        // If we have a canvas but no base64, convert it
+        if (!imageBase64 && savedData.imageCanvas) {
+          imageBase64 = savedData.imageCanvas.toDataURL(mimeType, quality);
+          imgWidth = savedData.imageCanvas.width;
+          imgHeight = savedData.imageCanvas.height;
         }
-      };
-      img.src = originalBase64;
-    } else {
-      // No resize needed, use original
-      const savedImageData: SavedImageData = {
+
+        if (!imageBase64) {
+          console.error('No image data available from editor');
+          return;
+        }
+
+        // Apply auto-resize
+        const resized = await resizeIfNeeded(imageBase64, imgWidth, imgHeight, maxDims, mimeType, quality);
+
+        const result: SavedImageData = {
+          name: 'edited-image',
+          extension,
+          mimeType,
+          fullName: `edited-image.${extension}`,
+          height: resized.height,
+          width: resized.width,
+          imageBase64: resized.base64,
+          quality,
+        };
+
+        onSave(result, designState as DesignState);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [format, mimeType, quality, maxDims, onSave],
+  );
+
+  // Custom save using getCurrentImgData ref
+  const handleCustomSave = useCallback(async () => {
+    if (!getCurrentImgDataRef.current) return;
+
+    setIsProcessing(true);
+    try {
+      const { imageData, designState, hideLoadingSpinner } = getCurrentImgDataRef.current(
+        {
+          name: 'edited-image',
+          extension: format,
+          quality,
+        },
+        4, // pixel ratio for quality
+        true, // keep loading spinner
+      );
+
+      let imageBase64 = imageData.imageBase64 || '';
+      let imgWidth = imageData.width || 0;
+      let imgHeight = imageData.height || 0;
+
+      if (!imageBase64 && imageData.imageCanvas) {
+        imageBase64 = imageData.imageCanvas.toDataURL(mimeType, quality);
+        imgWidth = imageData.imageCanvas.width;
+        imgHeight = imageData.imageCanvas.height;
+      }
+
+      hideLoadingSpinner();
+
+      if (!imageBase64) {
+        console.error('No image data available from editor');
+        return;
+      }
+
+      const resized = await resizeIfNeeded(imageBase64, imgWidth, imgHeight, maxDims, mimeType, quality);
+
+      const result: SavedImageData = {
         name: 'edited-image',
-        extension,
+        extension: format,
         mimeType,
-        fullName: `edited-image.${extension}`,
-        height: canvasSize.height,
-        width: canvasSize.width,
-        imageBase64: originalBase64,
+        fullName: `edited-image.${format}`,
+        height: resized.height,
+        width: resized.width,
+        imageBase64: resized.base64,
         quality,
       };
 
-      onSave(savedImageData, {});
+      onSave(result, designState as DesignState);
+    } finally {
+      setIsProcessing(false);
     }
-  }, [format, quality, onSave, getMaxDimensions]);
+  }, [format, mimeType, quality, maxDims, onSave]);
 
-  // Handle close
   const handleClose = useCallback(() => {
     if (onClose) {
       onClose();
     }
   }, [onClose]);
 
-  // Editor height calculation
-  const heightValue = typeof height === 'number' ? `${height}px` : height;
-
-  // Initialize editor
-  useEffect(() => {
-    if (!containerRef.current || !source) return;
-
-    // Cleanup previous instance
-    if (editorInstanceRef.current) {
-      editorInstanceRef.current.destroy();
-      editorInstanceRef.current = null;
-    }
-
-    setIsLoading(true);
-
-    // Create new editor instance
-    const editor = new TuiImageEditor(containerRef.current, {
-      includeUI: {
-        loadImage: {
-          path: source,
-          name: 'image',
-        },
-        theme: darkTheme,
-        menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'filter'],
-        initMenu: defaultTab || '',
-        uiSize: {
-          width: '100%',
-          height: heightValue,
-        },
-        menuBarPosition: 'bottom',
-        locale: customLocale,
-      },
-      cssMaxHeight: 800,
-      cssMaxWidth: 1200,
-      selectionStyle: {
-        cornerSize: 20,
-        rotatingPointOffset: 70,
-      },
-      usageStatistics: false,
-    });
-
-    editorInstanceRef.current = editor;
-
-    // Wait for image to load
-    editor.loadImageFromURL(source, 'image')
-      .then(() => {
-        setIsLoading(false);
-        // Apply initial crop ratio if specified
-        const ratio = getAspectRatio();
-        if (!isNaN(ratio)) {
-          editor.setCropzoneRect(ratio);
-        }
-      })
-      .catch((err: Error) => {
-        console.error('Failed to load image:', err);
-        setIsLoading(false);
-      });
-
-    // Cleanup on unmount
-    return () => {
-      if (editorInstanceRef.current) {
-        editorInstanceRef.current.destroy();
-        editorInstanceRef.current = null;
-      }
-    };
-  }, [source, defaultTab, heightValue, getAspectRatio]);
+  const defaultTabId = defaultTab ? mapDefaultTab(defaultTab) : TABS.ADJUST;
+  const defaultToolId = defaultTab ? mapDefaultTool(defaultTab) : TOOLS.CROP;
 
   return (
-    <div className="toast-ui-image-editor-container relative" style={{ height: heightValue }}>
-      {/* Hide buttons not needed for single image editing */}
+    <div className="filerobot-image-editor-container relative" style={{ height: heightValue }}>
       <style>{`
-        /* Hide Load/Download buttons in header */
-        .tui-image-editor-header .tui-image-editor-header-buttons {
-          display: none !important;
+        /* Match dark theme and purple accents */
+        .FIE_root {
+          font-family: Inter, system-ui, sans-serif !important;
+          height: 100% !important;
         }
-        /* Hide Delete and Delete All - confusing, users can use Undo instead */
-        .tui-image-editor-help-menu .tie-btn-delete,
-        .tui-image-editor-help-menu .tie-btn-deleteAll {
-          display: none !important;
+        /* Ensure editor fills container */
+        .FIE_root > div {
+          height: 100% !important;
         }
       `}</style>
 
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-10">
-          <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      {isProcessing && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-50">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-white text-sm">Processing image...</span>
+          </div>
         </div>
       )}
 
-      {/* Container for Toast UI Image Editor */}
-      <div ref={containerRef} style={{ width: '100%', height: heightValue }} />
+      <FilerobotImageEditor
+        source={source}
+        tabsIds={[TABS.ADJUST, TABS.ANNOTATE, TABS.FILTERS, TABS.WATERMARK, TABS.RESIZE]}
+        defaultTabId={defaultTabId}
+        defaultToolId={defaultToolId}
+        defaultSavedImageName="edited-image"
+        defaultSavedImageType={format === 'webp' ? 'png' : format}
+        defaultSavedImageQuality={quality}
+        onBeforeSave={handleBeforeSave}
+        onSave={handleFilerobotSave}
+        onClose={handleClose}
+        closeAfterSave={false}
+        avoidChangesNotSavedAlertOnLeave
+        savingPixelRatio={4}
+        previewPixelRatio={window.devicePixelRatio || 1}
+        Crop={cropConfig}
+        Rotate={{ componentType: 'slider' }}
+        observePluginContainerSize
+        showBackButton
+        getCurrentImgDataFnRef={getCurrentImgDataRef as React.RefObject<getCurrentImgDataFunction>}
+        theme={{
+          palette: {
+            'bg-secondary': '#1e1e2e',
+            'bg-primary': '#181825',
+            'bg-primary-active': '#313244',
+            'accent-primary': '#9333ea',
+            'accent-primary-active': '#7c3aed',
+            'icons-primary': '#cdd6f4',
+            'icons-secondary': '#a6adc8',
+            'borders-secondary': '#45475a',
+            'borders-primary': '#585b70',
+            'borders-strong': '#6c7086',
+            'light-shadow': 'rgba(0, 0, 0, 0.3)',
+            'warning': '#f9e2af',
+          },
+          typography: {
+            fontFamily: 'Inter, system-ui, sans-serif',
+          },
+        }}
+      />
 
-      {/* Custom action buttons */}
+      {/* Custom action buttons - overlaid on editor */}
       <div className="absolute bottom-4 right-4 flex gap-2 z-20">
         {onClose && (
           <button
@@ -432,8 +364,9 @@ export const ToastUIImageEditor: React.FC<ImageEditorProps> = ({
           </button>
         )}
         <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+          onClick={handleCustomSave}
+          disabled={isProcessing}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50"
         >
           Save
         </button>

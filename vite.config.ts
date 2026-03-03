@@ -45,7 +45,6 @@ export default defineConfig(({ mode }) => ({
         safari10: true,
       },
     },
-    // Suppress CSS warnings from third-party libraries (e.g., tui-image-editor typo)
     cssMinify: 'esbuild',
     // Enable source maps for production debugging
     sourcemap: true,
@@ -113,10 +112,4 @@ export default defineConfig(({ mode }) => ({
   },
   // Asset optimization
   assetsInclude: ['**/*.webp', '**/*.avif'],
-  // Suppress CSS warnings from third-party libraries (tui-image-editor has a typo)
-  esbuild: {
-    logOverride: {
-      'unsupported-css-property': 'silent',
-    },
-  },
 }));

@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ```bash
-# Setup (use --legacy-peer-deps due to @toast-ui/react-image-editor requiring React 17)
+# Setup (use --legacy-peer-deps due to next-themes peer dep on React 18)
 npm install --legacy-peer-deps
 
 # Core workflow
