@@ -114,7 +114,7 @@ const previewProps: InvoiceEmailData = {
     { description: 'Headliner Set', quantity: 1, unitPrice: 500.00, total: 550.00, taxAmount: 50.00 },
     { description: 'Commission', quantity: 1, unitPrice: -85.00, total: -85.00, taxAmount: 0 },
   ],
-  notes: 'Payment via bank transfer preferred.',
+  notes: 'Thanks for a great show!',
   senderBankName: 'Jane Smith',
   senderBankBsb: '062-000',
   senderBankAccount: '1234 5678',
@@ -269,6 +269,10 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
           {data.senderBankBsb ? <DetailRow label="BSB" value={data.senderBankBsb} /> : null}
           {data.senderBankAccount ? <DetailRow label="Account Number" value={data.senderBankAccount} /> : null}
           <DetailRow label="Reference" value={data.invoiceNumber} highlight />
+          {data.companyABN ? <DetailRow label="ABN" value={data.companyABN} /> : null}
+          <Text style={{ fontSize: '14px', lineHeight: '1.6', color: colors.neutral.muted, margin: '12px 0 0 0' }}>
+            Payment via bank transfer preferred.
+          </Text>
         </ContentCard>
       ) : data.paymentInstructions ? (
         <ContentCard>
@@ -278,15 +282,6 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
         </ContentCard>
       ) : null}
 
-      <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          Questions? Contact us at{' '}
-          <Link href={`mailto:${data.senderEmail}`} style={{ color: colors.brand.primary, textDecoration: 'none' }}>
-            {data.senderEmail}
-          </Link>
-        </Text>
-      </ContentCard>
-
       {data.notes ? (
         <>
           <Divider />
@@ -294,20 +289,6 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
             <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
               {data.notes}
             </Text>
-          </ContentCard>
-        </>
-      ) : null}
-
-      {(data.companyAddress || data.companyABN) ? (
-        <>
-          <Divider />
-          <ContentCard>
-            {data.companyAddress ? (
-              <DetailRow label="Address" value={data.companyAddress} />
-            ) : null}
-            {data.companyABN ? (
-              <DetailRow label="ABN" value={data.companyABN} />
-            ) : null}
           </ContentCard>
         </>
       ) : null}

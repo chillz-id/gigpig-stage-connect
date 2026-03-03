@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, Link, render } from '@react-email/components';
+import { Text, render } from '@react-email/components';
 import {
   EmailLayout,
   BrandHeader,
@@ -170,17 +170,6 @@ export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
           </ContentCard>
         </>
       ) : null}
-
-      <Divider />
-
-      <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          Questions or need to arrange payment? Contact{' '}
-          <Link href={`mailto:${data.senderEmail}`} style={{ color: buttonColor, textDecoration: 'none' }}>
-            {data.senderEmail}
-          </Link>
-        </Text>
-      </ContentCard>
 
       <BrandFooter />
     </EmailLayout>

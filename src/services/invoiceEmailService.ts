@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { pdfService, InvoicePDFData } from './pdfService';
+import { xeroService } from './xeroService';
 import {
   createInvoiceEmail,
   createInvoiceReminderEmail,
@@ -234,12 +235,34 @@ class InvoiceEmailService {
         if (error) {
           console.error('Failed to update invoice status:', error);
         }
+
+        // Sync to Xero if integration is active (fire-and-forget)
+        this.trySyncToXero(options.invoiceId);
       } catch (updateError) {
         console.error('Failed to update invoice status:', updateError);
       }
     }
 
     return result;
+  }
+
+  /**
+   * Attempt Xero sync if integration is active. No-op if not connected.
+   */
+  private async trySyncToXero(invoiceId: string): Promise<void> {
+    try {
+      const { data: integration } = await supabase
+        .from('xero_integrations')
+        .select('id')
+        .eq('connection_status', 'active')
+        .maybeSingle();
+
+      if (!integration) return; // No Xero — nothing to do
+
+      await xeroService.syncInvoiceToXero(invoiceId);
+    } catch (error) {
+      console.log('Xero sync failed (will retry on schedule):', error instanceof Error ? error.message : error);
+    }
   }
 
   /**
