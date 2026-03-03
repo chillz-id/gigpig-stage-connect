@@ -1,10 +1,16 @@
 /**
  * Invoice Email Service
- * Handles sending invoice emails with PDF attachments via Supabase Edge Function
+ * Renders react-email templates client-side and sends via edge function with PDF attachments.
  */
 
 import { supabase } from '@/integrations/supabase/client';
 import { pdfService, InvoicePDFData } from './pdfService';
+import {
+  createInvoiceEmail,
+  createInvoiceReminderEmail,
+} from '@/templates/email';
+import type { InvoiceEmailData, InvoiceReminderData } from '@/templates/email';
+import { renderInvoiceHtml } from '@/templates/email/invoicing/InvoiceEmail';
 
 export interface SendInvoiceEmailOptions {
   invoiceId: string;
@@ -25,15 +31,109 @@ export interface SendInvoiceEmailResult {
   bcc?: string[];
 }
 
+/**
+ * Transform InvoicePDFData (DB shape) → InvoiceEmailData (template shape)
+ */
+/**
+ * Fetch event name for an invoice if event_id is present.
+ */
+async function fetchEventName(eventId?: string): Promise<string | undefined> {
+  if (!eventId) return undefined;
+  const { data } = await supabase
+    .from('events')
+    .select('name')
+    .eq('id', eventId)
+    .single();
+  return data?.name || undefined;
+}
+
+function mapInvoiceToEmailData(inv: InvoicePDFData, eventName?: string): InvoiceEmailData {
+  const recipient = inv.invoice_recipients?.[0];
+  const taxRate = inv.tax_rate || 10;
+
+  return {
+    invoiceNumber: inv.invoice_number,
+    senderName: inv.sender_name,
+    senderEmail: inv.sender_email,
+    recipientName: recipient?.recipient_name || 'Valued Customer',
+    recipientEmail: recipient?.recipient_email || '',
+    issueDate: inv.issue_date,
+    dueDate: inv.due_date,
+    createdAt: inv.created_at,
+    eventName,
+    eventDate: inv.event_date,
+    totalAmount: inv.total_amount,
+    subtotal: inv.subtotal,
+    taxAmount: inv.tax_amount,
+    taxRate,
+    currency: inv.currency,
+    items: inv.invoice_items.map((item) => {
+      const isDeduction = item.total < 0 || item.unit_price < 0;
+      const itemSubtotal = item.quantity * item.unit_price;
+      const itemTax = isDeduction ? 0 : itemSubtotal * (taxRate / 100);
+      return {
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        total: item.total,
+        taxAmount: itemTax,
+        isDeduction,
+      };
+    }),
+    notes: inv.notes,
+    senderBankName: inv.sender_bank_name,
+    senderBankBsb: inv.sender_bank_bsb,
+    senderBankAccount: inv.sender_bank_account,
+    companyName: inv.sender_name,
+    companyAddress: inv.sender_address,
+    companyABN: inv.sender_abn,
+  };
+}
+
+/**
+ * Transform InvoicePDFData → InvoiceReminderData
+ */
+function mapInvoiceToReminderData(inv: InvoicePDFData, daysOverdue: number, isFirstReminder: boolean): InvoiceReminderData {
+  const recipient = inv.invoice_recipients?.[0];
+
+  return {
+    invoiceNumber: inv.invoice_number,
+    senderName: inv.sender_name,
+    senderEmail: inv.sender_email,
+    recipientName: recipient?.recipient_name || 'Valued Customer',
+    recipientEmail: recipient?.recipient_email || '',
+    issueDate: inv.issue_date,
+    dueDate: inv.due_date,
+    totalAmount: inv.total_amount,
+    currency: inv.currency,
+    items: inv.invoice_items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      total: item.total,
+    })),
+    notes: inv.notes,
+    senderBankName: inv.sender_bank_name,
+    senderBankBsb: inv.sender_bank_bsb,
+    senderBankAccount: inv.sender_bank_account,
+    companyName: inv.sender_name,
+    companyABN: inv.sender_abn,
+    daysOverdue,
+    originalDueDate: inv.due_date,
+    isFirstReminder,
+    isUrgent: daysOverdue > 7,
+  };
+}
+
 class InvoiceEmailService {
   /**
-   * Send an invoice email with optional PDF attachment
+   * Send an invoice email with optional PDF attachment.
+   * Renders the react-email template client-side and passes HTML to the edge function.
    */
   async sendInvoiceEmail(options: SendInvoiceEmailOptions): Promise<SendInvoiceEmailResult> {
     const {
       invoiceId,
       subject,
-      message,
       attachPdf = true,
       cc = [],
       bcc = [],
@@ -41,25 +141,36 @@ class InvoiceEmailService {
     } = options;
 
     try {
-      let pdfBase64: string | undefined;
+      // Fetch invoice data (reuse pdfService's fetcher)
+      const invoiceData = await pdfService.fetchInvoiceData(invoiceId);
+
+      // Fetch event name if linked
+      const eventName = await fetchEventName(invoiceData.event_id);
+
+      // Render react-email template client-side
+      const emailData = mapInvoiceToEmailData(invoiceData, eventName);
+      const rendered = await createInvoiceEmail(emailData);
 
       // Generate PDF if requested
+      let pdfBase64: string | undefined;
       if (attachPdf) {
         try {
-          const invoiceData = await pdfService.fetchInvoiceData(invoiceId);
-          pdfBase64 = await pdfService.generateInvoicePDF(invoiceData);
+          const result = await pdfService.generateInvoicePDF(invoiceData);
+          if (typeof result === 'string') {
+            pdfBase64 = result;
+          }
         } catch (pdfError) {
           console.error('Failed to generate PDF:', pdfError);
-          // Continue without attachment if PDF generation fails
         }
       }
 
-      // Call the edge function
+      // Call the edge function with pre-rendered HTML
       const { data, error } = await supabase.functions.invoke('send-invoice-email', {
         body: {
           invoiceId,
-          subject,
-          message,
+          subject: subject || rendered.subject,
+          html: rendered.html,
+          text: rendered.text,
           attachPdf,
           pdfBase64,
           cc,
@@ -70,39 +181,21 @@ class InvoiceEmailService {
 
       if (error) {
         console.error('Edge function error:', error);
-        console.error('Error properties:', Object.keys(error));
-        console.error('Error JSON:', JSON.stringify(error, null, 2));
-
-        // Try to extract the response body for more details
         let errorDetails = error.message || 'Failed to send email';
-
-        // Check for FunctionsHttpError context
         const funcError = error as any;
-        if (funcError.context) {
-          console.error('Error context:', funcError.context);
+        if (funcError.context?.json) {
           try {
-            // The context might be a Response object
-            if (funcError.context.json) {
-              const body = await funcError.context.json();
-              console.error('Error response body:', body);
-              errorDetails = body.error || errorDetails;
-            }
-          } catch (parseErr) {
-            console.error('Could not parse error context:', parseErr);
+            const body = await funcError.context.json();
+            errorDetails = body.error || errorDetails;
+          } catch {
+            // ignore parse error
           }
         }
-
-        return {
-          success: false,
-          error: errorDetails,
-        };
+        return { success: false, error: errorDetails };
       }
 
       if (data && !data.success) {
-        return {
-          success: false,
-          error: data.error || 'Failed to send email',
-        };
+        return { success: false, error: data.error || 'Failed to send email' };
       }
 
       return {
@@ -122,14 +215,12 @@ class InvoiceEmailService {
   }
 
   /**
-   * Send invoice email and update status
-   * Use this when sending an invoice for the first time
+   * Send invoice email and update status to 'sent'.
    */
   async sendAndUpdateStatus(options: SendInvoiceEmailOptions): Promise<SendInvoiceEmailResult> {
     const result = await this.sendInvoiceEmail(options);
 
     if (result.success) {
-      // Update invoice status to 'sent' and record sent_at timestamp
       try {
         const { error } = await supabase
           .from('invoices')
@@ -138,7 +229,7 @@ class InvoiceEmailService {
             sent_at: new Date().toISOString(),
           })
           .eq('id', options.invoiceId)
-          .eq('status', 'draft'); // Only update if currently draft
+          .eq('status', 'draft');
 
         if (error) {
           console.error('Failed to update invoice status:', error);
@@ -152,102 +243,87 @@ class InvoiceEmailService {
   }
 
   /**
-   * Resend an invoice email (for already sent invoices)
+   * Resend an invoice email (for already sent invoices).
    */
   async resendInvoice(
     invoiceId: string,
     options: Omit<SendInvoiceEmailOptions, 'invoiceId'> = {}
   ): Promise<SendInvoiceEmailResult> {
-    return this.sendInvoiceEmail({
-      invoiceId,
-      ...options,
-    });
+    return this.sendInvoiceEmail({ invoiceId, ...options });
   }
 
   /**
-   * Send invoice reminder email
+   * Send invoice reminder email using the react-email InvoiceReminder template.
    */
   async sendReminder(
     invoiceId: string,
     customMessage?: string
   ): Promise<SendInvoiceEmailResult> {
-    // Fetch invoice to get the number for the subject
-    const { data: invoice, error } = await supabase
-      .from('invoices')
-      .select('invoice_number, due_date, total_amount, currency')
-      .eq('id', invoiceId)
-      .single();
+    try {
+      const invoiceData = await pdfService.fetchInvoiceData(invoiceId);
 
-    if (error || !invoice) {
+      const dueDate = new Date(invoiceData.due_date);
+      const now = new Date();
+      const daysOverdue = Math.max(0, Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+      // Render reminder template
+      const reminderData = mapInvoiceToReminderData(invoiceData, daysOverdue, daysOverdue <= 3);
+      const rendered = await createInvoiceReminderEmail(reminderData);
+
+      // Generate PDF
+      let pdfBase64: string | undefined;
+      try {
+        const result = await pdfService.generateInvoicePDF(invoiceData);
+        if (typeof result === 'string') {
+          pdfBase64 = result;
+        }
+      } catch (pdfError) {
+        console.error('Failed to generate PDF for reminder:', pdfError);
+      }
+
+      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
+        body: {
+          invoiceId,
+          subject: rendered.subject,
+          html: rendered.html,
+          text: rendered.text,
+          attachPdf: true,
+          pdfBase64,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message || 'Failed to send reminder' };
+      }
+
+      if (data && !data.success) {
+        return { success: false, error: data.error || 'Failed to send reminder' };
+      }
+
+      return {
+        success: true,
+        messageId: data?.messageId,
+        recipients: data?.recipients,
+      };
+    } catch (error) {
+      console.error('Reminder email error:', error);
       return {
         success: false,
-        error: 'Invoice not found',
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
-
-    const dueDate = new Date(invoice.due_date);
-    const isOverdue = dueDate < new Date();
-
-    const defaultMessage = isOverdue
-      ? `This is a friendly reminder that Invoice #${invoice.invoice_number} for ${invoice.currency} $${invoice.total_amount.toFixed(2)} was due on ${dueDate.toLocaleDateString('en-AU')} and is now overdue. Please arrange payment at your earliest convenience.`
-      : `This is a friendly reminder that Invoice #${invoice.invoice_number} for ${invoice.currency} $${invoice.total_amount.toFixed(2)} is due on ${dueDate.toLocaleDateString('en-AU')}. Please ensure payment is made by the due date.`;
-
-    return this.sendInvoiceEmail({
-      invoiceId,
-      subject: isOverdue
-        ? `OVERDUE: Invoice ${invoice.invoice_number} Reminder`
-        : `Payment Reminder: Invoice ${invoice.invoice_number}`,
-      message: customMessage || defaultMessage,
-      attachPdf: true,
-    });
   }
 
   /**
-   * Preview email content without sending
-   * Returns the HTML that would be sent
+   * Preview email content without sending.
+   * Returns the react-email rendered HTML.
    */
-  async previewEmail(invoiceId: string, customMessage?: string): Promise<string | null> {
+  async previewEmail(invoiceId: string): Promise<string | null> {
     try {
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          invoice_recipients (
-            recipient_name,
-            recipient_email
-          )
-        `)
-        .eq('id', invoiceId)
-        .single();
-
-      if (error || !invoice) {
-        return null;
-      }
-
-      // Generate preview HTML (simplified version)
-      const recipient = invoice.invoice_recipients?.[0];
-      const recipientName = recipient?.recipient_name || 'Valued Customer';
-
-      return `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
-            <h1>${invoice.sender_name || 'Invoice'}</h1>
-            <p>Invoice #${invoice.invoice_number}</p>
-          </div>
-          <div style="padding: 30px; border: 1px solid #e0e0e0;">
-            <p>Hi ${recipientName},</p>
-            ${customMessage ? `<div style="background: #eef2ff; padding: 15px; margin: 20px 0;">${customMessage}</div>` : ''}
-            <p>Please find attached your invoice.</p>
-            <div style="background: #f9fafb; padding: 20px; margin: 20px 0;">
-              <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
-              <p><strong>Issue Date:</strong> ${new Date(invoice.issue_date).toLocaleDateString('en-AU')}</p>
-              <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString('en-AU')}</p>
-              <p style="font-size: 18px; color: #667eea;"><strong>Total:</strong> ${invoice.currency} $${invoice.total_amount.toFixed(2)}</p>
-            </div>
-            <p>Thank you for your business!</p>
-          </div>
-        </div>
-      `;
+      const invoiceData = await pdfService.fetchInvoiceData(invoiceId);
+      const eventName = await fetchEventName(invoiceData.event_id);
+      const emailData = mapInvoiceToEmailData(invoiceData, eventName);
+      return await renderInvoiceHtml(emailData);
     } catch (error) {
       console.error('Preview email error:', error);
       return null;

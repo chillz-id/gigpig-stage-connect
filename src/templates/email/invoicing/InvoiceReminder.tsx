@@ -50,6 +50,9 @@ export interface InvoiceReminderData {
   }>;
   notes?: string;
   paymentInstructions?: string;
+  senderBankName?: string;
+  senderBankBsb?: string;
+  senderBankAccount?: string;
   companyName?: string;
   companyAddress?: string;
   companyPhone?: string;
@@ -79,6 +82,9 @@ const previewProps: InvoiceReminderData = {
     { description: 'MC Services', quantity: 1, unitPrice: 350.00, total: 350.00 },
     { description: 'Headliner Set', quantity: 1, unitPrice: 500.00, total: 500.00 },
   ],
+  senderBankName: 'Jane Smith',
+  senderBankBsb: '062-000',
+  senderBankAccount: '1234 5678',
   daysOverdue: 14,
   originalDueDate: '2026-03-03',
   isFirstReminder: false,
@@ -149,6 +155,21 @@ export function InvoiceReminder(props: InvoiceReminderData = previewProps) {
           highlight
         />
       </ContentCard>
+
+      {(data.senderBankName || data.senderBankBsb || data.senderBankAccount) ? (
+        <>
+          <Divider />
+          <ContentCard>
+            <Text style={{ fontSize: '13px', fontWeight: 700, color: colors.neutral.heading, margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Payment Details
+            </Text>
+            <DetailRow label="Account Name" value={data.senderName} />
+            {data.senderBankBsb ? <DetailRow label="BSB" value={data.senderBankBsb} /> : null}
+            {data.senderBankAccount ? <DetailRow label="Account Number" value={data.senderBankAccount} /> : null}
+            <DetailRow label="Reference" value={data.invoiceNumber} highlight />
+          </ContentCard>
+        </>
+      ) : null}
 
       <Divider />
 

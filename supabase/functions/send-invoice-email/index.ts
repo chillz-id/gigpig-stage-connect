@@ -11,6 +11,8 @@ interface EmailRequest {
   invoiceId: string;
   subject?: string;
   message?: string;
+  html?: string;      // Pre-rendered HTML from react-email (client-side)
+  text?: string;       // Pre-rendered plain text from react-email
   attachPdf?: boolean;
   pdfBase64?: string; // Pre-generated PDF from client
   cc?: string[];
@@ -187,6 +189,34 @@ function generateEmailHtml(invoice: any, customMessage?: string): string {
               </div>
             </div>
 
+            ${(invoice.sender_bank_name || invoice.sender_bank_bsb || invoice.sender_bank_account) ? `
+            <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #1A1A2E;">
+              <p style="font-weight: 700; color: #1a202c; margin: 0 0 12px 0; font-size: 14px;">Payment Details</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tbody>
+                  <tr>
+                    <td style="padding: 6px 0; color: #4a5568; font-weight: 600; font-size: 13px; width: 140px;">Account Name</td>
+                    <td style="padding: 6px 0; color: #1a202c; font-size: 13px;">${invoice.sender_bank_name || invoice.sender_name}</td>
+                  </tr>
+                  ${invoice.sender_bank_bsb ? `
+                  <tr>
+                    <td style="padding: 6px 0; color: #4a5568; font-weight: 600; font-size: 13px;">BSB</td>
+                    <td style="padding: 6px 0; color: #1a202c; font-size: 13px;">${invoice.sender_bank_bsb}</td>
+                  </tr>` : ''}
+                  ${invoice.sender_bank_account ? `
+                  <tr>
+                    <td style="padding: 6px 0; color: #4a5568; font-weight: 600; font-size: 13px;">Account Number</td>
+                    <td style="padding: 6px 0; color: #1a202c; font-size: 13px;">${invoice.sender_bank_account}</td>
+                  </tr>` : ''}
+                  <tr>
+                    <td style="padding: 6px 0; color: #4a5568; font-weight: 600; font-size: 13px;">Reference</td>
+                    <td style="padding: 6px 0; color: #1a202c; font-size: 13px;">${invoice.invoice_number}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            ` : ''}
+
             <p>If you have any questions about this invoice, please don't hesitate to reach out.</p>
 
             <p>Thank you for your business!</p>
@@ -225,6 +255,15 @@ function generateEmailText(invoice: any, customMessage?: string): string {
   text += `Issue Date: ${new Date(invoice.issue_date).toLocaleDateString('en-AU')}\n`;
   text += `Due Date: ${new Date(invoice.due_date).toLocaleDateString('en-AU')}\n`;
   text += `Total Amount: ${invoice.currency} $${invoice.total_amount.toFixed(2)}\n\n`;
+  if (invoice.sender_bank_name || invoice.sender_bank_bsb || invoice.sender_bank_account) {
+    text += `Payment Details\n`;
+    text += `──────────────────────────\n`;
+    text += `Account Name:   ${invoice.sender_name}\n`;
+    if (invoice.sender_bank_bsb) text += `BSB:            ${invoice.sender_bank_bsb}\n`;
+    if (invoice.sender_bank_account) text += `Account Number: ${invoice.sender_bank_account}\n`;
+    text += `Reference:      ${invoice.invoice_number}\n\n`;
+  }
+
   text += `If you have any questions about this invoice, please don't hesitate to reach out.\n\n`;
   text += `Thank you for your business!\n\n`;
   text += `Best regards,\n${invoice.sender_name}\n`;
@@ -294,6 +333,8 @@ serve(async (req) => {
       invoiceId,
       subject,
       message,
+      html,
+      text,
       attachPdf = true,
       pdfBase64,
       cc = [],
@@ -301,7 +342,7 @@ serve(async (req) => {
       replyTo
     } = await req.json() as EmailRequest;
 
-    console.log('Request body:', { invoiceId, attachPdf, hasMessage: !!message, hasPdf: !!pdfBase64 });
+    console.log('Request body:', { invoiceId, attachPdf, hasMessage: !!message, hasPdf: !!pdfBase64, hasHtml: !!html });
 
     if (!invoiceId) {
       console.error('Missing invoiceId in request');
@@ -354,10 +395,10 @@ serve(async (req) => {
     const allCc = [...cc].filter(Boolean);
     const allBcc = [...bcc].filter(Boolean);
 
-    // Build email content
+    // Build email content — use pre-rendered HTML if provided, otherwise generate inline
     const emailSubject = subject || `Invoice ${invoice.invoice_number} from ${invoice.sender_name}`;
-    const htmlBody = generateEmailHtml(invoice, message);
-    const textBody = generateEmailText(invoice, message);
+    const htmlBody = html || generateEmailHtml(invoice, message);
+    const textBody = text || generateEmailText(invoice, message);
 
     // From address
     const fromAddress = Deno.env.get('SES_FROM_EMAIL') || 'invoices@gigpigs.app';

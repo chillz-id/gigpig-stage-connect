@@ -291,11 +291,11 @@ export const InvoicePDFTemplate: React.FC<InvoicePDFTemplateProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
-            <Text style={styles.companyName}>Stand Up Sydney</Text>
-            <Text style={styles.companyDetails}>ABN: 12 345 678 901</Text>
-            <Text style={styles.companyDetails}>comedy@standupSydney.com</Text>
-            <Text style={styles.companyDetails}>+61 2 9876 5432</Text>
-            <Text style={styles.companyDetails}>123 Comedy St, Sydney NSW 2000</Text>
+            <Text style={styles.companyName}>{invoice.sender_name || 'GigPigs'}</Text>
+            {invoice.sender_abn && <Text style={styles.companyDetails}>ABN: {invoice.sender_abn}</Text>}
+            <Text style={styles.companyDetails}>{invoice.sender_email || 'team@gigpigs.app'}</Text>
+            {invoice.sender_phone && <Text style={styles.companyDetails}>{invoice.sender_phone}</Text>}
+            {invoice.sender_address && <Text style={styles.companyDetails}>{invoice.sender_address}</Text>}
           </View>
           <View style={styles.invoiceDetails}>
             <Text style={styles.invoiceTitle}>INVOICE</Text>
@@ -335,10 +335,10 @@ export const InvoicePDFTemplate: React.FC<InvoicePDFTemplateProps> = ({
           <View style={styles.billFromSection}>
             <Text style={styles.sectionTitle}>From:</Text>
             <Text style={styles.addressText}>
-              {invoice.sender_name || 'Stand Up Sydney'}
+              {invoice.sender_name || 'GigPigs'}
             </Text>
             <Text style={styles.addressText}>
-              {invoice.sender_email || 'comedy@standupSydney.com'}
+              {invoice.sender_email || 'team@gigpigs.app'}
             </Text>
             {invoice.sender_phone && (
               <Text style={styles.addressText}>{invoice.sender_phone}</Text>
@@ -413,7 +413,7 @@ export const InvoicePDFTemplate: React.FC<InvoicePDFTemplateProps> = ({
             Payment terms: Net 30 days
           </Text>
           <Text style={styles.footerText}>
-            For any questions about this invoice, please contact us at comedy@standupSydney.com
+            For any questions about this invoice, please contact us at {invoice.sender_email || 'team@gigpigs.app'}
           </Text>
         </View>
       </Page>

@@ -39,16 +39,27 @@ export interface InvoiceEmailData {
   recipientEmail: string;
   issueDate: string;
   dueDate: string;
+  createdAt?: string;
+  eventName?: string;
+  eventDate?: string;
   totalAmount: number;
+  subtotal?: number;
+  taxAmount?: number;
+  taxRate?: number;
   currency: string;
   items: Array<{
     description: string;
     quantity: number;
     unitPrice: number;
     total: number;
+    taxAmount?: number;
+    isDeduction?: boolean;
   }>;
   notes?: string;
   paymentInstructions?: string;
+  senderBankName?: string;
+  senderBankBsb?: string;
+  senderBankAccount?: string;
   companyName?: string;
   companyAddress?: string;
   companyPhone?: string;
@@ -90,14 +101,23 @@ const previewProps: InvoiceEmailData = {
   recipientEmail: 'billing@example.com',
   issueDate: '2026-02-17',
   dueDate: '2026-03-17',
+  createdAt: '2026-02-26',
+  eventName: 'Magic Mic Comedy',
+  eventDate: '2026-02-25',
   totalAmount: 850.00,
+  subtotal: 765.00,
+  taxAmount: 85.00,
+  taxRate: 10,
   currency: 'AUD',
   items: [
-    { description: 'MC Services', quantity: 1, unitPrice: 350.00, total: 350.00 },
-    { description: 'Headliner Set', quantity: 1, unitPrice: 500.00, total: 500.00 },
+    { description: 'MC Services', quantity: 1, unitPrice: 350.00, total: 385.00, taxAmount: 35.00 },
+    { description: 'Headliner Set', quantity: 1, unitPrice: 500.00, total: 550.00, taxAmount: 50.00 },
+    { description: 'Commission', quantity: 1, unitPrice: -85.00, total: -85.00, taxAmount: 0 },
   ],
   notes: 'Payment via bank transfer preferred.',
-  paymentInstructions: 'BSB: 062-000, Account: 1234 5678. Reference: INV-2026-0042',
+  senderBankName: 'Jane Smith',
+  senderBankBsb: '062-000',
+  senderBankAccount: '1234 5678',
   companyName: 'GigPigs Pty Ltd',
   companyAddress: '88 Foveaux St, Surry Hills NSW 2010',
   companyABN: '33 614 240 328',
@@ -118,27 +138,39 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
         subtitle={data.companyName || 'GigPigs'}
       />
 
+      {data.createdAt ? (
+        <ContentCard>
+          <Text style={{ fontSize: '13px', color: colors.neutral.muted, margin: '0' }}>
+            Generated on {formatDate(data.createdAt)}
+          </Text>
+        </ContentCard>
+      ) : null}
+
+      <Divider />
+
+      {/* Summary — two-column layout like Xero */}
       <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
-          Hello {data.recipientName},
-        </Text>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
-          Please find your invoice below. Payment due by{' '}
-          <strong>{formatDate(data.dueDate)}</strong>.
-        </Text>
+        <table role="presentation" cellPadding="0" cellSpacing="0" style={{ width: '100%' }}>
+          <tbody>
+            <tr>
+              <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '12px' }}>
+                <DetailRow label="Invoice No" value={data.invoiceNumber} highlight />
+                <DetailRow label="Due Date" value={formatDate(data.dueDate)} />
+                <DetailRow label="From" value={data.senderName} />
+              </td>
+              <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '12px' }}>
+                {data.eventName ? <DetailRow label="Event" value={data.eventName} /> : null}
+                {data.eventDate ? <DetailRow label="Event Date" value={formatDate(data.eventDate)} /> : null}
+                <DetailRow label="To" value={data.recipientName} />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </ContentCard>
 
       <Divider />
 
-      <ContentCard>
-        <DetailRow label="Invoice" value={data.invoiceNumber} highlight />
-        <DetailRow label="Issued" value={formatDate(data.issueDate)} />
-        <DetailRow label="Due" value={formatDate(data.dueDate)} highlight />
-      </ContentCard>
-
-      <Divider />
-
-      {/* Line items table */}
+      {/* Line items table — Xero-style: Description | Sub Total | GST | Total */}
       <ContentCard padding="0">
         <table
           role="presentation"
@@ -149,42 +181,76 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
           <thead>
             <tr>
               <th style={thStyle}>Description</th>
-              <th style={{ ...thStyle, textAlign: 'center', width: '50px' }}>Qty</th>
-              <th style={{ ...thStyle, textAlign: 'right', width: '80px' }}>Rate</th>
+              <th style={{ ...thStyle, textAlign: 'right', width: '90px' }}>Sub Total</th>
+              <th style={{ ...thStyle, textAlign: 'right', width: '90px' }}>GST ({data.taxRate || 10}%)</th>
               <th style={{ ...thStyle, textAlign: 'right', width: '90px' }}>Total</th>
             </tr>
           </thead>
           <tbody>
-            {data.items.map((item, i) => (
-              <tr key={i}>
-                <td style={tdStyle}>{item.description}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.mono, fontSize: '13px' }}>
-                  ${item.unitPrice.toFixed(2)}
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, fontFamily: fonts.mono, fontSize: '13px' }}>
-                  ${item.total.toFixed(2)}
-                </td>
-              </tr>
-            ))}
+            {data.items.map((item, i) => {
+              const isDeduction = item.isDeduction || item.total < 0 || item.unitPrice < 0;
+              const itemSubtotal = item.quantity * item.unitPrice;
+              const itemTax = item.taxAmount ?? (isDeduction ? 0 : itemSubtotal * ((data.taxRate || 10) / 100));
+              const deductionColor = '#DC2626';
+              const amountStyle: React.CSSProperties = {
+                ...tdStyle,
+                textAlign: 'right',
+                fontFamily: fonts.mono,
+                fontSize: '13px',
+                ...(isDeduction ? { color: deductionColor } : {}),
+              };
+              return (
+                <tr key={i} style={isDeduction ? { backgroundColor: '#FEF2F2' } : undefined}>
+                  <td style={{ ...tdStyle, ...(isDeduction ? { color: deductionColor } : {}) }}>
+                    {item.description}{isDeduction ? ' (Deduction)' : ''}
+                  </td>
+                  <td style={amountStyle}>
+                    {isDeduction ? '-' : ''}${Math.abs(itemSubtotal).toFixed(2)}
+                  </td>
+                  <td style={amountStyle}>
+                    {itemTax < 0 ? '-' : ''}${Math.abs(itemTax).toFixed(2)}
+                  </td>
+                  <td style={{ ...amountStyle, fontWeight: 600 }}>
+                    {isDeduction ? '-' : ''}${Math.abs(item.total).toFixed(2)}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {/* Sub total row */}
+            <tr>
+              <td style={{ ...tdStyle, fontWeight: 600 }}>Sub total</td>
+              <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.mono, fontSize: '13px', fontWeight: 600 }}>
+                ${(data.subtotal ?? data.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0)).toFixed(2)}
+              </td>
+              <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.mono, fontSize: '13px', fontWeight: 600 }}>
+                ${(data.taxAmount ?? 0).toFixed(2)}
+              </td>
+              <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.mono, fontSize: '13px', fontWeight: 600 }}>
+                ${data.totalAmount.toFixed(2)}
+              </td>
+            </tr>
           </tbody>
         </table>
 
-        {/* Total row */}
+        {/* Amount Due */}
         <table role="presentation" cellPadding="0" cellSpacing="0" style={{ width: '100%' }}>
           <tbody>
             <tr>
+              <td style={{ padding: '16px 12px', fontSize: '14px', color: colors.neutral.body }}>
+                Amount Due
+              </td>
               <td
                 style={{
                   padding: '16px 12px',
-                  fontSize: '18px',
+                  fontSize: '20px',
                   fontWeight: 700,
                   textAlign: 'right',
                   color: colors.brand.primary,
                   borderTop: `2px solid ${colors.brand.primary}`,
                 }}
               >
-                Total: {formatCurrency(data.totalAmount, data.currency)}
+                {formatCurrency(data.totalAmount, data.currency)}
               </td>
             </tr>
           </tbody>
@@ -193,12 +259,26 @@ export function InvoiceEmail(props: InvoiceEmailData = previewProps) {
 
       <Divider />
 
-      {/* Payment instructions */}
+      {/* Payment details */}
+      {(data.senderBankName || data.senderBankBsb || data.senderBankAccount) ? (
+        <ContentCard>
+          <Text style={{ fontSize: '13px', fontWeight: 700, color: colors.neutral.heading, margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Payment Details
+          </Text>
+          <DetailRow label="Account Name" value={data.senderName} />
+          {data.senderBankBsb ? <DetailRow label="BSB" value={data.senderBankBsb} /> : null}
+          {data.senderBankAccount ? <DetailRow label="Account Number" value={data.senderBankAccount} /> : null}
+          <DetailRow label="Reference" value={data.invoiceNumber} highlight />
+        </ContentCard>
+      ) : data.paymentInstructions ? (
+        <ContentCard>
+          <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
+            {data.paymentInstructions}
+          </Text>
+        </ContentCard>
+      ) : null}
+
       <ContentCard>
-        <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0 0 12px 0' }}>
-          {data.paymentInstructions ||
-            `Please make payment by ${formatDate(data.dueDate)} to avoid any late fees.`}
-        </Text>
         <Text style={{ fontSize: '15px', lineHeight: '1.6', color: colors.neutral.body, margin: '0' }}>
           Questions? Contact us at{' '}
           <Link href={`mailto:${data.senderEmail}`} style={{ color: colors.brand.primary, textDecoration: 'none' }}>

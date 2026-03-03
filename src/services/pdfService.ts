@@ -54,6 +54,8 @@ export interface InvoicePDFData {
   deposit_percentage?: number;
   deposit_due_date?: string;
   event_date?: string;
+  event_id?: string;
+  created_at?: string;
 }
 
 interface PDFGenerationOptions {
