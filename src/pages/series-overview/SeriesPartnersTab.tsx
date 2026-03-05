@@ -3,10 +3,11 @@
  *
  * Manages series-level partners. Partners added here are automatically
  * inherited by all events in the series (synced via database triggers).
+ * Supports both individual user partners and organization partners.
  */
 
 import { useState } from 'react';
-import { Plus, Users, UserCheck, Mail, Shield, Eye, Edit, DollarSign, Database, MoreHorizontal, Search, AlertCircle } from 'lucide-react';
+import { Plus, Users, UserCheck, Mail, Shield, Eye, Edit, DollarSign, Database, MoreHorizontal, Search, AlertCircle, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +36,7 @@ import {
 import {
   useSeriesPartners,
   useSearchSeriesPartnersToAdd,
+  useSearchOrganizationsToAdd,
   useAddSeriesPartner,
   useUpdateSeriesPartnerPermissions,
   useRemoveSeriesPartner,
@@ -42,6 +45,7 @@ import {
   type SeriesPartnerWithProfile,
   type SeriesPartnerPermissions,
 } from '@/hooks/useSeriesPartners';
+import MemberOverridesDialog from './MemberOverridesDialog';
 
 const DEFAULT_PERMISSIONS: SeriesPartnerPermissions = {
   is_admin: false,
@@ -59,16 +63,24 @@ interface SeriesPartnersTabProps {
 
 export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTabProps) {
   const [showAddPartner, setShowAddPartner] = useState(false);
+  const [addTab, setAddTab] = useState<'person' | 'organization'>('person');
   const [searchQuery, setSearchQuery] = useState('');
+  const [orgSearchQuery, setOrgSearchQuery] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedPartner, setSelectedPartner] = useState<SeriesPartnerWithProfile | null>(null);
+  const [overridesPartner, setOverridesPartner] = useState<SeriesPartnerWithProfile | null>(null);
   const [newPartnerPermissions, setNewPartnerPermissions] = useState<SeriesPartnerPermissions>(DEFAULT_PERMISSIONS);
+  const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
 
   // Queries
   const { data: partners, isLoading } = useSeriesPartners(seriesId);
   const { data: searchResults, isLoading: searchLoading } = useSearchSeriesPartnersToAdd(
-    showAddPartner ? seriesId : undefined,
+    showAddPartner && addTab === 'person' ? seriesId : undefined,
     searchQuery
+  );
+  const { data: orgSearchResults, isLoading: orgSearchLoading } = useSearchOrganizationsToAdd(
+    showAddPartner && addTab === 'organization' ? seriesId : undefined,
+    orgSearchQuery
   );
 
   // Mutations
@@ -89,9 +101,24 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
       invited_email: profileId ? undefined : inviteEmail,
       permissions: newPartnerPermissions,
     });
+    resetAddDialog();
+  };
+
+  const handleAddOrgPartner = async (orgId: string) => {
+    await addPartner.mutateAsync({
+      series_id: seriesId,
+      partner_organization_id: orgId,
+      permissions: newPartnerPermissions,
+    });
+    resetAddDialog();
+  };
+
+  const resetAddDialog = () => {
     setShowAddPartner(false);
     setSearchQuery('');
+    setOrgSearchQuery('');
     setInviteEmail('');
+    setAddTab('person');
     setNewPartnerPermissions(DEFAULT_PERMISSIONS);
   };
 
@@ -116,6 +143,18 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
     await reactivatePartner.mutateAsync({ partnerId, seriesId });
   };
 
+  const toggleOrgExpanded = (partnerId: string) => {
+    setExpandedOrgs(prev => {
+      const next = new Set(prev);
+      if (next.has(partnerId)) {
+        next.delete(partnerId);
+      } else {
+        next.add(partnerId);
+      }
+      return next;
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -127,6 +166,32 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
       default:
         return null;
     }
+  };
+
+  const isOrgPartner = (partner: SeriesPartnerWithProfile): boolean => {
+    return !!partner.partner_organization_id;
+  };
+
+  const getPartnerDisplayName = (partner: SeriesPartnerWithProfile): string => {
+    if (isOrgPartner(partner)) {
+      return partner.partner_organization?.organization_name || partner.partner_organization?.display_name || 'Unknown Organization';
+    }
+    return partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email || 'Unknown';
+  };
+
+  const getPartnerAvatar = (partner: SeriesPartnerWithProfile): string | undefined => {
+    if (isOrgPartner(partner)) {
+      return partner.partner_organization?.logo_url || undefined;
+    }
+    return partner.partner_profile?.avatar_url || undefined;
+  };
+
+  const getPartnerSubtext = (partner: SeriesPartnerWithProfile): string => {
+    if (isOrgPartner(partner)) {
+      const type = partner.partner_organization?.organization_type;
+      return type ? type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Organization';
+    }
+    return partner.partner_profile?.email || partner.invited_email || '';
   };
 
   return (
@@ -242,19 +307,39 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
                 <div key={partner.id} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
+                      {isOrgPartner(partner) ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleOrgExpanded(partner.id)}
+                          className="flex items-center gap-2"
+                        >
+                          {expandedOrgs.has(partner.id) ? (
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                        </button>
+                      ) : (
+                        <div className="w-4" />
+                      )}
                       <OptimizedAvatar
-                        src={partner.partner_profile?.avatar_url || undefined}
-                        name={partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email || 'Partner'}
+                        src={getPartnerAvatar(partner)}
+                        name={getPartnerDisplayName(partner)}
                       />
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium">
-                            {partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email || 'Unknown'}
+                            {getPartnerDisplayName(partner)}
                           </p>
                           {getStatusBadge(partner.status)}
+                          {isOrgPartner(partner) && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Building2 className="h-3 w-3" /> Organization
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {partner.partner_profile?.email || partner.invited_email}
+                          {getPartnerSubtext(partner)}
                         </p>
                       </div>
                     </div>
@@ -268,6 +353,11 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
                         <DropdownMenuItem onClick={() => setSelectedPartner(partner)}>
                           Edit Permissions
                         </DropdownMenuItem>
+                        {isOrgPartner(partner) && (
+                          <DropdownMenuItem onClick={() => setOverridesPartner(partner)}>
+                            Manage Members
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         {partner.status === 'active' ? (
                           <DropdownMenuItem onClick={() => handleDeactivate(partner.id)}>
@@ -289,7 +379,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
                   </div>
 
                   {/* Permissions Display */}
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="ml-8 mt-4 flex flex-wrap gap-2">
                     {partner.is_admin && (
                       <Badge className="gap-1 bg-purple-500 hover:bg-purple-600">
                         <Shield className="h-3 w-3" /> Admin
@@ -321,6 +411,13 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
                       </Badge>
                     )}
                   </div>
+
+                  {/* Org partner note */}
+                  {isOrgPartner(partner) && (
+                    <p className="ml-8 mt-2 text-xs text-muted-foreground">
+                      Permissions apply to all team members unless overridden
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -329,7 +426,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
       </Card>
 
       {/* Add Partner Dialog */}
-      <Dialog open={showAddPartner} onOpenChange={setShowAddPartner}>
+      <Dialog open={showAddPartner} onOpenChange={(open) => { if (!open) resetAddDialog(); else setShowAddPartner(true); }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add Series Partner</DialogTitle>
@@ -339,80 +436,149 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* Search */}
-            <div className="space-y-2">
-              <Label>Search Users</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              {searchLoading && <p className="text-sm text-muted-foreground">Searching...</p>}
-              {searchResults && searchResults.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {searchResults.map((profile) => (
-                    <div
-                      key={profile.id}
-                      className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-muted"
-                      onClick={() => handleAddPartner(profile.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <OptimizedAvatar
-                          src={profile.avatar_url || undefined}
-                          name={profile.display_name || profile.name || 'User'}
-                          className="h-8 w-8"
-                        />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {profile.display_name || profile.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{profile.email}</p>
+            {/* Person / Organization Tabs */}
+            <Tabs value={addTab} onValueChange={(v) => { setAddTab(v as 'person' | 'organization'); setSearchQuery(''); setOrgSearchQuery(''); }}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="person">Person</TabsTrigger>
+                <TabsTrigger value="organization">Organization</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="person" className="space-y-4 pt-4">
+                {/* Search Users */}
+                <div className="space-y-2">
+                  <Label>Search Users</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name or email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  {searchLoading && <p className="text-sm text-muted-foreground">Searching...</p>}
+                  {searchResults && searchResults.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {searchResults.map((profile) => (
+                        <div
+                          key={profile.id}
+                          className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-muted"
+                          onClick={() => handleAddPartner(profile.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <OptimizedAvatar
+                              src={profile.avatar_url || undefined}
+                              name={profile.display_name || profile.name || 'User'}
+                              className="h-8 w-8"
+                            />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {profile.display_name || profile.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{profile.email}</p>
+                            </div>
+                          </div>
+                          <Plus className="h-4 w-4 text-muted-foreground" />
                         </div>
-                      </div>
-                      <Plus className="h-4 w-4 text-muted-foreground" />
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {searchQuery.length >= 2 && !searchLoading && searchResults?.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No users found</p>
+                  )}
                 </div>
-              )}
-              {searchQuery.length >= 2 && !searchLoading && searchResults?.length === 0 && (
-                <p className="text-sm text-muted-foreground">No users found</p>
-              )}
-            </div>
 
-            {/* Or Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or invite by email</span>
-              </div>
-            </div>
+                {/* Or Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or invite by email</span>
+                  </div>
+                </div>
 
-            {/* Email Invite */}
-            <div className="space-y-2">
-              <Label htmlFor="invite-email">Email Address</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="invite-email"
-                  type="email"
-                  placeholder="partner@example.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-                <Button
-                  onClick={() => handleAddPartner()}
-                  disabled={!inviteEmail || !inviteEmail.includes('@') || addPartner.isPending}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Invite
-                </Button>
-              </div>
-            </div>
+                {/* Email Invite */}
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">Email Address</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="partner@example.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => handleAddPartner()}
+                      disabled={!inviteEmail || !inviteEmail.includes('@') || addPartner.isPending}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Invite
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="organization" className="space-y-4 pt-4">
+                {/* Search Organizations */}
+                <div className="space-y-2">
+                  <Label>Search Organizations</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by organization name..."
+                      value={orgSearchQuery}
+                      onChange={(e) => setOrgSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  {orgSearchLoading && <p className="text-sm text-muted-foreground">Searching...</p>}
+                  {orgSearchResults && orgSearchResults.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {orgSearchResults.map((org) => (
+                        <div
+                          key={org.id}
+                          className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-muted"
+                          onClick={() => handleAddOrgPartner(org.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <OptimizedAvatar
+                              src={org.logo_url || undefined}
+                              name={org.organization_name || 'Org'}
+                              className="h-8 w-8"
+                            />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {org.organization_name}
+                              </p>
+                              <div className="flex items-center gap-1">
+                                {org.organization_type && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {org.organization_type.replace(/_/g, ' ')}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {orgSearchQuery.length >= 2 && !orgSearchLoading && orgSearchResults?.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No organizations found</p>
+                  )}
+                </div>
+
+                <Alert>
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription>
+                    Adding an organization grants access to all its team members. You can customize per-member permissions after adding.
+                  </AlertDescription>
+                </Alert>
+              </TabsContent>
+            </Tabs>
 
             {/* Permissions for New Partner */}
             <div className="space-y-4">
@@ -498,7 +664,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           </div>
 
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowAddPartner(false)}>
+            <Button variant="secondary" onClick={resetAddDialog}>
               Cancel
             </Button>
           </DialogFooter>
@@ -511,7 +677,10 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           <DialogHeader>
             <DialogTitle>Edit Permissions</DialogTitle>
             <DialogDescription>
-              Update permissions for {selectedPartner?.partner_profile?.display_name || selectedPartner?.partner_profile?.name || 'this partner'}
+              Update permissions for {getPartnerDisplayName(selectedPartner!)}
+              {selectedPartner && isOrgPartner(selectedPartner) && (
+                <span className="mt-1 block text-xs">These permissions apply to all team members unless overridden</span>
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -600,6 +769,15 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Member Overrides Dialog */}
+      {overridesPartner && (
+        <MemberOverridesDialog
+          partner={overridesPartner}
+          open={!!overridesPartner}
+          onOpenChange={(open) => { if (!open) setOverridesPartner(null); }}
+        />
+      )}
     </div>
   );
 }

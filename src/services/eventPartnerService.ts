@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 // TYPES
 // ============================================================================
 
-export type PartnerType = 'manual' | 'deal_participant' | 'co_promoter';
+export type PartnerType = 'manual' | 'deal_participant' | 'co_promoter' | 'venue_partner';
 export type PartnerStatus = 'pending_invite' | 'active' | 'inactive';
 
 export interface PartnerPermissions {
@@ -27,6 +27,7 @@ export interface EventPartner {
   id: string;
   event_id: string;
   partner_profile_id: string | null;
+  partner_organization_id: string | null;
   partner_type: PartnerType;
   source_deal_id: string | null;
   can_view_details: boolean;
@@ -48,6 +49,13 @@ export interface EventPartnerWithProfile extends EventPartner {
     display_name: string | null;
     email: string | null;
     avatar_url: string | null;
+  } | null;
+  partner_organization?: {
+    id: string;
+    organization_name: string;
+    display_name: string | null;
+    logo_url: string | null;
+    organization_type: string | null;
   } | null;
   added_by_profile?: {
     id: string;
@@ -283,72 +291,146 @@ export async function reactivatePartner(partnerId: string): Promise<EventPartner
 }
 
 /**
- * Check if a user is a partner on an event
+ * Check if a user is a partner on an event (directly or via org membership)
  */
 export async function isUserEventPartner(
   eventId: string,
   userId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase
+  // Check direct partner
+  const { data: directPartner, error: directError } = await supabase
     .from('event_partners')
     .select('id')
     .eq('event_id', eventId)
     .eq('partner_profile_id', userId)
     .eq('status', 'active')
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking partner status:', error);
-    throw error;
+  if (directError) {
+    console.error('Error checking direct partner status:', directError);
+    throw directError;
   }
 
-  return !!data;
+  if (directPartner) return true;
+
+  // Check org-based partner access via RPC
+  const { data: isOrgPartner, error: orgError } = await supabase
+    .rpc('is_org_member_event_partner', { p_event_id: eventId, p_user_id: userId });
+
+  if (orgError) {
+    console.error('Error checking org partner status:', orgError);
+    throw orgError;
+  }
+
+  return !!isOrgPartner;
 }
 
 /**
- * Get partner permissions for a user on an event
+ * Get partner permissions for a user on an event.
+ * Checks direct partnership first, then org-based partnerships.
+ * For org partners, applies member overrides if they exist.
  */
 export async function getPartnerPermissions(
   eventId: string,
   userId: string
 ): Promise<PartnerPermissions | null> {
-  const { data, error } = await supabase
+  // Check direct partner first
+  const { data: directData, error: directError } = await supabase
     .from('event_partners')
     .select('can_view_details, can_edit_event, can_view_financials, can_manage_financials, can_receive_crm_data')
     .eq('event_id', eventId)
     .eq('partner_profile_id', userId)
     .eq('status', 'active')
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not a partner
-    console.error('Error fetching partner permissions:', error);
-    throw error;
+  if (directError) {
+    console.error('Error fetching direct partner permissions:', directError);
+    throw directError;
   }
 
-  return data as PartnerPermissions;
+  if (directData) return directData as PartnerPermissions;
+
+  // Check org-based access: find event partners where user is org team member/owner
+  const { data: orgPartners, error: orgError } = await supabase
+    .from('event_partners')
+    .select('id, partner_organization_id, can_view_details, can_edit_event, can_view_financials, can_manage_financials, can_receive_crm_data')
+    .eq('event_id', eventId)
+    .eq('status', 'active')
+    .not('partner_organization_id', 'is', null);
+
+  if (orgError) {
+    console.error('Error fetching org partner permissions:', orgError);
+    throw orgError;
+  }
+
+  if (!orgPartners || orgPartners.length === 0) return null;
+
+  // Check which org the user belongs to
+  for (const ep of orgPartners) {
+    const orgId = ep.partner_organization_id;
+    if (!orgId) continue;
+
+    // Check if user is owner
+    const { data: orgProfile } = await supabase
+      .from('organization_profiles')
+      .select('owner_id')
+      .eq('id', orgId)
+      .single();
+
+    const isOwner = orgProfile?.owner_id === userId;
+
+    // Check if user is team member
+    const { data: teamMember } = await supabase
+      .from('organization_team_members')
+      .select('id')
+      .eq('organization_id', orgId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!isOwner && !teamMember) continue;
+
+    // User is part of this org — check for member overrides via series_partners
+    const { data: seriesPartnerOverride } = await supabase
+      .from('series_partner_member_overrides')
+      .select('can_view_details, can_edit_event, can_view_financials, can_manage_financials, can_receive_crm_data')
+      .eq('user_id', userId)
+      .eq('series_partner_id', ep.id)
+      .maybeSingle();
+
+    // Return permissions with overrides applied (null override = inherit from org partner)
+    return {
+      can_view_details: seriesPartnerOverride?.can_view_details ?? ep.can_view_details,
+      can_edit_event: seriesPartnerOverride?.can_edit_event ?? ep.can_edit_event,
+      can_view_financials: seriesPartnerOverride?.can_view_financials ?? ep.can_view_financials,
+      can_manage_financials: seriesPartnerOverride?.can_manage_financials ?? ep.can_manage_financials,
+      can_receive_crm_data: seriesPartnerOverride?.can_receive_crm_data ?? ep.can_receive_crm_data,
+    };
+  }
+
+  return null;
 }
 
 /**
- * Get all events where a user is a partner
+ * Get all events where a user is a partner (directly or via org membership)
  */
 export async function getUserPartnerEvents(userId: string): Promise<{
   event_id: string;
   permissions: PartnerPermissions;
   partner_type: PartnerType;
 }[]> {
-  const { data, error } = await supabase
+  // Direct partnerships
+  const { data: directData, error: directError } = await supabase
     .from('event_partners')
     .select('event_id, partner_type, can_view_details, can_edit_event, can_view_financials, can_manage_financials, can_receive_crm_data')
     .eq('partner_profile_id', userId)
     .eq('status', 'active');
 
-  if (error) {
-    console.error('Error fetching user partner events:', error);
-    throw error;
+  if (directError) {
+    console.error('Error fetching user partner events:', directError);
+    throw directError;
   }
 
-  return (data || []).map(d => ({
+  const results = (directData || []).map(d => ({
     event_id: d.event_id,
     partner_type: d.partner_type as PartnerType,
     permissions: {
@@ -359,6 +441,53 @@ export async function getUserPartnerEvents(userId: string): Promise<{
       can_receive_crm_data: d.can_receive_crm_data,
     },
   }));
+
+  const directEventIds = new Set(results.map(r => r.event_id));
+
+  // Get user's org IDs (as owner or team member)
+  const { data: ownedOrgs } = await supabase
+    .from('organization_profiles')
+    .select('id')
+    .eq('owner_id', userId);
+
+  const { data: memberOrgs } = await supabase
+    .from('organization_team_members')
+    .select('organization_id')
+    .eq('user_id', userId);
+
+  const orgIds = [
+    ...(ownedOrgs || []).map(o => o.id),
+    ...(memberOrgs || []).map(m => m.organization_id),
+  ];
+
+  if (orgIds.length > 0) {
+    const { data: orgPartnerEvents } = await supabase
+      .from('event_partners')
+      .select('event_id, partner_type, can_view_details, can_edit_event, can_view_financials, can_manage_financials, can_receive_crm_data')
+      .in('partner_organization_id', orgIds)
+      .eq('status', 'active');
+
+    if (orgPartnerEvents) {
+      for (const d of orgPartnerEvents) {
+        if (!directEventIds.has(d.event_id)) {
+          results.push({
+            event_id: d.event_id,
+            partner_type: d.partner_type as PartnerType,
+            permissions: {
+              can_view_details: d.can_view_details,
+              can_edit_event: d.can_edit_event,
+              can_view_financials: d.can_view_financials,
+              can_manage_financials: d.can_manage_financials,
+              can_receive_crm_data: d.can_receive_crm_data,
+            },
+          });
+          directEventIds.add(d.event_id);
+        }
+      }
+    }
+  }
+
+  return results;
 }
 
 /**

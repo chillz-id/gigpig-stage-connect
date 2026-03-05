@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 // TYPES
 // ============================================================================
 
-export type SeriesPartnerType = 'manual' | 'deal_participant' | 'co_promoter';
+export type SeriesPartnerType = 'manual' | 'deal_participant' | 'co_promoter' | 'venue_partner';
 export type SeriesPartnerStatus = 'pending_invite' | 'active' | 'inactive';
 
 export interface SeriesPartnerPermissions {
@@ -30,6 +30,7 @@ export interface SeriesPartner {
   id: string;
   series_id: string;
   partner_profile_id: string | null;
+  partner_organization_id: string | null;
   partner_type: SeriesPartnerType;
   is_admin: boolean;
   can_view_details: boolean;
@@ -44,6 +45,14 @@ export interface SeriesPartner {
   updated_at: string;
 }
 
+export interface PartnerOrganization {
+  id: string;
+  organization_name: string;
+  display_name: string | null;
+  logo_url: string | null;
+  organization_type: string | null;
+}
+
 export interface SeriesPartnerWithProfile extends SeriesPartner {
   partner_profile?: {
     id: string;
@@ -52,6 +61,7 @@ export interface SeriesPartnerWithProfile extends SeriesPartner {
     email: string | null;
     avatar_url: string | null;
   } | null;
+  partner_organization?: PartnerOrganization | null;
   added_by_profile?: {
     id: string;
     name: string | null;
@@ -62,6 +72,7 @@ export interface SeriesPartnerWithProfile extends SeriesPartner {
 export interface AddSeriesPartnerInput {
   series_id: string;
   partner_profile_id?: string;
+  partner_organization_id?: string;
   invited_email?: string;
   permissions?: Partial<SeriesPartnerPermissions>;
 }
@@ -135,30 +146,55 @@ async function getSeriesPartners(seriesId: string): Promise<SeriesPartnerWithPro
     }
   }
 
+  // Fetch org data for partners with organization IDs
+  const orgIds = partners
+    .map(p => p.partner_organization_id)
+    .filter((id): id is string => id !== null);
+
+  let orgsMap: Record<string, PartnerOrganization> = {};
+
+  if (orgIds.length > 0) {
+    const { data: orgsData } = await supabase
+      .from('organization_profiles')
+      .select('id, organization_name, display_name, logo_url, organization_type')
+      .in('id', orgIds);
+
+    if (orgsData) {
+      orgsMap = orgsData.reduce((acc, o) => {
+        acc[o.id] = o as PartnerOrganization;
+        return acc;
+      }, {} as typeof orgsMap);
+    }
+  }
+
   // Combine data
   return partners.map(partner => ({
     ...partner,
     partner_profile: partner.partner_profile_id ? profilesMap[partner.partner_profile_id] || null : null,
+    partner_organization: partner.partner_organization_id ? orgsMap[partner.partner_organization_id] || null : null,
     added_by_profile: null, // Skip added_by profile for simplicity
   })) as SeriesPartnerWithProfile[];
 }
 
 async function addSeriesPartner(input: AddSeriesPartnerInput): Promise<SeriesPartner> {
-  const { series_id, partner_profile_id, invited_email, permissions = {} } = input;
+  const { series_id, partner_profile_id, partner_organization_id, invited_email, permissions = {} } = input;
 
-  if (!partner_profile_id && !invited_email) {
-    throw new Error('Either partner_profile_id or invited_email is required');
+  if (!partner_profile_id && !partner_organization_id && !invited_email) {
+    throw new Error('Either partner_profile_id, partner_organization_id, or invited_email is required');
   }
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  const isOrgPartner = !!partner_organization_id;
+
   const partnerData = {
     series_id,
-    partner_profile_id: partner_profile_id || null,
-    invited_email: partner_profile_id ? null : invited_email,
-    partner_type: 'manual' as SeriesPartnerType,
-    status: partner_profile_id ? 'active' : 'pending_invite' as SeriesPartnerStatus,
+    partner_profile_id: isOrgPartner ? null : (partner_profile_id || null),
+    partner_organization_id: partner_organization_id || null,
+    invited_email: (partner_profile_id || partner_organization_id) ? null : invited_email,
+    partner_type: (isOrgPartner ? 'venue_partner' : 'manual') as SeriesPartnerType,
+    status: (partner_profile_id || partner_organization_id) ? 'active' : 'pending_invite' as SeriesPartnerStatus,
     added_by: user.id,
     ...DEFAULT_SERIES_PARTNER_PERMISSIONS,
     ...permissions,
@@ -293,6 +329,42 @@ async function searchProfilesToAddToSeries(
   return data || [];
 }
 
+async function searchOrganizationsToAddToSeries(
+  query: string,
+  seriesId: string
+): Promise<PartnerOrganization[]> {
+  // Get existing org partner IDs to exclude
+  const { data: existingPartners } = await supabase
+    .from('series_partners')
+    .select('partner_organization_id')
+    .eq('series_id', seriesId)
+    .not('partner_organization_id', 'is', null);
+
+  const existingOrgIds = (existingPartners || [])
+    .map(p => p.partner_organization_id)
+    .filter(Boolean);
+
+  let orgQuery = supabase
+    .from('organization_profiles')
+    .select('id, organization_name, display_name, logo_url, organization_type')
+    .or(`organization_name.ilike.%${query}%,display_name.ilike.%${query}%`)
+    .eq('is_active', true)
+    .limit(10);
+
+  if (existingOrgIds.length > 0) {
+    orgQuery = orgQuery.not('id', 'in', `(${existingOrgIds.join(',')})`);
+  }
+
+  const { data, error } = await orgQuery;
+
+  if (error) {
+    console.error('Error searching organizations:', error);
+    throw error;
+  }
+
+  return (data || []) as PartnerOrganization[];
+}
+
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -337,6 +409,22 @@ export function useSearchSeriesPartnersToAdd(seriesId: string | undefined, query
     queryFn: async () => {
       if (!seriesId || !query || query.length < 2) return [];
       return searchProfilesToAddToSeries(query, seriesId);
+    },
+    enabled: !!seriesId && query.length >= 2,
+    staleTime: 30 * 1000,
+    gcTime: 2 * 60 * 1000
+  });
+}
+
+/**
+ * Search for organizations to add as partners
+ */
+export function useSearchOrganizationsToAdd(seriesId: string | undefined, query: string) {
+  return useQuery({
+    queryKey: [...seriesPartnersKeys.all, 'org-search', seriesId || '', query] as const,
+    queryFn: async () => {
+      if (!seriesId || !query || query.length < 2) return [];
+      return searchOrganizationsToAddToSeries(query, seriesId);
     },
     enabled: !!seriesId && query.length >= 2,
     staleTime: 30 * 1000,

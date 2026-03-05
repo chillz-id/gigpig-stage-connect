@@ -48,7 +48,8 @@ export type ManagerType =
   | 'tour_manager'       // Tour manager - events, bookings, tasks
   | 'booking_manager'    // Booking manager - bookings, events, messages
   | 'content_manager'    // Content manager - media, social, events
-  | 'financial_manager'; // Financial manager - full financial access
+  | 'financial_manager'  // Financial manager - full financial access
+  | 'venue_manager';     // Venue manager - events, bookings, media, tasks
 
 /**
  * Organization team member role
@@ -160,6 +161,7 @@ export const MANAGER_TYPES: ManagerType[] = [
   'booking_manager',
   'content_manager',
   'financial_manager',
+  'venue_manager',
 ];
 
 /**
@@ -267,6 +269,12 @@ export const MANAGER_TYPE_CONFIGS: Record<ManagerType, Omit<ManagerTypeConfig, '
     label: 'Financial Manager',
     description: 'Full access to financial data and analytics',
     icon: 'DollarSign',
+  },
+  venue_manager: {
+    type: 'venue_manager',
+    label: 'Venue Manager',
+    description: 'Manages venue events, bookings, media, and tasks',
+    icon: 'Building2',
   },
 };
 
@@ -384,6 +392,17 @@ export const DEFAULT_PERMISSIONS: Record<ManagerType, OrganizationPermissions> =
     messages: viewOnly(),
     bookings: viewOnly(),
     analytics: fullAccess(),
+  },
+  venue_manager: {
+    financial: viewOnly(),
+    team: viewOnly(),
+    events: viewEdit(),
+    media: viewEdit(),
+    social: noAccess(),
+    tasks: viewEdit(),
+    messages: viewEdit(),
+    bookings: viewOnly(),
+    analytics: noAccess(),
   },
 };
 
