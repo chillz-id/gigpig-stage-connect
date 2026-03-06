@@ -160,6 +160,57 @@ export async function getParticipantsByDeal(dealId: string): Promise<DealPartici
 }
 
 /**
+ * Get all participants for a series deal
+ */
+export async function getParticipantsBySeriesDeal(seriesDealId: string): Promise<DealParticipantWithDetails[]> {
+  const { data, error } = await supabase
+    .from('deal_participants')
+    .select(`
+      *,
+      participant:profiles!participant_id (
+        id,
+        name,
+        avatar_url,
+        email
+      )
+    `)
+    .eq('series_deal_id', seriesDealId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching series deal participants:', error);
+    throw error;
+  }
+
+  return data as unknown as DealParticipantWithDetails[];
+}
+
+/**
+ * Add a participant to a series deal
+ */
+export async function addSeriesDealParticipant(input: Omit<CreateParticipantInput, 'deal_id'> & { series_deal_id: string }): Promise<DealParticipant> {
+  const { series_deal_id, ...rest } = input;
+  const { data, error } = await supabase
+    .from('deal_participants')
+    .insert({
+      ...rest,
+      series_deal_id,
+      deal_id: null,
+      approval_status: 'pending',
+      version: 1,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding series deal participant:', error);
+    throw error;
+  }
+
+  return data as DealParticipant;
+}
+
+/**
  * Get a single participant by ID
  */
 export async function getParticipantById(participantId: string): Promise<DealParticipantWithDetails | null> {

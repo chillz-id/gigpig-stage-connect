@@ -521,6 +521,83 @@ class InvoiceService {
   }
 
   // =====================================
+  // DEAL SETTLEMENT INVOICING
+  // =====================================
+
+  /**
+   * Create an invoice from a deal settlement.
+   * Called by eventDealService.settleDeal() for each participant.
+   */
+  async createInvoiceFromDeal(params: {
+    deal_id: string;
+    participant_id: string;
+    participant_name: string;
+    participant_type: string;
+    amount: number;
+    event_title: string;
+    event_date?: string;
+    venue?: string;
+    deal_name: string;
+    deal_type: string;
+    split_description: string;
+  }): Promise<{ id: string; invoice_number: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Get participant profile for recipient details
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, email, phone, abn')
+      .eq('id', params.participant_id)
+      .single();
+
+    const recipientName = profile?.name || params.participant_name;
+    const recipientEmail = profile?.email || '';
+
+    const dueDate = params.event_date
+      ? new Date(new Date(params.event_date).getTime() + 14 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const description = `${params.deal_name} - ${params.split_description}`;
+    const eventInfo = params.venue
+      ? `${params.event_title} at ${params.venue}`
+      : params.event_title;
+
+    return this.createInvoice({
+      invoice_type: 'payable',
+      recipient_id: params.participant_id,
+      sender_name: 'Stand Up Sydney',
+      sender_email: 'billing@standupsydney.com',
+      issue_date: new Date().toISOString(),
+      due_date: dueDate.toISOString(),
+      event_date: params.event_date,
+      currency: 'AUD',
+      tax_rate: 10,
+      tax_treatment: 'exclusive',
+      subtotal_amount: params.amount,
+      tax_amount: params.amount * 0.1,
+      total_amount: params.amount * 1.1,
+      notes: `Settlement for ${eventInfo}`,
+      status: 'draft',
+      items: [{
+        description,
+        quantity: 1,
+        unit_price: params.amount,
+        subtotal: params.amount,
+        tax_amount: params.amount * 0.1,
+        total: params.amount * 1.1,
+      }],
+      recipients: [{
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        recipient_phone: profile?.phone ?? undefined,
+        recipient_abn: profile?.abn ?? undefined,
+        recipient_type: params.participant_type === 'organization' ? 'company' : 'individual',
+      }],
+    });
+  }
+
+  // =====================================
   // XERO INTEGRATION
   // =====================================
 

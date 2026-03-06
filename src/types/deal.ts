@@ -59,3 +59,44 @@ export interface SplitParticipant {
   split_amount: number;
   split_percentage: number;
 }
+
+// Series deal participant (linked via series_deal_id instead of deal_id)
+export interface SeriesDealParticipant {
+  id: string;
+  series_deal_id: string;
+  participant_id?: string;
+  participant_email?: string;
+  participant_type: 'comedian' | 'manager' | 'organization' | 'venue' | 'promoter' | 'other';
+  split_type: 'percentage' | 'flat_fee' | 'door_split' | 'tiered' | 'custom';
+  split_percentage?: number;
+  flat_fee_amount?: number;
+  gst_mode: 'inclusive' | 'exclusive' | 'none';
+  approval_status: 'pending' | 'approved' | 'edited' | 'declined';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined profile data
+  participant?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+    email?: string;
+  };
+}
+
+export type DealFrequency = 'per_event' | 'weekly' | 'fortnightly' | 'monthly';
+
+export interface SeriesDealRevenue {
+  series_deal_id: string;
+  total_revenue: number;
+  settled_revenue: number;
+  pending_revenue: number;
+  event_count: number;
+  per_participant: Array<{
+    participant_id: string;
+    participant_name: string;
+    earned: number;
+    settled: number;
+    pending: number;
+  }>;
+}

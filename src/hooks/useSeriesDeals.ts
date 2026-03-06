@@ -16,6 +16,9 @@ import { supabase } from '@/integrations/supabase/client';
 export type SeriesDealType = 'revenue_share' | 'fixed_split' | 'tiered' | 'custom';
 export type SeriesDealStatus = 'draft' | 'pending_approval' | 'approved' | 'active' | 'cancelled';
 
+export type GstMode = 'inclusive' | 'exclusive' | 'none';
+export type DealFrequency = 'per_event' | 'weekly' | 'fortnightly' | 'monthly';
+
 export interface SeriesDeal {
   id: string;
   series_id: string;
@@ -24,9 +27,37 @@ export interface SeriesDeal {
   status: string;
   apply_to_all_events: boolean;
   apply_to_future_only: boolean;
+  description: string | null;
+  fixed_fee_amount: number | null;
+  guaranteed_minimum: number | null;
+  gst_mode: GstMode;
+  frequency: DealFrequency | null;
+  day_of_week: number | null;
+  recurring_invoice_id: string | null;
+  notes: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface SeriesDealParticipant {
+  id: string;
+  series_deal_id: string;
+  participant_id: string | null;
+  participant_email: string | null;
+  participant_type: string;
+  split_type: string;
+  split_percentage: number;
+  flat_fee_amount: number | null;
+  gst_mode: string;
+  approval_status: string;
+  notes: string | null;
+  participant?: {
+    id: string;
+    name: string | null;
+    avatar_url: string | null;
+    email: string | null;
+  } | null;
 }
 
 export interface SeriesDealWithDetails extends SeriesDeal {
@@ -36,20 +67,47 @@ export interface SeriesDealWithDetails extends SeriesDeal {
     display_name: string | null;
     avatar_url: string | null;
   } | null;
+  participants?: SeriesDealParticipant[];
+}
+
+export interface CreateSeriesDealParticipantInput {
+  participant_id?: string;
+  participant_email?: string;
+  participant_type: 'comedian' | 'manager' | 'organization' | 'venue' | 'promoter' | 'other';
+  split_type: 'percentage' | 'flat_fee' | 'door_split' | 'tiered' | 'custom';
+  split_percentage?: number;
+  flat_fee_amount?: number;
+  gst_mode?: GstMode;
+  notes?: string;
 }
 
 export interface CreateSeriesDealInput {
   series_id: string;
   title: string;
   deal_type?: SeriesDealType;
+  description?: string;
+  fixed_fee_amount?: number;
+  guaranteed_minimum?: number;
+  gst_mode?: GstMode;
+  frequency?: DealFrequency;
+  day_of_week?: number;
+  notes?: string;
   apply_to_all_events?: boolean;
   apply_to_future_only?: boolean;
+  participants?: CreateSeriesDealParticipantInput[];
 }
 
 export interface UpdateSeriesDealInput {
   title?: string;
   deal_type?: SeriesDealType;
   status?: SeriesDealStatus;
+  description?: string;
+  fixed_fee_amount?: number;
+  guaranteed_minimum?: number;
+  gst_mode?: GstMode;
+  frequency?: DealFrequency;
+  day_of_week?: number;
+  notes?: string;
   apply_to_all_events?: boolean;
   apply_to_future_only?: boolean;
 }
@@ -62,6 +120,8 @@ export const seriesDealsKeys = {
   all: ['series-deals'] as const,
   bySeries: (seriesId: string) => [...seriesDealsKeys.all, 'series', seriesId] as const,
   detail: (dealId: string) => [...seriesDealsKeys.all, 'detail', dealId] as const,
+  participants: (dealId: string) => [...seriesDealsKeys.all, 'participants', dealId] as const,
+  revenue: (dealId: string) => [...seriesDealsKeys.all, 'revenue', dealId] as const,
 };
 
 // ============================================================================
@@ -104,10 +164,35 @@ async function getSeriesDeals(seriesId: string): Promise<SeriesDealWithDetails[]
     }
   }
 
+  // Fetch participants for all deals
+  const dealIds = deals.map(d => d.id);
+  const participantsMap: Record<string, SeriesDealParticipant[]> = {};
+
+  if (dealIds.length > 0) {
+    const { data: participantsData } = await supabase
+      .from('deal_participants')
+      .select(`
+        *,
+        participant:profiles!participant_id (
+          id, name, avatar_url, email
+        )
+      `)
+      .in('series_deal_id', dealIds);
+
+    if (participantsData) {
+      for (const p of participantsData) {
+        const sid = p.series_deal_id as string;
+        if (!participantsMap[sid]) participantsMap[sid] = [];
+        participantsMap[sid].push(p as unknown as SeriesDealParticipant);
+      }
+    }
+  }
+
   // Combine data
   return deals.map(deal => ({
     ...deal,
     created_by_profile: deal.created_by ? profilesMap[deal.created_by] || null : null,
+    participants: participantsMap[deal.id] || [],
   })) as SeriesDealWithDetails[];
 }
 
@@ -151,6 +236,13 @@ async function createSeriesDeal(input: CreateSeriesDealInput): Promise<SeriesDea
     series_id: input.series_id,
     title: input.title,
     deal_type: input.deal_type || null,
+    description: input.description || null,
+    fixed_fee_amount: input.fixed_fee_amount || null,
+    guaranteed_minimum: input.guaranteed_minimum || null,
+    gst_mode: input.gst_mode || 'none',
+    frequency: input.frequency || null,
+    day_of_week: input.day_of_week ?? null,
+    notes: input.notes || null,
     status: 'draft',
     apply_to_all_events: input.apply_to_all_events ?? true,
     apply_to_future_only: input.apply_to_future_only ?? false,
@@ -166,6 +258,34 @@ async function createSeriesDeal(input: CreateSeriesDealInput): Promise<SeriesDea
   if (error) {
     console.error('Error creating series deal:', error);
     throw error;
+  }
+
+  // Create participants if provided
+  if (input.participants && input.participants.length > 0) {
+    const participantInserts = input.participants.map(p => ({
+      series_deal_id: data.id,
+      participant_id: p.participant_id || null,
+      participant_email: p.participant_email || null,
+      participant_type: p.participant_type,
+      split_type: p.split_type,
+      split_percentage: p.split_percentage ?? 0,
+      flat_fee_amount: p.flat_fee_amount || null,
+      gst_mode: p.gst_mode || 'none',
+      approval_status: 'pending',
+      version: 1,
+      notes: p.notes || null,
+    }));
+
+    const { error: participantsError } = await supabase
+      .from('deal_participants')
+      .insert(participantInserts);
+
+    if (participantsError) {
+      console.error('Error creating participants:', participantsError);
+      // Delete the deal if participants failed
+      await supabase.from('series_deals').delete().eq('id', data.id);
+      throw participantsError;
+    }
   }
 
   return data as SeriesDeal;
@@ -375,21 +495,17 @@ export function useApplySeriesDealToEvents() {
 
   return useMutation({
     mutationFn: async ({ dealId, seriesId }: { dealId: string; seriesId: string }) => {
-      // TODO: Implement actual deal application logic
-      // This would:
-      // 1. Get the series deal details
-      // 2. Get all events in the series
-      // 3. Create event_deals for each event based on the series deal template
-      console.log('Applying deal', dealId, 'to series', seriesId);
-      return { dealId, seriesId };
+      const { syncSeriesDealToEvents } = await import('@/services/seriesDealService');
+      const result = await syncSeriesDealToEvents(dealId, seriesId);
+      return { dealId, seriesId, ...result };
     },
-    onSuccess: ({ seriesId }) => {
+    onSuccess: ({ seriesId, eventsCreated }) => {
       queryClient.invalidateQueries({
         queryKey: seriesDealsKeys.bySeries(seriesId)
       });
       toast({
         title: 'Deal applied',
-        description: 'Deal has been applied to all events in the series.'
+        description: `Deal synced to ${eventsCreated} event${eventsCreated === 1 ? '' : 's'}.`
       });
     },
     onError: (error: Error) => {
@@ -400,5 +516,48 @@ export function useApplySeriesDealToEvents() {
       });
     },
     retry: 1
+  });
+}
+
+/**
+ * Fetch participants for a specific series deal
+ */
+export function useSeriesDealParticipants(dealId: string | undefined) {
+  return useQuery({
+    queryKey: seriesDealsKeys.participants(dealId || ''),
+    queryFn: async () => {
+      if (!dealId) throw new Error('Deal ID required');
+      const { data, error } = await supabase
+        .from('deal_participants')
+        .select(`
+          *,
+          participant:profiles!participant_id (
+            id, name, avatar_url, email
+          )
+        `)
+        .eq('series_deal_id', dealId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data as unknown as SeriesDealParticipant[];
+    },
+    enabled: !!dealId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Fetch revenue data for a series deal across its linked event_deals
+ */
+export function useSeriesDealRevenue(dealId: string | undefined) {
+  return useQuery({
+    queryKey: seriesDealsKeys.revenue(dealId || ''),
+    queryFn: async () => {
+      if (!dealId) throw new Error('Deal ID required');
+      const { getSeriesDealRevenue } = await import('@/services/seriesDealService');
+      return getSeriesDealRevenue(dealId);
+    },
+    enabled: !!dealId,
+    staleTime: 2 * 60 * 1000,
   });
 }
