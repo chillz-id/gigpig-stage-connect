@@ -172,21 +172,24 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
     return !!partner?.partner_organization_id;
   };
 
-  const getPartnerDisplayName = (partner: SeriesPartnerWithProfile): string => {
+  const getPartnerDisplayName = (partner: SeriesPartnerWithProfile | null | undefined): string => {
+    if (!partner) return 'Unknown';
     if (isOrgPartner(partner)) {
       return partner.partner_organization?.organization_name || partner.partner_organization?.display_name || 'Unknown Organization';
     }
     return partner.partner_profile?.display_name || partner.partner_profile?.name || partner.invited_email || 'Unknown';
   };
 
-  const getPartnerAvatar = (partner: SeriesPartnerWithProfile): string | undefined => {
+  const getPartnerAvatar = (partner: SeriesPartnerWithProfile | null | undefined): string | undefined => {
+    if (!partner) return undefined;
     if (isOrgPartner(partner)) {
       return partner.partner_organization?.logo_url || undefined;
     }
     return partner.partner_profile?.avatar_url || undefined;
   };
 
-  const getPartnerSubtext = (partner: SeriesPartnerWithProfile): string => {
+  const getPartnerSubtext = (partner: SeriesPartnerWithProfile | null | undefined): string => {
+    if (!partner) return '';
     if (isOrgPartner(partner)) {
       const type = partner.partner_organization?.organization_type;
       return type ? type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Organization';
@@ -677,7 +680,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           <DialogHeader>
             <DialogTitle>Edit Permissions</DialogTitle>
             <DialogDescription>
-              Update permissions for {getPartnerDisplayName(selectedPartner!)}
+              Update permissions for {getPartnerDisplayName(selectedPartner)}
               {selectedPartner && isOrgPartner(selectedPartner) && (
                 <span className="mt-1 block text-xs">These permissions apply to all team members unless overridden</span>
               )}
