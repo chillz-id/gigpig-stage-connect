@@ -168,8 +168,8 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
     }
   };
 
-  const isOrgPartner = (partner: SeriesPartnerWithProfile): boolean => {
-    return !!partner.partner_organization_id;
+  const isOrgPartner = (partner: SeriesPartnerWithProfile | null | undefined): boolean => {
+    return !!partner?.partner_organization_id;
   };
 
   const getPartnerDisplayName = (partner: SeriesPartnerWithProfile): string => {

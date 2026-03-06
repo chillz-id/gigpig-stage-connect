@@ -57,7 +57,7 @@ const PERMISSION_LABELS: { key: PermissionKey; label: string; icon: typeof Eye }
 ];
 
 export default function MemberOverridesDialog({ partner, open, onOpenChange }: MemberOverridesDialogProps) {
-  const orgId = partner.partner_organization_id;
+  const orgId = partner?.partner_organization_id;
 
   // Fetch org team members
   const { data: teamMembers, isLoading: membersLoading } = useQuery({
