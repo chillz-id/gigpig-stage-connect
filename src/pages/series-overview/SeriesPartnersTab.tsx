@@ -91,8 +91,8 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
   const reactivatePartner = useReactivateSeriesPartner();
 
   // Stats
-  const activePartners = partners?.filter(p => p.status === 'active') || [];
-  const pendingPartners = partners?.filter(p => p.status === 'pending_invite') || [];
+  const activePartners = partners?.filter(p => p?.status === 'active') || [];
+  const pendingPartners = partners?.filter(p => p?.status === 'pending_invite') || [];
 
   const handleAddPartner = async (profileId?: string) => {
     await addPartner.mutateAsync({
@@ -303,7 +303,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
             </div>
           ) : (
             <div className="space-y-4">
-              {partners?.map((partner) => (
+              {partners?.filter(Boolean).map((partner) => (
                 <div key={partner.id} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
