@@ -82,16 +82,6 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
   const [showManualEntryDialog, setShowManualEntryDialog] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
 
-  // Manual ticket entries hook
-  const {
-    entries: manualEntries,
-    breakdownByPartner,
-    totals: manualTotals,
-    isLoading: manualEntriesLoading,
-    deleteEntry,
-    isDeleting,
-  } = useManualTicketEntries(eventId);
-
   // Fetch event to get source_id
   const { data: event, isLoading: eventLoading } = useQuery<EventData>({
     queryKey: ['event-source', eventId],
@@ -108,6 +98,16 @@ export default function TicketsTab({ eventId }: TicketsTabProps) {
   });
 
   const sourceId = event?.source_id || event?.humanitix_event_id || event?.eventbrite_event_id;
+
+  // Manual ticket entries hook (queries by event_id OR canonical_session_source_id)
+  const {
+    entries: manualEntries,
+    breakdownByPartner,
+    totals: manualTotals,
+    isLoading: manualEntriesLoading,
+    deleteEntry,
+    isDeleting,
+  } = useManualTicketEntries(eventId, sourceId);
   const isSyncedEvent = event?.source === 'humanitix' || event?.source === 'eventbrite';
 
   // Fetch session data from session_complete view

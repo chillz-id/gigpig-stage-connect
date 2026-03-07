@@ -66,26 +66,32 @@ export interface ManualTicketEntryUpdate {
   cancelled_at?: string | null;
 }
 
-export const useManualTicketEntries = (eventId: string) => {
+export const useManualTicketEntries = (eventId: string, canonicalSourceId?: string | null) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch entries for an event
+  // Fetch entries for an event (by event_id OR canonical_session_source_id)
   const {
     data: entries = [],
     isLoading,
     error
   } = useQuery({
-    queryKey: ['manual-ticket-entries', eventId],
+    queryKey: ['manual-ticket-entries', eventId, canonicalSourceId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('manual_ticket_entries')
         .select(`
           *,
           partner:ticketing_partners(*)
-        `)
-        .eq('event_id', eventId)
-        .order('entry_date', { ascending: false });
+        `);
+
+      if (canonicalSourceId) {
+        query = query.or(`event_id.eq.${eventId},canonical_session_source_id.eq.${canonicalSourceId}`);
+      } else {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data, error } = await query.order('entry_date', { ascending: false });
 
       if (error) throw error;
       return data as ManualTicketEntry[];
