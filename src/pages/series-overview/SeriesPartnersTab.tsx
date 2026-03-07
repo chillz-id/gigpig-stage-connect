@@ -430,7 +430,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
 
       {/* Add Partner Dialog */}
       <Dialog open={showAddPartner} onOpenChange={(open) => { if (!open) resetAddDialog(); else setShowAddPartner(true); }}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
             <DialogTitle>Add Series Partner</DialogTitle>
             <DialogDescription>
@@ -584,91 +584,13 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
             </Tabs>
 
             {/* Permissions for New Partner */}
-            <>
-              <div className="space-y-4">
-                <Label>Initial Permissions</Label>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg bg-purple-500/10 p-2">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-purple-500" />
-                      <span className="text-sm font-medium">Series Admin</span>
-                      <span className="inline-flex cursor-help" title="Full control over series settings, partner management, deals, and all events within the series."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.is_admin}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, is_admin: checked }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">View Event Details</span>
-                      <span className="inline-flex cursor-help" title="See event details including date, time, venue, lineup, and ticket sales data."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.can_view_details}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, can_view_details: checked }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Edit className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Edit Events</span>
-                      <span className="inline-flex cursor-help" title="Modify event details like title, description, lineup, and scheduling. Does not include financial changes."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.can_edit_event}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, can_edit_event: checked }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">View Financials</span>
-                      <span className="inline-flex cursor-help" title="View revenue, ticket sales, deals, and settlement data. Read-only access to financial information."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.can_view_financials}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, can_view_financials: checked }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Manage Financials</span>
-                      <span className="inline-flex cursor-help" title="Create and edit deals, settle payments, generate invoices, and manage all financial operations."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.can_manage_financials}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, can_manage_financials: checked }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">CRM Data Sync</span>
-                      <span className="inline-flex cursor-help" title="Receive attendee and customer data from events for their own CRM or mailing list."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                    </div>
-                    <Switch
-                      checked={newPartnerPermissions.can_receive_crm_data}
-                      onCheckedChange={(checked) =>
-                        setNewPartnerPermissions(prev => ({ ...prev, can_receive_crm_data: checked }))
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
+            <PermissionsList
+              permissions={newPartnerPermissions}
+              onToggle={(key, checked) =>
+                setNewPartnerPermissions(prev => ({ ...prev, [key]: checked }))
+              }
+              title="Initial Permissions"
+            />
           </div>
 
           <DialogFooter>
@@ -681,7 +603,7 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
 
       {/* Edit Permissions Dialog */}
       <Dialog open={!!selectedPartner} onOpenChange={() => setSelectedPartner(null)}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Edit Permissions</DialogTitle>
             <DialogDescription>
@@ -693,86 +615,19 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           </DialogHeader>
 
           {selectedPartner && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center justify-between rounded-lg bg-purple-500/10 p-2">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm font-medium">Series Admin</span>
-                  <span className="inline-flex cursor-help" title="Full control over series settings, partner management, deals, and all events within the series."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.is_admin}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'is_admin', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">View Event Details</span>
-                  <span className="inline-flex cursor-help" title="See event details including date, time, venue, lineup, and ticket sales data."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_view_details}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_view_details', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Edit className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Edit Events</span>
-                  <span className="inline-flex cursor-help" title="Modify event details like title, description, lineup, and scheduling. Does not include financial changes."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_edit_event}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_edit_event', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">View Financials</span>
-                  <span className="inline-flex cursor-help" title="View revenue, ticket sales, deals, and settlement data. Read-only access to financial information."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_view_financials}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_view_financials', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Manage Financials</span>
-                  <span className="inline-flex cursor-help" title="Create and edit deals, settle payments, generate invoices, and manage all financial operations."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_manage_financials}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_manage_financials', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">CRM Data Sync</span>
-                  <span className="inline-flex cursor-help" title="Receive attendee and customer data from events for their own CRM or mailing list."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_receive_crm_data}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_receive_crm_data', checked)
-                  }
-                />
-              </div>
-            </div>
+            <PermissionsList
+              permissions={{
+                is_admin: selectedPartner.is_admin,
+                can_view_details: selectedPartner.can_view_details,
+                can_edit_event: selectedPartner.can_edit_event,
+                can_view_financials: selectedPartner.can_view_financials,
+                can_manage_financials: selectedPartner.can_manage_financials,
+                can_receive_crm_data: selectedPartner.can_receive_crm_data,
+              }}
+              onToggle={(key, checked) =>
+                handleUpdatePermission(selectedPartner.id, key, checked)
+              }
+            />
           )}
 
           <DialogFooter>
@@ -789,6 +644,138 @@ export default function SeriesPartnersTab({ seriesId, userId }: SeriesPartnersTa
           onOpenChange={(open) => { if (!open) setOverridesPartner(null); }}
         />
       )}
+    </div>
+  );
+}
+
+// ============================================================================
+// PERMISSIONS LIST — Shared between Add Partner and Edit Permissions dialogs
+// ============================================================================
+
+type PermissionKey = 'is_admin' | 'can_view_details' | 'can_edit_event' | 'can_view_financials' | 'can_manage_financials' | 'can_receive_crm_data';
+
+interface PermissionsListProps {
+  permissions: Record<PermissionKey, boolean>;
+  onToggle: (key: PermissionKey, checked: boolean) => void;
+  title?: string;
+}
+
+const PERMISSION_DEFS: {
+  key: PermissionKey;
+  label: string;
+  description: string;
+  icon: typeof Eye;
+  severity: 'critical' | 'high' | 'standard';
+}[] = [
+  {
+    key: 'is_admin',
+    label: 'Series Admin',
+    description: 'Full control: can manage series settings, add/remove partners, create deals, and modify all events. This is the highest level of access.',
+    icon: Shield,
+    severity: 'critical',
+  },
+  {
+    key: 'can_view_details',
+    label: 'View Event Details',
+    description: 'Can see event details including date, time, venue, lineup, and ticket sales numbers.',
+    icon: Eye,
+    severity: 'standard',
+  },
+  {
+    key: 'can_edit_event',
+    label: 'Edit Events',
+    description: 'Can modify event details like title, description, lineup, and scheduling. Does not include financial changes.',
+    icon: Edit,
+    severity: 'high',
+  },
+  {
+    key: 'can_view_financials',
+    label: 'View Financials',
+    description: 'Can see revenue figures, ticket sales income, deal terms, and settlement history. Read-only access.',
+    icon: DollarSign,
+    severity: 'high',
+  },
+  {
+    key: 'can_manage_financials',
+    label: 'Manage Financials',
+    description: 'Can create and edit deals, settle payments, generate invoices, and manage all financial operations on your behalf.',
+    icon: DollarSign,
+    severity: 'critical',
+  },
+  {
+    key: 'can_receive_crm_data',
+    label: 'CRM Data Sync',
+    description: 'Will receive attendee names, emails, and ticket data from events for their own CRM or mailing list. This shares customer data.',
+    icon: Database,
+    severity: 'high',
+  },
+];
+
+function PermissionsList({ permissions, onToggle, title }: PermissionsListProps) {
+  const [expandedKey, setExpandedKey] = useState<PermissionKey | null>(null);
+
+  const severityStyles = {
+    critical: 'border-red-500/30 bg-red-500/5',
+    high: 'border-amber-500/30 bg-amber-500/5',
+    standard: 'border-border',
+  };
+
+  const severityBadge = {
+    critical: <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Critical</Badge>,
+    high: <Badge variant="secondary" className="border-amber-500/50 text-amber-600 dark:text-amber-400 text-[10px] px-1.5 py-0">Sensitive</Badge>,
+    standard: null,
+  };
+
+  return (
+    <div className="space-y-3">
+      {title && <Label>{title}</Label>}
+      <div className="space-y-2">
+        {PERMISSION_DEFS.map(({ key, label, description, icon: Icon, severity }) => {
+          const isOn = permissions[key];
+          const isExpanded = expandedKey === key;
+          const isAdmin = key === 'is_admin';
+
+          return (
+            <div
+              key={key}
+              className={`rounded-lg border p-3 transition-colors ${
+                isAdmin ? 'bg-purple-500/10 border-purple-500/30' : severityStyles[severity]
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Icon className={`h-4 w-4 shrink-0 ${isAdmin ? 'text-purple-500' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm ${isAdmin ? 'font-semibold' : 'font-medium'}`}>{label}</span>
+                  {severityBadge[severity]}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedKey(isExpanded ? null : key)}
+                    className="inline-flex cursor-help rounded-full p-0.5 hover:bg-muted"
+                  >
+                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+                <Switch
+                  checked={isOn}
+                  onCheckedChange={(checked) => onToggle(key, checked)}
+                />
+              </div>
+              {isExpanded && (
+                <div className={`mt-2 rounded-md px-3 py-2 text-xs leading-relaxed ${
+                  severity === 'critical'
+                    ? 'bg-red-500/10 text-red-700 dark:text-red-300'
+                    : severity === 'high'
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  <AlertCircle className="mr-1 inline h-3 w-3" />
+                  {description}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
