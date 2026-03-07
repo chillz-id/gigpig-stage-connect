@@ -6,13 +6,12 @@
  */
 
 import { useState } from 'react';
-import { Plus, Users, UserCheck, UserX, Search, Mail, Shield, Eye, Edit, DollarSign, Database } from 'lucide-react';
+import { Plus, Users, UserCheck, Search, Mail, Shield, Eye, Edit, DollarSign, Database, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OptimizedAvatar } from '@/components/ui/OptimizedAvatar';
@@ -31,7 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
 import {
   useEventPartners,
   useAddPartner,
@@ -44,6 +42,7 @@ import {
   type PartnerPermissions
 } from '@/hooks/useEventPartners';
 import { DEFAULT_PARTNER_PERMISSIONS } from '@/services/eventPartnerService';
+import { PermissionsList, type PermissionKey } from '@/components/partners/PermissionsList';
 
 interface PartnersTabProps {
   eventId: string;
@@ -73,9 +72,8 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
   const reactivatePartner = useReactivatePartner();
 
   // Stats
-  const activePartners = partners?.filter(p => p.status === 'active') || [];
-  const pendingPartners = partners?.filter(p => p.status === 'pending_invite') || [];
-  const inactivePartners = partners?.filter(p => p.status === 'inactive') || [];
+  const activePartners = partners?.filter(p => p?.status === 'active') || [];
+  const pendingPartners = partners?.filter(p => p?.status === 'pending_invite') || [];
 
   const handleAddPartner = async (profileId?: string) => {
     await addPartner.mutateAsync({
@@ -134,6 +132,8 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
         return null;
     }
   };
+
+  const EVENT_PERMISSION_EXCLUDE: PermissionKey[] = ['is_admin'];
 
   return (
     <div className="space-y-6">
@@ -249,7 +249,7 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
             </div>
           ) : (
             <div className="space-y-4">
-              {partners?.map((partner) => (
+              {partners?.filter(Boolean).map((partner) => (
                 <div key={partner.id} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -344,68 +344,9 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
         </CardContent>
       </Card>
 
-      {/* Permissions Guide */}
-      <Card className="border-dashed">
-        <CardHeader>
-          <CardTitle>Permission Types</CardTitle>
-          <CardDescription>
-            What each permission allows partners to do
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-3">
-              <Eye className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">View Event Details</p>
-                <p className="text-muted-foreground">
-                  See event information, lineup, and basic stats
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Edit className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Edit Event</p>
-                <p className="text-muted-foreground">
-                  Modify event details, lineup, and settings
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <DollarSign className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">View Financials</p>
-                <p className="text-muted-foreground">
-                  See ticket sales, revenue, and deal information
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <DollarSign className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Manage Financials</p>
-                <p className="text-muted-foreground">
-                  Create and manage deals, process settlements
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Database className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">CRM Data Sync</p>
-                <p className="text-muted-foreground">
-                  Receive customer data from ticket purchases for their CRM
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Add Partner Dialog */}
       <Dialog open={showAddPartner} onOpenChange={setShowAddPartner}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
             <DialogTitle>Add Partner</DialogTitle>
             <DialogDescription>
@@ -490,71 +431,14 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
             </div>
 
             {/* Permissions for New Partner */}
-            <div className="space-y-4">
-              <Label>Initial Permissions</Label>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">View Event Details</span>
-                  </div>
-                  <Switch
-                    checked={newPartnerPermissions.can_view_details}
-                    onCheckedChange={(checked) =>
-                      setNewPartnerPermissions(prev => ({ ...prev, can_view_details: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Edit className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Edit Event</span>
-                  </div>
-                  <Switch
-                    checked={newPartnerPermissions.can_edit_event}
-                    onCheckedChange={(checked) =>
-                      setNewPartnerPermissions(prev => ({ ...prev, can_edit_event: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">View Financials</span>
-                  </div>
-                  <Switch
-                    checked={newPartnerPermissions.can_view_financials}
-                    onCheckedChange={(checked) =>
-                      setNewPartnerPermissions(prev => ({ ...prev, can_view_financials: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Manage Financials</span>
-                  </div>
-                  <Switch
-                    checked={newPartnerPermissions.can_manage_financials}
-                    onCheckedChange={(checked) =>
-                      setNewPartnerPermissions(prev => ({ ...prev, can_manage_financials: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">CRM Data Sync</span>
-                  </div>
-                  <Switch
-                    checked={newPartnerPermissions.can_receive_crm_data}
-                    onCheckedChange={(checked) =>
-                      setNewPartnerPermissions(prev => ({ ...prev, can_receive_crm_data: checked }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
+            <PermissionsList
+              title="Initial Permissions"
+              exclude={EVENT_PERMISSION_EXCLUDE}
+              permissions={newPartnerPermissions}
+              onToggle={(key, checked) =>
+                setNewPartnerPermissions(prev => ({ ...prev, [key]: checked }))
+              }
+            />
           </div>
 
           <DialogFooter>
@@ -567,7 +451,7 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
 
       {/* Edit Permissions Dialog */}
       <Dialog open={!!selectedPartner} onOpenChange={() => setSelectedPartner(null)}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Edit Permissions</DialogTitle>
             <DialogDescription>
@@ -576,68 +460,19 @@ export default function PartnersTab({ eventId, userId, isOwner }: PartnersTabPro
           </DialogHeader>
 
           {selectedPartner && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">View Event Details</span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_view_details}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_view_details', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Edit className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Edit Event</span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_edit_event}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_edit_event', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">View Financials</span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_view_financials}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_view_financials', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Manage Financials</span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_manage_financials}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_manage_financials', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">CRM Data Sync</span>
-                </div>
-                <Switch
-                  checked={selectedPartner.can_receive_crm_data}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePermission(selectedPartner.id, 'can_receive_crm_data', checked)
-                  }
-                />
-              </div>
-            </div>
+            <PermissionsList
+              exclude={EVENT_PERMISSION_EXCLUDE}
+              permissions={{
+                can_view_details: selectedPartner.can_view_details,
+                can_edit_event: selectedPartner.can_edit_event,
+                can_view_financials: selectedPartner.can_view_financials,
+                can_manage_financials: selectedPartner.can_manage_financials,
+                can_receive_crm_data: selectedPartner.can_receive_crm_data,
+              }}
+              onToggle={(key, checked) =>
+                handleUpdatePermission(selectedPartner.id, key as keyof PartnerPermissions, checked)
+              }
+            />
           )}
 
           <DialogFooter>
