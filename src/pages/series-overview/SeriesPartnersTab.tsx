@@ -761,12 +761,12 @@ function PermissionsList({ permissions, onToggle, title }: PermissionsListProps)
                 />
               </div>
               {isExpanded && (
-                <div className={`mt-2 rounded-md px-3 py-2 text-xs leading-relaxed ${
+                <div className={`mt-2 rounded-md px-3 py-2 text-xs leading-relaxed text-foreground ${
                   severity === 'critical'
-                    ? 'bg-red-500/10 text-red-700 dark:text-red-300'
+                    ? 'bg-red-500/10'
                     : severity === 'high'
-                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-amber-500/10'
+                    : 'bg-muted'
                 }`}>
                   <AlertCircle className="mr-1 inline h-3 w-3" />
                   {description}
